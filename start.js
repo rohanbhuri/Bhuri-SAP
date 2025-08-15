@@ -44,8 +44,15 @@ const frontend = spawn('npm', ['start'], {
   env: { ...process.env }
 });
 
+// Start MCP server in development
+const mcpServer = spawn('node', ['mcp-server.js'], {
+  stdio: 'inherit',
+  shell: true
+});
+
 process.on('SIGINT', () => {
   backend.kill();
   frontend.kill();
+  mcpServer.kill();
   process.exit();
 });

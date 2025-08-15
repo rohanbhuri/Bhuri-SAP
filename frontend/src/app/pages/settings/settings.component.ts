@@ -46,12 +46,17 @@ import { BottomNavbarComponent } from '../../components/bottom-navbar.component'
     
     .settings-item {
       cursor: pointer;
-      border-radius: 8px;
+      border-radius: var(--border-radius, 8px);
       margin-bottom: 8px;
+      transition: var(--transition, all 0.2s ease-in-out);
     }
     
     .settings-item:hover {
-      background-color: #f5f5f5;
+      background-color: color-mix(in srgb, var(--theme-on-surface) 8%, transparent);
+    }
+    
+    :host-context(.dark-theme) .settings-item:hover {
+      background-color: color-mix(in srgb, var(--theme-on-surface) 12%, transparent);
     }
   `]
 })

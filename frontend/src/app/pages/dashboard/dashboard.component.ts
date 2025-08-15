@@ -85,12 +85,11 @@ import { BottomNavbarComponent } from '../../components/bottom-navbar.component'
     <app-bottom-navbar></app-bottom-navbar>
   `,
   styles: [`
-
-    
     .dashboard-content {
       padding: 24px;
       max-width: 1200px;
       margin: 0 auto;
+      min-height: calc(100vh - 128px);
     }
     
     .welcome-section {
@@ -100,6 +99,14 @@ import { BottomNavbarComponent } from '../../components/bottom-navbar.component'
     
     .welcome-section h1 {
       margin-bottom: 16px;
+      color: var(--theme-on-surface);
+      font-weight: 500;
+    }
+    
+    .welcome-section p {
+      color: var(--theme-on-surface);
+      opacity: 0.8;
+      font-size: 1.1rem;
     }
     
     .cards-grid {
@@ -110,11 +117,30 @@ import { BottomNavbarComponent } from '../../components/bottom-navbar.component'
     
     .dashboard-card {
       cursor: pointer;
-      transition: transform 0.2s ease-in-out;
+      transition: var(--transition);
+      background-color: var(--theme-surface);
+      border: 1px solid transparent;
     }
     
     .dashboard-card:hover {
       transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      border-color: var(--theme-primary);
+    }
+    
+    .dashboard-card:focus-visible {
+      outline: var(--focus-outline);
+      outline-offset: 2px;
+    }
+    
+    .dashboard-card mat-card-title {
+      color: var(--theme-primary);
+      font-weight: 500;
+    }
+    
+    .dashboard-card mat-card-content p {
+      color: var(--theme-on-surface);
+      opacity: 0.8;
     }
   `]
 })

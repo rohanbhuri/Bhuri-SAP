@@ -43,7 +43,19 @@ import { AuthService, User } from '../services/auth.service';
       height: 32px;
       margin-right: 16px;
       cursor: pointer;
+      transition: var(--transition);
     }
+    
+    .logo:hover {
+      opacity: 0.8;
+    }
+    
+    .logo:focus-visible {
+      outline: var(--focus-outline);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+    
     .spacer {
       flex: 1 1 auto;
     }
@@ -52,6 +64,17 @@ import { AuthService, User } from '../services/auth.service';
       display: flex;
       align-items: center;
       gap: 8px;
+      color: var(--theme-on-primary);
+      transition: var(--transition);
+    }
+    
+    .user-button:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .user-button:focus-visible {
+      outline: 2px solid var(--theme-on-primary);
+      outline-offset: 2px;
     }
   `]
 })

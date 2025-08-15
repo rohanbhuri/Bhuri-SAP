@@ -1,5 +1,21 @@
 @import '@angular/material/prebuilt-themes/indigo-pink.css';
 
+:root {
+  // Default theme variables
+  --theme-primary: #1976d2;
+  --theme-secondary: #dc004e;
+  --theme-accent: #ffc107;
+  --theme-background: #fafafa;
+  --theme-surface: #ffffff;
+  --theme-on-surface: #212121;
+  --theme-on-primary: #ffffff;
+  
+  // Accessibility
+  --focus-outline: 2px solid var(--theme-primary);
+  --border-radius: 8px;
+  --transition: all 0.2s ease-in-out;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -8,46 +24,95 @@
 
 body {
   font-family: Roboto, "Helvetica Neue", sans-serif;
+  background-color: var(--theme-background);
+  color: var(--theme-on-surface);
+  transition: var(--transition);
 }
 
 html, body {
   height: 100%;
 }
 
-// Custom color support for Material components
+// Focus styles for accessibility
+*:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
+}
+
+// Material component theming
 .mat-mdc-raised-button.mat-primary {
-  background-color: var(--mdc-theme-primary) !important;
+  background-color: var(--theme-primary) !important;
+  color: var(--theme-on-primary) !important;
 }
 
 .mat-toolbar.mat-primary {
-  background-color: var(--mat-toolbar-background-color) !important;
+  background-color: var(--theme-primary) !important;
+  color: var(--theme-on-primary) !important;
 }
 
 .mat-mdc-icon-button.mat-primary {
-  color: var(--mdc-theme-primary) !important;
+  color: var(--theme-primary) !important;
 }
 
 .mat-mdc-button.mat-primary {
-  color: var(--mdc-theme-primary) !important;
+  color: var(--theme-primary) !important;
 }
 
-// Theme styles
+.mat-mdc-card {
+  background-color: var(--theme-surface) !important;
+  color: var(--theme-on-surface) !important;
+  border-radius: var(--border-radius) !important;
+  transition: var(--transition) !important;
+}
+
+.mat-mdc-list-item {
+  color: var(--theme-on-surface) !important;
+}
+
+// Light theme
 body.light-theme {
-  background-color: #fafafa;
-  color: #212121;
-}
-
-body.dark-theme {
-  background-color: #121212;
-  color: #ffffff;
-  
-  .mat-mdc-card {
-    background-color: #1e1e1e !important;
-    color: #ffffff !important;
-  }
+  --theme-background: #fafafa;
+  --theme-surface: #ffffff;
+  --theme-on-surface: #212121;
+  --theme-on-primary: #ffffff;
   
   .mat-mdc-form-field .mat-mdc-text-field-wrapper {
-    background-color: #2d2d2d !important;
+    background-color: #ffffff;
+  }
+  
+  .mat-mdc-select-panel {
+    background-color: #ffffff;
+  }
+  
+  .mat-mdc-option {
+    color: #212121;
+  }
+}
+
+// Dark theme with improved contrast
+body.dark-theme {
+  --theme-background: #121212;
+  --theme-surface: #1e1e1e;
+  --theme-on-surface: #e0e0e0;
+  --theme-on-primary: #000000;
+  
+  .mat-mdc-form-field {
+    .mat-mdc-text-field-wrapper {
+      background-color: #2d2d2d !important;
+      border-radius: var(--border-radius);
+    }
+    
+    .mat-mdc-floating-label {
+      color: #b0b0b0 !important;
+    }
+    
+    .mdc-text-field--filled {
+      background-color: #2d2d2d !important;
+    }
+    
+    input, .mat-mdc-select-value {
+      color: #e0e0e0 !important;
+    }
   }
   
   .mat-mdc-select-panel {
@@ -55,35 +120,59 @@ body.dark-theme {
   }
   
   .mat-mdc-option {
-    color: #ffffff !important;
-  }
-}
-
-body.auto-theme {
-  @media (prefers-color-scheme: dark) {
-    background-color: #121212;
-    color: #ffffff;
+    color: #e0e0e0 !important;
     
-    .mat-mdc-card {
-      background-color: #1e1e1e !important;
-      color: #ffffff !important;
-    }
-    
-    .mat-mdc-form-field .mat-mdc-text-field-wrapper {
-      background-color: #2d2d2d !important;
-    }
-    
-    .mat-mdc-select-panel {
-      background-color: #2d2d2d !important;
-    }
-    
-    .mat-mdc-option {
-      color: #ffffff !important;
+    &:hover {
+      background-color: #3d3d3d !important;
     }
   }
   
-  @media (prefers-color-scheme: light) {
-    background-color: #fafafa;
-    color: #212121;
+  .mat-mdc-list-item {
+    color: #e0e0e0 !important;
+    
+    .mat-mdc-list-item-title {
+      color: #ffffff !important;
+    }
+    
+    .mat-mdc-list-item-line {
+      color: #b0b0b0 !important;
+    }
+    
+    &:hover {
+      background-color: color-mix(in srgb, var(--theme-on-surface) 12%, transparent) !important;
+    }
+    
+    .mat-icon {
+      color: #e0e0e0 !important;
+    }
+  }
+  
+  // Better text contrast in dark mode
+  h1, h2, h3, h4, h5, h6 {
+    color: #ffffff;
+  }
+  
+  p {
+    color: #e0e0e0;
+  }
+}
+
+// High contrast mode support
+@media (prefers-contrast: high) {
+  :root {
+    --focus-outline: 3px solid;
+  }
+  
+  .mat-mdc-card {
+    border: 1px solid var(--theme-on-surface);
+  }
+}
+
+// Reduced motion support
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
