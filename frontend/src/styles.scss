@@ -1,0 +1,89 @@
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+html, body {
+  height: 100%;
+}
+
+// Custom color support for Material components
+.mat-mdc-raised-button.mat-primary {
+  background-color: var(--mdc-theme-primary) !important;
+}
+
+.mat-toolbar.mat-primary {
+  background-color: var(--mat-toolbar-background-color) !important;
+}
+
+.mat-mdc-icon-button.mat-primary {
+  color: var(--mdc-theme-primary) !important;
+}
+
+.mat-mdc-button.mat-primary {
+  color: var(--mdc-theme-primary) !important;
+}
+
+// Theme styles
+body.light-theme {
+  background-color: #fafafa;
+  color: #212121;
+}
+
+body.dark-theme {
+  background-color: #121212;
+  color: #ffffff;
+  
+  .mat-mdc-card {
+    background-color: #1e1e1e !important;
+    color: #ffffff !important;
+  }
+  
+  .mat-mdc-form-field .mat-mdc-text-field-wrapper {
+    background-color: #2d2d2d !important;
+  }
+  
+  .mat-mdc-select-panel {
+    background-color: #2d2d2d !important;
+  }
+  
+  .mat-mdc-option {
+    color: #ffffff !important;
+  }
+}
+
+body.auto-theme {
+  @media (prefers-color-scheme: dark) {
+    background-color: #121212;
+    color: #ffffff;
+    
+    .mat-mdc-card {
+      background-color: #1e1e1e !important;
+      color: #ffffff !important;
+    }
+    
+    .mat-mdc-form-field .mat-mdc-text-field-wrapper {
+      background-color: #2d2d2d !important;
+    }
+    
+    .mat-mdc-select-panel {
+      background-color: #2d2d2d !important;
+    }
+    
+    .mat-mdc-option {
+      color: #ffffff !important;
+    }
+  }
+  
+  @media (prefers-color-scheme: light) {
+    background-color: #fafafa;
+    color: #212121;
+  }
+}

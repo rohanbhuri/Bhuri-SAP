@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title id="app-title">Beax RM</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico" id="app-favicon">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script>
+    // Load brand configuration from environment
+    window.brandConfig = {
+      brand: {
+        name: 'Beax RM' || 'Beax RM',
+        logo: '/config/assets/beax-rm/logo.png' || '/config/assets/beax-rm/logo.png',
+        icon: '/config/assets/beax-rm/icon.png' || '/config/assets/beax-rm/icon.png'
+      },
+      colors: {
+        primary: '#3B82F6' || '#3B82F6',
+        accent: '#F59E0B' || '#F59E0B',
+        secondary: '#6B7280' || '#6B7280'
+      },
+      app: {
+        name: 'Beax Resource Manager' || 'Beax Resource Manager',
+        version: '1.0.0',
+        description: 'Resource Management System',
+        port: parseInt('3000') || 3000,
+        apiUrl: 'http://localhost:8000/api' || 'http://localhost:8000/api'
+      }
+    };
+    
+    // Update title and favicon
+    document.getElementById('app-title').textContent = window.brandConfig.app.name;
+    document.getElementById('app-favicon').href = window.brandConfig.brand.icon;
+  </script>
+</head>
+<body>
+  <app-root></app-root>
+</body>
+</html>

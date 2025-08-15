@@ -1,0 +1,343 @@
+{
+  "info": {
+    "name": "Beax RM API",
+    "description": "ERP/SAP-like tool API with user management and module-based permissions",
+    "version": "1.0.0"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000/api"
+    },
+    {
+      "key": "access_token",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('access_token', response.access_token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users",
+              "host": ["{{base_url}}"],
+              "path": ["users"]
+            }
+          }
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"organizationId\": \"{{org_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users",
+              "host": ["{{base_url}}"],
+              "path": ["users"]
+            }
+          }
+        },
+        {
+          "name": "Assign Role to User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roleId\": \"{{role_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/{{user_id}}/roles",
+              "host": ["{{base_url}}"],
+              "path": ["users", "{{user_id}}", "roles"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Organizations",
+      "item": [
+        {
+          "name": "Get All Organizations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/organizations",
+              "host": ["{{base_url}}"],
+              "path": ["organizations"]
+            }
+          }
+        },
+        {
+          "name": "Create Organization",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Acme Corp\",\n  \"code\": \"ACME\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/organizations",
+              "host": ["{{base_url}}"],
+              "path": ["organizations"]
+            }
+          }
+        },
+        {
+          "name": "Update Organization",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Corp Name\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/organizations/{{org_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["organizations", "{{org_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Organization",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/organizations/{{org_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["organizations", "{{org_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roles",
+      "item": [
+        {
+          "name": "Get All Roles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/roles",
+              "host": ["{{base_url}}"],
+              "path": ["roles"]
+            }
+          }
+        },
+        {
+          "name": "Create Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Manager\",\n  \"type\": \"custom\",\n  \"description\": \"Department manager role\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/roles",
+              "host": ["{{base_url}}"],
+              "path": ["roles"]
+            }
+          }
+        },
+        {
+          "name": "Update Role",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated role description\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/roles/{{role_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["roles", "{{role_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Permissions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/roles/permissions",
+              "host": ["{{base_url}}"],
+              "path": ["roles", "permissions"]
+            }
+          }
+        },
+        {
+          "name": "Assign Permission to Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permissionId\": \"{{permission_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/roles/{{role_id}}/permissions",
+              "host": ["{{base_url}}"],
+              "path": ["roles", "{{role_id}}", "permissions"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Modules",
+      "item": [
+        {
+          "name": "Get All Modules",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/modules",
+              "host": ["{{base_url}}"],
+              "path": ["modules"]
+            }
+          }
+        },
+        {
+          "name": "Get Active Modules",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/modules/active",
+              "host": ["{{base_url}}"],
+              "path": ["modules", "active"]
+            }
+          }
+        },
+        {
+          "name": "Activate Module",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/modules/{{module_id}}/activate",
+              "host": ["{{base_url}}"],
+              "path": ["modules", "{{module_id}}", "activate"]
+            }
+          }
+        },
+        {
+          "name": "Deactivate Module",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/modules/{{module_id}}/deactivate",
+              "host": ["{{base_url}}"],
+              "path": ["modules", "{{module_id}}", "deactivate"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
