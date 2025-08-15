@@ -84,8 +84,8 @@ import { ConfirmDialogComponent } from '../dialogs/confirm-dialog.component';
             <th mat-header-cell *matHeaderCellDef>Roles</th>
             <td mat-cell *matCellDef="let user">
               <div class="roles-container">
-                @for (role of user.roles; track role) {
-                <mat-chip color="primary">{{ role }}</mat-chip>
+                @for (role of user.roles; track role.id || role) {
+                <mat-chip color="primary">{{ role.name || role }}</mat-chip>
                 }
               </div>
             </td>
@@ -297,7 +297,7 @@ export class UsersComponent {
             email: user.email,
             firstName: user.firstName,
             lastName: user.lastName,
-            roles: user.roleIds || user.roles || [],
+            roles: user.roles || [],
             isActive: user.isActive,
             organizationId: user.organizationId,
           }));

@@ -13,6 +13,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ConfirmDialogComponent } from '../dialogs/confirm-dialog.component';
 import { RoleDialogComponent } from '../dialogs/role-dialog.component';
+import { PermissionTemplateDialogComponent } from '../dialogs/permission-template-dialog.component';
 import { UserManagementService } from '../user-management.service';
 import { FormsModule } from '@angular/forms';
 
@@ -103,6 +104,10 @@ import { FormsModule } from '@angular/forms';
                     <button mat-menu-item (click)="editRole(role)">
                       <mat-icon>edit</mat-icon>
                       <span>Edit</span>
+                    </button>
+                    <button mat-menu-item (click)="applyTemplate(role)">
+                      <mat-icon>assignment</mat-icon>
+                      <span>Apply Template</span>
                     </button>
                     <button mat-menu-item (click)="deleteRole(role)">
                       <mat-icon color="warn">delete</mat-icon>
@@ -316,6 +321,19 @@ export class RolesComponent {
         this.snackBar.open('Role updated successfully', 'Close', {
           duration: 3000,
         });
+        this.loadRoles();
+      }
+    });
+  }
+
+  applyTemplate(role: any) {
+    const ref = this.dialog.open(PermissionTemplateDialogComponent, {
+      width: '520px',
+      data: { roleId: role._id || role.id, roleName: role.name }
+    });
+    
+    ref.afterClosed().subscribe((result) => {
+      if (result) {
         this.loadRoles();
       }
     });

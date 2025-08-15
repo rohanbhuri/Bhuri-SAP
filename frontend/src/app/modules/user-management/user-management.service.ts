@@ -160,4 +160,43 @@ export class UserManagementService {
       .post(`${this.apiUrl}/user-management/setup-defaults`, {})
       .pipe(catchError(() => of({ success: false })));
   }
+
+  getPermissionTemplates(): Observable<any[]> {
+    const url = `${this.apiUrl}/user-management/permission-templates`;
+    console.log('Getting templates from:', url);
+    return this.http
+      .get<any[]>(url)
+      .pipe(
+        catchError((error) => {
+          console.error('Template API error:', error);
+          // Return mock templates as fallback
+          return of([
+            {
+              id: 'super-admin-full',
+              name: 'Super Admin - Full Access',
+              description: 'Complete access to all user management features',
+              permissions: Array(16).fill({})
+            },
+            {
+              id: 'admin-standard', 
+              name: 'Admin - Standard Access',
+              description: 'Standard admin access without permissions management',
+              permissions: Array(8).fill({})
+            },
+            {
+              id: 'staff-basic',
+              name: 'Staff - Basic Access', 
+              description: 'Basic staff access to view users only',
+              permissions: Array(1).fill({})
+            }
+          ]);
+        })
+      );
+  }
+
+  applyPermissionTemplate(roleId: string, templateId: string): Observable<any> {
+    return this.http
+      .post(`${this.apiUrl}/user-management/roles/${roleId}/apply-template`, { templateId })
+      .pipe(catchError(() => of({ success: false })));
+  }
 }

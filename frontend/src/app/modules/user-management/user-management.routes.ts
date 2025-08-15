@@ -22,6 +22,10 @@ export const userManagementRoutes: Routes = [
       {
         path: 'permissions',
         loadComponent: () => import('./pages/permissions.component').then(m => m.PermissionsComponent)
+      },
+      {
+        path: 'permission-templates',
+        loadComponent: () => import('./pages/permission-templates.component').then(m => m.PermissionTemplatesComponent)
       }
     ]
   }

@@ -30,25 +30,59 @@ export class UsersService {
 
     const isSuperAdmin = userRoles.some(role => role.type === RoleType.SUPER_ADMIN);
     
+    let users;
     if (isSuperAdmin) {
-      return this.userRepository.find();
+      users = await this.userRepository.find();
+    } else {
+      users = await this.userRepository.find({
+        where: { organizationId: user.organizationId }
+      });
     }
 
-    return this.userRepository.find({
-      where: { organizationId: user.organizationId }
-    });
+    // Populate role data for each user
+    const usersWithRoles = await Promise.all(
+      users.map(async (user) => {
+        if (user.roleIds && user.roleIds.length > 0) {
+          const roles = await this.roleRepository.find({
+            where: { _id: { $in: user.roleIds } }
+          });
+          return {
+            ...user,
+            roles: roles.map(role => ({ id: role._id, name: role.name, type: role.type }))
+          };
+        }
+        return { ...user, roles: [] };
+      })
+    );
+
+    return usersWithRoles;
   }
 
   async create(userData: any, currentUser: any) {
     const hashedPassword = await bcrypt.hash(userData.password, 10);
+    const roleIds = userData.roleIds ? userData.roleIds.map(id => new ObjectId(id)) : [];
     
     const user = this.userRepository.create({
       ...userData,
       password: hashedPassword,
       organizationId: new ObjectId(userData.organizationId),
+      roleIds,
     });
 
-    return this.userRepository.save(user);
+    const savedUser = await this.userRepository.save(user);
+    
+    // Return user with populated roles
+    if (roleIds.length > 0) {
+      const roles = await this.roleRepository.find({
+        where: { _id: { $in: roleIds } }
+      });
+      return {
+        ...savedUser,
+        roles: roles.map(role => ({ id: role._id, name: role.name, type: role.type }))
+      };
+    }
+    
+    return { ...savedUser, roles: [] };
   }
 
   async createPublic(userData: any) {

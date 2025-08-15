@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Put, Delete, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
 import { UserManagementService } from './user-management.service';
+import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 
 @Controller('user-management')
+@UseGuards(JwtAuthGuard)
 export class UserManagementController {
   constructor(private userManagementService: UserManagementService) {}
 
@@ -65,13 +67,43 @@ export class UserManagementController {
     return this.userManagementService.createRole(roleData);
   }
 
+  @Put('roles/:roleId')
+  async updateRole(@Param('roleId') roleId: string, @Body() roleData: any) {
+    return this.userManagementService.updateRole(roleId, roleData);
+  }
+
   @Post('permissions')
   async createPermission(@Body() permissionData: any) {
     return this.userManagementService.createPermission(permissionData);
   }
 
+  @Put('permissions/:permissionId')
+  async updatePermission(@Param('permissionId') permissionId: string, @Body() permissionData: any) {
+    return this.userManagementService.updatePermission(permissionId, permissionData);
+  }
+
+  @Delete('permissions/:permissionId')
+  async deletePermission(@Param('permissionId') permissionId: string) {
+    return this.userManagementService.deletePermission(permissionId);
+  }
+
+  @Delete('roles/:roleId')
+  async deleteRole(@Param('roleId') roleId: string) {
+    return this.userManagementService.deleteRole(roleId);
+  }
+
   @Post('setup-defaults')
   async setupDefaults() {
     return this.userManagementService.setupDefaults();
+  }
+
+  @Get('permission-templates')
+  async getPermissionTemplates() {
+    return this.userManagementService.getPermissionTemplates();
+  }
+
+  @Post('roles/:roleId/apply-template')
+  async applyPermissionTemplate(@Param('roleId') roleId: string, @Body() body: { templateId: string }) {
+    return this.userManagementService.applyPermissionTemplate(roleId, body.templateId);
   }
 }
