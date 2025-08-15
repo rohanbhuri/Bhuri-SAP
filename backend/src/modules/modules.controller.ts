@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Patch, Post, Param, UseGuards, Request } from '@nestjs/common';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { PermissionsGuard } from '../guards/permissions.guard';
 import { RequireRoles } from '../decorators/permissions.decorator';
@@ -30,5 +30,33 @@ export class ModulesController {
   @RequireRoles(RoleType.ADMIN, RoleType.SUPER_ADMIN)
   deactivateModule(@Param('id') id: string, @Request() req) {
     return this.modulesService.deactivateModule(id, req.user.organizationId);
+  }
+
+  @Get('available')
+  getAvailableModules(@Request() req) {
+    return this.modulesService.getAllAvailable(req.user.organizationId);
+  }
+
+  @Post(':id/request')
+  requestActivation(@Param('id') id: string, @Request() req) {
+    return this.modulesService.requestActivation(id, req.user.userId, req.user.organizationId);
+  }
+
+  @Get('requests')
+  @RequireRoles(RoleType.SUPER_ADMIN)
+  getPendingRequests(@Request() req) {
+    return this.modulesService.getPendingRequests(req.user.organizationId);
+  }
+
+  @Patch('requests/:id/approve')
+  @RequireRoles(RoleType.SUPER_ADMIN)
+  approveRequest(@Param('id') id: string, @Request() req) {
+    return this.modulesService.approveRequest(id, req.user.userId);
+  }
+
+  @Patch('requests/:id/reject')
+  @RequireRoles(RoleType.SUPER_ADMIN)
+  rejectRequest(@Param('id') id: string, @Request() req) {
+    return this.modulesService.rejectRequest(id, req.user.userId);
   }
 }

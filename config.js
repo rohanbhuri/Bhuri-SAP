@@ -21,7 +21,7 @@ const configs = {
     },
     development: {
       NODE_ENV: 'development',
-      MONGODB_URI: 'mongodb+srv://rohanbhuri:nokiaset@bhuri-db.zg9undw.mongodb.net/?retryWrites=true&w=majority&appName=bhuri-db',
+      MONGODB_URI: 'mongodb+srv://rohanbhuri:nokiaset@bhuri-db.zg9undw.mongodb.net/beaxrm?retryWrites=true&w=majority&appName=bhuri-db',
       JWT_SECRET: 'rohanbhuri',
       PORT: 3000
     }
@@ -50,7 +50,7 @@ const configs = {
 
     development: {
       NODE_ENV: 'development',
-      MONGODB_URI: 'mongodb+srv://rohanbhuri:nokiaset@bhuri-db.zg9undw.mongodb.net/?retryWrites=true&w=majority&appName=trueProcess-db',
+      MONGODB_URI: 'mongodb+srv://rohanbhuri:nokiaset@bhuri-db.zg9undw.mongodb.net/trueprocess?retryWrites=true&w=majority&appName=bhuri-db',
       JWT_SECRET: 'rohanbhuri',
       PORT: 3001
     }

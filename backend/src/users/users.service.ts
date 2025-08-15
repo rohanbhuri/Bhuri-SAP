@@ -15,6 +15,10 @@ export class UsersService {
     private roleRepository: MongoRepository<Role>,
   ) {}
 
+  async findByEmail(email: string) {
+    return this.userRepository.findOne({ where: { email } });
+  }
+
   async findAll(currentUser: any) {
     const user = await this.userRepository.findOne({
       where: { _id: new ObjectId(currentUser.userId) }

@@ -1,93 +1,151 @@
-import { Component } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { filter } from 'rxjs/operators';
+import { ModulesService } from '../services/modules.service';
 
 @Component({
   selector: 'app-bottom-navbar',
   standalone: true,
   imports: [MatButtonModule, MatIconModule],
   template: `
-    <div class="bottom-nav">
-      <button mat-icon-button (click)="goToDashboard()" [color]="activeRoute === '/dashboard' ? 'primary' : ''">
+    <nav class="bottom-nav" role="navigation" aria-label="Primary">
+      <button
+        mat-icon-button
+        (click)="goToDashboard()"
+        [attr.aria-current]="activeRoute === '/dashboard' ? 'page' : null"
+        [color]="activeRoute === '/dashboard' ? 'primary' : ''"
+        aria-label="Dashboard"
+      >
         <mat-icon>dashboard</mat-icon>
       </button>
-      <button mat-icon-button (click)="goToMessages()" [color]="activeRoute === '/messages' ? 'primary' : ''">
+      <button
+        mat-icon-button
+        (click)="goToMessages()"
+        [attr.aria-current]="activeRoute === '/messages' ? 'page' : null"
+        [color]="activeRoute === '/messages' ? 'primary' : ''"
+        aria-label="Messages"
+      >
         <mat-icon>message</mat-icon>
       </button>
-      <button mat-icon-button (click)="goToSearch()" [color]="activeRoute === '/search' ? 'primary' : ''">
+      <button
+        mat-icon-button
+        (click)="goToSearch()"
+        [attr.aria-current]="activeRoute === '/search' ? 'page' : null"
+        [color]="activeRoute === '/search' ? 'primary' : ''"
+        aria-label="Search"
+      >
         <mat-icon>search</mat-icon>
       </button>
-      <button mat-icon-button (click)="goToNotifications()" [color]="activeRoute === '/notifications' ? 'primary' : ''">
+      <button
+        mat-icon-button
+        (click)="goToNotifications()"
+        [attr.aria-current]="activeRoute === '/notifications' ? 'page' : null"
+        [color]="activeRoute === '/notifications' ? 'primary' : ''"
+        aria-label="Notifications"
+      >
         <mat-icon>notifications</mat-icon>
       </button>
-      <button mat-icon-button (click)="goToModules()" [color]="activeRoute === '/modules' ? 'primary' : ''">
+      <button
+        mat-icon-button
+        (click)="goToModules()"
+        [attr.aria-current]="activeRoute === '/modules' ? 'page' : null"
+        [color]="activeRoute === '/modules' ? 'primary' : ''"
+        aria-label="Modules"
+      >
         <mat-icon>apps</mat-icon>
       </button>
-      <button mat-icon-button (click)="goToMore()" [color]="activeRoute === '/more' ? 'primary' : ''">
+      <button
+        mat-icon-button
+        (click)="goToUserManagement()"
+        [attr.aria-current]="activeRoute.includes('/modules/user-management') ? 'page' : null"
+        [color]="activeRoute.includes('/modules/user-management') ? 'primary' : ''"
+        aria-label="User Management"
+      >
+        <mat-icon>people</mat-icon>
+      </button>
+      <button
+        mat-icon-button
+        (click)="goToMore()"
+        [attr.aria-current]="activeRoute === '/more' ? 'page' : null"
+        [color]="activeRoute === '/more' ? 'primary' : ''"
+        aria-label="More"
+      >
         <mat-icon>more_horiz</mat-icon>
       </button>
-    </div>
+    </nav>
   `,
-  styles: [`
-    .bottom-nav {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--mat-sys-surface-container);
-      backdrop-filter: blur(10px);
-      border-radius: 25px;
-      padding: 8px 16px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-      display: flex;
-      gap: 8px;
-      z-index: 1000;
-    }
-    
-    button {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-    }
-  `]
+  styles: [
+    `
+      .bottom-nav {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: color-mix(in srgb, var(--theme-surface) 80%, transparent);
+        backdrop-filter: blur(10px);
+        border-radius: 25px;
+        padding: 8px 16px;
+        border: 1px solid
+          color-mix(in srgb, var(--theme-on-surface) 10%, transparent);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        display: flex;
+        gap: 8px;
+        z-index: 1000;
+      }
+
+      button {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+      }
+
+      .bottom-nav:focus-within {
+        outline: var(--focus-outline);
+        outline-offset: 4px;
+      }
+    `,
+  ],
 })
 export class BottomNavbarComponent {
   activeRoute: string = '';
-  
   constructor(private router: Router) {
-    this.router.events.pipe(
-      filter(event => event instanceof NavigationEnd)
-    ).subscribe((event: NavigationEnd) => {
-      this.activeRoute = event.url;
-    });
+    this.router.events
+      .pipe(filter((event) => event instanceof NavigationEnd))
+      .subscribe((event: NavigationEnd) => {
+        this.activeRoute = event.url;
+      });
   }
-  
+
   ngOnInit() {
     this.activeRoute = this.router.url;
   }
-  
+
   goToDashboard() {
     this.router.navigate(['/dashboard']);
   }
-  
+
   goToMessages() {
     this.router.navigate(['/messages']);
   }
-  
+
   goToSearch() {
     this.router.navigate(['/search']);
   }
-  
+
   goToNotifications() {
     this.router.navigate(['/notifications']);
   }
-  
+
   goToModules() {
     this.router.navigate(['/modules']);
   }
-  
+
+  goToUserManagement() {
+    this.router.navigate(['/modules/user-management']);
+  }
+
   goToMore() {
     this.router.navigate(['/more']);
   }

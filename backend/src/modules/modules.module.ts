@@ -7,9 +7,10 @@ import { Organization } from '../entities/organization.entity';
 import { User } from '../entities/user.entity';
 import { Role } from '../entities/role.entity';
 import { Permission } from '../entities/permission.entity';
+import { ModuleRequest } from '../entities/module-request.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ModuleEntity, Organization, User, Role, Permission])],
+  imports: [TypeOrmModule.forFeature([ModuleEntity, Organization, User, Role, Permission, ModuleRequest])],
   providers: [ModulesService],
   controllers: [ModulesController],
 })

@@ -11,6 +11,7 @@ export interface User {
   firstName: string;
   lastName: string;
   organizationId?: string;
+  roles?: string[];
 }
 
 export interface LoginRequest {
@@ -129,5 +130,10 @@ export class AuthService {
       }
       this.currentUserSubject.next(user);
     }
+  }
+
+  hasRole(role: string): boolean {
+    const user = this.getCurrentUser();
+    return user?.roles?.includes(role) || false;
   }
 }

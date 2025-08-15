@@ -1,4 +1,4 @@
-@import '@angular/material/prebuilt-themes/indigo-pink.css';
+@import "@angular/material/prebuilt-themes/indigo-pink.css";
 
 :root {
   // Default theme variables
@@ -9,7 +9,7 @@
   --theme-surface: #ffffff;
   --theme-on-surface: #212121;
   --theme-on-primary: #ffffff;
-  
+
   // Accessibility
   --focus-outline: 2px solid var(--theme-primary);
   --border-radius: 8px;
@@ -29,7 +29,30 @@ body {
   transition: var(--transition);
 }
 
-html, body {
+/* Accessible skip link */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.skip-link:focus {
+  left: 16px;
+  top: 16px;
+  width: auto;
+  height: auto;
+  padding: 8px 12px;
+  background: var(--theme-primary);
+  color: var(--theme-on-primary);
+  border-radius: 6px;
+  z-index: 10000;
+}
+
+html,
+body {
   height: 100%;
 }
 
@@ -75,15 +98,15 @@ body.light-theme {
   --theme-surface: #ffffff;
   --theme-on-surface: #212121;
   --theme-on-primary: #ffffff;
-  
+
   .mat-mdc-form-field .mat-mdc-text-field-wrapper {
     background-color: #ffffff;
   }
-  
+
   .mat-mdc-select-panel {
     background-color: #ffffff;
   }
-  
+
   .mat-mdc-option {
     color: #212121;
   }
@@ -95,63 +118,73 @@ body.dark-theme {
   --theme-surface: #1e1e1e;
   --theme-on-surface: #e0e0e0;
   --theme-on-primary: #000000;
-  
+
   .mat-mdc-form-field {
     .mat-mdc-text-field-wrapper {
       background-color: #2d2d2d !important;
       border-radius: var(--border-radius);
     }
-    
+
     .mat-mdc-floating-label {
       color: #b0b0b0 !important;
     }
-    
+
     .mdc-text-field--filled {
       background-color: #2d2d2d !important;
     }
-    
-    input, .mat-mdc-select-value {
+
+    input,
+    .mat-mdc-select-value {
       color: #e0e0e0 !important;
     }
   }
-  
+
   .mat-mdc-select-panel {
     background-color: #2d2d2d !important;
   }
-  
+
   .mat-mdc-option {
     color: #e0e0e0 !important;
-    
+
     &:hover {
       background-color: #3d3d3d !important;
     }
   }
-  
+
   .mat-mdc-list-item {
     color: #e0e0e0 !important;
-    
+
     .mat-mdc-list-item-title {
       color: #ffffff !important;
     }
-    
+
     .mat-mdc-list-item-line {
       color: #b0b0b0 !important;
     }
-    
+
     &:hover {
-      background-color: color-mix(in srgb, var(--theme-on-surface) 12%, transparent) !important;
+      background-color: color-mix(
+        in srgb,
+        var(--theme-on-surface) 12%,
+        transparent
+      ) !important;
     }
-    
+
     .mat-icon {
       color: #e0e0e0 !important;
     }
   }
-  
+
   // Better text contrast in dark mode
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     color: #ffffff;
   }
-  
+
   p {
     color: #e0e0e0;
   }
@@ -162,7 +195,7 @@ body.dark-theme {
   :root {
     --focus-outline: 3px solid;
   }
-  
+
   .mat-mdc-card {
     border: 1px solid var(--theme-on-surface);
   }

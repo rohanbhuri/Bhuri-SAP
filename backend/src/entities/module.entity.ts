@@ -1,5 +1,10 @@
 import { Entity, ObjectIdColumn, ObjectId, Column } from 'typeorm';
 
+export enum ModulePermissionType {
+  PUBLIC = 'public',
+  REQUIRE_PERMISSION = 'require_permission'
+}
+
 @Entity()
 export class Module {
   @ObjectIdColumn()
@@ -16,6 +21,9 @@ export class Module {
 
   @Column()
   isAvailable: boolean;
+
+  @Column()
+  permissionType: ModulePermissionType;
 
   @Column()
   createdAt: Date;

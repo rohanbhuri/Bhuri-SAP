@@ -25,8 +25,10 @@ const server = http.createServer(async (req, res) => {
       await new Promise(resolve => setTimeout(resolve, 3000));
       
       try {
-        await page.goto('http://localhost:3000', { waitUntil: 'networkidle' });
-        console.log('Browser launched and navigated to UI');
+        const port = process.env.APP_PORT || '4200';
+        const url = `http://localhost:${port}`;
+        await page.goto(url, { waitUntil: 'networkidle' });
+        console.log('Browser launched and navigated to UI at', url);
         
         // Take initial screenshot and analyze
         await analyzeUI();

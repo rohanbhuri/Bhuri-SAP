@@ -4,14 +4,28 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatCardModule } from '@angular/material/card';
-import { MatSelectModule } from '@angular/material/select';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AuthService, Organization, User } from '../../services/auth.service';
 import { Router } from '@angular/router';
 import { NavbarComponent } from '../../components/navbar.component';
 import { BottomNavbarComponent } from '../../components/bottom-navbar.component';
 import { BrandConfigService } from '../../services/brand-config.service';
+import { ModulesService, AppModuleInfo } from '../../services/modules.service';
+import {
+  CdkDropList,
+  CdkDrag,
+  CdkDragHandle,
+  CdkDragDrop,
+  moveItemInArray,
+} from '@angular/cdk/drag-drop';
+import { UserManagementWidgetComponent } from '../../modules/user-management/user-management-widget.component';
+
+interface DashboardWidget {
+  id: string;
+  title: string;
+  description?: string;
+  size: 's' | 'm' | 'l';
+}
 
 @Component({
   selector: 'app-dashboard',
@@ -22,169 +36,316 @@ import { BrandConfigService } from '../../services/brand-config.service';
     MatIconModule,
     MatMenuModule,
     MatCardModule,
-    MatSelectModule,
-    MatFormFieldModule,
     MatSnackBarModule,
     NavbarComponent,
-    BottomNavbarComponent
+    BottomNavbarComponent,
+    CdkDropList,
+    CdkDrag,
+    CdkDragHandle,
+    UserManagementWidgetComponent,
   ],
   template: `
     <app-navbar></app-navbar>
 
-    <div class="dashboard-content">
-      <div class="welcome-section">
-        <h1>Welcome to {{ brandConfig.getBrandName() }}</h1>
-        @if (currentUser()) {
-          <p>Hello, {{ currentUser()?.firstName }}!</p>
-          @if (currentUser()?.organizationId) {
-            <p>Current Organization: {{ getCurrentOrgName() }}</p>
-          } @else {
-            <p>No organization selected. Choose one from the dropdown above.</p>
-          }
+    <div class="page">
+      <div class="page-header" aria-label="Dashboard header">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <span>Pages</span>
+          <mat-icon aria-hidden="true">chevron_right</mat-icon>
+          <span class="current">Dashboard</span>
+        </nav>
+        <h1>Dashboard</h1>
+        <p class="subtitle">
+          Check the sales, value and bounce rate by country.
+        </p>
+      </div>
+
+      <section
+        class="widgets"
+        cdkDropList
+        (cdkDropListDropped)="drop($event)"
+        role="list"
+        aria-label="Dashboard widgets grid"
+      >
+        @for (w of widgets(); track w.id) {
+        <mat-card
+          class="widget"
+          [attr.data-size]="w.size"
+          cdkDrag
+          role="listitem"
+          tabindex="0"
+          [attr.aria-label]="w.title"
+        >
+          <div class="widget-header">
+            <h3 class="widget-title">{{ w.title }}</h3>
+            <div class="widget-actions">
+              <button mat-icon-button cdkDragHandle aria-label="Drag widget">
+                <mat-icon>drag_indicator</mat-icon>
+              </button>
+              <button
+                mat-icon-button
+                [matMenuTriggerFor]="menu"
+                aria-label="Widget options"
+              >
+                <mat-icon>more_vert</mat-icon>
+              </button>
+              <mat-menu #menu="matMenu">
+                <button mat-menu-item (click)="resize(w, 's')">
+                  <mat-icon>fit_screen</mat-icon>
+                  <span>Small</span>
+                </button>
+                <button mat-menu-item (click)="resize(w, 'm')">
+                  <mat-icon>crop_5_4</mat-icon>
+                  <span>Medium</span>
+                </button>
+                <button mat-menu-item (click)="resize(w, 'l')">
+                  <mat-icon>crop_16_9</mat-icon>
+                  <span>Large</span>
+                </button>
+              </mat-menu>
+            </div>
+          </div>
+          <div class="widget-body">
+            @if (w.id === 'user-management') {
+              <app-user-management-widget></app-user-management-widget>
+            } @else {
+              <!-- Placeholder content for other widgets -->
+              <p class="metric" aria-live="polite">$53k</p>
+              <p class="trend positive">+5% than last week</p>
+            }
+          </div>
+        </mat-card>
+        } @if (widgets().length === 0) {
+        <mat-card class="empty" tabindex="0" aria-live="polite">
+          <mat-card-title>No active modules</mat-card-title>
+          <mat-card-content>
+            <p>
+              Ask your administrator to activate modules for your organization.
+            </p>
+          </mat-card-content>
+        </mat-card>
         }
-      </div>
-
-      <div class="cards-grid">
-        <mat-card class="dashboard-card">
-          <mat-card-header>
-            <mat-card-title>Users</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <p>Manage system users and permissions</p>
-          </mat-card-content>
-        </mat-card>
-
-        <mat-card class="dashboard-card">
-          <mat-card-header>
-            <mat-card-title>Organizations</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <p>Manage organizations and settings</p>
-          </mat-card-content>
-        </mat-card>
-
-        <mat-card class="dashboard-card">
-          <mat-card-header>
-            <mat-card-title>Roles</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <p>Configure roles and permissions</p>
-          </mat-card-content>
-        </mat-card>
-
-        <mat-card class="dashboard-card">
-          <mat-card-header>
-            <mat-card-title>Modules</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <p>Activate and manage system modules</p>
-          </mat-card-content>
-        </mat-card>
-      </div>
+      </section>
     </div>
-    
+
     <app-bottom-navbar></app-bottom-navbar>
   `,
-  styles: [`
-    .dashboard-content {
-      padding: 24px;
-      max-width: 1200px;
-      margin: 0 auto;
-      min-height: calc(100vh - 128px);
-    }
-    
-    .welcome-section {
-      margin-bottom: 32px;
-      text-align: center;
-    }
-    
-    .welcome-section h1 {
-      margin-bottom: 16px;
-      color: var(--theme-on-surface);
-      font-weight: 500;
-    }
-    
-    .welcome-section p {
-      color: var(--theme-on-surface);
-      opacity: 0.8;
-      font-size: 1.1rem;
-    }
-    
-    .cards-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 24px;
-    }
-    
-    .dashboard-card {
-      cursor: pointer;
-      transition: var(--transition);
-      background-color: var(--theme-surface);
-      border: 1px solid transparent;
-    }
-    
-    .dashboard-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-      border-color: var(--theme-primary);
-    }
-    
-    .dashboard-card:focus-visible {
-      outline: var(--focus-outline);
-      outline-offset: 2px;
-    }
-    
-    .dashboard-card mat-card-title {
-      color: var(--theme-primary);
-      font-weight: 500;
-    }
-    
-    .dashboard-card mat-card-content p {
-      color: var(--theme-on-surface);
-      opacity: 0.8;
-    }
-  `]
+  styles: [
+    `
+      .page {
+        padding: 24px;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      .page-header {
+        margin-bottom: 20px;
+      }
+
+      .breadcrumb {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: color-mix(in srgb, var(--theme-on-surface) 60%, transparent);
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+      }
+      .breadcrumb .current {
+        color: var(--theme-on-surface);
+      }
+
+      h1 {
+        margin: 0 0 6px;
+        font-weight: 600;
+      }
+      .subtitle {
+        color: color-mix(in srgb, var(--theme-on-surface) 65%, transparent);
+      }
+
+      .widgets {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+      }
+
+      .widget {
+        grid-column: span 12;
+        background: var(--theme-surface);
+        border: 1px solid
+          color-mix(in srgb, var(--theme-on-surface) 10%, transparent);
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+
+      .widget-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px 0 16px;
+      }
+      .widget-title {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 600;
+      }
+      .widget-actions {
+        display: inline-flex;
+        gap: 4px;
+      }
+
+      .widget-body {
+        padding: 4px 16px 16px 16px;
+      }
+      .metric {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin: 6px 0;
+      }
+      .trend {
+        font-weight: 600;
+        font-size: 0.9rem;
+      }
+      .trend.positive {
+        color: #18a957;
+      }
+      .trend.negative {
+        color: #e53935;
+      }
+
+      @media (min-width: 900px) {
+        .widget[data-size='s'] {
+          grid-column: span 4;
+        }
+        .widget[data-size='m'] {
+          grid-column: span 6;
+        }
+        .widget[data-size='l'] {
+          grid-column: span 12;
+        }
+      }
+
+      @media (min-width: 1200px) {
+        .widget[data-size='s'] {
+          grid-column: span 3;
+        }
+        .widget[data-size='m'] {
+          grid-column: span 6;
+        }
+        .widget[data-size='l'] {
+          grid-column: span 12;
+        }
+      }
+
+      .empty {
+        text-align: center;
+      }
+
+      .widget:focus-visible {
+        outline: var(--focus-outline);
+        outline-offset: 2px;
+      }
+    `,
+  ],
 })
 export class DashboardComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
   protected brandConfig = inject(BrandConfigService);
+  private modulesService = inject(ModulesService);
 
   currentUser = signal<User | null>(null);
   organizations = signal<Organization[]>([]);
+  activeModules = signal<AppModuleInfo[]>([]);
+  widgets = signal<DashboardWidget[]>([]);
 
   ngOnInit() {
-    this.authService.currentUser$.subscribe(user => {
+    this.authService.currentUser$.subscribe((user) => {
       this.currentUser.set(user);
+      if (user && this.authService.isAuthenticated()) {
+        this.modulesService.getActive().subscribe({
+          next: (list) => {
+            this.activeModules.set(list);
+            const mapped: DashboardWidget[] = list.length
+              ? list.map((m, idx) => ({
+                  id: m.name === 'user-management' ? 'user-management' : (m as any).id || `w${idx + 1}`,
+                  title: m.displayName,
+                  description: m.description,
+                  size: m.name === 'user-management' ? 'm' : (idx === 3 ? 'l' : 'm'),
+                }))
+              : [
+                  {
+                    id: 'user-management',
+                    title: 'User Management',
+                    description: 'Manage users and permissions',
+                    size: 'm',
+                  },
+                  {
+                    id: 'w2',
+                    title: "Today's Users",
+                    description: 'Summary',
+                    size: 'm',
+                  },
+                  {
+                    id: 'w3',
+                    title: 'Ads Views',
+                    description: 'Summary',
+                    size: 'm',
+                  },
+                  { id: 'w4', title: 'Sales', description: 'Summary', size: 'l' },
+                ];
+            this.widgets.set(mapped);
+          },
+          error: (error) => {
+            if (error.status === 401 || error.status === 403) {
+              this.authService.logout();
+            }
+          }
+        });
+        this.loadOrganizations();
+      }
     });
-    
-    this.loadOrganizations();
+  }
+
+  drop(event: CdkDragDrop<DashboardWidget[]>) {
+    const copy = [...this.widgets()];
+    moveItemInArray(copy, event.previousIndex, event.currentIndex);
+    this.widgets.set(copy);
+  }
+
+  resize(w: DashboardWidget, size: 's' | 'm' | 'l') {
+    const updated = this.widgets().map((x) =>
+      x.id === w.id ? { ...x, size } : x
+    );
+    this.widgets.set(updated);
   }
 
   loadOrganizations() {
-    this.authService.getOrganizations().subscribe({
+    this.authService.getMyOrganizations().subscribe({
       next: (orgs) => this.organizations.set(orgs),
-      error: () => {
-        this.snackBar.open('Failed to load organizations', 'Close', {
-          duration: 3000
-        });
-      }
+      error: (error) => {
+        if (error.status === 401 || error.status === 403) {
+          this.authService.logout();
+        } else {
+          this.snackBar.open('Failed to load organizations', 'Close', {
+            duration: 3000,
+          });
+        }
+      },
     });
   }
 
   onOrganizationChange(organizationId: string) {
     this.authService.updateUserOrganization(organizationId);
     this.snackBar.open('Organization updated successfully', 'Close', {
-      duration: 2000
+      duration: 2000,
     });
   }
 
   getCurrentOrgName(): string {
     const user = this.currentUser();
     if (!user?.organizationId) return '';
-    
-    const org = this.organizations().find(o => o.id === user.organizationId);
+    const org = this.organizations().find((o) => o.id === user.organizationId);
     return org?.name || '';
   }
 

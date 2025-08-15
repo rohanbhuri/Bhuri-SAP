@@ -28,6 +28,14 @@ export class AuthController {
 
   @Post('signup')
   async signup(@Body() signupDto: SignupDto) {
+    // Check if user already exists
+    const existingUser = await this.usersService.findByEmail(signupDto.email);
+    if (existingUser) {
+      // User exists, attempt login instead
+      return this.authService.login(signupDto.email, signupDto.password);
+    }
+    
+    // Create new user
     const user = await this.usersService.createPublic(signupDto);
     return this.authService.login(signupDto.email, signupDto.password);
   }

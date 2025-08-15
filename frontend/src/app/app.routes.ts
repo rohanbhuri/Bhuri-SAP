@@ -28,6 +28,11 @@ export const routes: Routes = [
   { path: 'search', component: SearchComponent, canActivate: [authGuard] },
   { path: 'notifications', component: NotificationsComponent, canActivate: [authGuard] },
   { path: 'modules', component: ModulesComponent, canActivate: [authGuard] },
+  { 
+    path: 'modules/user-management', 
+    loadChildren: () => import('./modules/user-management/user-management.routes').then(m => m.userManagementRoutes),
+    canActivate: [authGuard]
+  },
   { path: 'more', component: MoreComponent, canActivate: [authGuard] },
   { path: '**', redirectTo: '/login' }
 ];
