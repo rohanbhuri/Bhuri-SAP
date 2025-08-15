@@ -11,6 +11,7 @@ import { AuthService, Organization, User } from '../../services/auth.service';
 import { Router } from '@angular/router';
 import { NavbarComponent } from '../../components/navbar.component';
 import { BottomNavbarComponent } from '../../components/bottom-navbar.component';
+import { BrandConfigService } from '../../services/brand-config.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -32,7 +33,7 @@ import { BottomNavbarComponent } from '../../components/bottom-navbar.component'
 
     <div class="dashboard-content">
       <div class="welcome-section">
-        <h1>Welcome to Beax RM</h1>
+        <h1>Welcome to {{ brandConfig.getBrandName() }}</h1>
         @if (currentUser()) {
           <p>Hello, {{ currentUser()?.firstName }}!</p>
           @if (currentUser()?.organizationId) {
@@ -148,6 +149,7 @@ export class DashboardComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
+  protected brandConfig = inject(BrandConfigService);
 
   currentUser = signal<User | null>(null);
   organizations = signal<Organization[]>([]);

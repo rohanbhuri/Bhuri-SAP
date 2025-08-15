@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
+import { BrandConfigService } from './brand-config.service';
 
 export interface User {
   id: string;
@@ -42,7 +43,8 @@ export interface Organization {
 export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
-  private apiUrl = 'http://localhost:3000/api';
+  private brandConfig = inject(BrandConfigService);
+  private get apiUrl() { return this.brandConfig.getApiUrl(); }
   
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();

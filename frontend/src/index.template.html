@@ -14,21 +14,21 @@
       // Load brand configuration from environment
       window.brandConfig = {
         brand: {
-          name: "Beax RM",
-          logo: "/config/assets/beaxrm/icons/BEAX.png",
-          icon: "/config/assets/beaxrm/icons/BEAX-icon.png",
+          name: "{{BRAND_NAME}}",
+          logo: "{{BRAND_LOGO}}",
+          icon: "{{BRAND_ICON}}",
         },
         colors: {
-          primary: "#3B82F6",
-          accent: "#F59E0B",
-          secondary: "#6B7280",
+          primary: "{{PRIMARY_COLOR}}",
+          accent: "{{ACCENT_COLOR}}",
+          secondary: "{{SECONDARY_COLOR}}",
         },
         app: {
-          name: "Beax Resource Manager",
-          version: "1.0.0",
-          description: "Resource Management System",
-          port: parseInt("4200"),
-          apiUrl: "http://localhost:3000/api",
+          name: "{{APP_NAME}}",
+          version: "{{VERSION}}",
+          description: "{{DESCRIPTION}}",
+          port: parseInt("{{APP_PORT}}"),
+          apiUrl: "{{API_URL}}",
         },
       };
 

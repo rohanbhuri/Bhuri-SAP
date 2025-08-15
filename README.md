@@ -48,7 +48,45 @@ Secondary application for process management.
 - [Blueprint](./documentation/blueprint.md) - System architecture and design
 - [Brand Configuration](./BRAND_CONFIG.md) - Branding and theming guide
 
+## Brand Configuration System
+
+The application uses a dynamic brand configuration system that automatically switches between different applications based on the startup command.
+
+### How It Works
+
+1. **Configuration Source**: All brand configurations are stored in `config.js`
+2. **Dynamic Replacement**: `start.js` reads the config and replaces placeholders in `frontend/src/index.html`
+3. **Environment Variables**: Backend receives the correct environment variables for each brand
+4. **Automatic Startup**: Both frontend and backend start with the correct configuration
+
+### Brand Switching
+
+```bash
+# Start True Process application
+npm run start:true-process
+# → Backend: localhost:3001 | Frontend: localhost:4201 | API: localhost:3001/api
+
+# Start Beax RM application  
+npm run start:beax-rm
+# → Backend: localhost:3000 | Frontend: localhost:4200 | API: localhost:3000/api
+```
+
+### Configuration Structure
+
+Each brand in `config.js` contains:
+- **Brand**: Name, logo, icon paths
+- **Colors**: Primary, accent, secondary theme colors
+- **App**: Name, version, description, port, API URL
+- **Development**: Database URI, JWT secret, backend port
+
 ## Development
+
+### Adding New Brands
+
+1. Add new brand configuration to `config.js`
+2. Create assets in `configs/assets/[brand-name]/`
+3. Add npm script in root `package.json`
+4. The system automatically handles environment replacement
 
 ### Backend Development
 ```bash
@@ -60,7 +98,7 @@ npm run build        # Production build
 ### Frontend Development
 ```bash
 cd frontend
-npm start           # Development server
+npm start           # Development server (requires brand setup first)
 npm run build       # Production build
 ```
 

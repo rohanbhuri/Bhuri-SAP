@@ -2,8 +2,8 @@ const configs = {
   "beax-rm": {
     brand: {
       name: "Beax RM",
-      logo: "/config/assets/beax-rm/logo.png",
-      icon: "/config/assets/beax-rm/icon.png"
+      logo: "/config/assets/beaxrm/icons/BEAX.png",
+      icon: "/config/assets/beaxrm/icons/BEAX-icon.png"
     },
 
     colors: {
@@ -16,8 +16,8 @@ const configs = {
       name: "Beax Resource Manager",
       version: "1.0.0",
       description: "Resource Management System",
-      port: 3000,
-      apiUrl: "http://localhost:8000/api"
+      port: 4200,
+      apiUrl: "http://localhost:3000/api"
     },
     development: {
       NODE_ENV: 'development',
@@ -30,8 +30,8 @@ const configs = {
   "true-process": {
     brand: {
       name: "True Process",
-      logo: "/config/assets/true-process/logo.png",
-      icon: "/config/assets/true-process/icon.png"
+      logo: "/config/assets/true-process/icons/logo.png",
+      icon: "/config/assets/true-process/icons/icon.png"
     },
 
     colors: {
@@ -44,15 +44,15 @@ const configs = {
       name: "True Process Manager",
       version: "1.0.0",
       description: "Process Management System",
-      port: 3001,
-      apiUrl: "http://localhost:8001/api"
+      port: 4201,
+      apiUrl: "http://localhost:3001/api"
     },
 
     development: {
       NODE_ENV: 'development',
       MONGODB_URI: 'mongodb+srv://rohanbhuri:nokiaset@bhuri-db.zg9undw.mongodb.net/?retryWrites=true&w=majority&appName=trueProcess-db',
       JWT_SECRET: 'rohanbhuri',
-      PORT: 3000
+      PORT: 3001
     }
   }
 };

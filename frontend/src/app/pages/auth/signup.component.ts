@@ -8,6 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AuthService, Organization } from '../../services/auth.service';
+import { BrandConfigService } from '../../services/brand-config.service';
 
 @Component({
   selector: 'app-signup',
@@ -27,7 +28,7 @@ import { AuthService, Organization } from '../../services/auth.service';
       <mat-card class="auth-card">
         <mat-card-header>
           <div class="logo-container">
-            <img src="/icons/BEAX.png" alt="Beax RM" class="logo" />
+            <img [src]="brandConfig.getLogo()" [alt]="brandConfig.getBrandName()" class="logo" />
           </div>
         </mat-card-header>
 
@@ -139,6 +140,7 @@ export class SignupComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
+  protected brandConfig = inject(BrandConfigService);
 
   loading = signal(false);
 

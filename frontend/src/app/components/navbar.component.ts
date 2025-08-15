@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { AuthService, User } from '../services/auth.service';
+import { BrandConfigService } from '../services/brand-config.service';
 
 @Component({
   selector: 'app-navbar',
@@ -12,7 +13,7 @@ import { AuthService, User } from '../services/auth.service';
   imports: [MatToolbarModule, MatButtonModule, MatIconModule, MatMenuModule],
   template: `
     <mat-toolbar color="primary">
-      <img src="/icons/BEAX-icon.png" alt="Beax" class="logo" (click)="goToDashboard()">
+      <img [src]="brandConfig.getIcon()" [alt]="brandConfig.getBrandName()" class="logo" (click)="goToDashboard()">
       <span class="spacer"></span>
       
       @if (currentUser()) {
@@ -81,6 +82,7 @@ import { AuthService, User } from '../services/auth.service';
 export class NavbarComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
+  protected brandConfig = inject(BrandConfigService);
   
   currentUser = signal<User | null>(null);
   

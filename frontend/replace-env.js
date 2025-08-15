@@ -1,20 +1,26 @@
 const fs = require('fs');
 const path = require('path');
+const { getConfig } = require('../config.js');
+
+const brand = process.env.BRAND || 'beax-rm';
+const brandConfig = getConfig(brand);
 
 const indexPath = path.join(__dirname, 'src/index.html');
 let indexContent = fs.readFileSync(indexPath, 'utf8');
 
-// Replace placeholders with environment variables
+// Replace placeholders with config data
 const replacements = {
-  '{{BRAND_NAME}}': process.env.BRAND_NAME || 'Beax RM',
-  '{{BRAND_LOGO}}': process.env.BRAND_LOGO || '/config/assets/beax-rm/logo.png',
-  '{{BRAND_ICON}}': process.env.BRAND_ICON || '/config/assets/beax-rm/icon.png',
-  '{{PRIMARY_COLOR}}': process.env.PRIMARY_COLOR || '#3B82F6',
-  '{{ACCENT_COLOR}}': process.env.ACCENT_COLOR || '#F59E0B',
-  '{{SECONDARY_COLOR}}': process.env.SECONDARY_COLOR || '#6B7280',
-  '{{APP_NAME}}': process.env.APP_NAME || 'Beax Resource Manager',
-  '{{APP_PORT}}': process.env.APP_PORT || '3000',
-  '{{API_URL}}': process.env.API_URL || 'http://localhost:8000/api'
+  '{{BRAND_NAME}}': brandConfig.brand.name,
+  '{{BRAND_LOGO}}': brandConfig.brand.logo,
+  '{{BRAND_ICON}}': brandConfig.brand.icon,
+  '{{PRIMARY_COLOR}}': brandConfig.colors.primary,
+  '{{ACCENT_COLOR}}': brandConfig.colors.accent,
+  '{{SECONDARY_COLOR}}': brandConfig.colors.secondary,
+  '{{APP_NAME}}': brandConfig.app.name,
+  '{{VERSION}}': brandConfig.app.version,
+  '{{DESCRIPTION}}': brandConfig.app.description,
+  '{{APP_PORT}}': brandConfig.app.port.toString(),
+  '{{API_URL}}': brandConfig.app.apiUrl
 };
 
 Object.keys(replacements).forEach(placeholder => {
