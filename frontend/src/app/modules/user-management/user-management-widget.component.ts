@@ -22,49 +22,55 @@ import { UserManagementService } from './user-management.service';
         </div>
       </div>
       <div class="widget-actions">
-        <button mat-raised-button color="primary" (click)="openUserManagement()">
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="openUserManagement()"
+        >
           <mat-icon>people</mat-icon>
           Manage Users
         </button>
       </div>
     </div>
   `,
-  styles: [`
-    .widget-content {
-      padding: 16px;
-    }
+  styles: [
+    `
+      .widget-content {
+        padding: 16px;
+      }
 
-    .widget-stats {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 16px;
-    }
+      .widget-stats {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 16px;
+      }
 
-    .stat-item {
-      text-align: center;
-    }
+      .stat-item {
+        text-align: center;
+      }
 
-    .stat-number {
-      font-size: 1.8rem;
-      font-weight: 700;
-      color: var(--theme-primary);
-      margin-bottom: 4px;
-    }
+      .stat-number {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--theme-primary);
+        margin-bottom: 4px;
+      }
 
-    .stat-label {
-      font-size: 0.9rem;
-      color: color-mix(in srgb, var(--theme-on-surface) 60%, transparent);
-    }
+      .stat-label {
+        font-size: 0.9rem;
+        color: color-mix(in srgb, var(--theme-on-surface) 60%, transparent);
+      }
 
-    .widget-actions {
-      display: flex;
-      justify-content: center;
-    }
+      .widget-actions {
+        display: flex;
+        justify-content: center;
+      }
 
-    button {
-      width: 100%;
-    }
-  `]
+      button {
+        width: 100%;
+      }
+    `,
+  ],
 })
 export class UserManagementWidgetComponent {
   private router = inject(Router);
@@ -81,17 +87,21 @@ export class UserManagementWidgetComponent {
     this.userService.getUsers().subscribe({
       next: (users) => {
         this.totalUsers.set(users.length);
-        this.activeUsers.set(users.filter(u => u.isActive).length);
+        this.activeUsers.set(users.filter((u) => u.isActive).length);
       },
       error: () => {
         // Fallback to mock data
         this.totalUsers.set(0);
         this.activeUsers.set(0);
-      }
+      },
     });
   }
 
   openUserManagement() {
-    this.router.navigate(['/modules/user-management']);
+    console.log('Navigating to user management...');
+    this.router.navigate(['/modules/user-management']).then(
+      (success) => console.log('Navigation success:', success),
+      (error) => console.error('Navigation error:', error)
+    );
   }
 }

@@ -10,10 +10,12 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatMenuModule } from '@angular/material/menu';
 import { NavbarComponent } from '../../components/navbar.component';
 import { BottomNavbarComponent } from '../../components/bottom-navbar.component';
 import { UserManagementService, UserInfo } from './user-management.service';
 import { FormsModule } from '@angular/forms';
+import { ConfirmDialogComponent } from './dialogs/confirm-dialog.component';
 
 @Component({
   selector: 'app-user-management',
@@ -30,6 +32,7 @@ import { FormsModule } from '@angular/forms';
     MatDialogModule,
     MatSnackBarModule,
     MatTooltipModule,
+    MatMenuModule,
     NavbarComponent,
     BottomNavbarComponent,
     FormsModule,
@@ -45,7 +48,9 @@ import { FormsModule } from '@angular/forms';
           <span class="current">User Management</span>
         </nav>
         <h1>User Management</h1>
-        <p class="subtitle">Manage users and their roles within your organization</p>
+        <p class="subtitle">
+          Manage users and their roles within your organization
+        </p>
       </div>
 
       <div class="content-card">
@@ -53,11 +58,20 @@ import { FormsModule } from '@angular/forms';
           <div class="search-bar">
             <mat-form-field appearance="outline">
               <mat-label>Search users</mat-label>
-              <input matInput [(ngModel)]="searchTerm" (input)="filterUsers()" placeholder="Search by name or email">
+              <input
+                matInput
+                [(ngModel)]="searchTerm"
+                (input)="filterUsers()"
+                placeholder="Search by name or email"
+              />
               <mat-icon matSuffix>search</mat-icon>
             </mat-form-field>
           </div>
-          <button mat-raised-button color="primary" (click)="openAddUserDialog()">
+          <button
+            mat-raised-button
+            color="primary"
+            (click)="openAddUserDialog()"
+          >
             <mat-icon>person_add</mat-icon>
             Add User
           </button>
@@ -73,7 +87,9 @@ import { FormsModule } from '@angular/forms';
                     {{ getUserInitials(user) }}
                   </div>
                   <div class="user-details">
-                    <div class="user-name">{{ user.firstName }} {{ user.lastName }}</div>
+                    <div class="user-name">
+                      {{ user.firstName }} {{ user.lastName }}
+                    </div>
                     <div class="user-email">{{ user.email }}</div>
                   </div>
                 </div>
@@ -85,7 +101,7 @@ import { FormsModule } from '@angular/forms';
               <td mat-cell *matCellDef="let user">
                 <div class="roles-container">
                   @for (role of user.roles; track role) {
-                  <mat-chip class="role-chip">{{ role }}</mat-chip>
+                  <mat-chip color="primary">{{ role }}</mat-chip>
                   }
                 </div>
               </td>
@@ -94,8 +110,10 @@ import { FormsModule } from '@angular/forms';
             <ng-container matColumnDef="status">
               <th mat-header-cell *matHeaderCellDef>Status</th>
               <td mat-cell *matCellDef="let user">
-                <mat-chip [class]="user.isActive ? 'status-active' : 'status-inactive'">
-                  <mat-icon>{{ user.isActive ? 'check_circle' : 'cancel' }}</mat-icon>
+                <mat-chip [color]="user.isActive ? 'primary' : 'warn'">
+                  <mat-icon>{{
+                    user.isActive ? 'check_circle' : 'cancel'
+                  }}</mat-icon>
                   {{ user.isActive ? 'Active' : 'Inactive' }}
                 </mat-chip>
               </td>
@@ -105,22 +123,41 @@ import { FormsModule } from '@angular/forms';
               <th mat-header-cell *matHeaderCellDef>Actions</th>
               <td mat-cell *matCellDef="let user">
                 <div class="action-buttons">
-                  <button mat-icon-button (click)="editUser(user)" matTooltip="Edit user">
-                    <mat-icon>edit</mat-icon>
+                  <button
+                    mat-icon-button
+                    [matMenuTriggerFor]="userMenu"
+                    [matMenuTriggerData]="{ user: user }"
+                    aria-label="More actions"
+                    (click)="$event.stopPropagation()"
+                  >
+                    <mat-icon>more_vert</mat-icon>
                   </button>
-                  <button mat-icon-button (click)="toggleUserStatus(user)" 
-                          [matTooltip]="user.isActive ? 'Deactivate user' : 'Activate user'">
-                    <mat-icon>{{ user.isActive ? 'block' : 'check_circle' }}</mat-icon>
-                  </button>
-                  <button mat-icon-button color="warn" (click)="deleteUser(user)" matTooltip="Delete user">
-                    <mat-icon>delete</mat-icon>
-                  </button>
+                  <mat-menu #userMenu="matMenu">
+                    <ng-template matMenuContent let-user="user">
+                      <button mat-menu-item (click)="editUser(user)">
+                        <mat-icon>edit</mat-icon>
+                        <span>Edit</span>
+                      </button>
+                      <button mat-menu-item (click)="toggleUserStatus(user)">
+                        <mat-icon>{{
+                          user.isActive ? 'block' : 'check_circle'
+                        }}</mat-icon>
+                        <span>{{
+                          user.isActive ? 'Deactivate' : 'Activate'
+                        }}</span>
+                      </button>
+                      <button mat-menu-item (click)="deleteUser(user)">
+                        <mat-icon color="warn">delete</mat-icon>
+                        <span>Delete</span>
+                      </button>
+                    </ng-template>
+                  </mat-menu>
                 </div>
               </td>
             </ng-container>
 
             <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
           </table>
         </div>
 
@@ -128,7 +165,9 @@ import { FormsModule } from '@angular/forms';
         <div class="empty-state">
           <mat-icon class="empty-icon">people</mat-icon>
           <h3>No users found</h3>
-          <p>Try adjusting your search terms or add new users to get started.</p>
+          <p>
+            Try adjusting your search terms or add new users to get started.
+          </p>
         </div>
         }
       </div>
@@ -172,13 +211,15 @@ import { FormsModule } from '@angular/forms';
       .content-card {
         background: var(--theme-surface);
         border-radius: 12px;
-        border: 1px solid color-mix(in srgb, var(--theme-on-surface) 12%, transparent);
+        border: 1px solid
+          color-mix(in srgb, var(--theme-on-surface) 12%, transparent);
         overflow: hidden;
       }
 
       .card-header {
         padding: 24px;
-        border-bottom: 1px solid color-mix(in srgb, var(--theme-on-surface) 8%, transparent);
+        border-bottom: 1px solid
+          color-mix(in srgb, var(--theme-on-surface) 8%, transparent);
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -209,7 +250,7 @@ import { FormsModule } from '@angular/forms';
         height: 40px;
         border-radius: 50%;
         background: var(--theme-primary);
-        color: white;
+        color: var(--theme-on-primary);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -238,21 +279,9 @@ import { FormsModule } from '@angular/forms';
         flex-wrap: wrap;
       }
 
-      .role-chip {
+      mat-chip {
         font-size: 0.75rem;
         height: 24px;
-        background: color-mix(in srgb, var(--theme-primary) 15%, transparent);
-        color: var(--theme-primary);
-      }
-
-      .status-active {
-        background: color-mix(in srgb, #4caf50 15%, transparent);
-        color: #2e7d32;
-      }
-
-      .status-inactive {
-        background: color-mix(in srgb, #f44336 15%, transparent);
-        color: #c62828;
       }
 
       .action-buttons {
@@ -288,7 +317,7 @@ import { FormsModule } from '@angular/forms';
           flex-direction: column;
           align-items: stretch;
         }
-        
+
         .search-bar {
           max-width: none;
         }
@@ -313,30 +342,31 @@ export class UserManagementComponent {
   loadUsers() {
     this.userService.getUsers().subscribe({
       next: (users) => {
-        const mappedUsers = users.map(user => ({
+        const mappedUsers = users.map((user) => ({
           id: user._id,
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
           roles: user.roleIds || [],
           isActive: user.isActive,
-          organizationId: user.organizationId
+          organizationId: user.organizationId,
         }));
         this.users.set(mappedUsers);
         this.filteredUsers.set(mappedUsers);
       },
       error: (error) => {
         this.snackBar.open('Failed to load users', 'Close', { duration: 3000 });
-      }
+      },
     });
   }
 
   filterUsers() {
     const term = this.searchTerm.toLowerCase();
-    const filtered = this.users().filter(user => 
-      user.firstName.toLowerCase().includes(term) ||
-      user.lastName.toLowerCase().includes(term) ||
-      user.email.toLowerCase().includes(term)
+    const filtered = this.users().filter(
+      (user) =>
+        user.firstName.toLowerCase().includes(term) ||
+        user.lastName.toLowerCase().includes(term) ||
+        user.email.toLowerCase().includes(term)
     );
     this.filteredUsers.set(filtered);
   }
@@ -346,19 +376,51 @@ export class UserManagementComponent {
   }
 
   openAddUserDialog() {
-    this.snackBar.open('Add user dialog would open here', 'Close', { duration: 3000 });
+    this.snackBar.open('Add user dialog would open here', 'Close', {
+      duration: 3000,
+    });
   }
 
   editUser(user: UserInfo) {
-    this.snackBar.open(`Edit ${user.firstName} ${user.lastName}`, 'Close', { duration: 3000 });
+    this.snackBar.open(`Edit ${user.firstName} ${user.lastName}`, 'Close', {
+      duration: 3000,
+    });
   }
 
   toggleUserStatus(user: UserInfo) {
     user.isActive = !user.isActive;
-    this.snackBar.open(`User ${user.isActive ? 'activated' : 'deactivated'}`, 'Close', { duration: 3000 });
+    this.snackBar.open(
+      `User ${user.isActive ? 'activated' : 'deactivated'}`,
+      'Close',
+      { duration: 3000 }
+    );
   }
 
   deleteUser(user: UserInfo) {
-    this.snackBar.open(`Delete ${user.firstName} ${user.lastName}`, 'Close', { duration: 3000 });
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      width: '420px',
+      data: {
+        title: 'Delete User',
+        message: `Are you sure you want to delete ${user.firstName} ${user.lastName}? This action cannot be undone.`,
+        confirmText: 'Delete',
+      },
+    });
+
+    ref.afterClosed().subscribe((confirmed) => {
+      if (confirmed) {
+        this.userService.deleteUser(user.id).subscribe({
+          next: () => {
+            this.snackBar.open('User deleted successfully', 'Close', {
+              duration: 3000,
+            });
+            this.loadUsers();
+          },
+          error: () =>
+            this.snackBar.open('Failed to delete user', 'Close', {
+              duration: 3000,
+            }),
+        });
+      }
+    });
   }
 }

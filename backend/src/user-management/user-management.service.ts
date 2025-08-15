@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MongoRepository } from 'typeorm';
 import { ObjectId } from 'mongodb';
@@ -6,6 +6,8 @@ import { User } from '../entities/user.entity';
 import { Role, RoleType } from '../entities/role.entity';
 import { Permission, ActionType } from '../entities/permission.entity';
 import { Module, ModulePermissionType } from '../entities/module.entity';
+import { Organization } from '../entities/organization.entity';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserManagementService {
@@ -18,10 +20,97 @@ export class UserManagementService {
     private permissionRepository: MongoRepository<Permission>,
     @InjectRepository(Module)
     private moduleRepository: MongoRepository<Module>,
+    @InjectRepository(Organization)
+    private organizationRepository: MongoRepository<Organization>,
   ) {}
 
   async getAllUsers() {
     return this.userRepository.find();
+  }
+
+  async createUser(userData: any) {
+    // Check if user already exists
+    const existingUser = await this.userRepository.findOne({ where: { email: userData.email } });
+    if (existingUser) {
+      throw new ConflictException('User with this email already exists');
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(userData.password, 10);
+
+    const user = this.userRepository.create({
+      email: userData.email,
+      password: hashedPassword,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      isActive: userData.isActive ?? true,
+      organizationId: userData.organizationId ? new ObjectId(userData.organizationId) : null,
+      roleIds: userData.roleIds?.map(id => new ObjectId(id)) || [],
+      permissionIds: userData.permissionIds?.map(id => new ObjectId(id)) || []
+    });
+
+    const savedUser = await this.userRepository.save(user);
+    const { password, ...userWithoutPassword } = savedUser;
+    return userWithoutPassword;
+  }
+
+  async updateUser(userId: string, userData: any) {
+    const user = await this.userRepository.findOne({ where: { _id: new ObjectId(userId) } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Check email uniqueness if email is being changed
+    if (userData.email && userData.email !== user.email) {
+      const existingUser = await this.userRepository.findOne({ where: { email: userData.email } });
+      if (existingUser) {
+        throw new ConflictException('User with this email already exists');
+      }
+    }
+
+    // Update user fields
+    if (userData.email) user.email = userData.email;
+    if (userData.firstName) user.firstName = userData.firstName;
+    if (userData.lastName) user.lastName = userData.lastName;
+    if (userData.isActive !== undefined) user.isActive = userData.isActive;
+    if (userData.organizationId) user.organizationId = new ObjectId(userData.organizationId);
+    if (userData.roleIds) user.roleIds = userData.roleIds.map(id => new ObjectId(id));
+    if (userData.permissionIds) user.permissionIds = userData.permissionIds.map(id => new ObjectId(id));
+
+    // Hash new password if provided
+    if (userData.password) {
+      user.password = await bcrypt.hash(userData.password, 10);
+    }
+
+    const savedUser = await this.userRepository.save(user);
+    const { password, ...userWithoutPassword } = savedUser;
+    return userWithoutPassword;
+  }
+
+  async deleteUser(userId: string) {
+    const user = await this.userRepository.findOne({ where: { _id: new ObjectId(userId) } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    await this.userRepository.delete({ _id: new ObjectId(userId) });
+    return { success: true, message: 'User deleted successfully' };
+  }
+
+  async toggleUserStatus(userId: string, isActive: boolean) {
+    const user = await this.userRepository.findOne({ where: { _id: new ObjectId(userId) } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.isActive = isActive;
+    const savedUser = await this.userRepository.save(user);
+    const { password, ...userWithoutPassword } = savedUser;
+    return userWithoutPassword;
+  }
+
+  async getAllOrganizations() {
+    return this.organizationRepository.find();
   }
 
   async getAllRoles() {

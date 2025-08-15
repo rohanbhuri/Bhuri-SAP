@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param } from '@nestjs/common';
 import { UserManagementService } from './user-management.service';
 
 @Controller('user-management')
@@ -8,6 +8,31 @@ export class UserManagementController {
   @Get('users')
   async getAllUsers() {
     return this.userManagementService.getAllUsers();
+  }
+
+  @Post('users')
+  async createUser(@Body() userData: any) {
+    return this.userManagementService.createUser(userData);
+  }
+
+  @Put('users/:userId')
+  async updateUser(@Param('userId') userId: string, @Body() userData: any) {
+    return this.userManagementService.updateUser(userId, userData);
+  }
+
+  @Delete('users/:userId')
+  async deleteUser(@Param('userId') userId: string) {
+    return this.userManagementService.deleteUser(userId);
+  }
+
+  @Put('users/:userId/status')
+  async toggleUserStatus(@Param('userId') userId: string, @Body() body: { isActive: boolean }) {
+    return this.userManagementService.toggleUserStatus(userId, body.isActive);
+  }
+
+  @Get('organizations')
+  async getAllOrganizations() {
+    return this.userManagementService.getAllOrganizations();
   }
 
   @Get('roles')

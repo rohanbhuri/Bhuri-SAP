@@ -92,6 +92,90 @@ body {
   color: var(--theme-on-surface) !important;
 }
 
+/* Tabs: improve contrast and indicator color */
+.mat-mdc-tab-header {
+  background: var(--theme-surface);
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--theme-on-surface) 12%, transparent);
+}
+
+.mat-mdc-tab .mdc-tab__text-label {
+  color: color-mix(
+    in srgb,
+    var(--theme-on-surface) 65%,
+    transparent
+  ) !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mat-mdc-tab.mdc-tab--active .mdc-tab__text-label {
+  color: var(--theme-on-surface) !important;
+  font-weight: 600;
+}
+
+.mat-mdc-tab .mat-icon {
+  color: currentColor !important;
+}
+
+/* Ink bar / indicator color */
+.mdc-tab-indicator__content--underline {
+  border-color: var(--theme-primary) !important;
+}
+
+/* Table: use surface background and subtle dividers */
+.mat-mdc-table {
+  background: var(--theme-surface) !important;
+  color: var(--theme-on-surface) !important;
+  border-radius: var(--border-radius);
+}
+
+.mat-mdc-header-row {
+  background: color-mix(
+    in srgb,
+    var(--theme-on-surface) 6%,
+    transparent
+  ) !important;
+}
+
+.mat-mdc-row:hover {
+  background: color-mix(
+    in srgb,
+    var(--theme-on-surface) 8%,
+    transparent
+  ) !important;
+}
+
+.mat-mdc-cell,
+.mat-mdc-header-cell {
+  color: var(--theme-on-surface) !important;
+  border-bottom-color: color-mix(
+    in srgb,
+    var(--theme-on-surface) 12%,
+    transparent
+  ) !important;
+}
+
+.mat-mdc-header-cell {
+  font-weight: 600;
+}
+
+/* Chips: friendlier filled appearance with theme tint */
+.mat-mdc-standard-chip.mat-primary {
+  background: color-mix(
+    in srgb,
+    var(--theme-primary) 16%,
+    transparent
+  ) !important;
+  color: var(--theme-on-surface) !important;
+}
+
+.mat-mdc-standard-chip.mat-warn {
+  background: color-mix(in srgb, #f44336 20%, transparent) !important;
+  color: #ffffff !important;
+}
+
 // Light theme
 body.light-theme {
   --theme-background: #fafafa;

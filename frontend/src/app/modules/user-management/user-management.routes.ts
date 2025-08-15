@@ -4,8 +4,25 @@ import { roleGuard } from '../../guards/role.guard';
 export const userManagementRoutes: Routes = [
   {
     path: '',
-    loadComponent: () => import('./user-management.component').then(m => m.UserManagementComponent),
-    canActivate: [roleGuard],
-    data: { requiredRoles: ['admin', 'super_admin'] }
+    loadComponent: () => import('./user-management-layout.component').then(m => m.UserManagementLayoutComponent),
+    children: [
+      {
+        path: '',
+        redirectTo: 'users',
+        pathMatch: 'full'
+      },
+      {
+        path: 'users',
+        loadComponent: () => import('./pages/users.component').then(m => m.UsersComponent)
+      },
+      {
+        path: 'roles',
+        loadComponent: () => import('./pages/roles.component').then(m => m.RolesComponent)
+      },
+      {
+        path: 'permissions',
+        loadComponent: () => import('./pages/permissions.component').then(m => m.PermissionsComponent)
+      }
+    ]
   }
 ];

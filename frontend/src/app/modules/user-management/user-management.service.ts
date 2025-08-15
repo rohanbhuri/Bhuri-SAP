@@ -23,8 +23,61 @@ export class UserManagementService {
   }
 
   getUsers(): Observable<any[]> {
+    const url = `${this.apiUrl}/user-management/users`;
+    console.log('Making API call to:', url);
+    return this.http.get<any[]>(url).pipe(
+      catchError((error) => {
+        console.error('API call failed:', error);
+        throw error;
+      })
+    );
+  }
+
+  createUser(userData: any): Observable<any> {
     return this.http
-      .get<any[]>(`${this.apiUrl}/user-management/users`)
+      .post(`${this.apiUrl}/user-management/users`, userData)
+      .pipe(
+        catchError((error) => {
+          throw error;
+        })
+      );
+  }
+
+  updateUser(userId: string, userData: any): Observable<any> {
+    return this.http
+      .put(`${this.apiUrl}/user-management/users/${userId}`, userData)
+      .pipe(
+        catchError((error) => {
+          throw error;
+        })
+      );
+  }
+
+  deleteUser(userId: string): Observable<any> {
+    return this.http
+      .delete(`${this.apiUrl}/user-management/users/${userId}`)
+      .pipe(
+        catchError((error) => {
+          throw error;
+        })
+      );
+  }
+
+  toggleUserStatus(userId: string, isActive: boolean): Observable<any> {
+    return this.http
+      .put(`${this.apiUrl}/user-management/users/${userId}/status`, {
+        isActive,
+      })
+      .pipe(
+        catchError((error) => {
+          throw error;
+        })
+      );
+  }
+
+  getOrganizations(): Observable<any[]> {
+    return this.http
+      .get<any[]>(`${this.apiUrl}/user-management/organizations`)
       .pipe(catchError(() => of([])));
   }
 
@@ -52,9 +105,14 @@ export class UserManagementService {
       .pipe(catchError(() => of({ success: false })));
   }
 
-  updateUserPermissions(userId: string, permissionIds: string[]): Observable<any> {
+  updateUserPermissions(
+    userId: string,
+    permissionIds: string[]
+  ): Observable<any> {
     return this.http
-      .put(`${this.apiUrl}/user-management/users/${userId}/permissions`, { permissionIds })
+      .put(`${this.apiUrl}/user-management/users/${userId}/permissions`, {
+        permissionIds,
+      })
       .pipe(catchError(() => of({ success: false })));
   }
 
@@ -64,9 +122,36 @@ export class UserManagementService {
       .pipe(catchError(() => of({ success: false })));
   }
 
+  updateRole(roleId: string, roleData: any): Observable<any> {
+    return this.http
+      .put(`${this.apiUrl}/user-management/roles/${roleId}`, roleData)
+      .pipe(catchError(() => of({ success: false })));
+  }
+
+  deleteRole(roleId: string): Observable<any> {
+    return this.http
+      .delete(`${this.apiUrl}/user-management/roles/${roleId}`)
+      .pipe(catchError(() => of({ success: false })));
+  }
+
   createPermission(permissionData: any): Observable<any> {
     return this.http
       .post(`${this.apiUrl}/user-management/permissions`, permissionData)
+      .pipe(catchError(() => of({ success: false })));
+  }
+
+  updatePermission(permissionId: string, permissionData: any): Observable<any> {
+    return this.http
+      .put(
+        `${this.apiUrl}/user-management/permissions/${permissionId}`,
+        permissionData
+      )
+      .pipe(catchError(() => of({ success: false })));
+  }
+
+  deletePermission(permissionId: string): Observable<any> {
+    return this.http
+      .delete(`${this.apiUrl}/user-management/permissions/${permissionId}`)
       .pipe(catchError(() => of({ success: false })));
   }
 

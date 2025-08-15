@@ -206,10 +206,10 @@ interface DashboardWidget {
         font-size: 0.9rem;
       }
       .trend.positive {
-        color: #18a957;
+        color: var(--theme-success, #4caf50);
       }
       .trend.negative {
-        color: #e53935;
+        color: var(--theme-error, #f44336);
       }
 
       @media (min-width: 900px) {
