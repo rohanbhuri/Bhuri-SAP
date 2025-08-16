@@ -19,6 +19,7 @@ import {
   moveItemInArray,
 } from '@angular/cdk/drag-drop';
 import { UserManagementWidgetComponent } from '../../modules/user-management/user-management-widget.component';
+import { CrmWidgetComponent } from '../../modules/crm/crm-widget.component';
 
 interface DashboardWidget {
   id: string;
@@ -43,6 +44,7 @@ interface DashboardWidget {
     CdkDrag,
     CdkDragHandle,
     UserManagementWidgetComponent,
+    CrmWidgetComponent,
   ],
   template: `
     <app-navbar></app-navbar>
@@ -108,6 +110,8 @@ interface DashboardWidget {
           <div class="widget-body">
             @if (w.id === 'user-management') {
               <app-user-management-widget></app-user-management-widget>
+            } @else if (w.id === 'crm') {
+              <app-crm-widget></app-crm-widget>
             } @else {
               <!-- Placeholder content for other widgets -->
               <p class="metric" aria-live="polite">$53k</p>
@@ -268,16 +272,22 @@ export class DashboardComponent {
             this.activeModules.set(list);
             const mapped: DashboardWidget[] = list.length
               ? list.map((m, idx) => ({
-                  id: m.name === 'user-management' ? 'user-management' : (m as any).id || `w${idx + 1}`,
+                  id: m.name === 'user-management' ? 'user-management' : m.name === 'crm' ? 'crm' : (m as any).id || `w${idx + 1}`,
                   title: m.displayName,
                   description: m.description,
-                  size: m.name === 'user-management' ? 'm' : (idx === 3 ? 'l' : 'm'),
+                  size: m.name === 'user-management' ? 'm' : m.name === 'crm' ? 'm' : (idx === 3 ? 'l' : 'm'),
                 }))
               : [
                   {
                     id: 'user-management',
                     title: 'User Management',
                     description: 'Manage users and permissions',
+                    size: 'm',
+                  },
+                  {
+                    id: 'crm',
+                    title: 'CRM',
+                    description: 'Customer Relationship Management',
                     size: 'm',
                   },
                   {

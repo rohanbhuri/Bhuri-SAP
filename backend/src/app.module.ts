@@ -8,6 +8,7 @@ import { RolesModule } from './roles/roles.module';
 import { ModulesModule } from './modules/modules.module';
 import { PreferencesModule } from './preferences/preferences.module';
 import { UserManagementModule } from './user-management/user-management.module';
+import { CrmModule } from './crm/crm.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { UserManagementModule } from './user-management/user-management.module';
     ModulesModule,
     PreferencesModule,
     UserManagementModule,
+    CrmModule,
   ],
 })
 export class AppModule {}

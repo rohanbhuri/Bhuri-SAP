@@ -33,8 +33,8 @@ export class ModulesController {
   }
 
   @Get('available')
-  getAvailableModules(@Request() req) {
-    return this.modulesService.getAllAvailable(req.user.organizationId);
+  async getAvailableModules(@Request() req) {
+    return this.modulesService.getAllAvailable(req.user.organizationId, req.user.userId);
   }
 
   @Post(':id/request')
@@ -43,19 +43,20 @@ export class ModulesController {
   }
 
   @Get('requests')
-  @RequireRoles(RoleType.SUPER_ADMIN)
   getPendingRequests(@Request() req) {
-    return this.modulesService.getPendingRequests(req.user.organizationId);
+    console.log('User data in requests:', req.user);
+    const isSuperAdmin = req.user.roles?.includes('super_admin');
+    const orgId = req.user.organizationId || req.user.userId; // Fallback to userId if orgId missing
+    return this.modulesService.getPendingRequests(orgId, isSuperAdmin);
   }
 
   @Patch('requests/:id/approve')
-  @RequireRoles(RoleType.SUPER_ADMIN)
   approveRequest(@Param('id') id: string, @Request() req) {
+    console.log('Approving request with user:', req.user);
     return this.modulesService.approveRequest(id, req.user.userId);
   }
 
   @Patch('requests/:id/reject')
-  @RequireRoles(RoleType.SUPER_ADMIN)
   rejectRequest(@Param('id') id: string, @Request() req) {
     return this.modulesService.rejectRequest(id, req.user.userId);
   }

@@ -48,7 +48,12 @@ export class ModulesService {
   getAvailable(): Observable<AppModuleInfo[]> {
     return this.http
       .get<AppModuleInfo[]>(`${this.apiUrl}/modules/available`)
-      .pipe(catchError(() => of([])));
+      .pipe(
+        catchError((error) => {
+          console.error('Error fetching available modules:', error);
+          return of([]);
+        })
+      );
   }
 
   requestActivation(moduleId: string): Observable<any> {
@@ -60,7 +65,12 @@ export class ModulesService {
   getPendingRequests(): Observable<ModuleRequest[]> {
     return this.http
       .get<ModuleRequest[]>(`${this.apiUrl}/modules/requests`)
-      .pipe(catchError(() => of([])));
+      .pipe(
+        catchError((error) => {
+          console.error('Error fetching pending requests:', error);
+          return of([]);
+        })
+      );
   }
 
   approveRequest(requestId: string): Observable<any> {
@@ -72,6 +82,12 @@ export class ModulesService {
   rejectRequest(requestId: string): Observable<any> {
     return this.http
       .patch(`${this.apiUrl}/modules/requests/${requestId}/reject`, {})
+      .pipe(catchError(() => of({ success: false })));
+  }
+
+  deactivateModule(moduleId: string): Observable<any> {
+    return this.http
+      .patch(`${this.apiUrl}/modules/${moduleId}/deactivate`, {})
       .pipe(catchError(() => of({ success: false })));
   }
 }

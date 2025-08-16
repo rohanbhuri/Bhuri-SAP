@@ -92,10 +92,20 @@ import { FormsModule } from '@angular/forms';
                 
                 <div class="module-actions">
                   @if (module.isActive) {
-                  <button mat-raised-button color="primary" (click)="openModule(module)">
-                    <mat-icon>open_in_new</mat-icon>
-                    Open
-                  </button>
+                  <div class="active-module-actions">
+                    <button mat-raised-button color="primary" (click)="openModule(module)">
+                      <mat-icon>open_in_new</mat-icon>
+                      Open
+                    </button>
+                    <button mat-stroked-button color="warn" (click)="deactivateModule(module)" [disabled]="loading()">
+                      @if (loading()) {
+                      <mat-spinner diameter="16"></mat-spinner>
+                      } @else {
+                      <mat-icon>remove</mat-icon>
+                      }
+                      Deactivate
+                    </button>
+                  </div>
                   } @else if (module.canActivate) {
                   <button mat-raised-button color="accent" (click)="activateModule(module)" [disabled]="loading()">
                     @if (loading()) {
@@ -130,7 +140,6 @@ import { FormsModule } from '@angular/forms';
           </div>
         </mat-tab>
 
-        @if (isSuperAdmin()) {
         <mat-tab>
           <ng-template mat-tab-label>
             <span [matBadge]="pendingRequests().length" matBadgeColor="warn" [matBadgeHidden]="pendingRequests().length === 0">
@@ -176,7 +185,6 @@ import { FormsModule } from '@angular/forms';
             }
           </div>
         </mat-tab>
-        }
       </mat-tab-group>
     </div>
 
@@ -313,6 +321,15 @@ import { FormsModule } from '@angular/forms';
         border-top: 1px solid color-mix(in srgb, var(--theme-on-surface) 8%, transparent);
       }
 
+      .active-module-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .active-module-actions button {
+        flex: 1;
+      }
+
       .requests-list {
         display: flex;
         flex-direction: column;
@@ -404,20 +421,20 @@ export class ModulesComponent {
 
   ngOnInit() {
     this.loadModules();
-    if (this.isSuperAdmin()) {
-      this.loadPendingRequests();
-    }
+    this.loadPendingRequests();
   }
 
   loadModules() {
     this.loading.set(true);
     this.modulesService.getAvailable().subscribe({
       next: (modules) => {
+        console.log('Loaded modules:', modules);
         this.modules.set(modules);
         this.filteredModules.set(modules);
         this.loading.set(false);
       },
-      error: () => {
+      error: (error) => {
+        console.error('Failed to load modules:', error);
         this.snackBar.open('Failed to load modules', 'Close', { duration: 3000 });
         this.loading.set(false);
       }
@@ -425,9 +442,16 @@ export class ModulesComponent {
   }
 
   loadPendingRequests() {
+    console.log('Loading pending requests...');
     this.modulesService.getPendingRequests().subscribe({
-      next: (requests) => this.pendingRequests.set(requests),
-      error: () => this.snackBar.open('Failed to load requests', 'Close', { duration: 3000 })
+      next: (requests) => {
+        console.log('Loaded pending requests:', requests);
+        this.pendingRequests.set(requests);
+      },
+      error: (error) => {
+        console.error('Failed to load requests:', error);
+        this.snackBar.open('Failed to load requests', 'Close', { duration: 3000 });
+      }
     });
   }
 
@@ -442,16 +466,39 @@ export class ModulesComponent {
 
   activateModule(module: AppModuleInfo) {
     this.loading.set(true);
+    console.log('Activating module:', module.id);
     this.modulesService.requestActivation(module.id).subscribe({
       next: (result) => {
+        console.log('Activation result:', result);
         if (result.success) {
           this.snackBar.open('Module activated successfully', 'Close', { duration: 3000 });
+          // Add delay to ensure backend has processed the change
+          setTimeout(() => {
+            this.loadModules();
+          }, 500);
+        }
+        this.loading.set(false);
+      },
+      error: (error) => {
+        console.error('Activation error:', error);
+        this.snackBar.open('Failed to activate module', 'Close', { duration: 3000 });
+        this.loading.set(false);
+      }
+    });
+  }
+
+  deactivateModule(module: AppModuleInfo) {
+    this.loading.set(true);
+    this.modulesService.deactivateModule(module.id).subscribe({
+      next: (result) => {
+        if (result.success) {
+          this.snackBar.open('Module deactivated successfully', 'Close', { duration: 3000 });
           this.loadModules();
         }
         this.loading.set(false);
       },
       error: () => {
-        this.snackBar.open('Failed to activate module', 'Close', { duration: 3000 });
+        this.snackBar.open('Failed to deactivate module', 'Close', { duration: 3000 });
         this.loading.set(false);
       }
     });
@@ -474,12 +521,12 @@ export class ModulesComponent {
   }
 
   openModule(module: AppModuleInfo) {
-    // Map module names to routes
     const moduleRoutes: { [key: string]: string } = {
+      'crm': '/modules/crm',
       'user-management': '/modules/user-management',
       'user_management': '/modules/user-management',
-      'dashboard': '/dashboard',
       'reports': '/reports',
+      'dashboard': '/dashboard',
       'settings': '/settings'
     };
     
@@ -492,8 +539,11 @@ export class ModulesComponent {
     this.modulesService.approveRequest(request._id).subscribe({
       next: () => {
         this.snackBar.open('Request approved', 'Close', { duration: 3000 });
-        this.loadPendingRequests();
-        this.loadModules();
+        // Add delay to ensure backend processing completes
+        setTimeout(() => {
+          this.loadPendingRequests();
+          this.loadModules();
+        }, 500);
         this.loading.set(false);
       },
       error: () => {

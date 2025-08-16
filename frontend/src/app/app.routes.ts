@@ -33,6 +33,11 @@ export const routes: Routes = [
     loadChildren: () => import('./modules/user-management/user-management.routes').then(m => m.userManagementRoutes),
     canActivate: [authGuard]
   },
+  { 
+    path: 'modules/crm', 
+    loadChildren: () => import('./modules/crm/crm.routes').then(m => m.CRM_ROUTES),
+    canActivate: [authGuard]
+  },
   { path: 'more', component: MoreComponent, canActivate: [authGuard] },
   { path: '**', redirectTo: '/login' }
 ];
