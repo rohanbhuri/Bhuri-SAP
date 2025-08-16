@@ -45,6 +45,15 @@ import { AuthService } from '../../../services/auth.service';
           <th mat-header-cell *matHeaderCellDef>Progress</th>
           <td mat-cell *matCellDef="let g">{{ g.progress ?? 0 }}%</td>
         </ng-container>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let g">
+            <button mat-button color="primary" (click)="bumpProgress(g, 10)">
+              +10%
+            </button>
+            <button mat-button (click)="bumpProgress(g, -10)">-10%</button>
+          </td>
+        </ng-container>
 
         <tr mat-header-row *matHeaderRowDef="cols"></tr>
         <tr mat-row *matRowDef="let row; columns: cols"></tr>
@@ -58,6 +67,7 @@ import { AuthService } from '../../../services/auth.service';
         gap: 12px;
         align-items: center;
         margin: 16px 0;
+        flex-wrap: wrap;
       }
       .full-width {
         width: 100%;
@@ -70,7 +80,7 @@ export class PerformancePageComponent implements OnInit {
   private auth = inject(AuthService);
 
   goals = signal<GoalDto[]>([]);
-  cols = ['title', 'progress'];
+  cols = ['title', 'progress', 'actions'];
 
   newGoalTitle = '';
 
@@ -99,5 +109,12 @@ export class PerformancePageComponent implements OnInit {
         this.newGoalTitle = '';
         this.load();
       });
+  }
+
+  bumpProgress(g: GoalDto, delta: number): void {
+    const id = g._id;
+    if (!id) return;
+    const next = Math.max(0, Math.min(100, (g.progress ?? 0) + delta));
+    this.hr.updateGoal(id, { progress: next }).subscribe(() => this.load());
   }
 }

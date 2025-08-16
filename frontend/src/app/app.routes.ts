@@ -88,6 +88,30 @@ export const routes: Routes = [
       ),
     canActivate: [authGuard],
   },
+  {
+    path: 'modules/projects-management',
+    loadChildren: () =>
+      import('./modules/projects-management/projects-management.routes').then(
+        (m) => m.PROJECTS_MANAGEMENT_ROUTES
+      ),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'modules/project-tracking',
+    loadChildren: () =>
+      import('./modules/project-tracking/project-tracking.routes').then(
+        (m) => m.PROJECT_TRACKING_ROUTES
+      ),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'modules/project-timesheet',
+    loadChildren: () =>
+      import('./modules/project-timesheet/project-timesheet.routes').then(
+        (m) => m.PROJECT_TIMESHEET_ROUTES
+      ),
+    canActivate: [authGuard],
+  },
   { path: 'more', component: MoreComponent, canActivate: [authGuard] },
   { path: '404', component: NotFoundComponent },
   { path: '**', component: NotFoundComponent },

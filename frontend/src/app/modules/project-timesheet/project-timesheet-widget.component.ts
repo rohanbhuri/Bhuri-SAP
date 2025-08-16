@@ -3,32 +3,32 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router';
-import { ProjectsManagementService, ProjectStats } from './projects-management.service';
+import { ProjectTimesheetService, TimesheetStats } from './project-timesheet.service';
 
 @Component({
-  selector: 'app-projects-management-widget',
+  selector: 'app-project-timesheet-widget',
   standalone: true,
   imports: [MatCardModule, MatButtonModule, MatIconModule],
   template: `
     <div class="widget-content">
       <div class="widget-stats">
         <div class="stat-item">
-          <div class="stat-number">{{ stats().total }}</div>
-          <div class="stat-label">Projects</div>
+          <div class="stat-number">{{ stats().thisWeekHours }}</div>
+          <div class="stat-label">This Week</div>
         </div>
         <div class="stat-item">
-          <div class="stat-number">{{ stats().active }}</div>
-          <div class="stat-label">Active</div>
+          <div class="stat-number">{{ stats().billableHours }}</div>
+          <div class="stat-label">Billable</div>
         </div>
         <div class="stat-item">
-          <div class="stat-number">{{ stats().completed }}</div>
-          <div class="stat-label">Completed</div>
+          <div class="stat-number">{{ stats().pendingApprovals }}</div>
+          <div class="stat-label">Pending</div>
         </div>
       </div>
       <div class="widget-actions">
         <button mat-raised-button color="primary" (click)="openModule()">
-          <mat-icon>folder</mat-icon>
-          Manage Projects
+          <mat-icon>schedule</mat-icon>
+          Manage Timesheet
         </button>
       </div>
     </div>
@@ -67,17 +67,16 @@ import { ProjectsManagementService, ProjectStats } from './projects-management.s
     `,
   ],
 })
-export class ProjectsManagementWidgetComponent implements OnInit {
+export class ProjectTimesheetWidgetComponent implements OnInit {
   private router = inject(Router);
-  private projectsService = inject(ProjectsManagementService);
-  stats = signal<ProjectStats>({
-    total: 0,
-    active: 0,
-    completed: 0,
-    onHold: 0,
-    totalBudget: 0,
-    totalSpent: 0,
-    overdue: 0,
+  private timesheetService = inject(ProjectTimesheetService);
+  stats = signal<TimesheetStats>({
+    totalHours: 0,
+    billableHours: 0,
+    totalProjects: 0,
+    pendingApprovals: 0,
+    thisWeekHours: 0,
+    totalRevenue: 0,
   });
 
   ngOnInit() {
@@ -85,12 +84,12 @@ export class ProjectsManagementWidgetComponent implements OnInit {
   }
 
   loadStats() {
-    this.projectsService.getStats().subscribe((data) => {
+    this.timesheetService.getStats().subscribe((data) => {
       this.stats.set(data);
     });
   }
 
   openModule() {
-    this.router.navigate(['/modules/projects-management']);
+    this.router.navigate(['/modules/project-timesheet']);
   }
 }

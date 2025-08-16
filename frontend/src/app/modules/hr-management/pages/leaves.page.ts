@@ -7,7 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { FormsModule } from '@angular/forms';
-import { DatePipe } from '@angular/common';
+import { DatePipe, NgIf } from '@angular/common';
 import { HrManagementService, LeaveRequestDto } from '../hr-management.service';
 import { AuthService } from '../../../services/auth.service';
 
@@ -24,6 +24,7 @@ import { AuthService } from '../../../services/auth.service';
     MatSelectModule,
     FormsModule,
     DatePipe,
+    NgIf,
   ],
   template: `
     <mat-card>
@@ -46,10 +47,28 @@ import { AuthService } from '../../../services/auth.service';
             <option value="earned">Earned</option>
           </select>
         </mat-form-field>
+        <mat-form-field appearance="outline" class="reason">
+          <mat-label>Reason</mat-label>
+          <input matInput [(ngModel)]="reason" />
+        </mat-form-field>
         <button mat-raised-button color="primary" (click)="create()">
           <mat-icon>send</mat-icon>
           Submit
         </button>
+      </div>
+
+      <div class="filters">
+        <mat-form-field appearance="outline">
+          <mat-label>Status</mat-label>
+          <select matNativeControl [(ngModel)]="statusFilter">
+            <option value="">All</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </mat-form-field>
+        <button mat-stroked-button (click)="load()">Apply</button>
       </div>
 
       <table mat-table [dataSource]="leaves()" class="full-width">
@@ -67,6 +86,27 @@ import { AuthService } from '../../../services/auth.service';
           <th mat-header-cell *matHeaderCellDef>Status</th>
           <td mat-cell *matCellDef="let l">{{ l.status }}</td>
         </ng-container>
+        <ng-container matColumnDef="actions" *ngIf="isManager">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let l">
+            <button
+              mat-button
+              color="primary"
+              (click)="approve(l)"
+              [disabled]="l.status === 'approved'"
+            >
+              Approve
+            </button>
+            <button
+              mat-button
+              color="warn"
+              (click)="reject(l)"
+              [disabled]="l.status === 'rejected'"
+            >
+              Reject
+            </button>
+          </td>
+        </ng-container>
 
         <tr mat-header-row *matHeaderRowDef="cols"></tr>
         <tr mat-row *matRowDef="let row; columns: cols"></tr>
@@ -76,6 +116,16 @@ import { AuthService } from '../../../services/auth.service';
   styles: [
     `
       .new-leave {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin: 16px 0;
+        flex-wrap: wrap;
+      }
+      .reason {
+        min-width: 240px;
+      }
+      .filters {
         display: flex;
         gap: 12px;
         align-items: center;
@@ -92,11 +142,23 @@ export class LeavesPageComponent implements OnInit {
   private auth = inject(AuthService);
 
   leaves = signal<LeaveRequestDto[]>([]);
-  cols = ['period', 'type', 'status'];
+  cols = this.auth.hasRole('hr_manager')
+    ? ['period', 'type', 'status', 'actions']
+    : ['period', 'type', 'status'];
 
   startDate = '';
   endDate = '';
   leaveType = 'casual';
+  reason = '';
+  statusFilter = '';
+
+  get isManager(): boolean {
+    return (
+      this.auth.hasRole('hr_manager') ||
+      this.auth.hasRole('hr_admin') ||
+      this.auth.hasRole('super_admin')
+    );
+  }
 
   private get employeeId(): string {
     return this.auth.getCurrentUser()?.id || '';
@@ -108,7 +170,10 @@ export class LeavesPageComponent implements OnInit {
 
   load(): void {
     this.hr
-      .listLeaves({ employeeId: this.employeeId })
+      .listLeaves({
+        employeeId: this.employeeId,
+        status: this.statusFilter || undefined,
+      })
       .subscribe((list) => this.leaves.set(list));
   }
 
@@ -120,7 +185,23 @@ export class LeavesPageComponent implements OnInit {
         startDate: this.startDate,
         endDate: this.endDate,
         leaveType: this.leaveType,
+        reason: this.reason || undefined,
       })
-      .subscribe(() => this.load());
+      .subscribe(() => {
+        this.startDate = '';
+        this.endDate = '';
+        this.reason = '';
+        this.load();
+      });
+  }
+
+  approve(l: LeaveRequestDto): void {
+    if (!l._id) return;
+    this.hr.setLeaveStatus(l._id, 'approved').subscribe(() => this.load());
+  }
+
+  reject(l: LeaveRequestDto): void {
+    if (!l._id) return;
+    this.hr.setLeaveStatus(l._id, 'rejected').subscribe(() => this.load());
   }
 }

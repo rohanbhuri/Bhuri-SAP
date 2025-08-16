@@ -7,6 +7,8 @@ import { MyOrganizationsWidgetComponent } from './my-organizations/my-organizati
 import { CrmWidgetComponent } from './crm/crm-widget.component';
 import { HrManagementWidgetComponent } from './hr-management/hr-management-widget.component';
 import { ProjectsManagementWidgetComponent } from './projects-management/projects-management-widget.component';
+import { ProjectTrackingWidgetComponent } from './project-tracking/project-tracking-widget.component';
+import { ProjectTimesheetWidgetComponent } from './project-timesheet/project-timesheet-widget.component';
 import { TasksManagementWidgetComponent } from './tasks-management/tasks-management-widget.component';
 import { InventoryManagementWidgetComponent } from './inventory-management/inventory-management-widget.component';
 import { PayrollManagementWidgetComponent } from './payroll-management/payroll-management-widget.component';
@@ -17,6 +19,9 @@ import { UserManagementComponent } from './user-management/user-management.compo
 import { MyOrganizationsComponent } from './my-organizations/my-organizations.component';
 import { CrmComponent } from './crm/crm.component';
 import { HrManagementComponent } from './hr-management/hr-management.component';
+import { ProjectsManagementComponent } from './projects-management/projects-management.component';
+import { ProjectTrackingComponent } from './project-tracking/project-tracking.component';
+import { ProjectTimesheetComponent } from './project-timesheet/project-timesheet.component';
 
 export interface ModuleConfig {
   id: string;
@@ -154,7 +159,9 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     icon: 'work',
     color: '#3F51B5',
     widgetComponent: ProjectsManagementWidgetComponent,
-    isActive: false,
+    mainComponent: ProjectsManagementComponent,
+    route: '/modules/projects-management',
+    isActive: true,
     category: 'project',
   },
   {
@@ -164,8 +171,10 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     description: 'Track project progress and milestones',
     icon: 'track_changes',
     color: '#009688',
-    widgetComponent: ProjectsManagementWidgetComponent,
-    isActive: false,
+    widgetComponent: ProjectTrackingWidgetComponent,
+    mainComponent: ProjectTrackingComponent,
+    route: '/modules/project-tracking',
+    isActive: true,
     category: 'project',
   },
   {
@@ -175,8 +184,10 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     description: 'Track time spent on projects',
     icon: 'schedule',
     color: '#FFC107',
-    widgetComponent: ProjectsManagementWidgetComponent,
-    isActive: false,
+    widgetComponent: ProjectTimesheetWidgetComponent,
+    mainComponent: ProjectTimesheetComponent,
+    route: '/modules/project-timesheet',
+    isActive: true,
     category: 'project',
   },
 

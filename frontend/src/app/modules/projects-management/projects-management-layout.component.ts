@@ -1,11 +1,10 @@
-import { Component, inject } from '@angular/core';
+import { Component } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { NavbarComponent } from '../../components/navbar.component';
 import { BottomNavbarComponent } from '../../components/bottom-navbar.component';
-import { AuthService } from '../../services/auth.service';
 
 @Component({
-  selector: 'app-hr-management-layout',
+  selector: 'app-projects-management-layout',
   standalone: true,
   imports: [
     RouterOutlet,
@@ -19,13 +18,8 @@ import { AuthService } from '../../services/auth.service';
     <div class="module-container">
       <nav class="subnav">
         <a routerLink="overview" routerLinkActive="active">Overview</a>
-        <a routerLink="attendance" routerLinkActive="active">Attendance</a>
-        <a routerLink="leaves" routerLinkActive="active">Leaves</a>
-        <a routerLink="performance" routerLinkActive="active">Performance</a>
-        <a routerLink="payroll" routerLinkActive="active">Payroll</a>
-        <a routerLink="compliance" routerLinkActive="active">Compliance</a>
-        <a routerLink="documents" routerLinkActive="active">Documents</a>
-        <a routerLink="assets" routerLinkActive="active">Assets</a>
+        <a routerLink="projects" routerLinkActive="active">Projects</a>
+        <a routerLink="deliverables" routerLinkActive="active">Deliverables</a>
         <a routerLink="analytics" routerLinkActive="active">Analytics</a>
       </nav>
       <router-outlet></router-outlet>
@@ -61,12 +55,4 @@ import { AuthService } from '../../services/auth.service';
     `,
   ],
 })
-export class HrManagementLayoutComponent {
-  private auth = inject(AuthService);
-  hasRole(role: string) {
-    return (
-      this.auth.hasRole(role) ||
-      (role === 'hr_admin' && this.auth.hasRole('super_admin'))
-    );
-  }
-}
+export class ProjectsManagementLayoutComponent {}

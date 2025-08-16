@@ -4,12 +4,16 @@ import { MatGridListModule } from '@angular/material/grid-list';
 import { HrManagementService, HrStats } from '../hr-management.service';
 import { DecimalPipe } from '@angular/common';
 import { AuthService } from '../../../services/auth.service';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-hr-analytics-page',
   standalone: true,
-  imports: [MatCardModule, MatGridListModule, DecimalPipe],
+  imports: [MatCardModule, MatGridListModule, DecimalPipe, MatButtonModule],
   template: `
+    <div class="toolbar">
+      <button mat-stroked-button (click)="load()">Refresh</button>
+    </div>
     <div class="grid">
       <mat-card>
         <h3>Total Employees</h3>
@@ -31,6 +35,9 @@ import { AuthService } from '../../../services/auth.service';
   `,
   styles: [
     `
+      .toolbar {
+        margin-bottom: 12px;
+      }
       .grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -52,6 +59,10 @@ export class AnalyticsPageComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.load();
+  }
+
+  load(): void {
     this.hr.getStats().subscribe((s) => this.stats.set(s));
   }
 }

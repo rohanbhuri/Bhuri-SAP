@@ -37,6 +37,7 @@ import { AuthService } from '../../../services/auth.service';
           <mat-icon>payments</mat-icon>
           Run Payroll
         </button>
+        <button mat-stroked-button (click)="load()">Refresh</button>
       </div>
 
       <table mat-table [dataSource]="runs()" class="full-width">
@@ -65,6 +66,7 @@ import { AuthService } from '../../../services/auth.service';
         gap: 12px;
         align-items: center;
         margin: 16px 0;
+        flex-wrap: wrap;
       }
       .full-width {
         width: 100%;

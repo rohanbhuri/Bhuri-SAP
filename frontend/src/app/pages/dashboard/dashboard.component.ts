@@ -30,6 +30,8 @@ import { TasksManagementWidgetComponent } from '../../modules/tasks-management/t
 import { InventoryManagementWidgetComponent } from '../../modules/inventory-management/inventory-management-widget.component';
 import { PayrollManagementWidgetComponent } from '../../modules/payroll-management/payroll-management-widget.component';
 import { SalesManagementWidgetComponent } from '../../modules/sales-management/sales-management-widget.component';
+import { ProjectTrackingWidgetComponent } from '../../modules/project-tracking/project-tracking-widget.component';
+import { ProjectTimesheetWidgetComponent } from '../../modules/project-timesheet/project-timesheet-widget.component';
 import { PendingWorkWidgetComponent } from '../../components/pending-work-widget.component';
 import { OrganizationManagementService } from '../../modules/organization-management/organization-management.service';
 import { SeoService } from '../../services/seo.service';
@@ -68,6 +70,8 @@ interface DashboardWidget {
     InventoryManagementWidgetComponent,
     PayrollManagementWidgetComponent,
     SalesManagementWidgetComponent,
+    ProjectTrackingWidgetComponent,
+    ProjectTimesheetWidgetComponent,
     PendingWorkWidgetComponent,
   ],
   template: `
@@ -170,6 +174,10 @@ interface DashboardWidget {
             <app-payroll-management-widget></app-payroll-management-widget>
             } @case ('sales-management') {
             <app-sales-management-widget></app-sales-management-widget>
+            } @case ('project-tracking') {
+            <app-project-tracking-widget></app-project-tracking-widget>
+            } @case ('project-timesheet') {
+            <app-project-timesheet-widget></app-project-timesheet-widget>
             } @case ('pending-work') {
             <app-pending-work-widget></app-pending-work-widget>
             } @default {

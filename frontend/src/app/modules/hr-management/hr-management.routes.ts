@@ -35,7 +35,7 @@ export const HR_MANAGEMENT_ROUTES: Routes = [
         loadComponent: () =>
           import('./pages/payroll.page').then((m) => m.PayrollPageComponent),
         canActivate: [roleGuard],
-        data: { requiredRoles: ['hr_admin'] },
+        data: { requiredRoles: ['hr_admin', 'super_admin'] },
         title: 'Payroll',
       },
       {
@@ -53,7 +53,7 @@ export const HR_MANAGEMENT_ROUTES: Routes = [
             (m) => m.CompliancePageComponent
           ),
         canActivate: [roleGuard],
-        data: { requiredRoles: ['hr_admin'] },
+        data: { requiredRoles: ['hr_admin', 'super_admin'] },
         title: 'Compliance',
       },
       {
@@ -63,7 +63,7 @@ export const HR_MANAGEMENT_ROUTES: Routes = [
             (m) => m.DocumentsPageComponent
           ),
         canActivate: [roleGuard],
-        data: { requiredRoles: ['hr_admin'] },
+        data: { requiredRoles: ['hr_admin', 'super_admin'] },
         title: 'Documents',
       },
       {
@@ -71,7 +71,7 @@ export const HR_MANAGEMENT_ROUTES: Routes = [
         loadComponent: () =>
           import('./pages/assets.page').then((m) => m.AssetsPageComponent),
         canActivate: [roleGuard],
-        data: { requiredRoles: ['hr_admin'] },
+        data: { requiredRoles: ['hr_admin', 'super_admin'] },
         title: 'Assets',
       },
       {
@@ -81,7 +81,7 @@ export const HR_MANAGEMENT_ROUTES: Routes = [
             (m) => m.AnalyticsPageComponent
           ),
         canActivate: [roleGuard],
-        data: { requiredRoles: ['hr_admin'] },
+        data: { requiredRoles: ['hr_admin', 'super_admin'] },
         title: 'HR Analytics',
       },
     ],

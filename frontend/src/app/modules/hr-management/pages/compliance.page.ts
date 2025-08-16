@@ -42,6 +42,20 @@ import { AuthService } from '../../../services/auth.service';
         </button>
       </div>
 
+      <div class="schedule">
+        <mat-form-field appearance="outline">
+          <mat-label>Item ID</mat-label>
+          <input matInput [(ngModel)]="scheduleItemId" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Due Date (YYYY-MM-DD)</mat-label>
+          <input matInput [(ngModel)]="scheduleDueDate" />
+        </mat-form-field>
+        <button mat-stroked-button (click)="scheduleEvent()">
+          Schedule Due
+        </button>
+      </div>
+
       <h3>Items</h3>
       <table mat-table [dataSource]="items()" class="full-width">
         <ng-container matColumnDef="name">
@@ -58,6 +72,14 @@ import { AuthService } from '../../../services/auth.service';
           <th mat-header-cell *matHeaderCellDef>Upcoming Due</th>
           <td mat-cell *matCellDef="let e">{{ e.dueDate | date }}</td>
         </ng-container>
+        <ng-container matColumnDef="action">
+          <th mat-header-cell *matHeaderCellDef>Action</th>
+          <td mat-cell *matCellDef="let e">
+            <button mat-button color="primary" (click)="complete(e)">
+              Mark Complete
+            </button>
+          </td>
+        </ng-container>
         <tr mat-header-row *matHeaderRowDef="eventCols"></tr>
         <tr mat-row *matRowDef="let row; columns: eventCols"></tr>
       </table>
@@ -65,11 +87,13 @@ import { AuthService } from '../../../services/auth.service';
   `,
   styles: [
     `
-      .new-item {
+      .new-item,
+      .schedule {
         display: flex;
         gap: 12px;
         align-items: center;
         margin: 16px 0;
+        flex-wrap: wrap;
       }
       .full-width {
         width: 100%;
@@ -88,9 +112,11 @@ export class CompliancePageComponent implements OnInit {
   }>({ upcoming: [], overdue: [] });
 
   itemCols = ['name'];
-  eventCols = ['dueDate'];
+  eventCols = ['dueDate', 'action'];
 
   newItemName = '';
+  scheduleItemId = '';
+  scheduleDueDate = '';
 
   private get organizationId(): string {
     return this.auth.getCurrentUser()?.organizationId || '';
@@ -116,5 +142,24 @@ export class CompliancePageComponent implements OnInit {
       this.newItemName = '';
       this.load();
     });
+  }
+
+  scheduleEvent(): void {
+    if (!this.scheduleItemId || !this.scheduleDueDate) return;
+    this.hr
+      .scheduleComplianceEvent({
+        itemId: this.scheduleItemId,
+        dueDate: this.scheduleDueDate,
+      })
+      .subscribe(() => {
+        this.scheduleItemId = '';
+        this.scheduleDueDate = '';
+        this.load();
+      });
+  }
+
+  complete(e: ComplianceEventDto): void {
+    if (!e._id) return;
+    this.hr.markComplianceCompleted(e._id).subscribe(() => this.load());
   }
 }

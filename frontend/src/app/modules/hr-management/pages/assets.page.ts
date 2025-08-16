@@ -3,16 +3,45 @@ import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { FormsModule } from '@angular/forms';
 import { HrManagementService, AssetDto } from '../hr-management.service';
 import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-hr-assets-page',
   standalone: true,
-  imports: [MatCardModule, MatTableModule, MatButtonModule, MatIconModule],
+  imports: [
+    MatCardModule,
+    MatTableModule,
+    MatButtonModule,
+    MatIconModule,
+    MatFormFieldModule,
+    MatInputModule,
+    FormsModule,
+  ],
   template: `
     <mat-card>
       <h2>Assets</h2>
+
+      <div class="new-asset">
+        <mat-form-field appearance="outline">
+          <mat-label>Name</mat-label>
+          <input matInput [(ngModel)]="name" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Serial</mat-label>
+          <input matInput [(ngModel)]="serial" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Category</mat-label>
+          <input matInput [(ngModel)]="category" />
+        </mat-form-field>
+        <button mat-raised-button color="primary" (click)="create()">
+          Add
+        </button>
+      </div>
 
       <table mat-table [dataSource]="assets()" class="full-width">
         <ng-container matColumnDef="name">
@@ -38,6 +67,13 @@ import { AuthService } from '../../../services/auth.service';
       .full-width {
         width: 100%;
       }
+      .new-asset {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin: 16px 0;
+        flex-wrap: wrap;
+      }
     `,
   ],
 })
@@ -47,6 +83,10 @@ export class AssetsPageComponent implements OnInit {
 
   assets = signal<AssetDto[]>([]);
   cols = ['name', 'serial', 'category'];
+
+  name = '';
+  serial = '';
+  category = '';
 
   private get organizationId(): string {
     return this.auth.getCurrentUser()?.organizationId || '';
@@ -61,5 +101,21 @@ export class AssetsPageComponent implements OnInit {
     this.hr
       .listAssets(this.organizationId)
       .subscribe((list) => this.assets.set(list));
+  }
+
+  create(): void {
+    if (!this.name) return;
+    this.hr
+      .createAsset({
+        name: this.name,
+        serialNumber: this.serial || undefined,
+        category: this.category || undefined,
+      })
+      .subscribe(() => {
+        this.name = '';
+        this.serial = '';
+        this.category = '';
+        this.load();
+      });
   }
 }
