@@ -34,6 +34,12 @@ export class OrganizationsController {
     return this.organizationsService.create(orgData);
   }
 
+  @Post('create')
+  @UseGuards(JwtAuthGuard)
+  createMyOrganization(@Body() orgData: any, @Request() req) {
+    return this.organizationsService.createOrganization(orgData, req.user.userId);
+  }
+
   @Patch(':id')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequireRoles(RoleType.SUPER_ADMIN)

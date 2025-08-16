@@ -1,11 +1,13 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatExpansionModule } from '@angular/material/expansion';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
@@ -24,6 +26,8 @@ import { BottomNavbarComponent } from '../../components/bottom-navbar.component'
     MatInputModule,
     MatFormFieldModule,
     MatChipsModule,
+    MatCheckboxModule,
+    MatExpansionModule,
 
     NavbarComponent,
     BottomNavbarComponent,
@@ -66,7 +70,11 @@ import { BottomNavbarComponent } from '../../components/bottom-navbar.component'
                 </mat-card-content>
 
                 <mat-card-actions align="end">
-                  <button mat-button color="primary">
+                  <button mat-button color="primary" (click)="switchToOrganization(org)">
+                    <mat-icon>swap_horiz</mat-icon>
+                    Switch To
+                  </button>
+                  <button mat-button>
                     <mat-icon>dashboard</mat-icon>
                     View Dashboard
                   </button>
@@ -78,7 +86,67 @@ import { BottomNavbarComponent } from '../../components/bottom-navbar.component'
       }
 
       <div class="section">
-        <h2>Discover Organizations</h2>
+        <div class="section-header">
+          <h2>Discover Organizations</h2>
+          <button mat-raised-button color="primary" (click)="toggleCreateForm()">
+            <mat-icon>add</mat-icon>
+            Create Organization
+          </button>
+        </div>
+
+        @if (showCreateForm()) {
+          <mat-expansion-panel [expanded]="true" class="create-form-panel">
+            <mat-expansion-panel-header>
+              <mat-panel-title>Create New Organization</mat-panel-title>
+            </mat-expansion-panel-header>
+            
+            <form [formGroup]="createOrgForm" (ngSubmit)="createOrganization()" class="create-form">
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Organization Name</mat-label>
+                  <input matInput formControlName="name" placeholder="Enter organization name">
+                  @if (createOrgForm.get('name')?.hasError('required') && createOrgForm.get('name')?.touched) {
+                    <mat-error>Organization name is required</mat-error>
+                  }
+                </mat-form-field>
+                
+                <mat-form-field appearance="outline">
+                  <mat-label>Organization Code</mat-label>
+                  <input matInput formControlName="code" placeholder="Enter unique code">
+                  @if (createOrgForm.get('code')?.hasError('required') && createOrgForm.get('code')?.touched) {
+                    <mat-error>Organization code is required</mat-error>
+                  }
+                </mat-form-field>
+              </div>
+              
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Description</mat-label>
+                <textarea matInput formControlName="description" rows="3" placeholder="Describe your organization"></textarea>
+              </mat-form-field>
+              
+              <mat-checkbox formControlName="isPublic">
+                Make this organization public (others can request to join)
+              </mat-checkbox>
+              
+              <div class="form-actions">
+                <button type="button" mat-button (click)="cancelCreate()">Cancel</button>
+                <button type="submit" mat-raised-button color="primary" [disabled]="createOrgForm.invalid || isCreating()">
+                  @if (isCreating()) {
+                    <ng-container>
+                      <mat-icon>hourglass_empty</mat-icon>
+                      Creating...
+                    </ng-container>
+                  } @else {
+                    <ng-container>
+                      <mat-icon>add</mat-icon>
+                      Create Organization
+                    </ng-container>
+                  }
+                </button>
+              </div>
+            </form>
+          </mat-expansion-panel>
+        }
         <div class="search-section">
           <mat-form-field appearance="outline" class="search-field">
             <mat-label>Search organizations</mat-label>
@@ -177,6 +245,44 @@ import { BottomNavbarComponent } from '../../components/bottom-navbar.component'
         color: var(--theme-on-surface);
       }
 
+      .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+      }
+
+      .section-header h2 {
+        margin: 0;
+      }
+
+      .create-form-panel {
+        margin-bottom: 32px;
+      }
+
+      .create-form {
+        padding: 16px 0;
+      }
+
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+
+      .full-width {
+        width: 100%;
+        margin-bottom: 16px;
+      }
+
+      .form-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        margin-top: 24px;
+      }
+
       .search-section {
         margin-bottom: 32px;
       }
@@ -272,7 +378,17 @@ export class MyOrganizationsComponent implements OnInit {
   myOrganizations = signal<PublicOrganization[]>([]);
   publicOrganizations = signal<PublicOrganization[]>([]);
   filteredPublicOrgs = signal<PublicOrganization[]>([]);
+  private myOrgIds = signal<string[]>([]);
   searchControl = new FormControl('');
+  showCreateForm = signal(false);
+  isCreating = signal(false);
+  
+  createOrgForm = new FormGroup({
+    name: new FormControl('', [Validators.required]),
+    code: new FormControl('', [Validators.required]),
+    description: new FormControl(''),
+    isPublic: new FormControl(true)
+  });
 
   ngOnInit() {
     this.loadMyOrganizations();
@@ -282,7 +398,11 @@ export class MyOrganizationsComponent implements OnInit {
 
   loadMyOrganizations() {
     this.myOrgService.getMyOrganizations().subscribe({
-      next: (orgs) => this.myOrganizations.set(orgs),
+      next: (orgs) => {
+        this.myOrganizations.set(orgs);
+        this.myOrgIds.set(orgs.map(org => org.id || org._id).filter(id => id !== undefined) as string[]);
+        this.filterOrganizations(this.searchControl.value || '');
+      },
       error: (error) => console.error('Failed to load my organizations:', error)
     });
   }
@@ -291,7 +411,7 @@ export class MyOrganizationsComponent implements OnInit {
     this.myOrgService.getPublicOrganizations().subscribe({
       next: (orgs) => {
         this.publicOrganizations.set(orgs);
-        this.filteredPublicOrgs.set(orgs);
+        this.filterOrganizations(this.searchControl.value || '');
       },
       error: (error) => {
         console.error('Failed to load public organizations:', error);
@@ -310,28 +430,90 @@ export class MyOrganizationsComponent implements OnInit {
   }
 
   filterOrganizations(query: string) {
-    const filtered = this.publicOrganizations().filter(org =>
-      org.name.toLowerCase().includes(query.toLowerCase()) ||
-      org.code.toLowerCase().includes(query.toLowerCase()) ||
-      org.description?.toLowerCase().includes(query.toLowerCase())
-    );
+    const myOrgIds = this.myOrgIds();
+    const lowerQuery = query.toLowerCase();
+    const filtered = this.publicOrganizations().filter(org => {
+      const orgId = org.id || org._id;
+      if (orgId && myOrgIds.includes(orgId)) return false;
+      
+      return org.name.toLowerCase().includes(lowerQuery) ||
+        org.code.toLowerCase().includes(lowerQuery) ||
+        org.description?.toLowerCase().includes(lowerQuery);
+    });
     this.filteredPublicOrgs.set(filtered);
   }
 
   requestToJoin(org: PublicOrganization) {
     const orgId = org.id || org._id;
-    if (!orgId) return;
+    console.log('Organization:', org);
+    console.log('Organization ID:', orgId);
+    
+    if (!orgId) {
+      this.snackBar.open('Invalid organization ID', 'Close', { duration: 3000 });
+      return;
+    }
 
-    this.myOrgService.requestToJoin(orgId).subscribe({
+    this.myOrgService.requestToJoin(orgId.toString()).subscribe({
       next: (result) => {
         if (result.success !== false) {
           this.snackBar.open(`Request sent to join ${org.name}`, 'Close', { duration: 3000 });
         } else {
-          this.snackBar.open('Failed to send request', 'Close', { duration: 3000 });
+          this.snackBar.open(result.message || 'Failed to send request', 'Close', { duration: 3000 });
         }
       },
+      error: (error) => {
+        const message = error.error?.message || 'Failed to send request';
+        this.snackBar.open(message, 'Close', { duration: 3000 });
+      }
+    });
+  }
+
+  toggleCreateForm() {
+    this.showCreateForm.set(!this.showCreateForm());
+    if (!this.showCreateForm()) {
+      this.createOrgForm.reset({ isPublic: true });
+    }
+  }
+
+  cancelCreate() {
+    this.showCreateForm.set(false);
+    this.createOrgForm.reset({ isPublic: true });
+  }
+
+  createOrganization() {
+    if (this.createOrgForm.invalid) return;
+    
+    this.isCreating.set(true);
+    const formData = this.createOrgForm.value;
+    
+    this.myOrgService.createOrganization(formData).subscribe({
+      next: (org) => {
+        this.snackBar.open(`Organization "${org.name}" created successfully!`, 'Close', { duration: 3000 });
+        this.showCreateForm.set(false);
+        this.createOrgForm.reset({ isPublic: true });
+        this.loadMyOrganizations();
+        this.loadPublicOrganizations();
+        this.isCreating.set(false);
+      },
+      error: (error) => {
+        const message = error.error?.message || 'Failed to create organization';
+        this.snackBar.open(message, 'Close', { duration: 3000 });
+        this.isCreating.set(false);
+      }
+    });
+  }
+
+  switchToOrganization(org: PublicOrganization) {
+    const orgId = org.id || org._id;
+    if (!orgId) return;
+
+    this.myOrgService.switchOrganization(orgId).subscribe({
+      next: () => {
+        this.snackBar.open(`Switched to ${org.name}`, 'Close', { duration: 3000 });
+        window.location.reload();
+      },
       error: () => {
-        this.snackBar.open('Failed to send request', 'Close', { duration: 3000 });
+        this.snackBar.open('Failed to switch organization', 'Close', { duration: 3000 });
       }
     });
   }

@@ -391,4 +391,40 @@ export class ModulesService {
       await client.close();
     }
   }
+
+  async getPersonalModules(userId: string) {
+    const uri = process.env.MONGODB_URI || 'mongodb+srv://rohanbhuri:nokiaset@bhuri-db.zg9undw.mongodb.net/?retryWrites=true&w=majority&appName=bhuri-db';
+    const client = new MongoClient(uri);
+    
+    try {
+      await client.connect();
+      const db = client.db('beaxrm');
+      
+      // Get user's personal active modules (without organization context)
+      const user = await db.collection('users').findOne({ _id: new ObjectId(userId) });
+      const activeIds = user?.activeModuleIds || [];
+      
+      if (activeIds.length === 0) {
+        return [];
+      }
+      
+      const modules = await db.collection('modules').find({
+        _id: { $in: activeIds }
+      }).toArray();
+      
+      return modules.map(module => ({
+        id: module._id.toString(),
+        name: module.name,
+        displayName: module.displayName,
+        description: module.description,
+        isActive: true,
+        permissionType: module.permissionType,
+        category: module.category,
+        icon: module.icon,
+        color: module.color
+      }));
+    } finally {
+      await client.close();
+    }
+  }
 }

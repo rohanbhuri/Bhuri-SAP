@@ -184,12 +184,29 @@ export class OrganizationManagementService {
   }
 
   async requestToJoin(userId: string, organizationId: string) {
+    if (!userId || !organizationId) {
+      throw new BadRequestException('User ID and Organization ID are required');
+    }
+
+    // Check if organization exists
+    const organization = await this.organizationRepository.findOne({
+      where: { _id: new ObjectId(organizationId) }
+    });
+    
+    if (!organization) {
+      throw new BadRequestException('Organization not found');
+    }
+
     // Check if user already in organization
     const user = await this.userRepository.findOne({
       where: { _id: new ObjectId(userId) }
     });
     
-    if (user?.organizationIds.some(id => id.toString() === organizationId)) {
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+    
+    if (user.organizationIds?.some(id => id.toString() === organizationId)) {
       throw new BadRequestException('User already in organization');
     }
 

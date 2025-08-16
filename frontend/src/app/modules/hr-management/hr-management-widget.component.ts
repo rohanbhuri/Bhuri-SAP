@@ -1,8 +1,9 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router';
+import { HrManagementService, HrStats } from './hr-management.service';
 
 @Component({
   selector: 'app-hr-management-widget',
@@ -32,19 +33,60 @@ import { Router } from '@angular/router';
       </div>
     </div>
   `,
-  styles: [`
-    .widget-content { padding: 16px; }
-    .widget-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px; }
-    .stat-item { text-align: center; }
-    .stat-number { font-size: 1.4rem; font-weight: 700; color: var(--theme-primary); margin-bottom: 4px; }
-    .stat-label { font-size: 0.8rem; color: rgba(0, 0, 0, 0.6); }
-    .widget-actions { display: flex; justify-content: center; }
-    button { width: 100%; }
-  `],
+  styles: [
+    `
+      .widget-content {
+        padding: 16px;
+      }
+      .widget-stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+      .stat-item {
+        text-align: center;
+      }
+      .stat-number {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--theme-primary);
+        margin-bottom: 4px;
+      }
+      .stat-label {
+        font-size: 0.8rem;
+        color: rgba(0, 0, 0, 0.6);
+      }
+      .widget-actions {
+        display: flex;
+        justify-content: center;
+      }
+      button {
+        width: 100%;
+      }
+    `,
+  ],
 })
-export class HrManagementWidgetComponent {
+export class HrManagementWidgetComponent implements OnInit {
   private router = inject(Router);
-  stats = signal({ total: 0, active: 0, departments: 0 });
+  private hrService = inject(HrManagementService);
+  stats = signal<HrStats>({
+    total: 0,
+    active: 0,
+    departments: 0,
+    averageSalary: 0,
+    newHires: 0,
+  });
+
+  ngOnInit() {
+    this.loadStats();
+  }
+
+  loadStats() {
+    this.hrService.getStats().subscribe((data) => {
+      this.stats.set(data);
+    });
+  }
 
   openModule() {
     this.router.navigate(['/modules/hr-management']);

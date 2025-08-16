@@ -39,8 +39,21 @@ export class MyOrganizationsService {
   }
 
   requestToJoin(organizationId: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/organization-management/requests`, { organizationId }).pipe(
-      catchError(() => of({ success: false }))
-    );
+    if (!organizationId) {
+      return of({ success: false, message: 'Organization ID is required' });
+    }
+    
+    console.log('Sending request to join organization:', organizationId);
+    console.log('API URL:', `${this.apiUrl}/organization-management/requests`);
+    
+    return this.http.post(`${this.apiUrl}/organization-management/requests`, { organizationId });
+  }
+
+  createOrganization(orgData: any): Observable<PublicOrganization> {
+    return this.http.post<PublicOrganization>(`${this.apiUrl}/organizations/create`, orgData);
+  }
+
+  switchOrganization(organizationId: string): Observable<any> {
+    return this.http.put(`${this.apiUrl}/organization-management/switch-organization/${organizationId}`, {});
   }
 }

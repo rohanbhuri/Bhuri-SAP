@@ -53,5 +53,39 @@ export class OrganizationsService {
     });
   }
 
+  async createOrganization(orgData: any, creatorId: string) {
+    // Check if code already exists
+    const existingOrg = await this.organizationRepository.findOne({
+      where: { code: orgData.code }
+    });
+    
+    if (existingOrg) {
+      throw new Error('Organization code already exists');
+    }
 
+    const organization = this.organizationRepository.create({
+      ...orgData,
+      memberCount: 1,
+      activeModuleIds: [],
+      createdAt: new Date()
+    });
+    
+    const savedOrg = await this.organizationRepository.save(organization) as unknown as Organization;
+
+    // Add creator to organization
+    const creator = await this.userRepository.findOne({
+      where: { _id: new ObjectId(creatorId) }
+    });
+    
+    if (creator) {
+      if (!creator.organizationIds) creator.organizationIds = [];
+      creator.organizationIds.push(savedOrg._id);
+      if (!creator.currentOrganizationId) {
+        creator.currentOrganizationId = savedOrg._id;
+      }
+      await this.userRepository.save(creator);
+    }
+
+    return savedOrg;
+  }
 }

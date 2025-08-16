@@ -3,6 +3,7 @@ import { Type } from '@angular/core';
 // Widget Components
 import { UserManagementWidgetComponent } from './user-management/user-management-widget.component';
 import { OrganizationManagementWidgetComponent } from './organization-management/organization-management-widget.component';
+import { MyOrganizationsWidgetComponent } from './my-organizations/my-organizations-widget.component';
 import { CrmWidgetComponent } from './crm/crm-widget.component';
 import { HrManagementWidgetComponent } from './hr-management/hr-management-widget.component';
 import { ProjectsManagementWidgetComponent } from './projects-management/projects-management-widget.component';
@@ -13,6 +14,7 @@ import { SalesManagementWidgetComponent } from './sales-management/sales-managem
 
 // Main Components
 import { UserManagementComponent } from './user-management/user-management.component';
+import { MyOrganizationsComponent } from './my-organizations/my-organizations.component';
 import { CrmComponent } from './crm/crm.component';
 import { HrManagementComponent } from './hr-management/hr-management.component';
 
@@ -43,7 +45,7 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     mainComponent: UserManagementComponent,
     route: '/modules/user-management',
     isActive: true,
-    category: 'core'
+    category: 'core',
   },
   {
     id: 'organization-management',
@@ -55,7 +57,20 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     widgetComponent: OrganizationManagementWidgetComponent,
     route: '/modules/organization-management',
     isActive: true,
-    category: 'core'
+    category: 'core',
+  },
+  {
+    id: 'my-organizations',
+    name: 'my-organizations',
+    displayName: 'My Organizations',
+    description: 'View and join public organizations',
+    icon: 'groups',
+    color: '#9C27B0',
+    widgetComponent: MyOrganizationsWidgetComponent,
+    mainComponent: MyOrganizationsComponent,
+    route: '/modules/my-organizations',
+    isActive: true,
+    category: 'core',
   },
   {
     id: 'crm',
@@ -68,7 +83,7 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     mainComponent: CrmComponent,
     route: '/modules/crm',
     isActive: true,
-    category: 'sales'
+    category: 'sales',
   },
 
   // HR Modules
@@ -82,8 +97,8 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     widgetComponent: HrManagementWidgetComponent,
     mainComponent: HrManagementComponent,
     route: '/modules/hr-management',
-    isActive: false,
-    category: 'hr'
+    isActive: true,
+    category: 'hr',
   },
   {
     id: 'staff-management',
@@ -94,7 +109,7 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     color: '#FF5722',
     widgetComponent: HrManagementWidgetComponent,
     isActive: false,
-    category: 'hr'
+    category: 'hr',
   },
   {
     id: 'payroll-management',
@@ -105,7 +120,7 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     color: '#795548',
     widgetComponent: PayrollManagementWidgetComponent,
     isActive: false,
-    category: 'hr'
+    category: 'hr',
   },
   {
     id: 'assigning-roles',
@@ -116,7 +131,7 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     color: '#607D8B',
     widgetComponent: UserManagementWidgetComponent,
     isActive: false,
-    category: 'hr'
+    category: 'hr',
   },
 
   // Project Management
@@ -129,7 +144,7 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     color: '#9C27B0',
     widgetComponent: TasksManagementWidgetComponent,
     isActive: false,
-    category: 'project'
+    category: 'project',
   },
   {
     id: 'projects-management',
@@ -140,7 +155,7 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     color: '#3F51B5',
     widgetComponent: ProjectsManagementWidgetComponent,
     isActive: false,
-    category: 'project'
+    category: 'project',
   },
   {
     id: 'project-tracking',
@@ -151,7 +166,7 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     color: '#009688',
     widgetComponent: ProjectsManagementWidgetComponent,
     isActive: false,
-    category: 'project'
+    category: 'project',
   },
   {
     id: 'project-timesheet',
@@ -162,7 +177,7 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     color: '#FFC107',
     widgetComponent: ProjectsManagementWidgetComponent,
     isActive: false,
-    category: 'project'
+    category: 'project',
   },
 
   // Sales & CRM
@@ -175,7 +190,7 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     color: '#E91E63',
     widgetComponent: SalesManagementWidgetComponent,
     isActive: false,
-    category: 'sales'
+    category: 'sales',
   },
   {
     id: 'sales-management',
@@ -186,7 +201,7 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     color: '#4CAF50',
     widgetComponent: SalesManagementWidgetComponent,
     isActive: false,
-    category: 'sales'
+    category: 'sales',
   },
   {
     id: 'deal-management',
@@ -197,7 +212,7 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     color: '#2196F3',
     widgetComponent: SalesManagementWidgetComponent,
     isActive: false,
-    category: 'sales'
+    category: 'sales',
   },
 
   // Operations
@@ -210,7 +225,7 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     color: '#FF9800',
     widgetComponent: InventoryManagementWidgetComponent,
     isActive: false,
-    category: 'operations'
+    category: 'operations',
   },
   {
     id: 'item-management',
@@ -221,7 +236,7 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     color: '#795548',
     widgetComponent: InventoryManagementWidgetComponent,
     isActive: false,
-    category: 'operations'
+    category: 'operations',
   },
 
   // Finance
@@ -234,7 +249,7 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     color: '#4CAF50',
     widgetComponent: PayrollManagementWidgetComponent,
     isActive: false,
-    category: 'finance'
+    category: 'finance',
   },
   {
     id: 'estimates-management',
@@ -245,7 +260,7 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     color: '#FF5722',
     widgetComponent: PayrollManagementWidgetComponent,
     isActive: false,
-    category: 'finance'
+    category: 'finance',
   },
   {
     id: 'contract-module',
@@ -256,18 +271,18 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     color: '#607D8B',
     widgetComponent: PayrollManagementWidgetComponent,
     isActive: false,
-    category: 'finance'
-  }
+    category: 'finance',
+  },
 ];
 
 export function getModuleById(id: string): ModuleConfig | undefined {
-  return MODULE_REGISTRY.find(module => module.id === id);
+  return MODULE_REGISTRY.find((module) => module.id === id);
 }
 
 export function getModulesByCategory(category: string): ModuleConfig[] {
-  return MODULE_REGISTRY.filter(module => module.category === category);
+  return MODULE_REGISTRY.filter((module) => module.category === category);
 }
 
 export function getActiveModules(): ModuleConfig[] {
-  return MODULE_REGISTRY.filter(module => module.isActive);
+  return MODULE_REGISTRY.filter((module) => module.isActive);
 }

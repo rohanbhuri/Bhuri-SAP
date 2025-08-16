@@ -64,4 +64,16 @@ export class ModulesController {
   rejectRequest(@Param('id') id: string, @Request() req) {
     return this.modulesService.rejectRequest(id, req.user.userId);
   }
+
+  @Get('personal')
+  @UseGuards(JwtAuthGuard)
+  getPersonalModules(@Request() req) {
+    return this.modulesService.getPersonalModules(req.user.userId);
+  }
+
+  @Get('organization/:orgId')
+  @UseGuards(JwtAuthGuard)
+  getOrganizationModules(@Param('orgId') orgId: string, @Request() req) {
+    return this.modulesService.getActiveModulesForOrg(orgId, req.user.userId);
+  }
 }

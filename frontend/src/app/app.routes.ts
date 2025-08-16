@@ -20,36 +20,75 @@ export const routes: Routes = [
   { path: '', component: LandingComponent },
   { path: 'login', component: LoginComponent },
   { path: 'signup', component: SignupComponent },
-  { path: 'select-organization', component: SelectOrganizationComponent, canActivate: [authGuard] },
-  { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
+  {
+    path: 'select-organization',
+    component: SelectOrganizationComponent,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'dashboard',
+    component: DashboardComponent,
+    canActivate: [authGuard],
+  },
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
-  { path: 'profile/edit', component: EditProfileComponent, canActivate: [authGuard] },
+  {
+    path: 'profile/edit',
+    component: EditProfileComponent,
+    canActivate: [authGuard],
+  },
   { path: 'settings', component: SettingsComponent, canActivate: [authGuard] },
-  { path: 'settings/preferences', component: PreferencesComponent, canActivate: [authGuard] },
+  {
+    path: 'settings/preferences',
+    component: PreferencesComponent,
+    canActivate: [authGuard],
+  },
   { path: 'messages', component: MessagesComponent, canActivate: [authGuard] },
   { path: 'search', component: SearchComponent, canActivate: [authGuard] },
-  { path: 'notifications', component: NotificationsComponent, canActivate: [authGuard] },
+  {
+    path: 'notifications',
+    component: NotificationsComponent,
+    canActivate: [authGuard],
+  },
   { path: 'modules', component: ModulesComponent, canActivate: [authGuard] },
-  { 
-    path: 'modules/user-management', 
-    loadChildren: () => import('./modules/user-management/user-management.routes').then(m => m.userManagementRoutes),
-    canActivate: [authGuard]
+  {
+    path: 'modules/user-management',
+    loadChildren: () =>
+      import('./modules/user-management/user-management.routes').then(
+        (m) => m.userManagementRoutes
+      ),
+    canActivate: [authGuard],
   },
-  { 
-    path: 'modules/organization-management', 
-    loadChildren: () => import('./modules/organization-management/organization-management.routes').then(m => m.organizationManagementRoutes),
-    canActivate: [authGuard]
+  {
+    path: 'modules/organization-management',
+    loadChildren: () =>
+      import(
+        './modules/organization-management/organization-management.routes'
+      ).then((m) => m.organizationManagementRoutes),
+    canActivate: [authGuard],
   },
-  { 
-    path: 'modules/crm', 
-    loadChildren: () => import('./modules/crm/crm.routes').then(m => m.CRM_ROUTES),
-    canActivate: [authGuard]
+  {
+    path: 'modules/crm',
+    loadChildren: () =>
+      import('./modules/crm/crm.routes').then((m) => m.CRM_ROUTES),
+    canActivate: [authGuard],
   },
-  { 
-    path: 'my-organizations', 
-    loadChildren: () => import('./modules/my-organizations/my-organizations.routes').then(m => m.MY_ORGANIZATIONS_ROUTES)
+  {
+    path: 'modules/my-organizations',
+    loadChildren: () =>
+      import('./modules/my-organizations/my-organizations.routes').then(
+        (m) => m.MY_ORGANIZATIONS_ROUTES
+      ),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'modules/hr-management',
+    loadChildren: () =>
+      import('./modules/hr-management/hr-management.routes').then(
+        (m) => m.HR_MANAGEMENT_ROUTES
+      ),
+    canActivate: [authGuard],
   },
   { path: 'more', component: MoreComponent, canActivate: [authGuard] },
   { path: '404', component: NotFoundComponent },
-  { path: '**', component: NotFoundComponent }
+  { path: '**', component: NotFoundComponent },
 ];

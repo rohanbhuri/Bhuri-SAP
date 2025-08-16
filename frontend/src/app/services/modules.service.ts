@@ -95,4 +95,16 @@ export class ModulesService {
       .patch(`${this.apiUrl}/modules/${moduleId}/deactivate`, {})
       .pipe(catchError(() => of({ success: false })));
   }
+
+  getPersonalModules(): Observable<AppModuleInfo[]> {
+    return this.http
+      .get<AppModuleInfo[]>(`${this.apiUrl}/modules/personal`)
+      .pipe(catchError(() => of([])));
+  }
+
+  getOrganizationModules(organizationId: string): Observable<AppModuleInfo[]> {
+    return this.http
+      .get<AppModuleInfo[]>(`${this.apiUrl}/modules/organization/${organizationId}`)
+      .pipe(catchError(() => of([])));
+  }
 }

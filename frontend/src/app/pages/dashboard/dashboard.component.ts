@@ -4,6 +4,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatCardModule } from '@angular/material/card';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AuthService, Organization, User } from '../../services/auth.service';
 import { Router } from '@angular/router';
@@ -20,6 +22,7 @@ import {
 } from '@angular/cdk/drag-drop';
 import { UserManagementWidgetComponent } from '../../modules/user-management/user-management-widget.component';
 import { OrganizationManagementWidgetComponent } from '../../modules/organization-management/organization-management-widget.component';
+import { MyOrganizationsWidgetComponent } from '../../modules/my-organizations/my-organizations-widget.component';
 import { CrmWidgetComponent } from '../../modules/crm/crm-widget.component';
 import { HrManagementWidgetComponent } from '../../modules/hr-management/hr-management-widget.component';
 import { ProjectsManagementWidgetComponent } from '../../modules/projects-management/projects-management-widget.component';
@@ -47,6 +50,8 @@ interface DashboardWidget {
     MatIconModule,
     MatMenuModule,
     MatCardModule,
+    MatSelectModule,
+    MatFormFieldModule,
     MatSnackBarModule,
     NavbarComponent,
     BottomNavbarComponent,
@@ -55,6 +60,7 @@ interface DashboardWidget {
     CdkDragHandle,
     UserManagementWidgetComponent,
     OrganizationManagementWidgetComponent,
+    MyOrganizationsWidgetComponent,
     CrmWidgetComponent,
     HrManagementWidgetComponent,
     ProjectsManagementWidgetComponent,
@@ -74,7 +80,23 @@ interface DashboardWidget {
           <mat-icon aria-hidden="true">chevron_right</mat-icon>
           <span class="current">Dashboard</span>
         </nav>
-        <h1>Dashboard</h1>
+        <div class="header-controls">
+          <mat-form-field appearance="outline" class="view-selector">
+            <mat-select [value]="selectedContext()" (valueChange)="onContextChange($event)">
+              <mat-option value="personal">
+                <mat-icon>person</mat-icon>
+                Personal
+              </mat-option>
+              @for (org of organizations(); track org.id || $index) {
+                <mat-option [value]="org.id">
+                  <mat-icon>business</mat-icon>
+                  {{ org.name }}
+                </mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <h1>Dashboard</h1>
+        </div>
         <p class="subtitle">
           Check the sales, value and bounce rate by country.
         </p>
@@ -132,6 +154,8 @@ interface DashboardWidget {
             <app-user-management-widget></app-user-management-widget>
             } @case ('organization-management') {
             <app-organization-management-widget></app-organization-management-widget>
+            } @case ('my-organizations') {
+            <app-my-organizations-widget></app-my-organizations-widget>
             } @case ('crm') {
             <app-crm-widget></app-crm-widget>
             } @case ('hr-management') {
@@ -183,6 +207,21 @@ interface DashboardWidget {
         margin-bottom: 20px;
       }
 
+      .header-controls {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 6px;
+      }
+
+      .view-selector {
+        min-width: 160px;
+      }
+
+      .view-selector .mat-mdc-form-field-subscript-wrapper {
+        display: none;
+      }
+
       .breadcrumb {
         display: inline-flex;
         align-items: center;
@@ -196,7 +235,7 @@ interface DashboardWidget {
       }
 
       h1 {
-        margin: 0 0 6px;
+        margin: 0;
         font-weight: 600;
       }
       .subtitle {
@@ -301,63 +340,19 @@ export class DashboardComponent implements OnInit {
   organizations = signal<Organization[]>([]);
   activeModules = signal<AppModuleInfo[]>([]);
   widgets = signal<DashboardWidget[]>([]);
+  selectedContext = signal<string>('personal');
 
   ngOnInit() {
     this.setupSEO();
     this.authService.currentUser$.subscribe((user) => {
       this.currentUser.set(user);
       if (user && this.authService.isAuthenticated()) {
-        this.modulesService.getActive().subscribe({
-          next: (list) => {
-            this.activeModules.set(list);
-            const mapped: DashboardWidget[] = list.length
-              ? list.map((m, idx) => ({
-                  id: m.name,
-                  title: m.displayName,
-                  description: m.description,
-                  size:
-                    idx === 0
-                      ? 'm'
-                      : idx === 1
-                      ? 'm'
-                      : idx % 3 === 0
-                      ? 'l'
-                      : 'm',
-                }))
-              : [];
-            
-            // Add pending work widget if user has super admin role
-            if (user?.roles?.includes('super_admin')) {
-              this.orgService.getOrganizationRequests().subscribe({
-                next: (requests) => {
-                  const pendingCount = requests.filter(r => r.status === 'pending').length;
-                  if (pendingCount > 0) {
-                    const pendingWidget: DashboardWidget = {
-                      id: 'pending-work',
-                      title: 'Pending Work',
-                      description: 'Review pending organization requests',
-                      size: 's'
-                    };
-                    this.widgets.set([pendingWidget, ...mapped]);
-                  } else {
-                    this.widgets.set(mapped);
-                  }
-                },
-                error: () => {
-                  this.widgets.set(mapped);
-                }
-              });
-            } else {
-              this.widgets.set(mapped);
-            }
-          },
-          error: (error) => {
-            if (error.status === 401 || error.status === 403) {
-              this.authService.logout();
-            }
-          },
-        });
         this.loadOrganizations();
+        // Initialize with personal context and load modules after organizations are loaded
+        this.selectedContext.set('personal');
+        setTimeout(() => {
+          this.loadModulesForContext('personal');
+        }, 100);
       }
     });
   }
@@ -377,7 +372,9 @@ export class DashboardComponent implements OnInit {
 
   loadOrganizations() {
     this.authService.getMyOrganizations().subscribe({
-      next: (orgs) => this.organizations.set(orgs),
+      next: (orgs) => {
+        this.organizations.set(orgs);
+      },
       error: (error) => {
         if (error.status === 401 || error.status === 403) {
           this.authService.logout();
@@ -395,6 +392,104 @@ export class DashboardComponent implements OnInit {
     this.snackBar.open('Organization updated successfully', 'Close', {
       duration: 2000,
     });
+  }
+
+  onContextChange(context: string) {
+    console.log('Context changed to:', context);
+    
+    // Ensure context is not undefined or null
+    if (!context) {
+      console.warn('Context is undefined, defaulting to personal');
+      context = 'personal';
+    }
+    
+    this.selectedContext.set(context);
+    this.loadModulesForContext(context);
+    
+    const contextName = context === 'personal' ? 'Personal' : 
+      this.organizations().find(org => org.id === context)?.name || 'Organization';
+    
+    this.snackBar.open(`Switched to ${contextName} dashboard`, 'Close', {
+      duration: 2000,
+    });
+  }
+
+  loadModulesForContext(context: string) {
+    console.log('Loading modules for context:', context);
+    
+    // Ensure context is valid
+    if (!context) {
+      console.warn('Context is undefined, defaulting to personal');
+      context = 'personal';
+    }
+    
+    if (context === 'personal') {
+      // Load personal modules (user-specific modules without organization context)
+      this.modulesService.getPersonalModules().subscribe({
+        next: (modules) => {
+          console.log('Personal modules loaded:', modules);
+          this.updateWidgets(modules);
+        },
+        error: (error) => {
+          console.error('Error loading personal modules:', error);
+          this.widgets.set([]);
+        }
+      });
+    } else {
+      // Validate organization exists before loading modules
+      const org = this.organizations().find(o => o.id === context);
+      if (!org) {
+        console.error('Organization not found for context:', context);
+        this.selectedContext.set('personal');
+        this.loadModulesForContext('personal');
+        return;
+      }
+      
+      // Load organization-specific modules
+      this.modulesService.getOrganizationModules(context).subscribe({
+        next: (modules) => {
+          console.log('Organization modules loaded:', modules);
+          this.updateWidgets(modules);
+        },
+        error: (error) => {
+          console.error('Error loading organization modules:', error);
+          this.widgets.set([]);
+        }
+      });
+    }
+  }
+
+  updateWidgets(modules: AppModuleInfo[]) {
+    const mapped: DashboardWidget[] = modules.map((m, idx) => ({
+      id: m.name,
+      title: m.displayName,
+      description: m.description,
+      size: idx === 0 ? 'm' : idx === 1 ? 'm' : idx % 3 === 0 ? 'l' : 'm',
+    }));
+    
+    // Add pending work widget if user has super admin role and in organization context
+    const user = this.currentUser();
+    if (user?.roles?.includes('super_admin') && this.selectedContext() !== 'personal') {
+      this.orgService.getOrganizationRequests().subscribe({
+        next: (requests) => {
+          const pendingCount = requests.filter(r => r.status === 'pending').length;
+          if (pendingCount > 0) {
+            const pendingWidget: DashboardWidget = {
+              id: 'pending-work',
+              title: 'Pending Work',
+              description: 'Review pending organization requests',
+              size: 's'
+            };
+            this.widgets.set([pendingWidget, ...mapped]);
+          } else {
+            this.widgets.set(mapped);
+          }
+        },
+        error: () => this.widgets.set(mapped)
+      });
+    } else {
+      this.widgets.set(mapped);
+    }
   }
 
   getCurrentOrgName(): string {
