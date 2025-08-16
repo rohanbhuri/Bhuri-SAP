@@ -104,19 +104,30 @@ export class SelectOrganizationComponent {
   }
 
   loadOrganizations() {
-    this.authService.getMyOrganizations().subscribe({
-      next: (orgs) => {
-        this.organizations.set(orgs);
-        if (orgs.length === 0) {
-          this.skip();
-        }
-      },
-      error: (error) => {
-        this.snackBar.open('Failed to load organizations', 'Close', {
-          duration: 3000
-        });
+    // Load both user organizations and public organizations
+    const myOrgs$ = this.authService.getMyOrganizations();
+    const publicOrgs$ = this.authService.getPublicOrganizations();
+    
+    // Combine both requests
+    Promise.all([
+      myOrgs$.toPromise(),
+      publicOrgs$.toPromise()
+    ]).then(([myOrgs, publicOrgs]) => {
+      // Merge and deduplicate organizations
+      const allOrgs = [...(myOrgs || []), ...(publicOrgs || [])];
+      const uniqueOrgs = allOrgs.filter((org, index, self) => 
+        index === self.findIndex(o => o.id === org.id)
+      );
+      
+      this.organizations.set(uniqueOrgs);
+      if (uniqueOrgs.length === 0) {
         this.skip();
       }
+    }).catch((error) => {
+      this.snackBar.open('Failed to load organizations', 'Close', {
+        duration: 3000
+      });
+      this.skip();
     });
   }
 

@@ -52,4 +52,6 @@ export class OrganizationsService {
       where: { isPublic: true }
     });
   }
+
+
 }

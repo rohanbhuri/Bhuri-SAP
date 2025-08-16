@@ -94,6 +94,10 @@ export class AuthService {
     return this.http.get<Organization[]>(`${this.apiUrl}/organizations/my-organizations`);
   }
 
+  getPublicOrganizations(): Observable<Organization[]> {
+    return this.http.get<Organization[]>(`${this.apiUrl}/organizations/public`);
+  }
+
   logout(): void {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('token');

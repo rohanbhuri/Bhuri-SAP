@@ -6,17 +6,18 @@ import { RoleType } from '../entities/role.entity';
 import { OrganizationsService } from './organizations.service';
 
 @Controller('organizations')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class OrganizationsController {
   constructor(private organizationsService: OrganizationsService) {}
 
   @Get()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequireRoles(RoleType.SUPER_ADMIN)
   findAll() {
     return this.organizationsService.findAll();
   }
 
   @Get('my-organizations')
+  @UseGuards(JwtAuthGuard)
   findMyOrganizations(@Request() req) {
     return this.organizationsService.findUserOrganizations(req.user.userId);
   }
@@ -27,20 +28,25 @@ export class OrganizationsController {
   }
 
   @Post()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequireRoles(RoleType.SUPER_ADMIN)
   create(@Body() orgData: any) {
     return this.organizationsService.create(orgData);
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequireRoles(RoleType.SUPER_ADMIN)
   update(@Param('id') id: string, @Body() updateData: any) {
     return this.organizationsService.update(id, updateData);
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequireRoles(RoleType.SUPER_ADMIN)
   delete(@Param('id') id: string) {
     return this.organizationsService.delete(id);
   }
+
+
 }
