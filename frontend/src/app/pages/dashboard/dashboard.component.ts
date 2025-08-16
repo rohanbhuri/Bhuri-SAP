@@ -100,6 +100,21 @@ interface DashboardWidget {
             </mat-select>
           </mat-form-field>
           <h1>Dashboard</h1>
+          <div class="dashboard-menu">
+            <button
+              mat-icon-button
+              [matMenuTriggerFor]="dashboardMenu"
+              aria-label="Dashboard options"
+            >
+              <mat-icon>more_vert</mat-icon>
+            </button>
+            <mat-menu #dashboardMenu="matMenu">
+              <button mat-menu-item (click)="toggleCompactView()">
+                <mat-icon>{{ isCompactView() ? 'view_module' : 'view_compact' }}</mat-icon>
+                <span>{{ isCompactView() ? 'Normal View' : 'Compact View' }}</span>
+              </button>
+            </mat-menu>
+          </div>
         </div>
         <p class="subtitle">
           Check the sales, value and bounce rate by country.
@@ -108,6 +123,7 @@ interface DashboardWidget {
 
       <section
         class="widgets"
+        [class.compact]="isCompactView()"
         cdkDropList
         (cdkDropListDropped)="drop($event)"
         role="list"
@@ -116,7 +132,7 @@ interface DashboardWidget {
         @for (w of widgets(); track w.id) {
         <mat-card
           class="widget"
-          [attr.data-size]="w.size"
+          [attr.data-size]="isCompactView() ? 's' : w.size"
           [style.border-color]="getModuleColor(w.id)"
           [style.background]="getModuleColor(w.id) + '33'"
           cdkDrag
@@ -222,6 +238,10 @@ interface DashboardWidget {
         margin-bottom: 6px;
       }
 
+      .dashboard-menu {
+        margin-left: auto;
+      }
+
       .view-selector {
         min-width: 160px;
       }
@@ -256,6 +276,10 @@ interface DashboardWidget {
         grid-template-columns: repeat(12, minmax(0, 1fr));
       }
 
+      .widgets.compact {
+        gap: 12px;
+      }
+
       .widget {
         grid-column: span 12;
         background: var(--theme-surface);
@@ -263,6 +287,11 @@ interface DashboardWidget {
           color-mix(in srgb, var(--theme-on-surface) 10%, transparent);
         border-radius: 12px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+
+      .widgets.compact .widget {
+        grid-column: span 4;
+        border-radius: 8px;
       }
 
       .widget-header {
@@ -276,6 +305,13 @@ interface DashboardWidget {
         font-size: 1.05rem;
         font-weight: 600;
       }
+
+      .widgets.compact .widget-header {
+        padding: 8px 12px 0 12px;
+      }
+      .widgets.compact .widget-title {
+        font-size: 0.95rem;
+      }
       .widget-actions {
         display: inline-flex;
         gap: 4px;
@@ -283,6 +319,10 @@ interface DashboardWidget {
 
       .widget-body {
         padding: 4px 16px 16px 16px;
+      }
+
+      .widgets.compact .widget-body {
+        padding: 4px 12px 12px 12px;
       }
       .metric {
         font-size: 1.8rem;
@@ -310,6 +350,10 @@ interface DashboardWidget {
         .widget[data-size='l'] {
           grid-column: span 12;
         }
+
+        .widgets.compact .widget {
+          grid-column: span 3;
+        }
       }
 
       @media (min-width: 1200px) {
@@ -322,10 +366,22 @@ interface DashboardWidget {
         .widget[data-size='l'] {
           grid-column: span 12;
         }
+
+        .widgets.compact .widget {
+          grid-column: span 2;
+        }
       }
 
       .empty {
         text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 300px;
+        grid-column: 1 / -1;
+        margin: 40px auto;
+        max-width: 400px;
       }
 
       .widget:focus-visible {
@@ -349,6 +405,7 @@ export class DashboardComponent implements OnInit {
   activeModules = signal<AppModuleInfo[]>([]);
   widgets = signal<DashboardWidget[]>([]);
   selectedContext = signal<string>('personal');
+  isCompactView = signal<boolean>(false);
 
   ngOnInit() {
     this.setupSEO();
@@ -510,6 +567,14 @@ export class DashboardComponent implements OnInit {
   getModuleColor(moduleId: string): string | null {
     const module = this.activeModules().find((m) => m.name === moduleId);
     return module?.color || null;
+  }
+
+  toggleCompactView() {
+    this.isCompactView.set(!this.isCompactView());
+    const viewType = this.isCompactView() ? 'Compact' : 'Normal';
+    this.snackBar.open(`Switched to ${viewType} view`, 'Close', {
+      duration: 2000,
+    });
   }
 
   private setupSEO() {
