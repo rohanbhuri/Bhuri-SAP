@@ -1,5 +1,22 @@
 /* Critical CSS only - Material theme loaded dynamically */
 
+/* PWA Styles */
+.pwa-install-dialog .mat-mdc-dialog-container {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.pwa-update-snackbar {
+  --mdc-snackbar-container-color: var(--primary-color, #3b82f6);
+  --mat-snack-bar-button-color: white;
+  --mdc-snackbar-supporting-text-color: white;
+}
+
+.pwa-update-snackbar .mat-mdc-snack-bar-container {
+  border-radius: 12px;
+  margin: 16px;
+}
+
 :root {
   // Default theme variables
   --theme-primary: #1976d2;
@@ -82,7 +99,7 @@ body {
 }
 
 .mat-mdc-card {
-  background-color: var(--theme-surface) !important;
+  background-color: var(--theme-surface);
   color: var(--theme-on-surface) !important;
   border-radius: var(--border-radius) !important;
   transition: var(--transition) !important;

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'Beax RM-v1.0.0';
+const CACHE_NAME = 'Beax RM-v1.0.1';
 const urlsToCache = [
   '/',
   '/login',
@@ -15,6 +15,8 @@ self.addEventListener('install', event => {
     caches.open(CACHE_NAME)
       .then(cache => cache.addAll(urlsToCache))
   );
+  // Force the waiting service worker to become the active service worker
+  self.skipWaiting();
 });
 
 self.addEventListener('fetch', event => {
@@ -42,4 +44,13 @@ self.addEventListener('activate', event => {
       );
     })
   );
+  // Claim all clients immediately
+  self.clients.claim();
+});
+
+// Listen for skip waiting message
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });

@@ -86,14 +86,15 @@ interface DashboardWidget {
         <mat-card
           class="widget"
           [attr.data-size]="w.size"
-          [style.border-left]="'4px solid ' + (getModuleColor(w.id) || '#ccc')"
+          [style.border-color]="getModuleColor(w.id)"
+          [style.background]="getModuleColor(w.id) + '33'"
           cdkDrag
           role="listitem"
           tabindex="0"
           [attr.aria-label]="w.title"
         >
           <div class="widget-header">
-            <h3 class="widget-title" [style.color]="getModuleColor(w.id) || 'inherit'">{{ w.title }}</h3>
+            <h3 class="widget-title">{{ w.title }}</h3>
             <div class="widget-actions">
               <button mat-icon-button cdkDragHandle aria-label="Drag widget">
                 <mat-icon>drag_indicator</mat-icon>
@@ -122,38 +123,28 @@ interface DashboardWidget {
             </div>
           </div>
           <div class="widget-body">
-            @switch (w.id) {
-              @case ('user-management') {
-                <app-user-management-widget></app-user-management-widget>
-              }
-              @case ('crm') {
-                <app-crm-widget></app-crm-widget>
-              }
-              @case ('hr-management') {
-                <app-hr-management-widget></app-hr-management-widget>
-              }
-              @case ('projects-management') {
-                <app-projects-management-widget></app-projects-management-widget>
-              }
-              @case ('tasks-management') {
-                <app-tasks-management-widget></app-tasks-management-widget>
-              }
-              @case ('inventory-management') {
-                <app-inventory-management-widget></app-inventory-management-widget>
-              }
-              @case ('payroll-management') {
-                <app-payroll-management-widget></app-payroll-management-widget>
-              }
-              @case ('sales-management') {
-                <app-sales-management-widget></app-sales-management-widget>
-              }
-              @default {
-                <div class="placeholder-widget">
-                  <p class="metric">{{ w.title }}</p>
-                  <p class="trend">Ready for implementation</p>
-                </div>
-              }
-            }
+            @switch (w.id) { @case ('user-management') {
+            <app-user-management-widget></app-user-management-widget>
+            } @case ('crm') {
+            <app-crm-widget></app-crm-widget>
+            } @case ('hr-management') {
+            <app-hr-management-widget></app-hr-management-widget>
+            } @case ('projects-management') {
+            <app-projects-management-widget></app-projects-management-widget>
+            } @case ('tasks-management') {
+            <app-tasks-management-widget></app-tasks-management-widget>
+            } @case ('inventory-management') {
+            <app-inventory-management-widget></app-inventory-management-widget>
+            } @case ('payroll-management') {
+            <app-payroll-management-widget></app-payroll-management-widget>
+            } @case ('sales-management') {
+            <app-sales-management-widget></app-sales-management-widget>
+            } @default {
+            <div class="placeholder-widget">
+              <p class="metric">{{ w.title }}</p>
+              <p class="trend">Ready for implementation</p>
+            </div>
+            } }
           </div>
         </mat-card>
         } @if (widgets().length === 0) {
@@ -314,7 +305,14 @@ export class DashboardComponent implements OnInit {
                   id: m.name,
                   title: m.displayName,
                   description: m.description,
-                  size: idx === 0 ? 'm' : idx === 1 ? 'm' : idx % 3 === 0 ? 'l' : 'm',
+                  size:
+                    idx === 0
+                      ? 'm'
+                      : idx === 1
+                      ? 'm'
+                      : idx % 3 === 0
+                      ? 'l'
+                      : 'm',
                 }))
               : [];
             this.widgets.set(mapped);
@@ -323,7 +321,7 @@ export class DashboardComponent implements OnInit {
             if (error.status === 401 || error.status === 403) {
               this.authService.logout();
             }
-          }
+          },
         });
         this.loadOrganizations();
       }
@@ -373,19 +371,20 @@ export class DashboardComponent implements OnInit {
   }
 
   getModuleColor(moduleId: string): string | null {
-    const module = this.activeModules().find(m => m.name === moduleId);
+    const module = this.activeModules().find((m) => m.name === moduleId);
     return module?.color || null;
   }
 
   private setupSEO() {
     const brandName = this.brandConfig.getBrandName();
-    
+
     this.seoService.updateSEO({
       title: `Dashboard - ${brandName}`,
       description: `Access your ${brandName} business management dashboard with real-time insights, module widgets, and comprehensive analytics.`,
-      keywords: 'dashboard, business analytics, management dashboard, widgets, business insights',
+      keywords:
+        'dashboard, business analytics, management dashboard, widgets, business insights',
       siteName: brandName,
-      author: 'Rohan Bhuri'
+      author: 'Rohan Bhuri',
     });
   }
 

@@ -11,7 +11,11 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { NavbarComponent } from '../../components/navbar.component';
 import { BottomNavbarComponent } from '../../components/bottom-navbar.component';
-import { ModulesService, AppModuleInfo, ModuleRequest } from '../../services/modules.service';
+import {
+  ModulesService,
+  AppModuleInfo,
+  ModuleRequest,
+} from '../../services/modules.service';
 import { AuthService } from '../../services/auth.service';
 import { PreferencesService } from '../../services/preferences.service';
 import { Router } from '@angular/router';
@@ -48,26 +52,53 @@ import { BrandConfigService } from '../../services/brand-config.service';
           <span class="current">Modules</span>
         </nav>
         <h1>Module Management</h1>
-        <p class="subtitle">Discover and activate modules for your organization</p>
+        <p class="subtitle">
+          Discover and activate modules for your organization
+        </p>
       </div>
 
-      <mat-tab-group class="module-tabs" [selectedIndex]="selectedTab()" (selectedIndexChange)="onTabChange($event)">
+      <mat-tab-group
+        class="module-tabs"
+        [selectedIndex]="selectedTab()"
+        (selectedIndexChange)="onTabChange($event)"
+      >
         <mat-tab label="Available Modules">
           <div class="tab-content">
             <div class="search-bar">
               <mat-form-field appearance="outline" class="search-field">
                 <mat-label>Search modules</mat-label>
-                <input matInput [(ngModel)]="searchTerm" (input)="filterModules()" placeholder="Search by name or description">
+                <input
+                  matInput
+                  [(ngModel)]="searchTerm"
+                  (input)="filterModules()"
+                  placeholder="Search by name or description"
+                />
                 <mat-icon matSuffix>search</mat-icon>
               </mat-form-field>
             </div>
 
             <div class="modules-grid">
               @for (module of filteredModules(); track module.id) {
-              <mat-card class="module-card" [class.active]="module.isActive" [style.border-left]="'4px solid ' + (module.color || '#ccc')">
+              <mat-card
+                class="module-card"
+                [class.active]="module.isActive"
+                [style.border-color]="
+                  module.isActive ? module.color || '#ccc' : 'transparent'
+                "
+                [style.background]="
+                  module.isActive
+                    ? (module.color || '#f5f5f5') + '33'
+                    : 'var(--theme-surface)'
+                "
+              >
                 <div class="module-header">
                   <div class="module-info">
-                    <h3 class="module-title" [style.color]="module.color || 'inherit'">{{ module.displayName }}</h3>
+                    <h3
+                      class="module-title"
+                      [style.color]="module.color || 'inherit'"
+                    >
+                      {{ module.displayName }}
+                    </h3>
                     <div class="module-status">
                       @if (module.isActive) {
                       <mat-chip class="status-chip active">
@@ -93,28 +124,46 @@ import { BrandConfigService } from '../../services/brand-config.service';
                     </div>
                   </div>
                 </div>
-                
+
                 <mat-card-content>
                   <p class="module-description">{{ module.description }}</p>
                 </mat-card-content>
-                
+
                 <div class="module-actions">
                   @if (module.isActive) {
                   <div class="active-module-actions">
-                    <button mat-raised-button color="primary" (click)="openModule(module)">
+                    <button
+                      mat-raised-button
+                      color="primary"
+                      (click)="openModule(module)"
+                    >
                       <mat-icon>open_in_new</mat-icon>
                       Open
                     </button>
-                    <button mat-icon-button (click)="togglePin(module)" [attr.aria-label]="isPinned(module.id) ? 'Unpin from navbar' : 'Pin to navbar'">
-                      <mat-icon>{{ isPinned(module.id) ? 'push_pin' : 'push_pin' }}</mat-icon>
+                    <button
+                      mat-icon-button
+                      (click)="togglePin(module)"
+                      [attr.aria-label]="
+                        isPinned(module.id)
+                          ? 'Unpin from navbar'
+                          : 'Pin to navbar'
+                      "
+                    >
+                      <mat-icon>{{
+                        isPinned(module.id) ? 'push_pin' : 'push_pin'
+                      }}</mat-icon>
                     </button>
-                    <button mat-stroked-button color="warn" (click)="deactivateModule(module)" [disabled]="loading()">
+                    <button
+                      mat-stroked-button
+                      color="warn"
+                      (click)="deactivateModule(module)"
+                      [disabled]="loading()"
+                    >
                       @if (loading()) {
                       <mat-spinner diameter="16"></mat-spinner>
                       } @else {
                       <mat-icon>remove</mat-icon>
-                      }
-                      Deactivate
+                      } Deactivate
                     </button>
                   </div>
                   } @else if (module.isPending) {
@@ -123,22 +172,29 @@ import { BrandConfigService } from '../../services/brand-config.service';
                     Request Pending
                   </button>
                   } @else if (module.canActivate) {
-                  <button mat-raised-button color="accent" (click)="activateModule(module)" [disabled]="loading()">
+                  <button
+                    mat-raised-button
+                    color="accent"
+                    (click)="activateModule(module)"
+                    [disabled]="loading()"
+                  >
                     @if (loading()) {
                     <mat-spinner diameter="16"></mat-spinner>
                     } @else {
                     <mat-icon>add</mat-icon>
-                    }
-                    Activate
+                    } Activate
                   </button>
                   } @else {
-                  <button mat-raised-button (click)="requestModule(module)" [disabled]="loading()">
+                  <button
+                    mat-raised-button
+                    (click)="requestModule(module)"
+                    [disabled]="loading()"
+                  >
                     @if (loading()) {
                     <mat-spinner diameter="16"></mat-spinner>
                     } @else {
                     <mat-icon>request_page</mat-icon>
-                    }
-                    Request Access
+                    } Request Access
                   </button>
                   }
                 </div>
@@ -150,7 +206,9 @@ import { BrandConfigService } from '../../services/brand-config.service';
             <div class="empty-state">
               <mat-icon class="empty-icon">extension</mat-icon>
               <h3>No modules found</h3>
-              <p>Try adjusting your search terms or contact your administrator.</p>
+              <p>
+                Try adjusting your search terms or contact your administrator.
+              </p>
             </div>
             }
           </div>
@@ -158,11 +216,15 @@ import { BrandConfigService } from '../../services/brand-config.service';
 
         <mat-tab>
           <ng-template mat-tab-label>
-            <span [matBadge]="pendingRequests().length" matBadgeColor="warn" [matBadgeHidden]="pendingRequests().length === 0">
+            <span
+              [matBadge]="pendingRequests().length"
+              matBadgeColor="warn"
+              [matBadgeHidden]="pendingRequests().length === 0"
+            >
               Pending Requests
             </span>
           </ng-template>
-          
+
           <div class="tab-content">
             @if (pendingRequests().length > 0) {
             <div class="requests-list">
@@ -171,21 +233,35 @@ import { BrandConfigService } from '../../services/brand-config.service';
                 <div class="request-header">
                   <div class="request-info">
                     <h4>{{ getModuleName(request.moduleId) }}</h4>
-                    <p class="request-user">Requested by: {{ request.userName }}</p>
-                    <p class="request-date">{{ formatDate(request.requestedAt) }}</p>
+                    <p class="request-user">
+                      Requested by: {{ request.userName }}
+                    </p>
+                    <p class="request-date">
+                      {{ formatDate(request.requestedAt) }}
+                    </p>
                   </div>
                   <mat-chip class="status-chip pending">
                     <mat-icon>schedule</mat-icon>
                     Pending
                   </mat-chip>
                 </div>
-                
+
                 <div class="request-actions">
-                  <button mat-raised-button color="primary" (click)="approveRequest(request)" [disabled]="loading()">
+                  <button
+                    mat-raised-button
+                    color="primary"
+                    (click)="approveRequest(request)"
+                    [disabled]="loading()"
+                  >
                     <mat-icon>check</mat-icon>
                     Approve
                   </button>
-                  <button mat-stroked-button color="warn" (click)="rejectRequest(request)" [disabled]="loading()">
+                  <button
+                    mat-stroked-button
+                    color="warn"
+                    (click)="rejectRequest(request)"
+                    [disabled]="loading()"
+                  >
                     <mat-icon>close</mat-icon>
                     Reject
                   </button>
@@ -266,7 +342,8 @@ import { BrandConfigService } from '../../services/brand-config.service';
       }
 
       .module-card {
-        border: 1px solid color-mix(in srgb, var(--theme-on-surface) 12%, transparent);
+        border: 1px solid
+          color-mix(in srgb, var(--theme-on-surface) 12%, transparent);
         border-radius: 12px;
         transition: all 0.2s ease;
         position: relative;
@@ -280,7 +357,11 @@ import { BrandConfigService } from '../../services/brand-config.service';
 
       .module-card.active {
         border-color: var(--theme-primary);
-        background: color-mix(in srgb, var(--theme-primary) 5%, var(--theme-surface));
+        background: color-mix(
+          in srgb,
+          var(--theme-primary) 5%,
+          var(--theme-surface)
+        );
       }
 
       .module-header {
@@ -335,7 +416,8 @@ import { BrandConfigService } from '../../services/brand-config.service';
 
       .module-actions {
         padding: 16px;
-        border-top: 1px solid color-mix(in srgb, var(--theme-on-surface) 8%, transparent);
+        border-top: 1px solid
+          color-mix(in srgb, var(--theme-on-surface) 8%, transparent);
       }
 
       .active-module-actions {
@@ -354,7 +436,8 @@ import { BrandConfigService } from '../../services/brand-config.service';
       }
 
       .request-card {
-        border: 1px solid color-mix(in srgb, var(--theme-on-surface) 12%, transparent);
+        border: 1px solid
+          color-mix(in srgb, var(--theme-on-surface) 12%, transparent);
         border-radius: 8px;
       }
 
@@ -416,13 +499,13 @@ import { BrandConfigService } from '../../services/brand-config.service';
         .modules-grid {
           grid-template-columns: 1fr;
         }
-        
+
         .request-header {
           flex-direction: column;
           align-items: flex-start;
           gap: 12px;
         }
-        
+
         .request-actions {
           flex-direction: column;
         }
@@ -456,13 +539,14 @@ export class ModulesComponent implements OnInit {
 
   private setupSEO() {
     const brandName = this.brandConfig.getBrandName();
-    
+
     this.seoService.updateSEO({
       title: `Modules - ${brandName}`,
       description: `Discover and activate business modules for ${brandName}. Manage HR, CRM, project management, inventory, and more with our comprehensive module system.`,
-      keywords: 'business modules, module management, HR management, CRM, project management, inventory management, activate modules',
+      keywords:
+        'business modules, module management, HR management, CRM, project management, inventory management, activate modules',
       siteName: brandName,
-      author: 'Rohan Bhuri'
+      author: 'Rohan Bhuri',
     });
   }
 
@@ -477,9 +561,11 @@ export class ModulesComponent implements OnInit {
       },
       error: (error) => {
         console.error('Failed to load modules:', error);
-        this.snackBar.open('Failed to load modules', 'Close', { duration: 3000 });
+        this.snackBar.open('Failed to load modules', 'Close', {
+          duration: 3000,
+        });
         this.loading.set(false);
-      }
+      },
     });
   }
 
@@ -492,16 +578,19 @@ export class ModulesComponent implements OnInit {
       },
       error: (error) => {
         console.error('Failed to load requests:', error);
-        this.snackBar.open('Failed to load requests', 'Close', { duration: 3000 });
-      }
+        this.snackBar.open('Failed to load requests', 'Close', {
+          duration: 3000,
+        });
+      },
     });
   }
 
   filterModules() {
     const term = this.searchTerm.toLowerCase();
-    const filtered = this.modules().filter(m => 
-      m.displayName.toLowerCase().includes(term) || 
-      m.description.toLowerCase().includes(term)
+    const filtered = this.modules().filter(
+      (m) =>
+        m.displayName.toLowerCase().includes(term) ||
+        m.description.toLowerCase().includes(term)
     );
     this.filteredModules.set(filtered);
   }
@@ -513,7 +602,9 @@ export class ModulesComponent implements OnInit {
       next: (result) => {
         console.log('Activation result:', result);
         if (result.success) {
-          this.snackBar.open('Module activated successfully', 'Close', { duration: 3000 });
+          this.snackBar.open('Module activated successfully', 'Close', {
+            duration: 3000,
+          });
           // Add delay to ensure backend has processed the change
           setTimeout(() => {
             this.loadModules();
@@ -523,9 +614,11 @@ export class ModulesComponent implements OnInit {
       },
       error: (error) => {
         console.error('Activation error:', error);
-        this.snackBar.open('Failed to activate module', 'Close', { duration: 3000 });
+        this.snackBar.open('Failed to activate module', 'Close', {
+          duration: 3000,
+        });
         this.loading.set(false);
-      }
+      },
     });
   }
 
@@ -534,15 +627,19 @@ export class ModulesComponent implements OnInit {
     this.modulesService.deactivateModule(module.id).subscribe({
       next: (result) => {
         if (result.success) {
-          this.snackBar.open('Module deactivated successfully', 'Close', { duration: 3000 });
+          this.snackBar.open('Module deactivated successfully', 'Close', {
+            duration: 3000,
+          });
           this.loadModules();
         }
         this.loading.set(false);
       },
       error: () => {
-        this.snackBar.open('Failed to deactivate module', 'Close', { duration: 3000 });
+        this.snackBar.open('Failed to deactivate module', 'Close', {
+          duration: 3000,
+        });
         this.loading.set(false);
-      }
+      },
     });
   }
 
@@ -551,27 +648,31 @@ export class ModulesComponent implements OnInit {
     this.modulesService.requestActivation(module.id).subscribe({
       next: (result) => {
         if (result.success) {
-          this.snackBar.open('Access request submitted', 'Close', { duration: 3000 });
+          this.snackBar.open('Access request submitted', 'Close', {
+            duration: 3000,
+          });
         }
         this.loading.set(false);
       },
       error: () => {
-        this.snackBar.open('Failed to submit request', 'Close', { duration: 3000 });
+        this.snackBar.open('Failed to submit request', 'Close', {
+          duration: 3000,
+        });
         this.loading.set(false);
-      }
+      },
     });
   }
 
   openModule(module: AppModuleInfo) {
     const moduleRoutes: { [key: string]: string } = {
-      'crm': '/modules/crm',
+      crm: '/modules/crm',
       'user-management': '/modules/user-management',
-      'user_management': '/modules/user-management',
-      'reports': '/reports',
-      'dashboard': '/dashboard',
-      'settings': '/settings'
+      user_management: '/modules/user-management',
+      reports: '/reports',
+      dashboard: '/dashboard',
+      settings: '/settings',
     };
-    
+
     const route = moduleRoutes[module.name] || `/modules/${module.name}`;
     this.router.navigate([route]);
   }
@@ -589,9 +690,11 @@ export class ModulesComponent implements OnInit {
         this.loading.set(false);
       },
       error: () => {
-        this.snackBar.open('Failed to approve request', 'Close', { duration: 3000 });
+        this.snackBar.open('Failed to approve request', 'Close', {
+          duration: 3000,
+        });
         this.loading.set(false);
-      }
+      },
     });
   }
 
@@ -604,9 +707,11 @@ export class ModulesComponent implements OnInit {
         this.loading.set(false);
       },
       error: () => {
-        this.snackBar.open('Failed to reject request', 'Close', { duration: 3000 });
+        this.snackBar.open('Failed to reject request', 'Close', {
+          duration: 3000,
+        });
         this.loading.set(false);
-      }
+      },
     });
   }
 
@@ -619,7 +724,7 @@ export class ModulesComponent implements OnInit {
   }
 
   getModuleName(moduleId: string): string {
-    const module = this.modules().find(m => m.id === moduleId);
+    const module = this.modules().find((m) => m.id === moduleId);
     return module?.displayName || 'Unknown Module';
   }
 
@@ -634,7 +739,7 @@ export class ModulesComponent implements OnInit {
       },
       error: () => {
         this.pinnedModules.set([]);
-      }
+      },
     });
   }
 
@@ -648,11 +753,15 @@ export class ModulesComponent implements OnInit {
         this.pinnedModules.set(prefs.pinnedModules || []);
         this.preferencesService.updatePinnedModules(prefs.pinnedModules || []);
         const action = this.isPinned(module.id) ? 'pinned to' : 'unpinned from';
-        this.snackBar.open(`${module.displayName} ${action} navbar`, 'Close', { duration: 2000 });
+        this.snackBar.open(`${module.displayName} ${action} navbar`, 'Close', {
+          duration: 2000,
+        });
       },
       error: () => {
-        this.snackBar.open('Failed to update pin status', 'Close', { duration: 3000 });
-      }
+        this.snackBar.open('Failed to update pin status', 'Close', {
+          duration: 3000,
+        });
+      },
     });
   }
 }

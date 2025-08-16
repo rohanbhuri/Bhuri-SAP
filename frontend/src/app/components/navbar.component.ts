@@ -4,17 +4,27 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialog } from '@angular/material/dialog';
 import { AuthService, User } from '../services/auth.service';
 import { BrandConfigService } from '../services/brand-config.service';
+import { PwaService } from '../services/pwa.service';
+import { PwaInstallModalComponent } from './pwa-install-modal.component';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [MatToolbarModule, MatButtonModule, MatIconModule, MatMenuModule],
+  imports: [MatToolbarModule, MatButtonModule, MatIconModule, MatMenuModule, MatTooltipModule],
   template: `
     <mat-toolbar color="primary">
       <img [src]="brandConfig.getIcon()" [alt]="brandConfig.getBrandName()" class="logo" (click)="goToDashboard()">
       <span class="spacer"></span>
+      
+      @if (showInstallButton) {
+        <button mat-icon-button (click)="showInstallModal()" matTooltip="Install App" class="install-button">
+          <mat-icon>download</mat-icon>
+        </button>
+      }
       
       @if (currentUser()) {
         <button mat-button [matMenuTriggerFor]="userMenu" class="user-button">
@@ -77,18 +87,44 @@ import { BrandConfigService } from '../services/brand-config.service';
       outline: 2px solid var(--theme-on-primary);
       outline-offset: 2px;
     }
+    
+    .install-button {
+      color: var(--theme-on-primary);
+      margin-right: 8px;
+    }
+    
+    .install-button:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
   `]
 })
 export class NavbarComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
+  private dialog = inject(MatDialog);
+  private pwaService = inject(PwaService);
   protected brandConfig = inject(BrandConfigService);
   
   currentUser = signal<User | null>(null);
+  showInstallButton = false;
   
   ngOnInit() {
     this.authService.currentUser$.subscribe(user => {
       this.currentUser.set(user);
+    });
+    
+    // Check if PWA is installable
+    this.pwaService.installable$.subscribe((installable) => {
+      this.showInstallButton = installable;
+    });
+  }
+  
+  showInstallModal() {
+    this.dialog.open(PwaInstallModalComponent, {
+      width: '500px',
+      maxWidth: '90vw',
+      disableClose: false,
+      panelClass: 'pwa-install-dialog'
     });
   }
   
