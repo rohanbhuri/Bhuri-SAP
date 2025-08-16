@@ -5,7 +5,8 @@ import { Injectable } from '@angular/core';
 })
 export class SitemapService {
   
-  generateSitemap(baseUrl: string = 'http://localhost:4200'): string {
+  generateSitemap(baseUrl: string = typeof window !== 'undefined' && (window as any).location ? 
+    `${window.location.protocol}//${window.location.hostname}:4200` : 'http://localhost:4200'): string {
     const routes = [
       { url: '/', priority: '1.0', changefreq: 'daily' },
       { url: '/login', priority: '0.8', changefreq: 'monthly' },
@@ -29,7 +30,8 @@ ${routes.map(route => `  <url>
     return sitemap;
   }
 
-  generateRobotsTxt(baseUrl: string = 'http://localhost:4200'): string {
+  generateRobotsTxt(baseUrl: string = typeof window !== 'undefined' && (window as any).location ? 
+    `${window.location.protocol}//${window.location.hostname}:4200` : 'http://localhost:4200'): string {
     return `User-agent: *
 Allow: /
 Disallow: /admin/

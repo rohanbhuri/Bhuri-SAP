@@ -26,7 +26,8 @@ const server = http.createServer(async (req, res) => {
       
       try {
         const port = process.env.APP_PORT || '4200';
-        const url = `http://localhost:${port}`;
+        const host = process.env.NODE_ENV === 'production' ? '13.126.228.247' : 'localhost';
+        const url = `http://${host}:${port}`;
         await page.goto(url, { waitUntil: 'networkidle' });
         console.log('Browser launched and navigated to UI at', url);
         
@@ -151,9 +152,10 @@ async function analyzeUI() {
 }
 
 server.listen(PORT, () => {
-  console.log(`MCP Server running on http://localhost:${PORT}/mcp`);
-  console.log(`Screenshot endpoint: http://localhost:${PORT}/screenshot`);
-  console.log(`Analysis endpoint: http://localhost:${PORT}/analyze`);
+  const host = process.env.NODE_ENV === 'production' ? '13.126.228.247' : 'localhost';
+  console.log(`MCP Server running on http://${host}:${PORT}/mcp`);
+  console.log(`Screenshot endpoint: http://${host}:${PORT}/screenshot`);
+  console.log(`Analysis endpoint: http://${host}:${PORT}/analyze`);
 });
 
 process.on('SIGINT', async () => {
