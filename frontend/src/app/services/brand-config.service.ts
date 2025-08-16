@@ -59,6 +59,10 @@ export class BrandConfigService {
     return this.config;
   }
 
+  getConfig(): BrandConfig {
+    return this.config;
+  }
+
   getBrandName(): string {
     return this.config.brand.name;
   }

@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { LandingComponent } from './pages/landing/landing.component';
 import { LoginComponent } from './pages/auth/login.component';
 import { SignupComponent } from './pages/auth/signup.component';
 import { SelectOrganizationComponent } from './pages/auth/select-organization.component';
@@ -12,12 +13,13 @@ import { SearchComponent } from './pages/search/search.component';
 import { NotificationsComponent } from './pages/notifications/notifications.component';
 import { ModulesComponent } from './pages/modules/modules.component';
 import { MoreComponent } from './pages/more/more.component';
+import { NotFoundComponent } from './pages/not-found/not-found.component';
 import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
-  { path: '', redirectTo: '/login', pathMatch: 'full' },
-  { path: 'login', component: LoginComponent },
-  { path: 'signup', component: SignupComponent },
+  { path: '', component: LandingComponent, title: 'Home' },
+  { path: 'login', component: LoginComponent, title: 'Login' },
+  { path: 'signup', component: SignupComponent, title: 'Sign Up' },
   { path: 'select-organization', component: SelectOrganizationComponent, canActivate: [authGuard] },
   { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
@@ -39,5 +41,6 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   { path: 'more', component: MoreComponent, canActivate: [authGuard] },
-  { path: '**', redirectTo: '/login' }
+  { path: '404', component: NotFoundComponent, title: 'Page Not Found' },
+  { path: '**', component: NotFoundComponent }
 ];

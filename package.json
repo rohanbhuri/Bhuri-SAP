@@ -9,6 +9,7 @@
     "start:true-process": "node start.js true-process",
     "dev": "npm run start:beax-rm",
     "build": "cd frontend && npm run build",
+    "build:prerender": "cd frontend && npm run build:prerender",
     "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install",
     "clear-ports": "lsof -ti:3000,3001,8931,4200,4201 | xargs kill -9 2>/dev/null || true"
   },
