@@ -20,7 +20,8 @@ const replacements = {
   '{{VERSION}}': brandConfig.app.version,
   '{{DESCRIPTION}}': brandConfig.app.description,
   '{{APP_PORT}}': brandConfig.app.port.toString(),
-  '{{API_URL}}': brandConfig.app.apiUrl
+  '{{API_URL}}': brandConfig.app.apiUrl,
+  '{{CANONICAL_URL}}': `http://localhost:${brandConfig.app.port}`
 };
 
 Object.keys(replacements).forEach(placeholder => {

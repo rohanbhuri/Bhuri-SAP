@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -9,6 +9,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AuthService, Organization } from '../../services/auth.service';
 import { BrandConfigService } from '../../services/brand-config.service';
+import { SeoService } from '../../services/seo.service';
+import { SeoConfigService } from '../../services/seo-config.service';
 
 @Component({
   selector: 'app-login',
@@ -117,14 +119,25 @@ import { BrandConfigService } from '../../services/brand-config.service';
     `,
   ],
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
+  private seoService = inject(SeoService);
+  private seoConfigService = inject(SeoConfigService);
   protected brandConfig = inject(BrandConfigService);
 
   loading = signal(false);
+
+  ngOnInit() {
+    this.setupSEO();
+  }
+
+  private setupSEO() {
+    const seoData = this.seoConfigService.getPageSEO('login');
+    this.seoService.updateSEO(seoData);
+  }
 
   loginForm = this.fb.group({
     email: ['', [Validators.required, Validators.email]],

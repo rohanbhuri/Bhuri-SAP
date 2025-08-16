@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { BrandConfigService } from '../../services/brand-config.service';
+import { SeoService } from '../../services/seo.service';
 
 @Component({
   selector: 'app-not-found',
@@ -100,9 +101,23 @@ import { BrandConfigService } from '../../services/brand-config.service';
 })
 export class NotFoundComponent implements OnInit {
   private brandConfigService = inject(BrandConfigService);
+  private seoService = inject(SeoService);
   brandConfig: any;
 
   ngOnInit() {
     this.brandConfig = this.brandConfigService.getConfig();
+    this.setupSEO();
+  }
+
+  private setupSEO() {
+    const brandName = this.brandConfig?.brand?.name || 'Bhuri SAP';
+    
+    this.seoService.updateSEO({
+      title: `Page Not Found - ${brandName}`,
+      description: `The page you're looking for doesn't exist. Return to ${brandName} homepage to continue using our business management platform.`,
+      keywords: '404, page not found, error page',
+      siteName: brandName,
+      author: 'Rohan Bhuri'
+    });
   }
 }

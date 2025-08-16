@@ -17,9 +17,9 @@ import { NotFoundComponent } from './pages/not-found/not-found.component';
 import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
-  { path: '', component: LandingComponent, title: 'Home' },
-  { path: 'login', component: LoginComponent, title: 'Login' },
-  { path: 'signup', component: SignupComponent, title: 'Sign Up' },
+  { path: '', component: LandingComponent },
+  { path: 'login', component: LoginComponent },
+  { path: 'signup', component: SignupComponent },
   { path: 'select-organization', component: SelectOrganizationComponent, canActivate: [authGuard] },
   { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
@@ -41,6 +41,6 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   { path: 'more', component: MoreComponent, canActivate: [authGuard] },
-  { path: '404', component: NotFoundComponent, title: 'Page Not Found' },
+  { path: '404', component: NotFoundComponent },
   { path: '**', component: NotFoundComponent }
 ];

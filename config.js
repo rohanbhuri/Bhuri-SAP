@@ -17,7 +17,7 @@ const configs = {
       version: "1.0.0",
       description: "Resource Management System",
       port: 4200,
-      apiUrl: "http://localhost:3000/api"
+      apiUrl: process.env.NODE_ENV === 'production' ? "http://13.126.228.247:3000/api" : "http://localhost:3000/api"
     },
     development: {
       NODE_ENV: 'development',
@@ -45,7 +45,7 @@ const configs = {
       version: "1.0.0",
       description: "Process Management System",
       port: 4201,
-      apiUrl: "http://localhost:3001/api"
+      apiUrl: process.env.NODE_ENV === 'production' ? "http://13.126.228.247:3001/api" : "http://localhost:3001/api"
     },
 
     development: {

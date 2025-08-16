@@ -4,6 +4,7 @@ const path = require('path');
 const { getConfig } = require('./config.js');
 
 const brand = process.argv[2] || 'beax-rm';
+const buildOnly = process.argv.includes('--build-only');
 const brandConfig = getConfig(brand);
 
 if (!brandConfig) {
@@ -11,7 +12,7 @@ if (!brandConfig) {
   process.exit(1);
 }
 
-console.log(`Starting ${brandConfig.brand.name} (${brand})...`);
+console.log(`${buildOnly ? 'Configuring' : 'Starting'} ${brandConfig.brand.name} (${brand})...`);
 
 // Replace environment variables in frontend index.html using template
 const templatePath = path.join(__dirname, 'frontend/src/index.template.html');
@@ -58,6 +59,11 @@ process.env.ACCENT_COLOR = brandConfig.colors.accent;
 process.env.SECONDARY_COLOR = brandConfig.colors.secondary;
 process.env.BRAND_LOGO = brandConfig.brand.logo;
 process.env.BRAND_ICON = brandConfig.brand.icon;
+
+if (buildOnly) {
+  console.log(`Configuration complete for ${brand}`);
+  process.exit(0);
+}
 
 // Start backend
 const backend = spawn('npm', ['run', 'start:dev'], {

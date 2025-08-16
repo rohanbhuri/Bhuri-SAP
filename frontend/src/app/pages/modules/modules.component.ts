@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -16,6 +16,8 @@ import { AuthService } from '../../services/auth.service';
 import { PreferencesService } from '../../services/preferences.service';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { SeoService } from '../../services/seo.service';
+import { BrandConfigService } from '../../services/brand-config.service';
 
 @Component({
   selector: 'app-modules',
@@ -428,12 +430,14 @@ import { FormsModule } from '@angular/forms';
     `,
   ],
 })
-export class ModulesComponent {
+export class ModulesComponent implements OnInit {
   private modulesService = inject(ModulesService);
   private authService = inject(AuthService);
   private preferencesService = inject(PreferencesService);
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
+  private seoService = inject(SeoService);
+  private brandConfig = inject(BrandConfigService);
 
   modules = signal<AppModuleInfo[]>([]);
   filteredModules = signal<AppModuleInfo[]>([]);
@@ -444,9 +448,22 @@ export class ModulesComponent {
   pinnedModules = signal<string[]>([]);
 
   ngOnInit() {
+    this.setupSEO();
     this.loadModules();
     this.loadPendingRequests();
     this.loadPinnedModules();
+  }
+
+  private setupSEO() {
+    const brandName = this.brandConfig.getBrandName();
+    
+    this.seoService.updateSEO({
+      title: `Modules - ${brandName}`,
+      description: `Discover and activate business modules for ${brandName}. Manage HR, CRM, project management, inventory, and more with our comprehensive module system.`,
+      keywords: 'business modules, module management, HR management, CRM, project management, inventory management, activate modules',
+      siteName: brandName,
+      author: 'Rohan Bhuri'
+    });
   }
 
   loadModules() {

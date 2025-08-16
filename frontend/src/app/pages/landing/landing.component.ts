@@ -5,6 +5,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { BrandConfigService } from '../../services/brand-config.service';
+import { SeoService } from '../../services/seo.service';
+import { SeoConfigService } from '../../services/seo-config.service';
 
 @Component({
   selector: 'app-landing',
@@ -756,9 +758,37 @@ import { BrandConfigService } from '../../services/brand-config.service';
 })
 export class LandingComponent implements OnInit {
   private brandConfigService = inject(BrandConfigService);
+  private seoService = inject(SeoService);
+  private seoConfigService = inject(SeoConfigService);
   brandConfig: any;
 
   ngOnInit() {
     this.brandConfig = this.brandConfigService.getConfig();
+    this.setupSEO();
+  }
+
+  private setupSEO() {
+    const seoData = this.seoConfigService.getPageSEO('home');
+    this.seoService.updateSEO(seoData);
+
+    // Add structured data
+    const structuredData = this.seoService.generateStructuredData('WebApplication', {
+      name: seoData.siteName,
+      description: seoData.description,
+      url: seoData.url,
+      applicationCategory: 'BusinessApplication',
+      operatingSystem: 'Web Browser',
+      author: {
+        '@type': 'Person',
+        name: seoData.author
+      },
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'USD'
+      }
+    });
+    
+    this.seoService.addStructuredData(structuredData);
   }
 }

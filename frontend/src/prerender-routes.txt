@@ -1,0 +1,6 @@
+/
+/login
+/signup
+/404
+/modules
+/dashboard

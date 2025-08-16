@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -26,6 +26,7 @@ import { TasksManagementWidgetComponent } from '../../modules/tasks-management/t
 import { InventoryManagementWidgetComponent } from '../../modules/inventory-management/inventory-management-widget.component';
 import { PayrollManagementWidgetComponent } from '../../modules/payroll-management/payroll-management-widget.component';
 import { SalesManagementWidgetComponent } from '../../modules/sales-management/sales-management-widget.component';
+import { SeoService } from '../../services/seo.service';
 
 interface DashboardWidget {
   id: string;
@@ -287,10 +288,11 @@ interface DashboardWidget {
     `,
   ],
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
+  private seoService = inject(SeoService);
   protected brandConfig = inject(BrandConfigService);
   private modulesService = inject(ModulesService);
 
@@ -300,6 +302,7 @@ export class DashboardComponent {
   widgets = signal<DashboardWidget[]>([]);
 
   ngOnInit() {
+    this.setupSEO();
     this.authService.currentUser$.subscribe((user) => {
       this.currentUser.set(user);
       if (user && this.authService.isAuthenticated()) {
@@ -372,6 +375,18 @@ export class DashboardComponent {
   getModuleColor(moduleId: string): string | null {
     const module = this.activeModules().find(m => m.name === moduleId);
     return module?.color || null;
+  }
+
+  private setupSEO() {
+    const brandName = this.brandConfig.getBrandName();
+    
+    this.seoService.updateSEO({
+      title: `Dashboard - ${brandName}`,
+      description: `Access your ${brandName} business management dashboard with real-time insights, module widgets, and comprehensive analytics.`,
+      keywords: 'dashboard, business analytics, management dashboard, widgets, business insights',
+      siteName: brandName,
+      author: 'Rohan Bhuri'
+    });
   }
 
   logout() {
