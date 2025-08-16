@@ -50,6 +50,10 @@ module.exports = {
         PORT: 4200
       },
       max_memory_restart: '200M',
+      max_restarts: 10,
+      min_uptime: '10s',
+      restart_delay: 4000,
+      autorestart: true,
       error_file: './logs/beax-rm-frontend-error.log',
       out_file: './logs/beax-rm-frontend-out.log',
       log_file: './logs/beax-rm-frontend.log'
@@ -66,6 +70,10 @@ module.exports = {
         PORT: 4201
       },
       max_memory_restart: '200M',
+      max_restarts: 10,
+      min_uptime: '10s',
+      restart_delay: 4000,
+      autorestart: true,
       error_file: './logs/true-process-frontend-error.log',
       out_file: './logs/true-process-frontend-out.log',
       log_file: './logs/true-process-frontend.log'

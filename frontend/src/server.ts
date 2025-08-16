@@ -6,23 +6,42 @@ import {
 } from '@angular/ssr/node';
 import express from 'express';
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
+const indexPath = join(browserDistFolder, 'index.html');
 
 const app = express();
-const angularApp = new AngularNodeAppEngine();
+let angularApp: AngularNodeAppEngine | null = null;
+
+// Initialize Angular SSR with error handling
+try {
+  angularApp = new AngularNodeAppEngine();
+  console.log('Angular SSR initialized successfully');
+} catch (error) {
+  console.warn('Failed to initialize Angular SSR, falling back to static serving:', error instanceof Error ? error.message : String(error));
+}
 
 /**
- * Example Express Rest API endpoints can be defined here.
- * Uncomment and define endpoints as necessary.
- *
- * Example:
- * ```ts
- * app.get('/api/{*splat}', (req, res) => {
- *   // Handle API request
- * });
- * ```
+ * Health check endpoint
  */
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    ssr: angularApp ? 'available' : 'unavailable',
+    timestamp: new Date().toISOString()
+  });
+});
+
+/**
+ * SSR status endpoint
+ */
+app.get('/ssr-status', (req, res) => {
+  res.json({
+    ssr_enabled: !!angularApp,
+    fallback_available: existsSync(indexPath)
+  });
+});
 
 /**
  * Serve static files from /browser
@@ -37,14 +56,43 @@ app.use(
 
 /**
  * Handle all other requests by rendering the Angular application.
+ * Falls back to serving index.html if SSR fails or is unavailable.
  */
 app.use((req, res, next) => {
+  // If Angular SSR is not available, serve static files immediately
+  if (!angularApp) {
+    if (existsSync(indexPath)) {
+      res.sendFile(indexPath);
+    } else {
+      res.status(500).send('Application not available');
+    }
+    return;
+  }
+
+  // Try SSR first
   angularApp
     .handle(req)
-    .then((response) =>
-      response ? writeResponseToNodeResponse(response, res) : next()
-    )
-    .catch(next);
+    .then((response) => {
+      if (response) {
+        writeResponseToNodeResponse(response, res);
+      } else {
+        // Fallback to client-side rendering
+        if (existsSync(indexPath)) {
+          res.sendFile(indexPath);
+        } else {
+          res.status(404).send('Page not found');
+        }
+      }
+    })
+    .catch((error) => {
+      console.warn('SSR failed, falling back to client-side rendering:', error instanceof Error ? error.message : String(error));
+      // Serve the static index.html for client-side rendering
+      if (existsSync(indexPath)) {
+        res.sendFile(indexPath);
+      } else {
+        res.status(500).send('SSR Server unavailable - Please try refreshing the page');
+      }
+    });
 });
 
 /**
