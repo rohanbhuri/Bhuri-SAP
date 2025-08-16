@@ -40,13 +40,14 @@ module.exports = {
     },
     {
       name: 'beax-rm-frontend',
-      script: 'npx',
-      args: 'ng serve --port 4200 --host 0.0.0.0',
+      script: 'node',
+      args: './dist/beax-rm/browser/server.js',
       cwd: './frontend',
       instances: 1,
       exec_mode: 'fork',
       env: {
-        NODE_ENV: 'production'
+        NODE_ENV: 'production',
+        PORT: 4200
       },
       max_memory_restart: '200M',
       error_file: './logs/beax-rm-frontend-error.log',
@@ -55,13 +56,14 @@ module.exports = {
     },
     {
       name: 'true-process-frontend',
-      script: 'npx',
-      args: 'ng serve --port 4201 --host 0.0.0.0',
+      script: 'node',
+      args: './dist/true-process/browser/server.js',
       cwd: './frontend',
       instances: 1,
       exec_mode: 'fork',
       env: {
-        NODE_ENV: 'production'
+        NODE_ENV: 'production',
+        PORT: 4201
       },
       max_memory_restart: '200M',
       error_file: './logs/true-process-frontend-error.log',

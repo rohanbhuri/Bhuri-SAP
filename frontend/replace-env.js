@@ -1,12 +1,16 @@
-const fs = require('fs');
-const path = require('path');
-const { getConfig } = require('../config.js');
+import { readFileSync, writeFileSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { getConfig } from '../config.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const brand = process.env.BRAND || 'beax-rm';
 const brandConfig = getConfig(brand);
 
-const indexPath = path.join(__dirname, 'src/index.html');
-let indexContent = fs.readFileSync(indexPath, 'utf8');
+const indexPath = join(__dirname, 'src/index.html');
+let indexContent = readFileSync(indexPath, 'utf8');
 
 // Replace placeholders with config data
 const replacements = {
@@ -29,5 +33,5 @@ Object.keys(replacements).forEach(placeholder => {
   indexContent = indexContent.replace(regex, replacements[placeholder]);
 });
 
-fs.writeFileSync(indexPath, indexContent);
+writeFileSync(indexPath, indexContent);
 console.log('Environment variables replaced in index.html');

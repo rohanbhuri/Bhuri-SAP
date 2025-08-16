@@ -1,14 +1,15 @@
 {
   "name": "beax-rm",
   "version": "0.0.0",
+  "type": "module",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
     "build": "node replace-env.js && ng build",
-    "build:prerender": "node replace-env.js && ng build --prerender",
+    "build:prerender:ssr": "node replace-env.js && ng build --ssr && ng build --prerender --ssr",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:beax-rm": "node dist/beax-rm/server/server.mjs"
+    "serve:ssr:beax-rm": "node dist/beax-rm/server/main.server.mjs"
   },
   "prettier": {
     "overrides": [
@@ -33,6 +34,7 @@
     "@angular/platform-server": "^20.1.0",
     "@angular/router": "^20.1.0",
     "@angular/ssr": "^20.1.5",
+    "compression": "^1.8.1",
     "express": "^5.1.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"

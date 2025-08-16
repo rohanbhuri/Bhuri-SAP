@@ -1,4 +1,5 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { BrandConfigService } from './brand-config.service';
 import { SEOData } from './seo.service';
 
@@ -7,6 +8,7 @@ import { SEOData } from './seo.service';
 })
 export class SeoConfigService {
   private brandConfig = inject(BrandConfigService);
+  private platformId = inject(PLATFORM_ID);
 
   getPageSEO(page: string, customData?: Partial<SEOData>): SEOData {
     const brandName = this.brandConfig.getBrandName();
@@ -16,7 +18,7 @@ export class SeoConfigService {
       siteName: brandName,
       author: 'Rohan Bhuri',
       image: this.brandConfig.getLogo(),
-      url: window.location.href
+      url: isPlatformBrowser(this.platformId) ? window.location.href : ''
     };
 
     const pageConfigs: Record<string, SEOData> = {
@@ -80,7 +82,7 @@ export class SeoConfigService {
       siteName: brandName,
       author: 'Rohan Bhuri',
       image: this.brandConfig.getLogo(),
-      url: window.location.href
+      url: isPlatformBrowser(this.platformId) ? window.location.href : ''
     };
   }
 }

@@ -65,9 +65,11 @@ export class SeoService {
   }
 
   addStructuredData(structuredData: string) {
-    const script = document.createElement('script');
-    script.type = 'application/ld+json';
-    script.text = structuredData;
-    document.head.appendChild(script);
+    if (typeof document !== 'undefined') {
+      const script = document.createElement('script');
+      script.type = 'application/ld+json';
+      script.text = structuredData;
+      document.head.appendChild(script);
+    }
   }
 }

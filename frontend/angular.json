@@ -23,7 +23,8 @@
             "assets": [
               {
                 "glob": "**/*",
-                "input": "public"
+                "input": "public",
+                "output": "/"
               },
               {
                 "glob": "**/*",
@@ -31,11 +32,8 @@
                 "output": "/config/assets"
               }
             ],
-            "styles": [
-              "src/styles.scss"
-            ],
-            "server": "src/main.server.ts",
-
+            "styles": ["src/styles.scss"],
+            "server": "src/main.server.ts"
           },
           "configurations": {
             "production": {
@@ -92,9 +90,7 @@
                 "output": "/config/assets"
               }
             ],
-            "styles": [
-              "src/styles.scss"
-            ]
+            "styles": ["src/styles.scss"]
           }
         }
       }
