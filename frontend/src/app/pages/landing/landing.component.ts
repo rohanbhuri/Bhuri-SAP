@@ -49,9 +49,7 @@ import { SeoConfigService } from '../../services/seo-config.service';
             <!-- HR Management -->
             <mat-card class="module-card">
               <div class="module-image">
-                <a href="https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400" target="_blank">
-                  <img src="https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=250&fit=crop" alt="HR Management" />
-                </a>
+                <img src="https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=250&fit=crop&auto=format&q=75" alt="HR Management - Effortlessly manage employee data and schedules" loading="lazy" width="400" height="250" />
               </div>
               <mat-card-content>
                 <h3>HR Management</h3>
@@ -63,9 +61,7 @@ import { SeoConfigService } from '../../services/seo-config.service';
             <!-- Staff Management -->
             <mat-card class="module-card">
               <div class="module-image">
-                <a href="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400" target="_blank">
-                  <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&h=250&fit=crop" alt="Staff Management" />
-                </a>
+                <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&h=250&fit=crop&auto=format&q=75" alt="Staff Management - Organize workforce with scheduling tools" loading="lazy" width="400" height="250" />
               </div>
               <mat-card-content>
                 <h3>Staff Management</h3>
@@ -77,9 +73,7 @@ import { SeoConfigService } from '../../services/seo-config.service';
             <!-- Payroll Management -->
             <mat-card class="module-card">
               <div class="module-image">
-                <a href="https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400" target="_blank">
-                  <img src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=250&fit=crop" alt="Payroll Management" />
-                </a>
+                <img src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=250&fit=crop&auto=format&q=75" alt="Payroll Management - Automate salary calculations and payments" loading="lazy" width="400" height="250" />
               </div>
               <mat-card-content>
                 <h3>Payroll Management</h3>
@@ -91,9 +85,7 @@ import { SeoConfigService } from '../../services/seo-config.service';
             <!-- Assigning Roles -->
             <mat-card class="module-card">
               <div class="module-image">
-                <a href="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400" target="_blank">
-                  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=250&fit=crop" alt="Role Assignment" />
-                </a>
+                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=250&fit=crop&auto=format&q=75" alt="Role Assignment - Define user roles with granular permissions" loading="lazy" width="400" height="250" />
               </div>
               <mat-card-content>
                 <h3>Role Assignment</h3>
@@ -105,9 +97,7 @@ import { SeoConfigService } from '../../services/seo-config.service';
             <!-- Tasks Management -->
             <mat-card class="module-card">
               <div class="module-image">
-                <a href="https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=400" target="_blank">
-                  <img src="https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=400&h=250&fit=crop" alt="Task Management" />
-                </a>
+                <img src="https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=400&h=250&fit=crop&auto=format&q=75" alt="Task Management - Create and track tasks with deadlines" loading="lazy" width="400" height="250" />
               </div>
               <mat-card-content>
                 <h3>Task Management</h3>
@@ -119,9 +109,7 @@ import { SeoConfigService } from '../../services/seo-config.service';
             <!-- Projects Management -->
             <mat-card class="module-card">
               <div class="module-image">
-                <a href="https://images.unsplash.com/photo-1552664730-d307ca884978?w=400" target="_blank">
-                  <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=250&fit=crop" alt="Project Management" />
-                </a>
+                <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=250&fit=crop&auto=format&q=75" alt="Project Management - Plan and execute projects collaboratively" loading="lazy" width="400" height="250" />
               </div>
               <mat-card-content>
                 <h3>Project Management</h3>
@@ -133,9 +121,7 @@ import { SeoConfigService } from '../../services/seo-config.service';
             <!-- Project Tracking -->
             <mat-card class="module-card">
               <div class="module-image">
-                <a href="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400" target="_blank">
-                  <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=250&fit=crop" alt="Project Tracking" />
-                </a>
+                <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=250&fit=crop&auto=format&q=75" alt="Project Tracking - Monitor progress with real-time updates" loading="lazy" width="400" height="250" />
               </div>
               <mat-card-content>
                 <h3>Project Tracking</h3>
@@ -147,9 +133,7 @@ import { SeoConfigService } from '../../services/seo-config.service';
             <!-- Project Timesheet -->
             <mat-card class="module-card">
               <div class="module-image">
-                <a href="https://images.unsplash.com/photo-1434626881859-194d67b2b86f?w=400" target="_blank">
-                  <img src="https://images.unsplash.com/photo-1434626881859-194d67b2b86f?w=400&h=250&fit=crop" alt="Timesheet" />
-                </a>
+                <img src="https://images.unsplash.com/photo-1434626881859-194d67b2b86f?w=400&h=250&fit=crop&auto=format&q=75" alt="Timesheet - Track time for accurate billing and analysis" loading="lazy" width="400" height="250" />
               </div>
               <mat-card-content>
                 <h3>Project Timesheet</h3>
@@ -161,9 +145,7 @@ import { SeoConfigService } from '../../services/seo-config.service';
             <!-- Reports Management -->
             <mat-card class="module-card">
               <div class="module-image">
-                <a href="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400" target="_blank">
-                  <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=250&fit=crop" alt="Reports" />
-                </a>
+                <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=250&fit=crop&auto=format&q=75" alt="Reports Management - Generate comprehensive analytics" loading="lazy" width="400" height="250" />
               </div>
               <mat-card-content>
                 <h3>Reports Management</h3>
@@ -175,9 +157,7 @@ import { SeoConfigService } from '../../services/seo-config.service';
             <!-- Goal Tracking -->
             <mat-card class="module-card">
               <div class="module-image">
-                <a href="https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=400" target="_blank">
-                  <img src="https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=400&h=250&fit=crop" alt="Goal Tracking" />
-                </a>
+                <img src="https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=400&h=250&fit=crop&auto=format&q=75" alt="Goal Tracking - Set and monitor business objectives" loading="lazy" width="400" height="250" />
               </div>
               <mat-card-content>
                 <h3>Goal Tracking</h3>
@@ -189,9 +169,7 @@ import { SeoConfigService } from '../../services/seo-config.service';
             <!-- Events and Notice Board -->
             <mat-card class="module-card">
               <div class="module-image">
-                <a href="https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=400" target="_blank">
-                  <img src="https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=400&h=250&fit=crop" alt="Events" />
-                </a>
+                <img src="https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=400&h=250&fit=crop&auto=format&q=75" alt="Events and Notice Board - Manage company events and announcements" loading="lazy" width="400" height="250" />
               </div>
               <mat-card-content>
                 <h3>Events & Notice Board</h3>
@@ -203,9 +181,7 @@ import { SeoConfigService } from '../../services/seo-config.service';
             <!-- Goals and Notes -->
             <mat-card class="module-card">
               <div class="module-image">
-                <a href="https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=400" target="_blank">
-                  <img src="https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=400&h=250&fit=crop" alt="Notes" />
-                </a>
+                <img src="https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=400&h=250&fit=crop&auto=format&q=75" alt="Goals and Notes - Organize goals with integrated note-taking" loading="lazy" width="400" height="250" />
               </div>
               <mat-card-content>
                 <h3>Goals & Notes</h3>
@@ -217,9 +193,7 @@ import { SeoConfigService } from '../../services/seo-config.service';
             <!-- Leads Management -->
             <mat-card class="module-card">
               <div class="module-image">
-                <a href="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400" target="_blank">
-                  <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=250&fit=crop" alt="Leads Management" />
-                </a>
+                <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=250&fit=crop&auto=format&q=75" alt="Leads Management - Capture and convert leads effectively" loading="lazy" width="400" height="250" />
               </div>
               <mat-card-content>
                 <h3>Leads Management</h3>
@@ -231,9 +205,7 @@ import { SeoConfigService } from '../../services/seo-config.service';
             <!-- Indicator Appraisal -->
             <mat-card class="module-card">
               <div class="module-image">
-                <a href="https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400" target="_blank">
-                  <img src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&h=250&fit=crop" alt="Performance Appraisal" />
-                </a>
+                <img src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&h=250&fit=crop&auto=format&q=75" alt="Performance Appraisal - Conduct comprehensive employee evaluations" loading="lazy" width="400" height="250" />
               </div>
               <mat-card-content>
                 <h3>Performance Appraisal</h3>
@@ -245,9 +217,7 @@ import { SeoConfigService } from '../../services/seo-config.service';
             <!-- Sales Management -->
             <mat-card class="module-card">
               <div class="module-image">
-                <a href="https://images.unsplash.com/photo-1556742502-ec7c0e9f34b1?w=400" target="_blank">
-                  <img src="https://images.unsplash.com/photo-1556742502-ec7c0e9f34b1?w=400&h=250&fit=crop" alt="Sales Management" />
-                </a>
+                <img src="https://images.unsplash.com/photo-1556742502-ec7c0e9f34b1?w=400&h=250&fit=crop&auto=format&q=75" alt="Sales Management - Streamline sales process and forecasting" loading="lazy" width="400" height="250" />
               </div>
               <mat-card-content>
                 <h3>Sales Management</h3>
@@ -259,9 +229,7 @@ import { SeoConfigService } from '../../services/seo-config.service';
             <!-- Deal Management -->
             <mat-card class="module-card">
               <div class="module-image">
-                <a href="https://images.unsplash.com/photo-1521791136064-7986c2920216?w=400" target="_blank">
-                  <img src="https://images.unsplash.com/photo-1521791136064-7986c2920216?w=400&h=250&fit=crop" alt="Deal Management" />
-                </a>
+                <img src="https://images.unsplash.com/photo-1521791136064-7986c2920216?w=400&h=250&fit=crop&auto=format&q=75" alt="Deal Management - Track and close deals efficiently" loading="lazy" width="400" height="250" />
               </div>
               <mat-card-content>
                 <h3>Deal Management</h3>

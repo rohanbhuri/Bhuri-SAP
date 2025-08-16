@@ -4,3 +4,9 @@
 /404
 /modules
 /dashboard
+/profile
+/settings
+/messages
+/notifications
+/search
+/more

@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title id="app-title">{{ APP_NAME }}</title>
+    <title id="app-title">{{APP_NAME}}</title>
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="{{DESCRIPTION}}" />
@@ -10,24 +10,57 @@
     <meta name="author" content="Rohan Bhuri" />
     <meta name="robots" content="index, follow" />
     <meta name="theme-color" content="{{PRIMARY_COLOR}}" />
+    <meta name="color-scheme" content="light dark" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    
+    <!-- Performance hints -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content="{{APP_NAME}}" />
     <meta property="og:description" content="{{DESCRIPTION}}" />
     <meta property="og:site_name" content="{{BRAND_NAME}}" />
+    <meta property="og:url" content="{{CANONICAL_URL}}" />
+    <meta property="og:locale" content="en_US" />
     
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="{{APP_NAME}}" />
     <meta name="twitter:description" content="{{DESCRIPTION}}" />
+    <meta name="twitter:site" content="@{{BRAND_NAME}}" />
     
+    <!-- Icons -->
     <link rel="icon" type="image/x-icon" href="favicon.ico" id="app-favicon" />
+    <link rel="apple-touch-icon" sizes="180x180" href="{{BRAND_ICON}}" />
+    <link rel="icon" type="image/png" sizes="32x32" href="{{BRAND_ICON}}" />
+    <link rel="icon" type="image/png" sizes="16x16" href="{{BRAND_ICON}}" />
+    
     <link rel="canonical" href="{{CANONICAL_URL}}" />
-    <link
-      href="https://fonts.googleapis.com/icon?family=Material+Icons"
-      rel="stylesheet"
-    />
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Optimized font loading -->
+    <link rel="preload" href="https://fonts.googleapis.com/icon?family=Material+Icons&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/icon?family=Material+Icons&display=swap" rel="stylesheet" /></noscript>
+    
+    <!-- Material theme loaded dynamically -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/@angular/material@20/prebuilt-themes/indigo-pink.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://cdn.jsdelivr.net/npm/@angular/material@20/prebuilt-themes/indigo-pink.css" rel="stylesheet" /></noscript>
+    <!-- Critical CSS inlined -->
+    <style>
+      :root {
+        --primary-color: {{PRIMARY_COLOR}};
+        --accent-color: {{ACCENT_COLOR}};
+        --secondary-color: {{SECONDARY_COLOR}};
+      }
+      body { margin: 0; font-family: Roboto, sans-serif; background: var(--primary-color); }
+      .loading { display: flex; justify-content: center; align-items: center; height: 100vh; color: white; }
+      .skip-link { position: absolute; left: -9999px; }
+      .skip-link:focus { left: 16px; top: 16px; z-index: 10000; padding: 8px 12px; background: var(--primary-color); color: white; }
+    </style>
+    
     <script>
       // Load brand configuration from environment
       window.brandConfig = {
@@ -51,10 +84,17 @@
       };
 
       // Update title and favicon
-      document.getElementById("app-title").textContent =
-        window.brandConfig.app.name;
-      document.getElementById("app-favicon").href =
-        window.brandConfig.brand.icon;
+      document.getElementById("app-title").textContent = window.brandConfig.app.name;
+      document.getElementById("app-favicon").href = window.brandConfig.brand.icon;
+      
+      // Register service worker
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => console.log('SW registered:', registration))
+            .catch(registrationError => console.log('SW registration failed:', registrationError));
+        });
+      }
     </script>
   </head>
   <body>

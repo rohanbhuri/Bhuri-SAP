@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title id="app-title">{{ APP_NAME }}</title>
+    <title id="app-title">Beax Resource Manager</title>
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Resource Management System" />
@@ -10,24 +10,57 @@
     <meta name="author" content="Rohan Bhuri" />
     <meta name="robots" content="index, follow" />
     <meta name="theme-color" content="#3B82F6" />
+    <meta name="color-scheme" content="light dark" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    
+    <!-- Performance hints -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Beax Resource Manager" />
     <meta property="og:description" content="Resource Management System" />
     <meta property="og:site_name" content="Beax RM" />
+    <meta property="og:url" content="http://localhost:4200" />
+    <meta property="og:locale" content="en_US" />
     
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Beax Resource Manager" />
     <meta name="twitter:description" content="Resource Management System" />
+    <meta name="twitter:site" content="@Beax RM" />
     
+    <!-- Icons -->
     <link rel="icon" type="image/x-icon" href="favicon.ico" id="app-favicon" />
-    <link rel="canonical" href="http://13.126.228.247:4200" />
-    <link
-      href="https://fonts.googleapis.com/icon?family=Material+Icons"
-      rel="stylesheet"
-    />
+    <link rel="apple-touch-icon" sizes="180x180" href="/config/assets/beaxrm/icons/BEAX-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/config/assets/beaxrm/icons/BEAX-icon.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/config/assets/beaxrm/icons/BEAX-icon.png" />
+    
+    <link rel="canonical" href="http://localhost:4200" />
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Optimized font loading -->
+    <link rel="preload" href="https://fonts.googleapis.com/icon?family=Material+Icons&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/icon?family=Material+Icons&display=swap" rel="stylesheet" /></noscript>
+    
+    <!-- Material theme loaded dynamically -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/@angular/material@20/prebuilt-themes/indigo-pink.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://cdn.jsdelivr.net/npm/@angular/material@20/prebuilt-themes/indigo-pink.css" rel="stylesheet" /></noscript>
+    <!-- Critical CSS inlined -->
+    <style>
+      :root {
+        --primary-color: #3B82F6;
+        --accent-color: #F59E0B;
+        --secondary-color: #6B7280;
+      }
+      body { margin: 0; font-family: Roboto, sans-serif; background: var(--primary-color); }
+      .loading { display: flex; justify-content: center; align-items: center; height: 100vh; color: white; }
+      .skip-link { position: absolute; left: -9999px; }
+      .skip-link:focus { left: 16px; top: 16px; z-index: 10000; padding: 8px 12px; background: var(--primary-color); color: white; }
+    </style>
+    
     <script>
       // Load brand configuration from environment
       window.brandConfig = {
@@ -51,10 +84,17 @@
       };
 
       // Update title and favicon
-      document.getElementById("app-title").textContent =
-        window.brandConfig.app.name;
-      document.getElementById("app-favicon").href =
-        window.brandConfig.brand.icon;
+      document.getElementById("app-title").textContent = window.brandConfig.app.name;
+      document.getElementById("app-favicon").href = window.brandConfig.brand.icon;
+      
+      // Register service worker
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => console.log('SW registered:', registration))
+            .catch(registrationError => console.log('SW registration failed:', registrationError));
+        });
+      }
     </script>
   </head>
   <body>

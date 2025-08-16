@@ -14,10 +14,19 @@ if (!brandConfig) {
 
 console.log(`${buildOnly ? 'Configuring' : 'Starting'} ${brandConfig.brand.name} (${brand})...`);
 
-// Replace environment variables in frontend index.html using template
+// Replace environment variables in frontend files using templates
 const templatePath = path.join(__dirname, 'frontend/src/index.template.html');
 const indexPath = path.join(__dirname, 'frontend/src/index.html');
+const manifestPath = path.join(__dirname, 'frontend/public/manifest.json');
+const robotsPath = path.join(__dirname, 'frontend/public/robots.txt');
+const swPath = path.join(__dirname, 'frontend/public/sw.js');
+const sitemapPath = path.join(__dirname, 'frontend/public/sitemap.xml');
+
 let indexContent = fs.readFileSync(templatePath, 'utf8');
+let manifestContent = fs.readFileSync(manifestPath, 'utf8');
+let robotsContent = fs.readFileSync(robotsPath, 'utf8');
+let swContent = fs.readFileSync(swPath, 'utf8');
+let sitemapContent = fs.readFileSync(sitemapPath, 'utf8');
 
 const replacements = {
   '{{BRAND_NAME}}': brandConfig.brand.name,
@@ -30,15 +39,24 @@ const replacements = {
   '{{VERSION}}': brandConfig.app.version,
   '{{DESCRIPTION}}': brandConfig.app.description,
   '{{APP_PORT}}': brandConfig.app.port.toString(),
-  '{{API_URL}}': brandConfig.app.apiUrl
+  '{{API_URL}}': brandConfig.app.apiUrl,
+  '{{CANONICAL_URL}}': `http://localhost:${brandConfig.app.port}`
 };
 
 Object.keys(replacements).forEach(placeholder => {
   const regex = new RegExp(placeholder.replace(/[{}]/g, '\\$&'), 'g');
   indexContent = indexContent.replace(regex, replacements[placeholder]);
+  manifestContent = manifestContent.replace(regex, replacements[placeholder]);
+  robotsContent = robotsContent.replace(regex, replacements[placeholder]);
+  swContent = swContent.replace(regex, replacements[placeholder]);
+  sitemapContent = sitemapContent.replace(regex, replacements[placeholder]);
 });
 
 fs.writeFileSync(indexPath, indexContent);
+fs.writeFileSync(manifestPath, manifestContent);
+fs.writeFileSync(robotsPath, robotsContent);
+fs.writeFileSync(swPath, swContent);
+fs.writeFileSync(sitemapPath, sitemapContent);
 console.log(`Environment variables replaced for ${brand}`);
 
 // Set environment variables from development config
@@ -59,6 +77,7 @@ process.env.ACCENT_COLOR = brandConfig.colors.accent;
 process.env.SECONDARY_COLOR = brandConfig.colors.secondary;
 process.env.BRAND_LOGO = brandConfig.brand.logo;
 process.env.BRAND_ICON = brandConfig.brand.icon;
+process.env.CANONICAL_URL = `http://localhost:${brandConfig.app.port}`;
 
 if (buildOnly) {
   console.log(`Configuration complete for ${brand}`);
