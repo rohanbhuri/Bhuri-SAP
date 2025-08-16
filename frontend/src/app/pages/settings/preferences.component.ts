@@ -183,7 +183,7 @@ export class PreferencesComponent {
         this.themeService.applyTheme(preferences);
         this.snackBar.open('Preferences saved successfully', 'Close', { duration: 3000 });
       },
-      error: (error) => {
+      error: (error: any) => {
         this.loading.set(false);
         console.error('Save preferences error:', error);
         if (error.status === 401) {

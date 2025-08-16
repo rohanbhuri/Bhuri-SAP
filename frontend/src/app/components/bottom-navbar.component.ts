@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { filter } from 'rxjs/operators';
 import { ModulesService, AppModuleInfo } from '../services/modules.service';
+import { PreferencesService } from '../services/preferences.service';
 
 @Component({
   selector: 'app-bottom-navbar',
@@ -56,7 +57,7 @@ import { ModulesService, AppModuleInfo } from '../services/modules.service';
       >
         <mat-icon>apps</mat-icon>
       </button>
-      @for (module of activeModules(); track module.id) {
+      @for (module of pinnedModules(); track module.id) {
         <button
           mat-icon-button
           (click)="goToModule(module)"
@@ -112,8 +113,10 @@ import { ModulesService, AppModuleInfo } from '../services/modules.service';
 })
 export class BottomNavbarComponent {
   private modulesService = inject(ModulesService);
+  private preferencesService = inject(PreferencesService);
   activeRoute: string = '';
   activeModules = signal<AppModuleInfo[]>([]);
+  pinnedModules = signal<AppModuleInfo[]>([]);
   
   constructor(private router: Router) {
     this.router.events
@@ -126,16 +129,37 @@ export class BottomNavbarComponent {
   ngOnInit() {
     this.activeRoute = this.router.url;
     this.loadActiveModules();
+    this.loadPinnedModules();
   }
 
   loadActiveModules() {
     this.modulesService.getActive().subscribe({
       next: (modules) => {
-        this.activeModules.set(modules.slice(0, 4)); // Limit to 4 modules for bottom nav
+        this.activeModules.set(modules);
+        this.updatePinnedModules();
       },
       error: (error) => {
         console.error('Failed to load active modules:', error);
       }
+    });
+  }
+
+  loadPinnedModules() {
+    this.preferencesService.getUserPreferences().subscribe({
+      next: (prefs) => {
+        this.preferencesService.updatePinnedModules(prefs?.pinnedModules || []);
+        this.updatePinnedModules();
+      },
+      error: () => {
+        this.preferencesService.updatePinnedModules([]);
+      }
+    });
+  }
+
+  updatePinnedModules() {
+    this.preferencesService.pinnedModules$.subscribe(pinnedIds => {
+      const pinned = this.activeModules().filter(m => pinnedIds.includes(m.id));
+      this.pinnedModules.set(pinned);
     });
   }
 

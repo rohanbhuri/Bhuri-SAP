@@ -19,4 +19,16 @@ export class UserPreferences {
 
   @Column({ default: '#424242' })
   secondaryColor: string;
+
+  @Column({ default: [] })
+  pinnedModules: string[];
+
+  @Column({ default: {} })
+  dashboardPreferences: {
+    widgets?: {
+      id: string;
+      size: 's' | 'm' | 'l';
+      position: number;
+    }[];
+  };
 }

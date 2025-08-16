@@ -25,4 +25,22 @@ export class PreferencesService {
       return this.userPreferencesRepository.save(newPreferences);
     }
   }
+
+  async togglePinnedModule(userId: string, moduleId: string) {
+    const prefs = await this.getUserPreferences(userId) || { userId, pinnedModules: [] };
+    const pinnedModules = prefs.pinnedModules || [];
+    
+    const index = pinnedModules.indexOf(moduleId);
+    if (index > -1) {
+      pinnedModules.splice(index, 1);
+    } else {
+      pinnedModules.push(moduleId);
+    }
+    
+    return this.saveUserPreferences(userId, { pinnedModules });
+  }
+
+  async saveDashboardPreferences(userId: string, dashboardPreferences: any) {
+    return this.saveUserPreferences(userId, { dashboardPreferences });
+  }
 }

@@ -85,13 +85,14 @@ interface DashboardWidget {
         <mat-card
           class="widget"
           [attr.data-size]="w.size"
+          [style.border-left]="'4px solid ' + (getModuleColor(w.id) || '#ccc')"
           cdkDrag
           role="listitem"
           tabindex="0"
           [attr.aria-label]="w.title"
         >
           <div class="widget-header">
-            <h3 class="widget-title">{{ w.title }}</h3>
+            <h3 class="widget-title" [style.color]="getModuleColor(w.id) || 'inherit'">{{ w.title }}</h3>
             <div class="widget-actions">
               <button mat-icon-button cdkDragHandle aria-label="Drag widget">
                 <mat-icon>drag_indicator</mat-icon>
@@ -366,6 +367,11 @@ export class DashboardComponent {
     if (!user?.organizationId) return '';
     const org = this.organizations().find((o) => o.id === user.organizationId);
     return org?.name || '';
+  }
+
+  getModuleColor(moduleId: string): string | null {
+    const module = this.activeModules().find(m => m.name === moduleId);
+    return module?.color || null;
   }
 
   logout() {

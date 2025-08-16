@@ -13,6 +13,7 @@ import { NavbarComponent } from '../../components/navbar.component';
 import { BottomNavbarComponent } from '../../components/bottom-navbar.component';
 import { ModulesService, AppModuleInfo, ModuleRequest } from '../../services/modules.service';
 import { AuthService } from '../../services/auth.service';
+import { PreferencesService } from '../../services/preferences.service';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 
@@ -61,10 +62,10 @@ import { FormsModule } from '@angular/forms';
 
             <div class="modules-grid">
               @for (module of filteredModules(); track module.id) {
-              <mat-card class="module-card" [class.active]="module.isActive">
+              <mat-card class="module-card" [class.active]="module.isActive" [style.border-left]="'4px solid ' + (module.color || '#ccc')">
                 <div class="module-header">
                   <div class="module-info">
-                    <h3 class="module-title">{{ module.displayName }}</h3>
+                    <h3 class="module-title" [style.color]="module.color || 'inherit'">{{ module.displayName }}</h3>
                     <div class="module-status">
                       @if (module.isActive) {
                       <mat-chip class="status-chip active">
@@ -101,6 +102,9 @@ import { FormsModule } from '@angular/forms';
                     <button mat-raised-button color="primary" (click)="openModule(module)">
                       <mat-icon>open_in_new</mat-icon>
                       Open
+                    </button>
+                    <button mat-icon-button (click)="togglePin(module)" [attr.aria-label]="isPinned(module.id) ? 'Unpin from navbar' : 'Pin to navbar'">
+                      <mat-icon>{{ isPinned(module.id) ? 'push_pin' : 'push_pin' }}</mat-icon>
                     </button>
                     <button mat-stroked-button color="warn" (click)="deactivateModule(module)" [disabled]="loading()">
                       @if (loading()) {
@@ -427,6 +431,7 @@ import { FormsModule } from '@angular/forms';
 export class ModulesComponent {
   private modulesService = inject(ModulesService);
   private authService = inject(AuthService);
+  private preferencesService = inject(PreferencesService);
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
 
@@ -436,10 +441,12 @@ export class ModulesComponent {
   selectedTab = signal(0);
   loading = signal(false);
   searchTerm = '';
+  pinnedModules = signal<string[]>([]);
 
   ngOnInit() {
     this.loadModules();
     this.loadPendingRequests();
+    this.loadPinnedModules();
   }
 
   loadModules() {
@@ -601,5 +608,34 @@ export class ModulesComponent {
 
   formatDate(dateString: string): string {
     return new Date(dateString).toLocaleDateString();
+  }
+
+  loadPinnedModules() {
+    this.preferencesService.getUserPreferences().subscribe({
+      next: (prefs) => {
+        this.pinnedModules.set(prefs?.pinnedModules || []);
+      },
+      error: () => {
+        this.pinnedModules.set([]);
+      }
+    });
+  }
+
+  isPinned(moduleId: string): boolean {
+    return this.pinnedModules().includes(moduleId);
+  }
+
+  togglePin(module: AppModuleInfo) {
+    this.preferencesService.togglePinnedModule(module.id).subscribe({
+      next: (prefs) => {
+        this.pinnedModules.set(prefs.pinnedModules || []);
+        this.preferencesService.updatePinnedModules(prefs.pinnedModules || []);
+        const action = this.isPinned(module.id) ? 'pinned to' : 'unpinned from';
+        this.snackBar.open(`${module.displayName} ${action} navbar`, 'Close', { duration: 2000 });
+      },
+      error: () => {
+        this.snackBar.open('Failed to update pin status', 'Close', { duration: 3000 });
+      }
+    });
   }
 }
