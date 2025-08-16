@@ -20,8 +20,11 @@ export class User {
   @Column()
   isActive: boolean;
 
-  @Column('objectId')
-  organizationId: ObjectId;
+  @Column('array')
+  organizationIds: ObjectId[];
+
+  @Column({ type: String, nullable: true })
+  currentOrganizationId?: ObjectId;
 
   @Column('array')
   roleIds: ObjectId[];
@@ -37,6 +40,7 @@ export class User {
 
   constructor() {
     this.isActive = true;
+    this.organizationIds = [];
     this.roleIds = [];
     this.permissionIds = [];
     this.activeModuleIds = [];

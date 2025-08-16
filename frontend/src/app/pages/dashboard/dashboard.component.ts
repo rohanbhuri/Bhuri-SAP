@@ -19,6 +19,7 @@ import {
   moveItemInArray,
 } from '@angular/cdk/drag-drop';
 import { UserManagementWidgetComponent } from '../../modules/user-management/user-management-widget.component';
+import { OrganizationManagementWidgetComponent } from '../../modules/organization-management/organization-management-widget.component';
 import { CrmWidgetComponent } from '../../modules/crm/crm-widget.component';
 import { HrManagementWidgetComponent } from '../../modules/hr-management/hr-management-widget.component';
 import { ProjectsManagementWidgetComponent } from '../../modules/projects-management/projects-management-widget.component';
@@ -26,6 +27,8 @@ import { TasksManagementWidgetComponent } from '../../modules/tasks-management/t
 import { InventoryManagementWidgetComponent } from '../../modules/inventory-management/inventory-management-widget.component';
 import { PayrollManagementWidgetComponent } from '../../modules/payroll-management/payroll-management-widget.component';
 import { SalesManagementWidgetComponent } from '../../modules/sales-management/sales-management-widget.component';
+import { PendingWorkWidgetComponent } from '../../components/pending-work-widget.component';
+import { OrganizationManagementService } from '../../modules/organization-management/organization-management.service';
 import { SeoService } from '../../services/seo.service';
 
 interface DashboardWidget {
@@ -51,6 +54,7 @@ interface DashboardWidget {
     CdkDrag,
     CdkDragHandle,
     UserManagementWidgetComponent,
+    OrganizationManagementWidgetComponent,
     CrmWidgetComponent,
     HrManagementWidgetComponent,
     ProjectsManagementWidgetComponent,
@@ -58,6 +62,7 @@ interface DashboardWidget {
     InventoryManagementWidgetComponent,
     PayrollManagementWidgetComponent,
     SalesManagementWidgetComponent,
+    PendingWorkWidgetComponent,
   ],
   template: `
     <app-navbar></app-navbar>
@@ -125,6 +130,8 @@ interface DashboardWidget {
           <div class="widget-body">
             @switch (w.id) { @case ('user-management') {
             <app-user-management-widget></app-user-management-widget>
+            } @case ('organization-management') {
+            <app-organization-management-widget></app-organization-management-widget>
             } @case ('crm') {
             <app-crm-widget></app-crm-widget>
             } @case ('hr-management') {
@@ -139,6 +146,8 @@ interface DashboardWidget {
             <app-payroll-management-widget></app-payroll-management-widget>
             } @case ('sales-management') {
             <app-sales-management-widget></app-sales-management-widget>
+            } @case ('pending-work') {
+            <app-pending-work-widget></app-pending-work-widget>
             } @default {
             <div class="placeholder-widget">
               <p class="metric">{{ w.title }}</p>
@@ -286,6 +295,7 @@ export class DashboardComponent implements OnInit {
   private seoService = inject(SeoService);
   protected brandConfig = inject(BrandConfigService);
   private modulesService = inject(ModulesService);
+  private orgService = inject(OrganizationManagementService);
 
   currentUser = signal<User | null>(null);
   organizations = signal<Organization[]>([]);
@@ -315,7 +325,31 @@ export class DashboardComponent implements OnInit {
                       : 'm',
                 }))
               : [];
-            this.widgets.set(mapped);
+            
+            // Add pending work widget if user has super admin role
+            if (user?.roles?.includes('super_admin')) {
+              this.orgService.getOrganizationRequests().subscribe({
+                next: (requests) => {
+                  const pendingCount = requests.filter(r => r.status === 'pending').length;
+                  if (pendingCount > 0) {
+                    const pendingWidget: DashboardWidget = {
+                      id: 'pending-work',
+                      title: 'Pending Work',
+                      description: 'Review pending organization requests',
+                      size: 's'
+                    };
+                    this.widgets.set([pendingWidget, ...mapped]);
+                  } else {
+                    this.widgets.set(mapped);
+                  }
+                },
+                error: () => {
+                  this.widgets.set(mapped);
+                }
+              });
+            } else {
+              this.widgets.set(mapped);
+            }
           },
           error: (error) => {
             if (error.status === 401 || error.status === 403) {

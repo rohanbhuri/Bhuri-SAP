@@ -8,6 +8,7 @@ import { RolesModule } from './roles/roles.module';
 import { ModulesModule } from './modules/modules.module';
 import { PreferencesModule } from './preferences/preferences.module';
 import { UserManagementModule } from './user-management/user-management.module';
+import { OrganizationManagementModule } from './organization-management/organization-management.module';
 import { CrmModule } from './crm/crm.module';
 import { HrManagementModule } from './hr-management/hr-management.module';
 import { ProjectsManagementModule } from './projects-management/projects-management.module';
@@ -28,6 +29,7 @@ import { ProjectsManagementModule } from './projects-management/projects-managem
     ModulesModule,
     PreferencesModule,
     UserManagementModule,
+    OrganizationManagementModule,
     CrmModule,
     HrManagementModule,
     ProjectsManagementModule,

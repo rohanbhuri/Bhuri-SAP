@@ -29,10 +29,10 @@ export class Project {
   @Column('array')
   teamMemberIds: ObjectId[];
 
-  @Column('objectId')
+  @Column({ type: String })
   managerId: ObjectId;
 
-  @Column('objectId')
+  @Column({ type: String })
   organizationId: ObjectId;
 
   @Column()

@@ -21,6 +21,11 @@ export class OrganizationsController {
     return this.organizationsService.findUserOrganizations(req.user.userId);
   }
 
+  @Get('public')
+  findPublicOrganizations() {
+    return this.organizationsService.findPublicOrganizations();
+  }
+
   @Post()
   @RequireRoles(RoleType.SUPER_ADMIN)
   create(@Body() orgData: any) {

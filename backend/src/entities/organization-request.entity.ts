@@ -1,18 +1,15 @@
 import { Entity, ObjectIdColumn, ObjectId, Column } from 'typeorm';
 
-export enum ModuleRequestStatus {
+export enum RequestStatus {
   PENDING = 'pending',
   APPROVED = 'approved',
   REJECTED = 'rejected'
 }
 
-@Entity('module-requests')
-export class ModuleRequest {
+@Entity('organization_requests')
+export class OrganizationRequest {
   @ObjectIdColumn()
   _id: ObjectId;
-
-  @Column({ type: String })
-  moduleId: ObjectId;
 
   @Column({ type: String })
   userId: ObjectId;
@@ -20,20 +17,27 @@ export class ModuleRequest {
   @Column({ type: String })
   organizationId: ObjectId;
 
-  @Column()
-  status: ModuleRequestStatus;
+  @Column({
+    type: 'enum',
+    enum: RequestStatus,
+    default: RequestStatus.PENDING
+  })
+  status: RequestStatus;
 
   @Column()
   requestedAt: Date;
 
-  @Column()
+  @Column({ nullable: true })
   processedAt?: Date;
 
   @Column({ type: String, nullable: true })
   processedBy?: ObjectId;
 
+  @Column({ nullable: true })
+  reason?: string;
+
   constructor() {
-    this.status = ModuleRequestStatus.PENDING;
     this.requestedAt = new Date();
+    this.status = RequestStatus.PENDING;
   }
 }

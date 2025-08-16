@@ -87,4 +87,8 @@ export class BrandConfigService {
   getApiUrl(): string {
     return this.config.app.apiUrl;
   }
+
+  getPrimaryColor(): string {
+    return this.config.colors.primary;
+  }
 }

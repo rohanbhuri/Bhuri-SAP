@@ -36,9 +36,18 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   { 
+    path: 'modules/organization-management', 
+    loadChildren: () => import('./modules/organization-management/organization-management.routes').then(m => m.organizationManagementRoutes),
+    canActivate: [authGuard]
+  },
+  { 
     path: 'modules/crm', 
     loadChildren: () => import('./modules/crm/crm.routes').then(m => m.CRM_ROUTES),
     canActivate: [authGuard]
+  },
+  { 
+    path: 'my-organizations', 
+    loadChildren: () => import('./modules/my-organizations/my-organizations.routes').then(m => m.MY_ORGANIZATIONS_ROUTES)
   },
   { path: 'more', component: MoreComponent, canActivate: [authGuard] },
   { path: '404', component: NotFoundComponent },

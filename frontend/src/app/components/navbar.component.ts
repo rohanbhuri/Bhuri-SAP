@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
@@ -20,7 +20,7 @@ import { PwaInstallModalComponent } from './pwa-install-modal.component';
       <img [src]="brandConfig.getIcon()" [alt]="brandConfig.getBrandName()" class="logo" (click)="goToDashboard()">
       <span class="spacer"></span>
       
-      @if (showInstallButton) {
+      @if (showInstallButton()) {
         <button mat-icon-button (click)="showInstallModal()" matTooltip="Install App" class="install-button">
           <mat-icon>download</mat-icon>
         </button>
@@ -98,15 +98,16 @@ import { PwaInstallModalComponent } from './pwa-install-modal.component';
     }
   `]
 })
-export class NavbarComponent {
+export class NavbarComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
   private dialog = inject(MatDialog);
   private pwaService = inject(PwaService);
+  private cdr = inject(ChangeDetectorRef);
   protected brandConfig = inject(BrandConfigService);
   
   currentUser = signal<User | null>(null);
-  showInstallButton = false;
+  showInstallButton = signal(false);
   
   ngOnInit() {
     this.authService.currentUser$.subscribe(user => {
@@ -115,7 +116,7 @@ export class NavbarComponent {
     
     // Check if PWA is installable
     this.pwaService.installable$.subscribe((installable) => {
-      this.showInstallButton = installable;
+      this.showInstallButton.set(installable);
     });
   }
   

@@ -35,7 +35,7 @@ export class UsersService {
       users = await this.userRepository.find();
     } else {
       users = await this.userRepository.find({
-        where: { organizationId: user.organizationId }
+        where: { currentOrganizationId: user.currentOrganizationId }
       });
     }
 

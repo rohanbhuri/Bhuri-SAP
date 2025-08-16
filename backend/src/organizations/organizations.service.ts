@@ -38,14 +38,18 @@ export class OrganizationsService {
       where: { _id: new ObjectId(userId) }
     });
     
-    if (!user || user.roleIds.length === 0) {
+    if (!user || user.organizationIds.length === 0) {
       return [];
     }
 
-    const organizationIds = user.organizationId ? [user.organizationId] : [];
-    
     return this.organizationRepository.find({
-      where: { _id: { $in: organizationIds } }
+      where: { _id: { $in: user.organizationIds } }
+    });
+  }
+
+  async findPublicOrganizations() {
+    return this.organizationRepository.find({
+      where: { isPublic: true }
     });
   }
 }

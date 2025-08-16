@@ -11,6 +11,15 @@ export class Organization {
   @Column()
   code: string;
 
+  @Column({ nullable: true })
+  description: string;
+
+  @Column({ default: false })
+  isPublic: boolean;
+
+  @Column({ default: 0 })
+  memberCount: number;
+
   @Column('array')
   activeModuleIds: ObjectId[];
 

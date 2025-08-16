@@ -5,10 +5,10 @@ export class Timesheet {
   @ObjectIdColumn()
   _id: ObjectId;
 
-  @Column('objectId')
+  @Column({ type: String })
   employeeId: ObjectId;
 
-  @Column('objectId')
+  @Column({ type: String })
   projectId: ObjectId;
 
   @Column()
@@ -23,7 +23,7 @@ export class Timesheet {
   @Column()
   status: string; // draft, submitted, approved, rejected
 
-  @Column('objectId')
+  @Column({ type: String })
   organizationId: ObjectId;
 
   @Column()

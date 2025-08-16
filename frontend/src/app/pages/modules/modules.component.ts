@@ -668,6 +668,7 @@ export class ModulesComponent implements OnInit {
       crm: '/modules/crm',
       'user-management': '/modules/user-management',
       user_management: '/modules/user-management',
+      'my-organizations': '/my-organizations',
       reports: '/reports',
       dashboard: '/dashboard',
       settings: '/settings',

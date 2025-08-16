@@ -65,14 +65,15 @@ import { PwaInstallModalComponent } from '../../components/pwa-install-modal.com
               <mat-icon>person_add</mat-icon>
               Sign Up
             </button>
-            <button 
-              *ngIf="showInstallButton" 
-              mat-raised-button 
-              (click)="showInstallModal()" 
-              class="cta-install">
-              <mat-icon>download</mat-icon>
-              Install App
-            </button>
+            @if (showInstallButton) {
+              <button 
+                mat-raised-button 
+                (click)="showInstallModal()" 
+                class="cta-install">
+                <mat-icon>download</mat-icon>
+                Install App
+              </button>
+            }
           </div>
         </div>
       </section>

@@ -63,7 +63,8 @@ export class UserManagementService {
       firstName: userData.firstName,
       lastName: userData.lastName,
       isActive: userData.isActive ?? true,
-      organizationId: userData.organizationId ? new ObjectId(userData.organizationId) : null,
+      currentOrganizationId: userData.organizationId ? new ObjectId(userData.organizationId) : null,
+      organizationIds: userData.organizationId ? [new ObjectId(userData.organizationId)] : [],
       roleIds: userData.roleIds?.map(id => new ObjectId(id)) || [],
       permissionIds: userData.permissionIds?.map(id => new ObjectId(id)) || []
     });
@@ -92,7 +93,12 @@ export class UserManagementService {
     if (userData.firstName) user.firstName = userData.firstName;
     if (userData.lastName) user.lastName = userData.lastName;
     if (userData.isActive !== undefined) user.isActive = userData.isActive;
-    if (userData.organizationId) user.organizationId = new ObjectId(userData.organizationId);
+    if (userData.organizationId) {
+      user.currentOrganizationId = new ObjectId(userData.organizationId);
+      if (!user.organizationIds.some(id => id.equals(new ObjectId(userData.organizationId)))) {
+        user.organizationIds.push(new ObjectId(userData.organizationId));
+      }
+    }
     if (userData.roleIds) user.roleIds = userData.roleIds.map(id => new ObjectId(id));
     if (userData.permissionIds) user.permissionIds = userData.permissionIds.map(id => new ObjectId(id));
 
@@ -268,10 +274,11 @@ export class UserManagementService {
   async setupDefaults() {
     // Create default modules
     const modules = [
-      { name: 'user-management', displayName: 'User Management', description: 'Manage users, roles and permissions', permissionType: ModulePermissionType.PUBLIC },
-      { name: 'dashboard', displayName: 'Dashboard', description: 'Main dashboard view', permissionType: ModulePermissionType.PUBLIC },
-      { name: 'reports', displayName: 'Reports', description: 'Generate and view reports', permissionType: ModulePermissionType.REQUIRE_PERMISSION },
-      { name: 'settings', displayName: 'Settings', description: 'System settings', permissionType: ModulePermissionType.REQUIRE_PERMISSION }
+      { id: 'user-management', name: 'user-management', displayName: 'User Management', description: 'Manage users, roles and permissions', permissionType: ModulePermissionType.PUBLIC, category: 'administration', icon: 'people', color: '#2196F3', isActive: true },
+      { id: 'organization-management', name: 'organization-management', displayName: 'Organization Management', description: 'Manage organizations and organizational settings', permissionType: ModulePermissionType.REQUIRE_PERMISSION, category: 'administration', icon: 'business', color: '#FF9800', isActive: true },
+      { id: 'dashboard', name: 'dashboard', displayName: 'Dashboard', description: 'Main dashboard view', permissionType: ModulePermissionType.PUBLIC, category: 'core', icon: 'dashboard', color: '#4CAF50', isActive: true },
+      { id: 'reports', name: 'reports', displayName: 'Reports', description: 'Generate and view reports', permissionType: ModulePermissionType.REQUIRE_PERMISSION, category: 'analytics', icon: 'assessment', color: '#9C27B0', isActive: true },
+      { id: 'settings', name: 'settings', displayName: 'Settings', description: 'System settings', permissionType: ModulePermissionType.REQUIRE_PERMISSION, category: 'configuration', icon: 'settings', color: '#607D8B', isActive: true }
     ];
 
     for (const moduleData of modules) {

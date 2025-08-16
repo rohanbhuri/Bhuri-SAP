@@ -35,10 +35,10 @@ export class Employee {
   @Column()
   status: string; // active, inactive, terminated
 
-  @Column('objectId')
+  @Column({ type: String })
   organizationId: ObjectId;
 
-  @Column('objectId')
+  @Column({ type: String })
   managerId: ObjectId;
 
   @Column()

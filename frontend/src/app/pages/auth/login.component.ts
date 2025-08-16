@@ -27,7 +27,7 @@ import { SeoConfigService } from '../../services/seo-config.service';
   ],
   template: `
     <div class="auth-container">
-      <mat-card class="auth-card">
+      <mat-card class="auth-card" [style.background]="brandConfig.getPrimaryColor() + '11'" [style.border-color]="brandConfig.getPrimaryColor() + '33'">
         <mat-card-header>
           <div class="logo-container">
             <img [src]="brandConfig.getLogo()" [alt]="brandConfig.getBrandName()" class="logo" />
@@ -91,6 +91,8 @@ import { SeoConfigService } from '../../services/seo-config.service';
         width: 100%;
         max-width: 400px;
         padding: 20px;
+        border: 2px solid;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
       }
 
       .full-width {

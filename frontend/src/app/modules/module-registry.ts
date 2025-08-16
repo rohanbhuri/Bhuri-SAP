@@ -2,6 +2,7 @@ import { Type } from '@angular/core';
 
 // Widget Components
 import { UserManagementWidgetComponent } from './user-management/user-management-widget.component';
+import { OrganizationManagementWidgetComponent } from './organization-management/organization-management-widget.component';
 import { CrmWidgetComponent } from './crm/crm-widget.component';
 import { HrManagementWidgetComponent } from './hr-management/hr-management-widget.component';
 import { ProjectsManagementWidgetComponent } from './projects-management/projects-management-widget.component';
@@ -41,6 +42,18 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     widgetComponent: UserManagementWidgetComponent,
     mainComponent: UserManagementComponent,
     route: '/modules/user-management',
+    isActive: true,
+    category: 'core'
+  },
+  {
+    id: 'organization-management',
+    name: 'organization-management',
+    displayName: 'Organization Management',
+    description: 'Manage organizations and membership requests',
+    icon: 'business',
+    color: '#FF5722',
+    widgetComponent: OrganizationManagementWidgetComponent,
+    route: '/modules/organization-management',
     isActive: true,
     category: 'core'
   },

@@ -29,7 +29,7 @@ export class InventoryItem {
   @Column()
   status: string; // in-stock, low-stock, out-of-stock
 
-  @Column('objectId')
+  @Column({ type: String })
   organizationId: ObjectId;
 
   @Column()
