@@ -7,7 +7,13 @@ export const PROJECT_TRACKING_ROUTES: Routes = [
     path: '',
     component: ProjectTrackingLayoutComponent,
     children: [
-      { path: '', redirectTo: 'overview', pathMatch: 'full' },
+      { path: '', redirectTo: 'gantt', pathMatch: 'full' },
+      {
+        path: 'gantt',
+        loadComponent: () =>
+          import('./pages/gantt.page').then((m) => m.TrackingGanttPageComponent),
+        title: 'Tracking Gantt Chart',
+      },
       {
         path: 'overview',
         component: ProjectTrackingComponent,

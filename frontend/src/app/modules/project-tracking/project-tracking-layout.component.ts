@@ -17,6 +17,7 @@ import { BottomNavbarComponent } from '../../components/bottom-navbar.component'
     <app-navbar></app-navbar>
     <div class="module-container">
       <nav class="subnav">
+        <a routerLink="gantt" routerLinkActive="active">Gantt Chart</a>
         <a routerLink="overview" routerLinkActive="active">Overview</a>
         <a routerLink="milestones" routerLinkActive="active">Milestones</a>
         <a routerLink="tasks" routerLinkActive="active">Tasks</a>

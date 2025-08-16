@@ -7,7 +7,13 @@ export const PROJECT_TIMESHEET_ROUTES: Routes = [
     path: '',
     component: ProjectTimesheetLayoutComponent,
     children: [
-      { path: '', redirectTo: 'overview', pathMatch: 'full' },
+      { path: '', redirectTo: 'gantt', pathMatch: 'full' },
+      {
+        path: 'gantt',
+        loadComponent: () =>
+          import('./pages/gantt.page').then((m) => m.TimesheetGanttPageComponent),
+        title: 'Timesheet Gantt Chart',
+      },
       {
         path: 'overview',
         component: ProjectTimesheetComponent,

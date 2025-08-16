@@ -7,7 +7,13 @@ export const PROJECTS_MANAGEMENT_ROUTES: Routes = [
     path: '',
     component: ProjectsManagementLayoutComponent,
     children: [
-      { path: '', redirectTo: 'overview', pathMatch: 'full' },
+      { path: '', redirectTo: 'gantt', pathMatch: 'full' },
+      {
+        path: 'gantt',
+        loadComponent: () =>
+          import('./pages/gantt.page').then((m) => m.ProjectsGanttPageComponent),
+        title: 'Projects Gantt Chart',
+      },
       {
         path: 'overview',
         component: ProjectsManagementComponent,
