@@ -7,7 +7,7 @@ export enum ActionType {
   DELETE = 'delete'
 }
 
-@Entity()
+@Entity('permissions')
 export class Permission {
   @ObjectIdColumn()
   _id: ObjectId;

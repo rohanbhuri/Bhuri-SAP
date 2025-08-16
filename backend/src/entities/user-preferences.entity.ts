@@ -1,6 +1,6 @@
 import { Entity, Column, ObjectIdColumn, ObjectId } from 'typeorm';
 
-@Entity()
+@Entity('user-preferences')
 export class UserPreferences {
   @ObjectIdColumn()
   _id: ObjectId;

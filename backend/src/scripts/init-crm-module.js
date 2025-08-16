@@ -9,7 +9,7 @@ async function initCrmModule() {
     const db = client.db();
     
     // Check if CRM module already exists
-    const existingModule = await db.collection('module').findOne({ name: 'crm' });
+    const existingModule = await db.collection('modules').findOne({ name: 'crm' });
     
     if (!existingModule) {
       // Insert CRM module
@@ -22,7 +22,7 @@ async function initCrmModule() {
         createdAt: new Date()
       };
       
-      const result = await db.collection('module').insertOne(crmModule);
+      const result = await db.collection('modules').insertOne(crmModule);
       console.log('CRM module created with ID:', result.insertedId);
     } else {
       console.log('CRM module already exists');

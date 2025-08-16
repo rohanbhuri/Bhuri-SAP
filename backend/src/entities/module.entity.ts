@@ -5,10 +5,13 @@ export enum ModulePermissionType {
   REQUIRE_PERMISSION = 'require_permission'
 }
 
-@Entity()
+@Entity('modules')
 export class Module {
   @ObjectIdColumn()
   _id: ObjectId;
+
+  @Column()
+  id: string;
 
   @Column()
   name: string;
@@ -20,16 +23,25 @@ export class Module {
   description: string;
 
   @Column()
-  isAvailable: boolean;
+  isActive: boolean;
 
   @Column()
-  permissionType: ModulePermissionType;
+  permissionType: string;
+
+  @Column()
+  category: string;
+
+  @Column()
+  icon: string;
+
+  @Column()
+  color: string;
 
   @Column()
   createdAt: Date;
 
   constructor() {
-    this.isAvailable = true;
+    this.isActive = false;
     this.createdAt = new Date();
   }
 }

@@ -7,7 +7,7 @@ export enum RoleType {
   CUSTOM = 'custom'
 }
 
-@Entity()
+@Entity('roles')
 export class Role {
   @ObjectIdColumn()
   _id: ObjectId;

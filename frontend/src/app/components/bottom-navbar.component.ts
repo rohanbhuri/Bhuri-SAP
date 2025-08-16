@@ -3,7 +3,7 @@ import { Router, NavigationEnd } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { filter } from 'rxjs/operators';
-import { ModulesService } from '../services/modules.service';
+import { ModulesService, AppModuleInfo } from '../services/modules.service';
 
 @Component({
   selector: 'app-bottom-navbar',
@@ -56,15 +56,17 @@ import { ModulesService } from '../services/modules.service';
       >
         <mat-icon>apps</mat-icon>
       </button>
-      <button
-        mat-icon-button
-        (click)="goToUserManagement()"
-        [attr.aria-current]="activeRoute.includes('/modules/user-management') ? 'page' : null"
-        [color]="activeRoute.includes('/modules/user-management') ? 'primary' : ''"
-        aria-label="User Management"
-      >
-        <mat-icon>people</mat-icon>
-      </button>
+      @for (module of activeModules(); track module.id) {
+        <button
+          mat-icon-button
+          (click)="goToModule(module)"
+          [attr.aria-current]="activeRoute.includes('/modules/' + module.name) ? 'page' : null"
+          [color]="activeRoute.includes('/modules/' + module.name) ? 'primary' : ''"
+          [attr.aria-label]="module.displayName"
+        >
+          <mat-icon>{{ getModuleIcon(module.name) }}</mat-icon>
+        </button>
+      }
       <button
         mat-icon-button
         (click)="goToMore()"
@@ -109,7 +111,10 @@ import { ModulesService } from '../services/modules.service';
   ],
 })
 export class BottomNavbarComponent {
+  private modulesService = inject(ModulesService);
   activeRoute: string = '';
+  activeModules = signal<AppModuleInfo[]>([]);
+  
   constructor(private router: Router) {
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
@@ -120,6 +125,18 @@ export class BottomNavbarComponent {
 
   ngOnInit() {
     this.activeRoute = this.router.url;
+    this.loadActiveModules();
+  }
+
+  loadActiveModules() {
+    this.modulesService.getActive().subscribe({
+      next: (modules) => {
+        this.activeModules.set(modules.slice(0, 4)); // Limit to 4 modules for bottom nav
+      },
+      error: (error) => {
+        console.error('Failed to load active modules:', error);
+      }
+    });
   }
 
   goToDashboard() {
@@ -142,8 +159,22 @@ export class BottomNavbarComponent {
     this.router.navigate(['/modules']);
   }
 
-  goToUserManagement() {
-    this.router.navigate(['/modules/user-management']);
+  goToModule(module: AppModuleInfo) {
+    this.router.navigate(['/modules', module.name]);
+  }
+
+  getModuleIcon(moduleName: string): string {
+    const iconMap: { [key: string]: string } = {
+      'user-management': 'people',
+      'crm': 'business_center',
+      'hr-management': 'people',
+      'projects-management': 'work',
+      'tasks-management': 'task',
+      'inventory-management': 'inventory',
+      'payroll-management': 'payments',
+      'sales-management': 'trending_up'
+    };
+    return iconMap[moduleName] || 'extension';
   }
 
   goToMore() {

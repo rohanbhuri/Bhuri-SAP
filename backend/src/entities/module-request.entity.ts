@@ -6,7 +6,7 @@ export enum ModuleRequestStatus {
   REJECTED = 'rejected'
 }
 
-@Entity()
+@Entity('module-requests')
 export class ModuleRequest {
   @ObjectIdColumn()
   _id: ObjectId;

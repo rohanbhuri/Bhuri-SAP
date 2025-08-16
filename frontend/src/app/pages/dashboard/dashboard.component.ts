@@ -20,6 +20,12 @@ import {
 } from '@angular/cdk/drag-drop';
 import { UserManagementWidgetComponent } from '../../modules/user-management/user-management-widget.component';
 import { CrmWidgetComponent } from '../../modules/crm/crm-widget.component';
+import { HrManagementWidgetComponent } from '../../modules/hr-management/hr-management-widget.component';
+import { ProjectsManagementWidgetComponent } from '../../modules/projects-management/projects-management-widget.component';
+import { TasksManagementWidgetComponent } from '../../modules/tasks-management/tasks-management-widget.component';
+import { InventoryManagementWidgetComponent } from '../../modules/inventory-management/inventory-management-widget.component';
+import { PayrollManagementWidgetComponent } from '../../modules/payroll-management/payroll-management-widget.component';
+import { SalesManagementWidgetComponent } from '../../modules/sales-management/sales-management-widget.component';
 
 interface DashboardWidget {
   id: string;
@@ -45,6 +51,12 @@ interface DashboardWidget {
     CdkDragHandle,
     UserManagementWidgetComponent,
     CrmWidgetComponent,
+    HrManagementWidgetComponent,
+    ProjectsManagementWidgetComponent,
+    TasksManagementWidgetComponent,
+    InventoryManagementWidgetComponent,
+    PayrollManagementWidgetComponent,
+    SalesManagementWidgetComponent,
   ],
   template: `
     <app-navbar></app-navbar>
@@ -108,14 +120,37 @@ interface DashboardWidget {
             </div>
           </div>
           <div class="widget-body">
-            @if (w.id === 'user-management') {
-              <app-user-management-widget></app-user-management-widget>
-            } @else if (w.id === 'crm') {
-              <app-crm-widget></app-crm-widget>
-            } @else {
-              <!-- Placeholder content for other widgets -->
-              <p class="metric" aria-live="polite">$53k</p>
-              <p class="trend positive">+5% than last week</p>
+            @switch (w.id) {
+              @case ('user-management') {
+                <app-user-management-widget></app-user-management-widget>
+              }
+              @case ('crm') {
+                <app-crm-widget></app-crm-widget>
+              }
+              @case ('hr-management') {
+                <app-hr-management-widget></app-hr-management-widget>
+              }
+              @case ('projects-management') {
+                <app-projects-management-widget></app-projects-management-widget>
+              }
+              @case ('tasks-management') {
+                <app-tasks-management-widget></app-tasks-management-widget>
+              }
+              @case ('inventory-management') {
+                <app-inventory-management-widget></app-inventory-management-widget>
+              }
+              @case ('payroll-management') {
+                <app-payroll-management-widget></app-payroll-management-widget>
+              }
+              @case ('sales-management') {
+                <app-sales-management-widget></app-sales-management-widget>
+              }
+              @default {
+                <div class="placeholder-widget">
+                  <p class="metric">{{ w.title }}</p>
+                  <p class="trend">Ready for implementation</p>
+                </div>
+              }
             }
           </div>
         </mat-card>
@@ -272,38 +307,12 @@ export class DashboardComponent {
             this.activeModules.set(list);
             const mapped: DashboardWidget[] = list.length
               ? list.map((m, idx) => ({
-                  id: m.name === 'user-management' ? 'user-management' : m.name === 'crm' ? 'crm' : (m as any).id || `w${idx + 1}`,
+                  id: m.name,
                   title: m.displayName,
                   description: m.description,
-                  size: m.name === 'user-management' ? 'm' : m.name === 'crm' ? 'm' : (idx === 3 ? 'l' : 'm'),
+                  size: idx === 0 ? 'm' : idx === 1 ? 'm' : idx % 3 === 0 ? 'l' : 'm',
                 }))
-              : [
-                  {
-                    id: 'user-management',
-                    title: 'User Management',
-                    description: 'Manage users and permissions',
-                    size: 'm',
-                  },
-                  {
-                    id: 'crm',
-                    title: 'CRM',
-                    description: 'Customer Relationship Management',
-                    size: 'm',
-                  },
-                  {
-                    id: 'w2',
-                    title: "Today's Users",
-                    description: 'Summary',
-                    size: 'm',
-                  },
-                  {
-                    id: 'w3',
-                    title: 'Ads Views',
-                    description: 'Summary',
-                    size: 'm',
-                  },
-                  { id: 'w4', title: 'Sales', description: 'Summary', size: 'l' },
-                ];
+              : [];
             this.widgets.set(mapped);
           },
           error: (error) => {

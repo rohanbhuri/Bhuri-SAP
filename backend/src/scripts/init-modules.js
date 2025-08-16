@@ -52,9 +52,9 @@ async function initModules() {
     ];
     
     for (const module of modules) {
-      const existing = await db.collection('module').findOne({ name: module.name });
+      const existing = await db.collection('modules').findOne({ name: module.name });
       if (!existing) {
-        await db.collection('module').insertOne(module);
+        await db.collection('modules').insertOne(module);
         console.log(`Created module: ${module.displayName}`);
       } else {
         console.log(`Module already exists: ${module.displayName}`);

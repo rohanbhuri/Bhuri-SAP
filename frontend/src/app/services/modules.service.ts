@@ -11,7 +11,11 @@ export interface AppModuleInfo {
   description: string;
   isActive?: boolean;
   canActivate?: boolean;
+  isPending?: boolean;
   permissionType?: 'public' | 'require_permission';
+  category?: string;
+  icon?: string;
+  color?: string;
 }
 
 export interface ModuleRequest {
@@ -23,6 +27,7 @@ export interface ModuleRequest {
   requestedAt: string;
   processedAt?: string;
   processedBy?: string;
+  userName?: string;
 }
 
 @Injectable({ providedIn: 'root' })

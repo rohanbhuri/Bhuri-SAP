@@ -76,6 +76,11 @@ import { FormsModule } from '@angular/forms';
                         <mat-icon>public</mat-icon>
                         Public
                       </mat-chip>
+                      } @else if (module.isPending) {
+                      <mat-chip class="status-chip pending">
+                        <mat-icon>schedule</mat-icon>
+                        Pending
+                      </mat-chip>
                       } @else {
                       <mat-chip class="status-chip restricted">
                         <mat-icon>lock</mat-icon>
@@ -106,6 +111,11 @@ import { FormsModule } from '@angular/forms';
                       Deactivate
                     </button>
                   </div>
+                  } @else if (module.isPending) {
+                  <button mat-stroked-button disabled>
+                    <mat-icon>schedule</mat-icon>
+                    Request Pending
+                  </button>
                   } @else if (module.canActivate) {
                   <button mat-raised-button color="accent" (click)="activateModule(module)" [disabled]="loading()">
                     @if (loading()) {
@@ -155,7 +165,8 @@ import { FormsModule } from '@angular/forms';
                 <div class="request-header">
                   <div class="request-info">
                     <h4>{{ getModuleName(request.moduleId) }}</h4>
-                    <p class="request-date">Requested {{ formatDate(request.requestedAt) }}</p>
+                    <p class="request-user">Requested by: {{ request.userName }}</p>
+                    <p class="request-date">{{ formatDate(request.requestedAt) }}</p>
                   </div>
                   <mat-chip class="status-chip pending">
                     <mat-icon>schedule</mat-icon>
@@ -351,6 +362,13 @@ import { FormsModule } from '@angular/forms';
       .request-info h4 {
         margin: 0 0 4px;
         font-weight: 600;
+      }
+
+      .request-user {
+        margin: 0 0 4px;
+        font-size: 0.9rem;
+        color: var(--theme-primary);
+        font-weight: 500;
       }
 
       .request-date {

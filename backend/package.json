@@ -7,7 +7,8 @@
     "start:dev": "nest start --watch",
     "start:prod": "node dist/main",
     "init:crm": "node src/scripts/init-crm-module.js",
-    "init:modules": "node src/scripts/init-modules.js"
+    "init:modules": "node src/scripts/init-modules.js",
+    "seed:modules": "npx ts-node src/scripts/run-seed.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",

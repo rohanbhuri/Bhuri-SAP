@@ -1,6 +1,6 @@
 import { Entity, ObjectIdColumn, ObjectId, Column } from 'typeorm';
 
-@Entity()
+@Entity('users')
 export class User {
   @ObjectIdColumn()
   _id: ObjectId;
@@ -29,6 +29,9 @@ export class User {
   @Column('array')
   permissionIds: ObjectId[];
 
+  @Column('array')
+  activeModuleIds: ObjectId[];
+
   @Column()
   createdAt: Date;
 
@@ -36,6 +39,7 @@ export class User {
     this.isActive = true;
     this.roleIds = [];
     this.permissionIds = [];
+    this.activeModuleIds = [];
     this.createdAt = new Date();
   }
 }

@@ -27,36 +27,12 @@ export class ModulesService {
       name: module.name,
       displayName: module.displayName,
       description: module.description,
-      isAvailable: module.isAvailable,
       permissionType: module.permissionType,
       createdAt: module.createdAt
     }));
   }
 
-  async getActiveModulesForOrg(orgId: string) {
-    const org = await this.organizationRepository.findOne({
-      where: { _id: new ObjectId(orgId) }
-    });
-    
-    if (!org || !org.activeModuleIds) {
-      return [];
-    }
-    
-    const modules = await this.moduleRepository.find({
-      where: { _id: { $in: org.activeModuleIds } }
-    });
-    
-    return modules.map(module => ({
-      id: module._id.toString(),
-      name: module.name,
-      displayName: module.displayName,
-      description: module.description,
-      isAvailable: module.isAvailable,
-      permissionType: module.permissionType
-    }));
-  }
-
-  async activateModule(moduleId: string, orgId: string) {
+  async getActiveModulesForOrg(orgId: string, userId?: string) {
     const uri = process.env.MONGODB_URI || 'mongodb+srv://rohanbhuri:nokiaset@bhuri-db.zg9undw.mongodb.net/?retryWrites=true&w=majority&appName=bhuri-db';
     const client = new MongoClient(uri);
     
@@ -64,35 +40,46 @@ export class ModulesService {
       await client.connect();
       const db = client.db('beaxrm');
       
-      console.log('Activating module:', moduleId, 'for org:', orgId);
+      let activeIds = [];
       
-      // Handle undefined orgId by using the existing organization
-      let targetOrgId = orgId;
-      if (!orgId || orgId === 'undefined') {
-        const existingOrg = await db.collection('organization').findOne({});
-        if (existingOrg) {
-          targetOrgId = existingOrg._id.toString();
-          console.log('Using existing org:', targetOrgId);
-        } else {
-          console.error('No organization found');
-          return { success: false, message: 'No organization found' };
-        }
+      // Try to get organization's active modules first
+      if (orgId && orgId !== 'undefined') {
+        const org = await db.collection('organizations').findOne({ _id: new ObjectId(orgId) });
+        activeIds = org?.activeModuleIds || [];
       }
       
-      // Simple update without conflicting operations
-      await db.collection('organization').updateOne(
-        { _id: new ObjectId(targetOrgId) },
-        { $addToSet: { activeModuleIds: new ObjectId(moduleId) } } as any
-      );
+      // If no org modules and userId provided, check user's active modules
+      if (activeIds.length === 0 && userId) {
+        const user = await db.collection('users').findOne({ _id: new ObjectId(userId) });
+        activeIds = user?.activeModuleIds || [];
+      }
       
-      console.log('Module activated successfully');
-      return { success: true };
+      // If no active modules, return empty array
+      if (activeIds.length === 0) {
+        return [];
+      }
+      
+      const modules = await db.collection('modules').find({
+        _id: { $in: activeIds }
+      }).toArray();
+      
+      return modules.map(module => ({
+        id: module._id.toString(),
+        name: module.name,
+        displayName: module.displayName,
+        description: module.description,
+        isActive: true,
+        permissionType: module.permissionType,
+        category: module.category,
+        icon: module.icon,
+        color: module.color
+      }));
     } finally {
       await client.close();
     }
   }
 
-  async deactivateModule(moduleId: string, orgId: string) {
+  async activateModule(moduleId: string, orgId: string, userId?: string) {
     const uri = process.env.MONGODB_URI || 'mongodb+srv://rohanbhuri:nokiaset@bhuri-db.zg9undw.mongodb.net/?retryWrites=true&w=majority&appName=bhuri-db';
     const client = new MongoClient(uri);
     
@@ -100,12 +87,65 @@ export class ModulesService {
       await client.connect();
       const db = client.db('beaxrm');
       
-      await db.collection('organization').updateOne(
-        { _id: new ObjectId(orgId) },
-        { $pull: { activeModuleIds: new ObjectId(moduleId) } } as any
-      );
+      console.log('Activating module:', moduleId, 'for org:', orgId, 'user:', userId);
       
-      return { success: true };
+      // Try to activate for organization first
+      if (orgId && orgId !== 'undefined') {
+        await db.collection('organizations').updateOne(
+          { _id: new ObjectId(orgId) },
+          { $addToSet: { activeModuleIds: new ObjectId(moduleId) } }
+        );
+        console.log('Module activated for organization');
+        return { success: true };
+      }
+      
+      // If no organization, activate for user
+      if (userId) {
+        await db.collection('users').updateOne(
+          { _id: new ObjectId(userId) },
+          { $addToSet: { activeModuleIds: new ObjectId(moduleId) } }
+        );
+        console.log('Module activated for user');
+        return { success: true };
+      }
+      
+      return { success: false, message: 'No organization or user found' };
+    } finally {
+      await client.close();
+    }
+  }
+
+  async deactivateModule(moduleId: string, orgId: string, userId?: string) {
+    const uri = process.env.MONGODB_URI || 'mongodb+srv://rohanbhuri:nokiaset@bhuri-db.zg9undw.mongodb.net/?retryWrites=true&w=majority&appName=bhuri-db';
+    const client = new MongoClient(uri);
+    
+    try {
+      await client.connect();
+      const db = client.db('beaxrm');
+      
+      console.log('Deactivating module:', moduleId, 'for org:', orgId, 'user:', userId);
+      
+      // Try to deactivate for organization first
+      if (orgId && orgId !== 'undefined') {
+        await db.collection('organizations').updateOne(
+          { _id: new ObjectId(orgId) },
+          { $pull: { activeModuleIds: new ObjectId(moduleId) } } as any
+        );
+        console.log('Module deactivated for organization');
+        return { success: true };
+      }
+      
+      // If no organization, deactivate for user
+      if (userId) {
+        await db.collection('users').updateOne(
+          { _id: new ObjectId(userId) },
+          { $pull: { activeModuleIds: new ObjectId(moduleId) } } as any
+        );
+        console.log('Module deactivated for user');
+        return { success: true };
+      }
+      
+      return { success: false, message: 'No organization or user found' };
     } finally {
       await client.close();
     }
@@ -123,32 +163,58 @@ export class ModulesService {
     try {
       await client.connect();
       const db = client.db('beaxrm'); // Use 'beaxrm' database
-      const modules = await db.collection('module').find({}).toArray();
+      const modules = await db.collection('modules').find({}).toArray();
       console.log('Found modules:', modules.length);
       
-      // Get organization's active modules - try multiple approaches
-      let org = await db.collection('organization').findOne({ _id: new ObjectId(orgId) });
+      let activeIds = [];
       
-      if (!org) {
-        // Try finding by any field that might match
-        org = await db.collection('organization').findOne({});
-        console.log('Found fallback org:', org?._id);
+      // Try to get organization's active modules first
+      if (orgId && orgId !== 'undefined') {
+        const org = await db.collection('organizations').findOne({ _id: new ObjectId(orgId) });
+        activeIds = org?.activeModuleIds || [];
+        console.log('Active module IDs for org:', activeIds.map(id => id.toString()));
       }
       
-      const activeIds = org?.activeModuleIds || [];
-      console.log('Active module IDs for org:', activeIds.map(id => id.toString()));
+      // If no org modules and userId provided, check user's active modules
+      if (activeIds.length === 0 && userId) {
+        const user = await db.collection('users').findOne({ _id: new ObjectId(userId) });
+        activeIds = user?.activeModuleIds || [];
+        console.log('Active module IDs for user:', activeIds.map(id => id.toString()));
+      }
+      
+      // Get pending requests for this user/org
+      const orConditions: any[] = [{ userId: new ObjectId(userId) }];
+      if (orgId && orgId !== 'undefined') {
+        orConditions.push({ organizationId: new ObjectId(orgId) });
+      }
+      const pendingRequests = await db.collection('module-requests').find({
+        $or: orConditions,
+        status: 'pending'
+      }).toArray();
+      
+      const pendingModuleIds = pendingRequests.map(req => req.moduleId.toString());
       
       await client.close();
       
-      const result = modules.map(module => ({
-        id: module._id.toString(),
-        name: module.name,
-        displayName: module.displayName,
-        description: module.description,
-        isActive: activeIds.some(id => id.toString() === module._id.toString()),
-        canActivate: true,
-        permissionType: module.permissionType
-      }));
+      const result = modules.map(module => {
+        // Check if module is in user/org activeModuleIds
+        const isActive = activeIds.some(id => id.toString() === module._id.toString());
+        const isPending = pendingModuleIds.includes(module._id.toString());
+        
+        return {
+          id: module._id.toString(),
+          name: module.name,
+          displayName: module.displayName,
+          description: module.description,
+          isActive,
+          canActivate: !isActive && !isPending,
+          isPending,
+          permissionType: module.permissionType,
+          category: module.category,
+          icon: module.icon,
+          color: module.color
+        };
+      });
       
       console.log('Returning modules:', result);
       return result;
@@ -169,22 +235,25 @@ export class ModulesService {
       await client.connect();
       const db = client.db('beaxrm');
       
-      const module = await db.collection('module').findOne({ _id: new ObjectId(moduleId) });
+      const module = await db.collection('modules').findOne({ _id: new ObjectId(moduleId) });
       if (!module) {
         throw new Error('Module not found');
       }
       
       if (module.permissionType === 'public') {
-        return this.activateModule(moduleId, orgId);
+        return this.activateModule(moduleId, orgId, userId);
       }
       
       // Check for existing pending request
-      const existingRequest = await db.collection('modulerequest').findOne({
+      const query: any = {
         moduleId: new ObjectId(moduleId),
         userId: new ObjectId(userId),
-        organizationId: new ObjectId(orgId),
         status: 'pending'
-      });
+      };
+      if (orgId && orgId !== 'undefined') {
+        query.organizationId = new ObjectId(orgId);
+      }
+      const existingRequest = await db.collection('module-requests').findOne(query);
       
       if (existingRequest) {
         return { success: false, message: 'Request already pending' };
@@ -194,13 +263,13 @@ export class ModulesService {
       const requestDoc = {
         moduleId: new ObjectId(moduleId),
         userId: new ObjectId(userId),
-        organizationId: new ObjectId(orgId),
+        organizationId: orgId && orgId !== 'undefined' ? new ObjectId(orgId) : null,
         status: 'pending',
         requestedAt: new Date()
       };
       
       console.log('Creating request:', requestDoc);
-      const result = await db.collection('modulerequest').insertOne(requestDoc);
+      const result = await db.collection('module-requests').insertOne(requestDoc);
       console.log('Request created with ID:', result.insertedId);
       
       return { success: true, message: 'Request submitted for approval' };
@@ -219,18 +288,33 @@ export class ModulesService {
       
       console.log('Getting requests for orgId:', orgId, 'isSuperAdmin:', isSuperAdmin);
       
-      // Super admins see all pending requests, regular users see only their org's requests
-      const query = isSuperAdmin ? { status: 'pending' } : { organizationId: new ObjectId(orgId), status: 'pending' };
-      const requests = await db.collection('modulerequest').find(query).toArray();
+      let query: any = { status: 'pending' };
+      if (!isSuperAdmin && orgId && orgId !== 'undefined') {
+        query.organizationId = new ObjectId(orgId);
+      }
+      
+      const requests = await db.collection('module-requests').aggregate([
+        { $match: query },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'userId',
+            foreignField: '_id',
+            as: 'user'
+          }
+        },
+        { $unwind: '$user' }
+      ]).toArray();
       
       console.log('Found pending requests:', requests.length);
       return requests.map(req => ({
         _id: req._id.toString(),
         moduleId: req.moduleId.toString(),
         userId: req.userId.toString(),
-        organizationId: req.organizationId.toString(),
+        organizationId: req.organizationId?.toString() || null,
         status: req.status,
-        requestedAt: req.requestedAt
+        requestedAt: req.requestedAt,
+        userName: req.user.name || req.user.email
       }));
     } finally {
       await client.close();
@@ -247,20 +331,27 @@ export class ModulesService {
       
       console.log('Approving request:', requestId);
       
-      const request = await db.collection('modulerequest').findOne({ _id: new ObjectId(requestId) });
+      const request = await db.collection('module-requests').findOne({ _id: new ObjectId(requestId) });
       if (!request) {
         return { success: false, message: 'Request not found' };
       }
       
-      // Add module to organization's activeModuleIds
-      await db.collection('organization').updateOne(
-        { _id: request.organizationId },
-        { $addToSet: { activeModuleIds: request.moduleId } } as any,
-        { upsert: true }
-      );
+      // Add module to organization's or user's activeModuleIds
+      if (request.organizationId) {
+        await db.collection('organizations').updateOne(
+          { _id: request.organizationId },
+          { $addToSet: { activeModuleIds: request.moduleId } } as any,
+          { upsert: true }
+        );
+      } else {
+        await db.collection('users').updateOne(
+          { _id: request.userId },
+          { $addToSet: { activeModuleIds: request.moduleId } } as any
+        );
+      }
       
       // Update request status
-      await db.collection('modulerequest').updateOne(
+      await db.collection('module-requests').updateOne(
         { _id: new ObjectId(requestId) },
         { $set: { status: 'approved', processedAt: new Date() } } as any
       );
@@ -284,7 +375,7 @@ export class ModulesService {
       await client.connect();
       const db = client.db('beaxrm');
       
-      await db.collection('modulerequest').updateOne(
+      await db.collection('module-requests').updateOne(
         { _id: new ObjectId(requestId) },
         { 
           $set: {
