@@ -79,3 +79,14 @@ db.role.insertOne({
 - `npm run start` - Start production server
 - `npm run start:dev` - Start development server with hot reload
 - `npm run build` - Build for production
+
+---
+Last updated: 2025-08-17
+Current status: Backend setup steps validated; Postman collection available; brand-based startup integrated from root scripts.
+Future work:
+- Add Docker option and PM2 ecosystem examples
+- Expand Postman collection and add environment templates
+Related docs:
+- Index: documentation/README.md
+- API: documentation/API_DOCUMENTATION.md
+- Database setup: documentation/database-setup.md

@@ -550,3 +550,14 @@ mongorestore --host localhost:27017 --db bhuri_sap --gzip --archive=/backups/wee
 ```
 
 This blueprint provides a comprehensive foundation for the Bhuri SAP database architecture, ensuring scalability, security, and maintainability.
+
+---
+Last updated: 2025-08-17
+Current status: Core collections and management collections defined; audit/logging and preferences modeled.
+Future work:
+- Add indexes/TTL policies for logs and sessions
+- Provide sample aggregation pipelines and data validation schemas
+Related docs:
+- Index: documentation/README.md
+- Database setup: documentation/database-setup.md
+- Modules seeding: documentation/DATABASE_MODULES_SETUP.md

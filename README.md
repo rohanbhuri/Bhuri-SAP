@@ -52,13 +52,13 @@ Secondary application for process management.
 - [Project Management Modules](./documentation/PROJECT_MANAGEMENT_MODULES.md)
 - [Brand Configuration](./documentation/BRAND_CONFIG.md) - Branding and theming guide
 - [PWA Setup](./documentation/PWA_SETUP.md)
-- [Modules Created](./documentation/MODULES_CREATED.md)
+
 - [Module Management User Story](./documentation/MODULE_MANAGEMENT_USER_STORY.md)
 - [CRM Setup](./documentation/crm-setup.md)
 - [Database Setup](./documentation/database-setup.md)
 - [User Management Setup](./documentation/user-management-setup.md)
 - [User Management Complete](./documentation/user-management-complete.md)
-- [Setup User Management](./documentation/setup-user-management.md)
+
 
 ## Brand Configuration System
 

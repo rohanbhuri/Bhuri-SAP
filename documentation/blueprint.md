@@ -277,3 +277,15 @@ beax-rm/
 ```
 
 This blueprint provides a comprehensive overview of the Beax RM system's modular architecture, functionality, and technical implementation details.
+
+---
+Last updated: 2025-08-17
+Current status: Core modules implemented (auth, users, organizations, roles, modules, preferences) with CRM/HR/Projects scaffolding and widgets.
+Future work:
+- Add real role guards to module routes
+- Add WebSocket/live updates to dashboards
+- Expand analytics/reporting surfaces
+Related docs:
+- Index: documentation/README.md
+- API: documentation/API_DOCUMENTATION.md
+- Project Management: documentation/PROJECT_MANAGEMENT_MODULES.md

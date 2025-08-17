@@ -60,7 +60,6 @@ Centralized documentation for Bhuri SAP, covering setup, architecture, modules, 
   - Keep secrets out of docs; prefer .env for URIs and secrets
 
 ## Notes on Obsolete/Overlapping Docs
-- The following pairs overlap and can be merged after a quick content review:
-  - user-management-setup.md and setup-user-management.md
-  - DATABASE_MODULES_SETUP.md and MODULES_CREATED.md
-- Marking for consolidation here only; files retained to avoid breaking links.
+- Consolidated and removed duplicates:
+  - Removed: setup-user-management.md (use user-management-setup.md)
+  - Removed: MODULES_CREATED.md (use DATABASE_MODULES_SETUP.md)

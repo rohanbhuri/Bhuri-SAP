@@ -213,3 +213,15 @@ Authorization: Bearer {token}
   "message": "Forbidden resource"
 }
 ```
+
+---
+Last updated: 2025-08-17
+Current status: API surface documented for auth, users, organizations, roles, permissions, modules; CRM/HR/Projects endpoints in progress.
+Future work:
+- Add endpoints coverage for HR, CRM, and Project modules
+- Include error schemas and pagination examples
+- Generate OpenAPI spec from NestJS decorators
+Related docs:
+- Index: documentation/README.md
+- Setup: documentation/SETUP_GUIDE.md
+- Blueprint: documentation/blueprint.md

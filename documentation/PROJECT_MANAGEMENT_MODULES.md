@@ -272,3 +272,13 @@ Currently no role-based restrictions, but can be added using `roleGuard` similar
 4. **Mobile App**: Extend functionality to mobile applications
 5. **Integration**: Connect with external project management tools
 6. **Notifications**: Add email/push notifications for deadlines and approvals
+
+---
+Last updated: 2025-08-17
+Current status: Components, services, and routes outlined; widgets and integration patterns consistent with other modules.
+Future work:
+- Implement endpoints and connect services to backend
+- Add guard policies per role
+Related docs:
+- Index: documentation/README.md
+- Blueprint: documentation/blueprint.md

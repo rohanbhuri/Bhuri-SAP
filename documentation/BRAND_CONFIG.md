@@ -44,3 +44,14 @@ Each brand configuration includes:
 2. Create brand assets in `configs/assets/[brand-name]/`
 3. Add a new npm script in `package.json`
 4. The application will automatically use the new brand configuration
+
+---
+Last updated: 2025-08-17
+Current status: beax-rm (default) and true-process brands supported; SSR/prerender and PWA assets adapt by brand.
+Future work:
+- Document per-brand PM2 processes and environment overrides
+- Add brand-level theme presets and typography tokens
+Related docs:
+- Index: documentation/README.md
+- Setup: documentation/SETUP_GUIDE.md
+- Blueprint: documentation/blueprint.md
