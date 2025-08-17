@@ -57,3 +57,16 @@ Angular CLI does not come with an end-to-end testing framework by default. You c
 ## Additional Resources
 
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+
+## Documentation
+
+- Project docs: ../documentation/README.md
+- Root README: ../README.md
+
+## Brand Run Commands
+
+```bash
+# From project root
+npm run start:beax-rm      # Frontend 4200, Backend 3000
+npm run start:true-process # Frontend 4201, Backend 3001
+```
