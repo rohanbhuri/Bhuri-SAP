@@ -9,7 +9,7 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
         PORT: 3000,
-        DATABASE_URI: process.env.DATABASE_URI,
+        MONGODB_URI: process.env.MONGODB_URI,
         JWT_SECRET: process.env.JWT_SECRET,
         BRAND: 'beax-rm'
       },
@@ -28,7 +28,7 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
         PORT: 3001,
-        DATABASE_URI: process.env.DATABASE_URI,
+        MONGODB_URI: process.env.MONGODB_URI,
         JWT_SECRET: process.env.JWT_SECRET,
         BRAND: 'true-process'
       },

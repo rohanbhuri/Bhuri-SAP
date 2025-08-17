@@ -18,7 +18,7 @@ import { ProjectsManagementModule } from './projects-management/projects-managem
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRoot({
       type: 'mongodb',
-      url: process.env.MONGODB_URI || 'mongodb+srv://rohanbhuri:nokiaset@bhuri-db.zg9undw.mongodb.net/?retryWrites=true&w=majority&appName=bhuri-db',
+      url: process.env.MONGODB_URI,
       autoLoadEntities: true,
       synchronize: process.env.NODE_ENV !== 'production',
     }),

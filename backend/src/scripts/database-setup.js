@@ -650,9 +650,16 @@ class DatabaseSetup {
 
 // Run setup if called directly
 if (require.main === module) {
-  const connectionString = process.env.MONGODB_URI || 'mongodb+srv://rohanbhuri:nokiaset@bhuri-db.zg9undw.mongodb.net/beaxrm?retryWrites=true&w=majority&appName=bhuri-db';
-  const setup = new DatabaseSetup(connectionString);
+  // Load config to get database credentials
+  require('../load-config');
+  const connectionString = process.env.MONGODB_URI;
   
+  if (!connectionString) {
+    console.error('MONGODB_URI not found. Make sure config.js is properly loaded.');
+    process.exit(1);
+  }
+  
+  const setup = new DatabaseSetup(connectionString);
   setup.setupComplete().catch(console.error);
 }
 
