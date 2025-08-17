@@ -132,6 +132,7 @@ interface DashboardWidget {
         @for (w of widgets(); track w.id) {
         <mat-card
           class="widget"
+          color="primary"
           [attr.data-size]="isCompactView() ? 's' : w.size"
           [style.border-color]="getModuleColor(w.id)"
           [style.background]="getModuleColor(w.id) + '33'"
@@ -205,7 +206,7 @@ interface DashboardWidget {
           </div>
         </mat-card>
         } @if (widgets().length === 0) {
-        <mat-card class="empty" tabindex="0" aria-live="polite">
+        <mat-card class="empty" color="primary" tabindex="0" aria-live="polite">
           <mat-card-title>No active modules</mat-card-title>
           <mat-card-content>
             <p>

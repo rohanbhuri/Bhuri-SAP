@@ -11,7 +11,7 @@ import { OrganizationManagementService } from '../modules/organization-managemen
   standalone: true,
   imports: [MatCardModule, MatButtonModule, MatIconModule, MatListModule],
   template: `
-    <mat-card class="pending-work-card">
+    <mat-card class="pending-work-card" color="primary">
       <mat-card-header>
         <mat-card-title>
           <mat-icon>pending_actions</mat-icon>

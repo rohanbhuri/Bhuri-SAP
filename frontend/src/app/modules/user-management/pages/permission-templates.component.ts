@@ -51,9 +51,9 @@ import { UserManagementService } from '../user-management.service';
 
       <div class="templates-grid">
         @for (template of filteredTemplates(); track template.id) {
-          <mat-card class="template-card">
+          <mat-card class="template-card" color="primary">
             <mat-card-header>
-              <mat-card-title>{{template.name}}</mat-card-title>
+              <mat-card-title color="primary">{{template.name}}</mat-card-title>
               <div class="card-actions">
                 <button mat-icon-button [matMenuTriggerFor]="templateMenu" [matMenuTriggerData]="{template: template}">
                   <mat-icon>more_vert</mat-icon>

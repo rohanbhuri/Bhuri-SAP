@@ -133,38 +133,144 @@ export class RolesService {
     return {
       admin: {
         name: 'Admin Template',
+        description: 'Full administrative access to organization',
         permissions: [
-          { module: 'users', action: ActionType.READ, resource: 'all' },
-          { module: 'users', action: ActionType.WRITE, resource: 'all' },
-          { module: 'users', action: ActionType.EDIT, resource: 'all' },
-          { module: 'roles', action: ActionType.READ, resource: 'all' },
-          { module: 'organizations', action: ActionType.READ, resource: 'all' },
-          { module: 'modules', action: ActionType.READ, resource: 'all' }
+          { module: 'users', action: ActionType.READ, resource: 'organization' },
+          { module: 'users', action: ActionType.WRITE, resource: 'organization' },
+          { module: 'users', action: ActionType.EDIT, resource: 'organization' },
+          { module: 'roles', action: ActionType.READ, resource: 'organization' },
+          { module: 'organizations', action: ActionType.READ, resource: 'own' },
+          { module: 'organizations', action: ActionType.EDIT, resource: 'own' },
+          { module: 'modules', action: ActionType.READ, resource: 'own' },
+          { module: 'dashboard', action: ActionType.READ, resource: 'organization' },
+          { module: 'reports', action: ActionType.READ, resource: 'organization' }
+        ]
+      },
+      hr_manager: {
+        name: 'HR Manager Template',
+        description: 'Complete HR management access',
+        permissions: [
+          { module: 'hr-management', action: ActionType.READ, resource: 'organization' },
+          { module: 'hr-management', action: ActionType.WRITE, resource: 'organization' },
+          { module: 'hr-management', action: ActionType.EDIT, resource: 'organization' },
+          { module: 'hr-management', action: ActionType.DELETE, resource: 'organization' },
+          { module: 'employees', action: ActionType.READ, resource: 'organization' },
+          { module: 'employees', action: ActionType.WRITE, resource: 'organization' },
+          { module: 'employees', action: ActionType.EDIT, resource: 'organization' },
+          { module: 'payroll', action: ActionType.READ, resource: 'organization' },
+          { module: 'payroll', action: ActionType.WRITE, resource: 'organization' },
+          { module: 'payroll', action: ActionType.EDIT, resource: 'organization' },
+          { module: 'users', action: ActionType.READ, resource: 'organization' },
+          { module: 'reports', action: ActionType.READ, resource: 'organization' },
+          { module: 'dashboard', action: ActionType.READ, resource: 'organization' }
+        ]
+      },
+      crm_manager: {
+        name: 'CRM Manager Template',
+        description: 'Complete CRM and sales management',
+        permissions: [
+          { module: 'crm', action: ActionType.READ, resource: 'organization' },
+          { module: 'crm', action: ActionType.WRITE, resource: 'organization' },
+          { module: 'crm', action: ActionType.EDIT, resource: 'organization' },
+          { module: 'crm', action: ActionType.DELETE, resource: 'organization' },
+          { module: 'contacts', action: ActionType.READ, resource: 'organization' },
+          { module: 'contacts', action: ActionType.WRITE, resource: 'organization' },
+          { module: 'contacts', action: ActionType.EDIT, resource: 'organization' },
+          { module: 'contacts', action: ActionType.DELETE, resource: 'organization' },
+          { module: 'leads', action: ActionType.READ, resource: 'organization' },
+          { module: 'leads', action: ActionType.WRITE, resource: 'organization' },
+          { module: 'leads', action: ActionType.EDIT, resource: 'organization' },
+          { module: 'deals', action: ActionType.READ, resource: 'organization' },
+          { module: 'deals', action: ActionType.WRITE, resource: 'organization' },
+          { module: 'deals', action: ActionType.EDIT, resource: 'organization' },
+          { module: 'sales-management', action: ActionType.READ, resource: 'organization' },
+          { module: 'sales-management', action: ActionType.WRITE, resource: 'organization' },
+          { module: 'reports', action: ActionType.READ, resource: 'organization' },
+          { module: 'dashboard', action: ActionType.READ, resource: 'organization' }
+        ]
+      },
+      project_manager: {
+        name: 'Project Manager Template',
+        description: 'Project and task management access',
+        permissions: [
+          { module: 'projects-management', action: ActionType.READ, resource: 'organization' },
+          { module: 'projects-management', action: ActionType.WRITE, resource: 'organization' },
+          { module: 'projects-management', action: ActionType.EDIT, resource: 'organization' },
+          { module: 'projects-management', action: ActionType.DELETE, resource: 'organization' },
+          { module: 'tasks-management', action: ActionType.READ, resource: 'organization' },
+          { module: 'tasks-management', action: ActionType.WRITE, resource: 'organization' },
+          { module: 'tasks-management', action: ActionType.EDIT, resource: 'organization' },
+          { module: 'tasks-management', action: ActionType.DELETE, resource: 'organization' },
+          { module: 'users', action: ActionType.READ, resource: 'organization' },
+          { module: 'reports', action: ActionType.READ, resource: 'organization' },
+          { module: 'dashboard', action: ActionType.READ, resource: 'organization' }
+        ]
+      },
+      sales_manager: {
+        name: 'Sales Manager Template',
+        description: 'Sales and inventory management',
+        permissions: [
+          { module: 'sales-management', action: ActionType.READ, resource: 'organization' },
+          { module: 'sales-management', action: ActionType.WRITE, resource: 'organization' },
+          { module: 'sales-management', action: ActionType.EDIT, resource: 'organization' },
+          { module: 'inventory-management', action: ActionType.READ, resource: 'organization' },
+          { module: 'inventory-management', action: ActionType.WRITE, resource: 'organization' },
+          { module: 'inventory-management', action: ActionType.EDIT, resource: 'organization' },
+          { module: 'crm', action: ActionType.READ, resource: 'organization' },
+          { module: 'contacts', action: ActionType.READ, resource: 'organization' },
+          { module: 'leads', action: ActionType.READ, resource: 'organization' },
+          { module: 'deals', action: ActionType.READ, resource: 'organization' },
+          { module: 'reports', action: ActionType.READ, resource: 'organization' },
+          { module: 'dashboard', action: ActionType.READ, resource: 'organization' }
         ]
       },
       staff: {
         name: 'Staff Template',
+        description: 'Basic staff access with limited permissions',
         permissions: [
           { module: 'users', action: ActionType.READ, resource: 'own' },
+          { module: 'users', action: ActionType.EDIT, resource: 'own' },
           { module: 'organizations', action: ActionType.READ, resource: 'own' },
-          { module: 'modules', action: ActionType.READ, resource: 'own' }
+          { module: 'modules', action: ActionType.READ, resource: 'own' },
+          { module: 'preferences', action: ActionType.READ, resource: 'own' },
+          { module: 'preferences', action: ActionType.WRITE, resource: 'own' },
+          { module: 'preferences', action: ActionType.EDIT, resource: 'own' },
+          { module: 'messages', action: ActionType.READ, resource: 'own' },
+          { module: 'messages', action: ActionType.WRITE, resource: 'own' },
+          { module: 'dashboard', action: ActionType.READ, resource: 'own' },
+          { module: 'tasks-management', action: ActionType.READ, resource: 'organization' }
         ]
       },
-      hr: {
-        name: 'HR Template',
+      viewer: {
+        name: 'Viewer Template',
+        description: 'Read-only access to organization data',
         permissions: [
-          { module: 'hr-management', action: ActionType.READ, resource: 'all' },
-          { module: 'hr-management', action: ActionType.WRITE, resource: 'all' },
-          { module: 'hr-management', action: ActionType.EDIT, resource: 'all' },
-          { module: 'users', action: ActionType.READ, resource: 'all' }
+          { module: 'users', action: ActionType.READ, resource: 'organization' },
+          { module: 'organizations', action: ActionType.READ, resource: 'own' },
+          { module: 'hr-management', action: ActionType.READ, resource: 'organization' },
+          { module: 'employees', action: ActionType.READ, resource: 'organization' },
+          { module: 'crm', action: ActionType.READ, resource: 'organization' },
+          { module: 'contacts', action: ActionType.READ, resource: 'organization' },
+          { module: 'leads', action: ActionType.READ, resource: 'organization' },
+          { module: 'deals', action: ActionType.READ, resource: 'organization' },
+          { module: 'projects-management', action: ActionType.READ, resource: 'organization' },
+          { module: 'tasks-management', action: ActionType.READ, resource: 'organization' },
+          { module: 'reports', action: ActionType.READ, resource: 'organization' },
+          { module: 'dashboard', action: ActionType.READ, resource: 'organization' },
+          { module: 'preferences', action: ActionType.READ, resource: 'own' },
+          { module: 'preferences', action: ActionType.EDIT, resource: 'own' }
         ]
       },
-      crm: {
-        name: 'CRM Template',
+      form_builder: {
+        name: 'Form Builder Template',
+        description: 'Form creation and management access',
         permissions: [
-          { module: 'crm', action: ActionType.READ, resource: 'all' },
-          { module: 'crm', action: ActionType.WRITE, resource: 'all' },
-          { module: 'crm', action: ActionType.EDIT, resource: 'all' }
+          { module: 'form-builder', action: ActionType.READ, resource: 'organization' },
+          { module: 'form-builder', action: ActionType.WRITE, resource: 'organization' },
+          { module: 'form-builder', action: ActionType.EDIT, resource: 'organization' },
+          { module: 'form-builder', action: ActionType.DELETE, resource: 'organization' },
+          { module: 'users', action: ActionType.READ, resource: 'organization' },
+          { module: 'dashboard', action: ActionType.READ, resource: 'organization' }
         ]
       }
     };

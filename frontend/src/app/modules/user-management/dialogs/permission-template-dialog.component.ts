@@ -18,7 +18,7 @@ import { UserManagementService } from '../user-management.service';
     MatButtonModule
   ],
   template: `
-    <h2 mat-dialog-title>Apply Permission Template</h2>
+    <h2 mat-dialog-title color="primary">Apply Permission Template</h2>
     <mat-dialog-content>
       <p>Select a permission template to apply to <strong>{{data.roleName}}</strong></p>
       
