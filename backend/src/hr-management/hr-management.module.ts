@@ -6,6 +6,8 @@ import { Employee } from '../entities/employee.entity';
 import { Department } from '../entities/department.entity';
 import { User } from '../entities/user.entity';
 import { Organization } from '../entities/organization.entity';
+import { Role } from '../entities/role.entity';
+import { Permission } from '../entities/permission.entity';
 import { AuthModule } from '../auth/auth.module';
 import { Attendance } from '../entities/attendance.entity';
 import { LeaveRequest } from '../entities/leave.entity';
@@ -24,6 +26,8 @@ import { Asset, AssetAssignment } from '../entities/asset.entity';
       Department,
       User,
       Organization,
+      Role,
+      Permission,
       Attendance,
       LeaveRequest,
       Shift,

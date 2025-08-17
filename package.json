@@ -25,7 +25,10 @@
     "pm2:delete": "pm2 delete ecosystem.config.js",
     "pm2:logs": "pm2 logs",
     "deploy:prod": "npm run build:prod && npm run pm2:restart",
-    "clear-ports": "lsof -ti:3000,3001,4200,4201 | xargs kill -9 || true"
+    "clear-ports": "lsof -ti:3000,3001,4200,4201 | xargs kill -9 || true",
+    "db:setup": "cd backend && node src/scripts/database-setup.js",
+    "db:setup:prod": "NODE_ENV=production cd backend && node src/scripts/database-setup.js",
+    "db:reset": "echo 'WARNING: This will reset the entire database!' && read -p 'Type YES to continue: ' confirm && [ \"$confirm\" = \"YES\" ] && npm run db:setup"
   },
   "keywords": ["sap", "resource-management", "angular", "nestjs"],
   "author": "Rohan Bhuri",

@@ -1,54 +1,66 @@
 import { Controller, Get, Post, Put, Patch, Delete, Body, Param, UseGuards, Query } from '@nestjs/common';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { PermissionsGuard } from '../guards/permissions.guard';
+import { RequireRoles } from '../decorators/permissions.decorator';
+import { RoleType } from '../entities/role.entity';
 import { HrManagementService } from './hr-management.service';
 
 @Controller('hr-management')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class HrManagementController {
   constructor(private readonly hrService: HrManagementService) {}
 
   // ===== Core Lists =====
   @Get('employees')
+  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN, RoleType.STAFF)
   getEmployees(@Query('organizationId') organizationId?: string) {
     return this.hrService.getEmployees(organizationId);
   }
 
   @Get('departments')
+  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN, RoleType.STAFF)
   getDepartments(@Query('organizationId') organizationId?: string) {
     return this.hrService.getDepartments(organizationId);
   }
 
   @Get('stats')
+  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
   getStats(@Query('organizationId') organizationId?: string) {
     return this.hrService.getStats(organizationId);
   }
 
   @Post('employees')
+  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
   createEmployee(@Body() employeeData: any, @Query('organizationId') organizationId?: string) {
     return this.hrService.createEmployee(employeeData, organizationId);
   }
 
   @Put('employees/:id')
+  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
   updateEmployee(@Param('id') id: string, @Body() employeeData: any) {
     return this.hrService.updateEmployee(id, employeeData);
   }
 
   @Delete('employees/:id')
+  @RequireRoles(RoleType.SUPER_ADMIN)
   deleteEmployee(@Param('id') id: string) {
     return this.hrService.deleteEmployee(id);
   }
 
   @Post('departments')
+  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
   createDepartment(@Body() departmentData: any, @Query('organizationId') organizationId?: string) {
     return this.hrService.createDepartment(departmentData, organizationId);
   }
 
   @Put('departments/:id')
+  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
   updateDepartment(@Param('id') id: string, @Body() departmentData: any) {
     return this.hrService.updateDepartment(id, departmentData);
   }
 
   @Delete('departments/:id')
+  @RequireRoles(RoleType.SUPER_ADMIN)
   deleteDepartment(@Param('id') id: string) {
     return this.hrService.deleteDepartment(id);
   }

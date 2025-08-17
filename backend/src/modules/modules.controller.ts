@@ -45,7 +45,8 @@ export class ModulesController {
   }
 
   @Get('requests')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
   getPendingRequests(@Request() req) {
     console.log('User data in requests:', req.user);
     const isSuperAdmin = req.user.roles?.includes('super_admin');
@@ -54,13 +55,16 @@ export class ModulesController {
   }
 
   @Patch('requests/:id/approve')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
   approveRequest(@Param('id') id: string, @Request() req) {
     console.log('Approving request with user:', req.user);
     return this.modulesService.approveRequest(id, req.user.userId);
   }
 
   @Patch('requests/:id/reject')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
   rejectRequest(@Param('id') id: string, @Request() req) {
     return this.modulesService.rejectRequest(id, req.user.userId);
   }

@@ -8,11 +8,13 @@ import { Deal } from '../entities/deal.entity';
 import { Task } from '../entities/task.entity';
 import { User } from '../entities/user.entity';
 import { Organization } from '../entities/organization.entity';
+import { Role } from '../entities/role.entity';
+import { Permission } from '../entities/permission.entity';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Contact, Lead, Deal, Task, User, Organization]),
+    TypeOrmModule.forFeature([Contact, Lead, Deal, Task, User, Organization, Role, Permission]),
     AuthModule
   ],
   controllers: [CrmController],

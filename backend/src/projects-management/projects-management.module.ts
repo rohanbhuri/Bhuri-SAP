@@ -5,11 +5,13 @@ import { ProjectsManagementService } from './projects-management.service';
 import { Project } from '../entities/project.entity';
 import { Timesheet } from '../entities/timesheet.entity';
 import { User } from '../entities/user.entity';
+import { Role } from '../entities/role.entity';
+import { Permission } from '../entities/permission.entity';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Project, Timesheet, User]),
+    TypeOrmModule.forFeature([Project, Timesheet, User, Role, Permission]),
     AuthModule
   ],
   controllers: [ProjectsManagementController],

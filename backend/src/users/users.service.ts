@@ -1,10 +1,11 @@
-import { Injectable, ForbiddenException } from '@nestjs/common';
+import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MongoRepository } from 'typeorm';
 import { ObjectId } from 'mongodb';
 import * as bcrypt from 'bcrypt';
 import { User } from '../entities/user.entity';
 import { Role, RoleType } from '../entities/role.entity';
+import { Permission } from '../entities/permission.entity';
 
 @Injectable()
 export class UsersService {
@@ -13,6 +14,8 @@ export class UsersService {
     private userRepository: MongoRepository<User>,
     @InjectRepository(Role)
     private roleRepository: MongoRepository<Role>,
+    @InjectRepository(Permission)
+    private permissionRepository: MongoRepository<Permission>,
   ) {}
 
   async findByEmail(email: string) {
@@ -98,15 +101,141 @@ export class UsersService {
     return this.userRepository.save(user);
   }
 
+  async findOne(id: string) {
+    const user = await this.userRepository.findOne({
+      where: { _id: new ObjectId(id) }
+    });
+    
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const roles = await this.roleRepository.find({
+      where: { _id: { $in: user.roleIds } }
+    });
+
+    const permissions = await this.permissionRepository.find({
+      where: { _id: { $in: user.permissionIds } }
+    });
+
+    return {
+      ...user,
+      roles: roles.map(role => ({ id: role._id, name: role.name, type: role.type })),
+      permissions: permissions.map(perm => ({ id: perm._id, module: perm.module, action: perm.action }))
+    };
+  }
+
+  async update(id: string, userData: any) {
+    const user = await this.userRepository.findOne({
+      where: { _id: new ObjectId(id) }
+    });
+    
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (userData.password) {
+      userData.password = await bcrypt.hash(userData.password, 10);
+    }
+
+    if (userData.roleIds) {
+      userData.roleIds = userData.roleIds.map(id => new ObjectId(id));
+    }
+
+    if (userData.permissionIds) {
+      userData.permissionIds = userData.permissionIds.map(id => new ObjectId(id));
+    }
+
+    await this.userRepository.update({ _id: new ObjectId(id) }, userData);
+    return this.findOne(id);
+  }
+
+  async delete(id: string) {
+    const result = await this.userRepository.delete({ _id: new ObjectId(id) });
+    if (result.affected === 0) {
+      throw new NotFoundException('User not found');
+    }
+    return { message: 'User deleted successfully' };
+  }
+
   async assignRole(userId: string, roleId: string, currentUser: any) {
     const user = await this.userRepository.findOne({
       where: { _id: new ObjectId(userId) }
     });
 
-    if (!user.roleIds.includes(new ObjectId(roleId))) {
-      user.roleIds.push(new ObjectId(roleId));
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const roleObjectId = new ObjectId(roleId);
+    if (!user.roleIds.some(id => id.equals(roleObjectId))) {
+      user.roleIds.push(roleObjectId);
+      await this.userRepository.save(user);
     }
     
-    return this.userRepository.save(user);
+    return this.findOne(userId);
+  }
+
+  async removeRole(userId: string, roleId: string) {
+    const user = await this.userRepository.findOne({
+      where: { _id: new ObjectId(userId) }
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.roleIds = user.roleIds.filter(id => !id.equals(new ObjectId(roleId)));
+    await this.userRepository.save(user);
+    
+    return this.findOne(userId);
+  }
+
+  async assignPermission(userId: string, permissionId: string) {
+    const user = await this.userRepository.findOne({
+      where: { _id: new ObjectId(userId) }
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const permissionObjectId = new ObjectId(permissionId);
+    if (!user.permissionIds.some(id => id.equals(permissionObjectId))) {
+      user.permissionIds.push(permissionObjectId);
+      await this.userRepository.save(user);
+    }
+    
+    return this.findOne(userId);
+  }
+
+  async removePermission(userId: string, permissionId: string) {
+    const user = await this.userRepository.findOne({
+      where: { _id: new ObjectId(userId) }
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.permissionIds = user.permissionIds.filter(id => !id.equals(new ObjectId(permissionId)));
+    await this.userRepository.save(user);
+    
+    return this.findOne(userId);
+  }
+
+  async toggleStatus(userId: string, isActive: boolean) {
+    const user = await this.userRepository.findOne({
+      where: { _id: new ObjectId(userId) }
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.isActive = isActive;
+    await this.userRepository.save(user);
+    
+    return this.findOne(userId);
   }
 }
