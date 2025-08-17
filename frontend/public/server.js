@@ -42,6 +42,26 @@ const proxyToSSR = (req, res) => {
   });
 
   proxy.on("error", () => {
+    // Fallback to client-side app shell if SSR is unavailable
+    try {
+      const candidates = [
+        join(__dirname, "../dist/beax-rm/browser/index.html"),
+        join(__dirname, "../dist/beax-rm/browser/index.html"),
+        join(__dirname, "index.html"),
+      ];
+      for (const p of candidates) {
+        if (existsSync(p)) {
+          const content = readFileSync(p);
+          res.writeHead(200, {
+            "Content-Type": "text/html; charset=utf-8",
+            "Cache-Control": "no-store",
+          });
+          return res.end(content);
+        }
+      }
+    } catch (e) {
+      // ignore and fall back to 500
+    }
     res.writeHead(500);
     res.end("SSR Server unavailable");
   });

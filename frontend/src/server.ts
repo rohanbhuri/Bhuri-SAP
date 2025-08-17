@@ -19,7 +19,10 @@ try {
   angularApp = new AngularNodeAppEngine();
   console.log('Angular SSR initialized successfully');
 } catch (error) {
-  console.warn('Failed to initialize Angular SSR, falling back to static serving:', error instanceof Error ? error.message : String(error));
+  console.warn(
+    'Failed to initialize Angular SSR, falling back to static serving:',
+    error instanceof Error ? error.message : String(error)
+  );
 }
 
 /**
@@ -29,7 +32,7 @@ app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
     ssr: angularApp ? 'available' : 'unavailable',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -39,7 +42,7 @@ app.get('/health', (req, res) => {
 app.get('/ssr-status', (req, res) => {
   res.json({
     ssr_enabled: !!angularApp,
-    fallback_available: existsSync(indexPath)
+    fallback_available: existsSync(indexPath),
   });
 });
 
@@ -85,12 +88,17 @@ app.use((req, res, next) => {
       }
     })
     .catch((error) => {
-      console.warn('SSR failed, falling back to client-side rendering:', error instanceof Error ? error.message : String(error));
+      console.warn(
+        'SSR failed, falling back to client-side rendering:',
+        error instanceof Error ? error.message : String(error)
+      );
       // Serve the static index.html for client-side rendering
       if (existsSync(indexPath)) {
         res.sendFile(indexPath);
       } else {
-        res.status(500).send('SSR Server unavailable - Please try refreshing the page');
+        res
+          .status(500)
+          .send('SSR Server unavailable - Please try refreshing the page');
       }
     });
 });
@@ -100,7 +108,7 @@ app.use((req, res, next) => {
  * The server listens on the port defined by the `PORT` environment variable, or defaults to 4000.
  */
 if (isMainModule(import.meta.url)) {
-  const port = process.env['PORT'] || 4200;
+  const port = process.env['PORT'] || 4000;
   app.listen(port, (error) => {
     if (error) {
       throw error;
