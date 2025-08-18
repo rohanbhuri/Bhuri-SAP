@@ -20,6 +20,18 @@ export class ModulesController {
     return this.modulesService.getActiveModulesForOrg(req.user.organizationId, req.user.userId);
   }
 
+  @Get('personal')
+  @UseGuards(JwtAuthGuard)
+  getPersonalModules(@Request() req) {
+    return this.modulesService.getPersonalModules(req.user.userId);
+  }
+
+  @Get('organization/:orgId')
+  @UseGuards(JwtAuthGuard)
+  getOrganizationModules(@Param('orgId') orgId: string, @Request() req) {
+    return this.modulesService.getActiveModulesForOrg(orgId, req.user.userId);
+  }
+
   @Patch(':id/activate')
   @UseGuards(JwtAuthGuard)
   activateModule(@Param('id') id: string, @Request() req) {
@@ -67,17 +79,5 @@ export class ModulesController {
   @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
   rejectRequest(@Param('id') id: string, @Request() req) {
     return this.modulesService.rejectRequest(id, req.user.userId);
-  }
-
-  @Get('personal')
-  @UseGuards(JwtAuthGuard)
-  getPersonalModules(@Request() req) {
-    return this.modulesService.getPersonalModules(req.user.userId);
-  }
-
-  @Get('organization/:orgId')
-  @UseGuards(JwtAuthGuard)
-  getOrganizationModules(@Param('orgId') orgId: string, @Request() req) {
-    return this.modulesService.getActiveModulesForOrg(orgId, req.user.userId);
   }
 }

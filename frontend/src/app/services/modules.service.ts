@@ -44,6 +44,18 @@ export class ModulesService {
       .pipe(catchError(() => of([])));
   }
 
+  getPersonalModules(): Observable<AppModuleInfo[]> {
+    return this.http
+      .get<AppModuleInfo[]>(`${this.apiUrl}/modules/personal`)
+      .pipe(catchError(() => of([])));
+  }
+
+  getOrganizationModules(orgId: string): Observable<AppModuleInfo[]> {
+    return this.http
+      .get<AppModuleInfo[]>(`${this.apiUrl}/modules/organization/${orgId}`)
+      .pipe(catchError(() => of([])));
+  }
+
   getAll(): Observable<AppModuleInfo[]> {
     return this.http
       .get<AppModuleInfo[]>(`${this.apiUrl}/modules`)
@@ -94,17 +106,5 @@ export class ModulesService {
     return this.http
       .patch(`${this.apiUrl}/modules/${moduleId}/deactivate`, {})
       .pipe(catchError(() => of({ success: false })));
-  }
-
-  getPersonalModules(): Observable<AppModuleInfo[]> {
-    return this.http
-      .get<AppModuleInfo[]>(`${this.apiUrl}/modules/personal`)
-      .pipe(catchError(() => of([])));
-  }
-
-  getOrganizationModules(organizationId: string): Observable<AppModuleInfo[]> {
-    return this.http
-      .get<AppModuleInfo[]>(`${this.apiUrl}/modules/organization/${organizationId}`)
-      .pipe(catchError(() => of([])));
   }
 }

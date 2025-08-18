@@ -7,7 +7,19 @@ import { MatCardModule } from '@angular/material/card';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { AuthService, Organization, User } from '../../services/auth.service';
+import { FormsModule } from '@angular/forms';
+import { AuthService, User } from '../../services/auth.service';
+
+export interface Organization {
+  id?: string;
+  _id?: string;
+  name: string;
+  settings?: {
+    primaryColor?: string;
+    accentColor?: string;
+    theme?: string;
+  };
+}
 import { Router } from '@angular/router';
 import { NavbarComponent } from '../../components/navbar.component';
 import { BottomNavbarComponent } from '../../components/bottom-navbar.component';
@@ -55,6 +67,7 @@ interface DashboardWidget {
     MatSelectModule,
     MatFormFieldModule,
     MatSnackBarModule,
+    FormsModule,
     NavbarComponent,
     BottomNavbarComponent,
     CdkDropList,
@@ -86,13 +99,15 @@ interface DashboardWidget {
         </nav>
         <div class="header-controls">
           <mat-form-field appearance="outline" class="view-selector">
-            <mat-select [value]="selectedContext()" (valueChange)="onContextChange($event)">
+            <mat-select 
+              [ngModel]="selectedContext()" 
+              (ngModelChange)="onContextChange($event)">
               <mat-option value="personal">
                 <mat-icon>person</mat-icon>
                 Personal
               </mat-option>
-              @for (org of organizations(); track org.id || $index) {
-                <mat-option [value]="org.id">
+              @for (org of organizations(); track org._id || org.id) {
+                <mat-option [value]="org._id || org.id">
                   <mat-icon>business</mat-icon>
                   {{ org.name }}
                 </mat-option>
@@ -414,10 +429,12 @@ export class DashboardComponent implements OnInit {
       this.currentUser.set(user);
       if (user && this.authService.isAuthenticated()) {
         this.loadOrganizations();
-        // Initialize with personal context and load modules after organizations are loaded
-        this.selectedContext.set('personal');
+        // Initialize with current organization or personal
+        const initialContext = user.organizationId || 'personal';
+        this.selectedContext.set(initialContext);
+        console.log('Initial context set to:', initialContext);
         setTimeout(() => {
-          this.loadModulesForContext('personal');
+          this.loadModulesForContext(initialContext);
         }, 100);
       }
     });
@@ -461,22 +478,86 @@ export class DashboardComponent implements OnInit {
   }
 
   onContextChange(context: string) {
-    console.log('Context changed to:', context);
+    console.log('=== CONTEXT CHANGE ===');
+    console.log('New context:', context);
+    console.log('Current context:', this.selectedContext());
     
-    // Ensure context is not undefined or null
     if (!context) {
-      console.warn('Context is undefined, defaulting to personal');
-      context = 'personal';
+      console.log('Invalid context, ignoring');
+      return;
     }
     
     this.selectedContext.set(context);
-    this.loadModulesForContext(context);
+    
+    if (context === 'personal') {
+      console.log('Loading personal modules...');
+      this.loadPersonalModules();
+    } else {
+      console.log('Loading organization modules for:', context);
+      this.loadOrganizationModules(context);
+    }
     
     const contextName = context === 'personal' ? 'Personal' : 
-      this.organizations().find(org => org.id === context)?.name || 'Organization';
+      this.organizations().find(org => (org._id || org.id) === context)?.name || 'Organization';
     
     this.snackBar.open(`Switched to ${contextName} dashboard`, 'Close', {
       duration: 2000,
+    });
+  }
+
+  private loadOrganizationModules(orgId: string) {
+    console.log('=== LOADING ORG MODULES ===');
+    console.log('Organization ID:', orgId);
+    
+    this.modulesService.getOrganizationModules(orgId).subscribe({
+      next: (modules) => {
+        console.log('API Response - Organization modules:', modules);
+        console.log('Module count:', modules?.length || 0);
+        if (modules && modules.length > 0) {
+          console.log('Module names:', modules.map(m => m.displayName));
+        }
+        this.updateWidgets(modules || []);
+      },
+      error: (error) => {
+        console.error('=== ERROR LOADING ORG MODULES ===');
+        console.error('Error details:', error);
+        this.updateWidgets([]);
+      }
+    });
+  }
+
+  private applyOrganizationTheme(orgId: string) {
+    const org = this.organizations().find(o => (o._id || o.id) === orgId);
+    if (org?.settings?.primaryColor) {
+      document.documentElement.style.setProperty('--theme-primary', org.settings.primaryColor);
+    }
+    if (org?.settings?.accentColor) {
+      document.documentElement.style.setProperty('--theme-accent', org.settings.accentColor);
+    }
+  }
+
+  private resetTheme() {
+    document.documentElement.style.removeProperty('--theme-primary');
+    document.documentElement.style.removeProperty('--theme-accent');
+  }
+
+  private loadPersonalModules() {
+    console.log('=== LOADING PERSONAL MODULES ===');
+    
+    this.modulesService.getPersonalModules().subscribe({
+      next: (modules) => {
+        console.log('API Response - Personal modules:', modules);
+        console.log('Module count:', modules?.length || 0);
+        if (modules && modules.length > 0) {
+          console.log('Module names:', modules.map(m => m.displayName));
+        }
+        this.updateWidgets(modules || []);
+      },
+      error: (error) => {
+        console.error('=== ERROR LOADING PERSONAL MODULES ===');
+        console.error('Error details:', error);
+        this.updateWidgets([]);
+      }
     });
   }
 
@@ -526,6 +607,13 @@ export class DashboardComponent implements OnInit {
   }
 
   updateWidgets(modules: AppModuleInfo[]) {
+    console.log('Updating widgets with modules:', modules?.length || 0);
+    
+    if (!modules || modules.length === 0) {
+      this.widgets.set([]);
+      return;
+    }
+    
     const mapped: DashboardWidget[] = modules.map((m, idx) => ({
       id: m.name,
       title: m.displayName,
