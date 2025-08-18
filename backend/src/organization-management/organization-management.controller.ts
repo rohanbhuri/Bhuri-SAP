@@ -48,6 +48,9 @@ export class OrganizationManagementController {
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequireRoles(RoleType.SUPER_ADMIN)
   approveRequest(@Param('id') id: string) {
+    if (!id || id === 'undefined') {
+      throw new BadRequestException('Valid request ID is required');
+    }
     return this.orgManagementService.approveRequest(id);
   }
 
@@ -55,6 +58,9 @@ export class OrganizationManagementController {
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequireRoles(RoleType.SUPER_ADMIN)
   rejectRequest(@Param('id') id: string) {
+    if (!id || id === 'undefined') {
+      throw new BadRequestException('Valid request ID is required');
+    }
     return this.orgManagementService.rejectRequest(id);
   }
 

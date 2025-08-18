@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { MongoRepository } from 'typeorm';
+import { MongoRepository, In } from 'typeorm';
 import { ObjectId } from 'mongodb';
 import { Organization } from '../entities/organization.entity';
 import { User } from '../entities/user.entity';
@@ -16,7 +16,23 @@ export class OrganizationsService {
   ) {}
 
   async findAll() {
-    return this.organizationRepository.find();
+    const organizations = await this.organizationRepository.find();
+    
+    // Add user count for each organization
+    const orgsWithUserCount = await Promise.all(
+      organizations.map(async (org) => {
+        const userCount = await this.userRepository.count({
+          where: { organizationIds: In([org._id]) }
+        });
+        
+        return {
+          ...org,
+          userCount
+        };
+      })
+    );
+    
+    return orgsWithUserCount;
   }
 
   async create(orgData: any) {

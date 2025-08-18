@@ -18,6 +18,7 @@ import { Goal, ReviewCycle, Feedback } from '../entities/performance.entity';
 import { ComplianceItem, ComplianceEvent, AuditLog } from '../entities/compliance.entity';
 import { DocumentRecord } from '../entities/document.entity';
 import { Asset, AssetAssignment } from '../entities/asset.entity';
+import { MessagesModule } from '../messages/messages.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { Asset, AssetAssignment } from '../entities/asset.entity';
       AssetAssignment,
     ]),
     AuthModule,
+    MessagesModule,
   ],
   controllers: [HrManagementController],
   providers: [HrManagementService],

@@ -12,6 +12,7 @@ import { OrganizationManagementModule } from './organization-management/organiza
 import { CrmModule } from './crm/crm.module';
 import { HrManagementModule } from './hr-management/hr-management.module';
 import { ProjectsManagementModule } from './projects-management/projects-management.module';
+import { MessagesModule } from './messages/messages.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { ProjectsManagementModule } from './projects-management/projects-managem
     CrmModule,
     HrManagementModule,
     ProjectsManagementModule,
+    MessagesModule,
   ],
 })
 export class AppModule {}

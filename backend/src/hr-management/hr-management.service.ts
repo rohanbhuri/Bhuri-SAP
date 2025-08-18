@@ -15,6 +15,7 @@ import { Goal, ReviewCycle, Feedback } from '../entities/performance.entity';
 import { ComplianceItem, ComplianceEvent, AuditLog } from '../entities/compliance.entity';
 import { DocumentRecord } from '../entities/document.entity';
 import { Asset, AssetAssignment } from '../entities/asset.entity';
+import { MessagesGateway } from '../messages/messages.gateway';
 
 @Injectable()
 export class HrManagementService {
@@ -57,6 +58,7 @@ export class HrManagementService {
     private assetRepository: MongoRepository<Asset>,
     @InjectRepository(AssetAssignment)
     private assetAssignmentRepository: MongoRepository<AssetAssignment>,
+    private gateway: MessagesGateway,
   ) {}
 
   async getEmployees(organizationId?: string) {
@@ -240,12 +242,32 @@ export class HrManagementService {
       createdAt: new Date(),
       status: 'pending',
     });
-    return this.leaveRepository.save(leave);
+    const saved = await this.leaveRepository.save(leave);
+
+    // Emit request notification to org room
+    this.gateway.emitRequest({ orgId: String((saved as any).organizationId) }, {
+      type: 'leave',
+      action: 'created',
+      data: saved,
+    });
+
+    return saved;
   }
 
   async setLeaveStatus(id: string, status: 'approved' | 'rejected') {
     await this.leaveRepository.update(id, { status, updatedAt: new Date() } as any);
-    return this.leaveRepository.findOne({ where: { _id: new ObjectId(id) } as any });
+    const updated = await this.leaveRepository.findOne({ where: { _id: new ObjectId(id) } as any });
+
+    // Emit request status change
+    if (updated) {
+      this.gateway.emitNotification({ orgId: String((updated as any).organizationId) }, {
+        type: 'leave',
+        action: status,
+        data: updated,
+      });
+    }
+
+    return updated;
   }
 
   async listLeaves(params: { employeeId?: string; organizationId?: string; status?: string }) {

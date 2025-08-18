@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { MongoRepository } from 'typeorm';
-import { ObjectId } from 'mongodb';
+import { MongoRepository, In } from 'typeorm';
+import { ObjectId, MongoClient } from 'mongodb';
 import { Organization } from '../entities/organization.entity';
 import { OrganizationRequest, RequestStatus } from '../entities/organization-request.entity';
 import { User } from '../entities/user.entity';
@@ -23,17 +23,27 @@ export class OrganizationManagementService {
   async findAll() {
     const organizations = await this.organizationRepository.find();
     
-    // Get user count for each organization
-    const orgsWithUserCount = await Promise.all(
-      organizations.map(async (org) => {
-        const userCount = await this.userRepository.count({
-          where: { organizationIds: org._id }
-        });
-        return { ...org, userCount };
-      })
-    );
-
-    return orgsWithUserCount;
+    // Use direct MongoDB client for array matching
+    const uri = process.env.MONGODB_URI || 'mongodb+srv://rohanbhuri:nokiaset@bhuri-db.zg9undw.mongodb.net/?retryWrites=true&w=majority&appName=bhuri-db';
+    const client = new MongoClient(uri);
+    
+    try {
+      await client.connect();
+      const db = client.db('beaxrm');
+      
+      const orgsWithUserCount = await Promise.all(
+        organizations.map(async (org) => {
+          const userCount = await db.collection('users').countDocuments({
+            organizationIds: { $in: [org._id] }
+          });
+          return { ...org, userCount };
+        })
+      );
+      
+      return orgsWithUserCount;
+    } finally {
+      await client.close();
+    }
   }
 
   async create(orgData: any) {
@@ -120,6 +130,7 @@ export class OrganizationManagementService {
         
         return {
           ...request,
+          id: request._id,
           user: user ? { id: user._id, name: `${user.firstName} ${user.lastName}`, email: user.email } : null,
           organization: organization ? { id: organization._id, name: organization.name } : null
         };
@@ -130,6 +141,10 @@ export class OrganizationManagementService {
   }
 
   async approveRequest(requestId: string) {
+    if (!ObjectId.isValid(requestId)) {
+      throw new BadRequestException('Invalid request ID');
+    }
+    
     const request = await this.organizationRequestRepository.findOne({
       where: { _id: new ObjectId(requestId) }
     });
@@ -164,6 +179,10 @@ export class OrganizationManagementService {
   }
 
   async rejectRequest(requestId: string) {
+    if (!ObjectId.isValid(requestId)) {
+      throw new BadRequestException('Invalid request ID');
+    }
+    
     const request = await this.organizationRequestRepository.findOne({
       where: { _id: new ObjectId(requestId) }
     });
