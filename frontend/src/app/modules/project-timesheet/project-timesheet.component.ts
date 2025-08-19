@@ -5,6 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTableModule } from '@angular/material/table';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatDialog } from '@angular/material/dialog';
 import { DatePipe, CurrencyPipe, NgIf } from '@angular/common';
 
 import {
@@ -14,6 +15,7 @@ import {
   ProjectTimeReport,
   TimesheetStats,
 } from './project-timesheet.service';
+import { TimesheetEntryDialogComponent } from './dialogs';
 
 @Component({
   selector: 'app-project-timesheet',
@@ -46,7 +48,7 @@ import {
           <div class="tab-content">
             <div class="tab-header">
               <h2>Time Entries</h2>
-              <button mat-raised-button color="primary">
+              <button mat-raised-button color="primary" (click)="openEntryDialog()">
                 <mat-icon>add</mat-icon>
                 Log Time
               </button>
@@ -106,10 +108,10 @@ import {
                 <ng-container matColumnDef="actions">
                   <th mat-header-cell *matHeaderCellDef>Actions</th>
                   <td mat-cell *matCellDef="let entry">
-                    <button mat-icon-button color="primary" title="Edit">
+                    <button mat-icon-button color="primary" title="Edit" (click)="openEntryDialog(entry)">
                       <mat-icon>edit</mat-icon>
                     </button>
-                    <button mat-icon-button color="warn" title="Delete">
+                    <button mat-icon-button color="warn" title="Delete" (click)="deleteEntry(entry._id)">
                       <mat-icon>delete</mat-icon>
                     </button>
                   </td>
@@ -126,7 +128,7 @@ import {
           <div class="tab-content">
             <div class="tab-header">
               <h2>Weekly Timesheets</h2>
-              <button mat-raised-button color="primary">
+              <button mat-raised-button color="primary" (click)="submitTimesheet()">
                 <mat-icon>send</mat-icon>
                 Submit Timesheet
               </button>
@@ -167,10 +169,10 @@ import {
                 <ng-container matColumnDef="actions">
                   <th mat-header-cell *matHeaderCellDef>Actions</th>
                   <td mat-cell *matCellDef="let summary">
-                    <button mat-icon-button color="primary" title="View Details">
+                    <button mat-icon-button color="primary" title="View Details" (click)="viewSummaryDetails(summary)">
                       <mat-icon>visibility</mat-icon>
                     </button>
-                    <button mat-icon-button color="accent" title="Submit" *ngIf="summary.status === 'draft'">
+                    <button mat-icon-button color="accent" title="Submit" *ngIf="summary.status === 'draft'" (click)="submitSummary(summary)">
                       <mat-icon>send</mat-icon>
                     </button>
                   </td>
@@ -187,7 +189,7 @@ import {
           <div class="tab-content">
             <div class="tab-header">
               <h2>Project Time Reports</h2>
-              <button mat-raised-button color="primary">
+              <button mat-raised-button color="primary" (click)="exportReport()">
                 <mat-icon>download</mat-icon>
                 Export Report
               </button>
@@ -226,10 +228,10 @@ import {
                 <ng-container matColumnDef="actions">
                   <th mat-header-cell *matHeaderCellDef>Actions</th>
                   <td mat-cell *matCellDef="let report">
-                    <button mat-icon-button color="primary" title="View Details">
+                    <button mat-icon-button color="primary" title="View Details" (click)="viewReportDetails(report)">
                       <mat-icon>visibility</mat-icon>
                     </button>
-                    <button mat-icon-button color="accent" title="Export">
+                    <button mat-icon-button color="accent" title="Export" (click)="exportProjectReport(report)">
                       <mat-icon>download</mat-icon>
                     </button>
                   </td>
@@ -435,6 +437,7 @@ import {
 })
 export class ProjectTimesheetComponent implements OnInit {
   private timesheetService = inject(ProjectTimesheetService);
+  private dialog = inject(MatDialog);
 
   timesheetEntries = signal<TimesheetEntry[]>([]);
   timesheetSummaries = signal<TimesheetSummary[]>([]);
@@ -490,5 +493,60 @@ export class ProjectTimesheetComponent implements OnInit {
       case 'rejected': return 'warn';
       default: return '';
     }
+  }
+
+  openEntryDialog(entry?: TimesheetEntry) {
+    const dialogRef = this.dialog.open(TimesheetEntryDialogComponent, {
+      width: '600px',
+      data: { entry }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        if (entry) {
+          this.timesheetService.updateTimesheetEntry(entry._id, result).subscribe(() => {
+            this.loadTimesheetEntries();
+          });
+        } else {
+          this.timesheetService.createTimesheetEntry(result).subscribe(() => {
+            this.loadTimesheetEntries();
+          });
+        }
+      }
+    });
+  }
+
+  deleteEntry(id: string) {
+    if (confirm('Are you sure you want to delete this entry?')) {
+      this.timesheetService.deleteTimesheetEntry(id).subscribe(() => {
+        this.loadTimesheetEntries();
+      });
+    }
+  }
+
+  submitTimesheet() {
+    console.log('Submit timesheet');
+  }
+
+  viewSummaryDetails(summary: TimesheetSummary) {
+    console.log('View summary details', summary);
+  }
+
+  submitSummary(summary: TimesheetSummary) {
+    this.timesheetService.submitTimesheet(summary.employeeId).subscribe(() => {
+      this.loadTimesheetSummaries();
+    });
+  }
+
+  exportReport() {
+    console.log('Export report');
+  }
+
+  viewReportDetails(report: ProjectTimeReport) {
+    console.log('View report details', report);
+  }
+
+  exportProjectReport(report: ProjectTimeReport) {
+    console.log('Export project report', report);
   }
 }

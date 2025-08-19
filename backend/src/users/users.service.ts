@@ -238,4 +238,25 @@ export class UsersService {
     
     return this.findOne(userId);
   }
+
+  async updateUserOrganization(userId: string, organizationId: string) {
+    const user = await this.userRepository.findOne({
+      where: { _id: new ObjectId(userId) }
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.currentOrganizationId = new ObjectId(organizationId);
+    await this.userRepository.save(user);
+    
+    return {
+      id: user._id.toString(),
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      organizationId: organizationId
+    };
+  }
 }

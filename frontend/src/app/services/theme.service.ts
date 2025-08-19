@@ -9,8 +9,15 @@ import { AuthService } from './auth.service';
 export class ThemeService {
   private preferencesService = inject(PreferencesService);
   private authService = inject(AuthService);
+  private currentPreferences: any = {};
+  private mediaQuery?: MediaQueryList;
 
-  constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) {
+    if (isPlatformBrowser(this.platformId)) {
+      this.mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      this.mediaQuery.addEventListener('change', () => this.handleSystemThemeChange());
+    }
+  }
 
   loadAndApplyUserTheme() {
     if (!isPlatformBrowser(this.platformId)) return;
@@ -30,13 +37,27 @@ export class ThemeService {
     });
   }
 
+  private handleSystemThemeChange() {
+    if (this.currentPreferences.theme === 'auto') {
+      this.applyTheme(this.currentPreferences);
+    }
+  }
+
   applyTheme(preferences: any = {}) {
     if (!isPlatformBrowser(this.platformId)) return;
+
+    // Store current preferences for system theme change handling
+    this.currentPreferences = { ...preferences };
 
     const root = document.documentElement;
     const body = document.body;
     const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const theme = preferences.theme || (isDarkMode ? 'dark' : 'light');
+    
+    // Determine theme: default to 'light' if no preference, handle 'auto' mode
+    let theme = preferences.theme || 'light';
+    if (theme === 'auto') {
+      theme = isDarkMode ? 'dark' : 'light';
+    }
 
     // Define theme colors with better accessibility
     const themeColors = {

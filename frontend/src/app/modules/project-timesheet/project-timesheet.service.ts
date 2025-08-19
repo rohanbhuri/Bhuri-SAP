@@ -145,4 +145,46 @@ export class ProjectTimesheetService {
   rejectTimesheet(summaryId: string, reason: string): Observable<TimesheetSummary> {
     return this.http.patch<TimesheetSummary>(`${this.apiUrl}/project-timesheet/summaries/${summaryId}/reject`, { reason });
   }
+
+  getMockData(): TimesheetEntry[] {
+    const today = new Date();
+    const mockData: TimesheetEntry[] = [];
+    
+    const tasks = [
+      'Frontend Development',
+      'Backend API Work', 
+      'Database Design',
+      'Testing & QA',
+      'Code Review',
+      'Client Meeting',
+      'Documentation',
+      'Bug Fixes',
+      'UI/UX Design',
+      'Performance Optimization'
+    ];
+    
+    const statuses: ('draft' | 'submitted' | 'approved' | 'rejected')[] = ['draft', 'submitted', 'approved', 'rejected'];
+    
+    for (let i = 0; i < 15; i++) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - Math.floor(Math.random() * 30));
+      
+      mockData.push({
+        _id: `mock-${i}`,
+        employeeId: 'emp-1',
+        projectId: 'proj-1',
+        taskId: `task-${i}`,
+        date,
+        startTime: '09:00',
+        endTime: `${9 + Math.floor(Math.random() * 8)}:00`,
+        totalHours: Math.floor(Math.random() * 8) + 1,
+        description: tasks[Math.floor(Math.random() * tasks.length)],
+        status: statuses[Math.floor(Math.random() * statuses.length)],
+        billable: Math.random() > 0.3,
+        hourlyRate: 50 + Math.floor(Math.random() * 50)
+      });
+    }
+    
+    return mockData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }
 }

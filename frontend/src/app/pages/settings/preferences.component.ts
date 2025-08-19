@@ -134,7 +134,7 @@ export class PreferencesComponent {
   loading = signal(false);
   
   preferencesForm = this.fb.group({
-    theme: ['auto'],
+    theme: ['light'],
     primaryColor: ['#1976d2'],
     accentColor: ['#ff4081'],
     secondaryColor: ['#424242']
@@ -198,12 +198,12 @@ export class PreferencesComponent {
   
   resetToDefault() {
     this.preferencesForm.patchValue({
-      theme: 'auto',
+      theme: 'light',
       primaryColor: '#1976d2',
       accentColor: '#ff4081',
       secondaryColor: '#424242'
     });
-    this.themeService.applyTheme();
+    this.themeService.applyTheme({ theme: 'light' });
     this.savePreferences();
   }
   

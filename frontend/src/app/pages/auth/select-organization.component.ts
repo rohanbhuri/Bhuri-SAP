@@ -229,12 +229,24 @@ export class SelectOrganizationComponent {
 
   selectOrganization(organizationId: string) {
     this.loading.set(true);
-    this.authService.updateUserOrganization(organizationId);
-    this.loading.set(false);
-    // Small delay to ensure user object is updated before navigation
-    setTimeout(() => {
-      this.router.navigate(['/dashboard']);
-    }, 100);
+    this.authService.updateUserOrganization(organizationId).subscribe({
+      next: () => {
+        this.loading.set(false);
+        this.router.navigate(['/dashboard']);
+      },
+      error: (error) => {
+        this.loading.set(false);
+        // Fallback to local storage update
+        const user = this.authService.getCurrentUser();
+        if (user) {
+          user.organizationId = organizationId;
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('user', JSON.stringify(user));
+          }
+        }
+        this.router.navigate(['/dashboard']);
+      }
+    });
   }
 
   skip() {

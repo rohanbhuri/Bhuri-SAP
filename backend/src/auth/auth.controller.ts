@@ -1,6 +1,7 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Patch, UseGuards, Request } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
+import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 
 class LoginDto {
   email: string;
@@ -38,5 +39,12 @@ export class AuthController {
     // Create new user
     const user = await this.usersService.createPublic(signupDto);
     return this.authService.login(signupDto.email, signupDto.password);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('update-organization')
+  async updateOrganization(@Request() req, @Body() body: { organizationId: string }) {
+    const updatedUser = await this.usersService.updateUserOrganization(req.user.id, body.organizationId);
+    return updatedUser;
   }
 }

@@ -31,11 +31,11 @@ import { ProjectTimesheetService, TimesheetSummary } from '../project-timesheet.
       <div class="page-header">
         <h2>Weekly Timesheets</h2>
         <div class="header-actions">
-          <button mat-raised-button color="accent">
+          <button mat-raised-button color="accent" (click)="submitCurrentWeek()">
             <mat-icon>send</mat-icon>
             Submit Current Week
           </button>
-          <button mat-raised-button color="primary">
+          <button mat-raised-button color="primary" (click)="createNewTimesheet()">
             <mat-icon>add</mat-icon>
             New Timesheet
           </button>
@@ -69,8 +69,8 @@ import { ProjectTimesheetService, TimesheetSummary } from '../project-timesheet.
             </div>
           </mat-card-content>
           <mat-card-actions>
-            <button mat-button color="primary">View Details</button>
-            <button mat-raised-button color="accent">Submit for Approval</button>
+            <button mat-button color="primary" (click)="viewDetails()">View Details</button>
+            <button mat-raised-button color="accent" (click)="submitForApproval()">Submit for Approval</button>
           </mat-card-actions>
         </mat-card>
       </div>
@@ -161,10 +161,10 @@ import { ProjectTimesheetService, TimesheetSummary } from '../project-timesheet.
                 </div>
 
                 <mat-card-actions>
-                  <button mat-button color="primary" *ngIf="summary.status === 'draft'">Edit</button>
-                  <button mat-raised-button color="accent" *ngIf="summary.status === 'draft'">Submit</button>
-                  <button mat-button color="warn" *ngIf="summary.status === 'submitted'">Withdraw</button>
-                  <button mat-button>Export PDF</button>
+                  <button mat-button color="primary" *ngIf="summary.status === 'draft'" (click)="editTimesheet(summary)">Edit</button>
+                  <button mat-raised-button color="accent" *ngIf="summary.status === 'draft'" (click)="submitTimesheet(summary)">Submit</button>
+                  <button mat-button color="warn" *ngIf="summary.status === 'submitted'" (click)="withdrawTimesheet(summary)">Withdraw</button>
+                  <button mat-button (click)="exportPDF(summary)">Export PDF</button>
                 </mat-card-actions>
               </div>
             </mat-expansion-panel>
@@ -288,5 +288,46 @@ export class TimesheetsPageComponent implements OnInit {
       case 'rejected': return 'warn';
       default: return '';
     }
+  }
+
+  submitCurrentWeek() {
+    console.log('Submit current week');
+    // Implementation for submitting current week
+  }
+
+  createNewTimesheet() {
+    console.log('Create new timesheet');
+    // Implementation for creating new timesheet
+  }
+
+  viewDetails() {
+    console.log('View details');
+    // Implementation for viewing details
+  }
+
+  submitForApproval() {
+    console.log('Submit for approval');
+    // Implementation for submitting for approval
+  }
+
+  editTimesheet(summary: TimesheetSummary) {
+    console.log('Edit timesheet', summary);
+    // Implementation for editing timesheet
+  }
+
+  submitTimesheet(summary: TimesheetSummary) {
+    this.timesheetService.submitTimesheet(summary.employeeId).subscribe(() => {
+      this.loadSummaries();
+    });
+  }
+
+  withdrawTimesheet(summary: TimesheetSummary) {
+    console.log('Withdraw timesheet', summary);
+    // Implementation for withdrawing timesheet
+  }
+
+  exportPDF(summary: TimesheetSummary) {
+    console.log('Export PDF', summary);
+    // Implementation for exporting PDF
   }
 }

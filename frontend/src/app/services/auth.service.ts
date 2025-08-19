@@ -127,15 +127,16 @@ export class AuthService {
     return this.currentUserSubject.value;
   }
 
-  updateUserOrganization(organizationId: string): void {
-    const user = this.getCurrentUser();
-    if (user) {
-      user.organizationId = organizationId;
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('user', JSON.stringify(user));
-      }
-      this.currentUserSubject.next(user);
-    }
+  updateUserOrganization(organizationId: string): Observable<User> {
+    return this.http.patch<User>(`${this.apiUrl}/auth/update-organization`, { organizationId })
+      .pipe(
+        tap(updatedUser => {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+          }
+          this.currentUserSubject.next(updatedUser);
+        })
+      );
   }
 
   hasRole(role: string): boolean {

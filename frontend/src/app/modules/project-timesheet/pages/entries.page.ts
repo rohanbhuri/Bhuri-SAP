@@ -9,8 +9,10 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { MatDialog } from '@angular/material/dialog';
 import { DatePipe, NgIf } from '@angular/common';
 import { ProjectTimesheetService, TimesheetEntry } from '../project-timesheet.service';
+import { TimesheetEntryDialogComponent } from '../dialogs';
 
 @Component({
   selector: 'app-entries-page',
@@ -33,7 +35,7 @@ import { ProjectTimesheetService, TimesheetEntry } from '../project-timesheet.se
     <div class="page-container">
       <div class="page-header">
         <h2>Time Entries</h2>
-        <button mat-raised-button color="primary">
+        <button mat-raised-button color="primary" (click)="openEntryDialog()">
           <mat-icon>add</mat-icon>
           Log Time
         </button>
@@ -167,13 +169,13 @@ import { ProjectTimesheetService, TimesheetEntry } from '../project-timesheet.se
               <ng-container matColumnDef="actions">
                 <th mat-header-cell *matHeaderCellDef>Actions</th>
                 <td mat-cell *matCellDef="let entry">
-                  <button mat-icon-button color="primary" title="Edit" *ngIf="entry.status === 'draft'">
+                  <button mat-icon-button color="primary" title="Edit" *ngIf="entry.status === 'draft'" (click)="openEntryDialog(entry)">
                     <mat-icon>edit</mat-icon>
                   </button>
                   <button mat-icon-button color="accent" title="Copy">
                     <mat-icon>content_copy</mat-icon>
                   </button>
-                  <button mat-icon-button color="warn" title="Delete" *ngIf="entry.status === 'draft'">
+                  <button mat-icon-button color="warn" title="Delete" *ngIf="entry.status === 'draft'" (click)="deleteEntry(entry._id)">
                     <mat-icon>delete</mat-icon>
                   </button>
                 </td>
@@ -255,6 +257,7 @@ import { ProjectTimesheetService, TimesheetEntry } from '../project-timesheet.se
 })
 export class EntriesPageComponent implements OnInit {
   private timesheetService = inject(ProjectTimesheetService);
+  private dialog = inject(MatDialog);
   entries = signal<TimesheetEntry[]>([]);
   displayedColumns = ['date', 'project', 'description', 'time', 'billable', 'status', 'actions'];
 
@@ -266,6 +269,35 @@ export class EntriesPageComponent implements OnInit {
     this.timesheetService.getTimesheetEntries().subscribe(data => {
       this.entries.set(data);
     });
+  }
+
+  openEntryDialog(entry?: TimesheetEntry) {
+    const dialogRef = this.dialog.open(TimesheetEntryDialogComponent, {
+      width: '600px',
+      data: { entry }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        if (entry) {
+          this.timesheetService.updateTimesheetEntry(entry._id, result).subscribe(() => {
+            this.loadEntries();
+          });
+        } else {
+          this.timesheetService.createTimesheetEntry(result).subscribe(() => {
+            this.loadEntries();
+          });
+        }
+      }
+    });
+  }
+
+  deleteEntry(id: string) {
+    if (confirm('Are you sure you want to delete this entry?')) {
+      this.timesheetService.deleteTimesheetEntry(id).subscribe(() => {
+        this.loadEntries();
+      });
+    }
   }
 
   getStatusColor(status: string): string {
