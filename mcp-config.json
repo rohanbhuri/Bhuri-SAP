@@ -1,0 +1,53 @@
+{
+  "name": "Bhuri-SAP MCP Server",
+  "description": "Enhanced Model Context Protocol server with full AI agent compatibility",
+  "version": "2.0.0",
+  "server": {
+    "command": "node",
+    "args": ["mcp-server-improved.js"],
+    "env": {
+      "NODE_ENV": "development"
+    }
+  },
+  "playwright": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "@playwright/mcp@latest",
+      "--isolated",
+      "--headless",
+      "--browser",
+      "firefox",
+      "--user-agent",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.6422.112 Safari/537.3"
+    ]
+  },
+  "endpoints": {
+    "mcp": "http://localhost:8931/mcp",
+    "websocket": "ws://localhost:8932",
+    "screenshot": "http://localhost:8931/screenshot",
+    "analysis": "http://localhost:8931/analyze",
+    "config": "http://localhost:8931/config"
+  },
+  "tools": [
+    "screenshot",
+    "analyzeUI", 
+    "click",
+    "type",
+    "navigate",
+    "wait",
+    "scroll",
+    "getElements"
+  ],
+  "capabilities": [
+    "json-rpc-2.0",
+    "websocket-support",
+    "element-interaction",
+    "navigation",
+    "ui-analysis",
+    "accessibility-check",
+    "theme-detection",
+    "secure-cors",
+    "input-validation"
+  ]
+}

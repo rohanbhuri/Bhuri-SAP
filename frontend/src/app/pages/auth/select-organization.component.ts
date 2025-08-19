@@ -5,6 +5,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatListModule } from '@angular/material/list';
+import { MatIconModule } from '@angular/material/icon';
 import { AuthService, Organization } from '../../services/auth.service';
 
 @Component({
@@ -15,6 +16,7 @@ import { AuthService, Organization } from '../../services/auth.service';
     MatCardModule,
     MatButtonModule,
     MatListModule,
+    MatIconModule,
     MatSnackBarModule
   ],
   template: `
@@ -28,20 +30,52 @@ import { AuthService, Organization } from '../../services/auth.service';
         <mat-card-content>
           @if (organizations().length > 0) {
             <mat-list>
-              @for (org of organizations(); track org.id) {
-                <mat-list-item (click)="selectOrganization(org.id)" class="org-item">
+              @for (org of organizations(); track org._id || org.id) {
+                <mat-list-item 
+                  (click)="selectOrganization(org._id || org.id)" 
+                  class="org-item"
+                  [class.selected]="isLastSelected(org._id || org.id)">
+                  <div matListItemAvatar>
+                    @if (org.avatar) {
+                      <img [src]="org.avatar" [alt]="org.name + ' logo'" class="org-avatar">
+                    } @else {
+                      <div class="org-avatar-placeholder">
+                        {{ getOrgInitials(org.name) }}
+                      </div>
+                    }
+                  </div>
                   <span matListItemTitle>{{ org.name }}</span>
+                  @if (isLastSelected(org._id || org.id)) {
+                    <span matListItemMeta class="selected-indicator">✓</span>
+                  }
                 </mat-list-item>
               }
+            </mat-list>
+            
+            <div class="or-separator">
+              <span>OR</span>
+            </div>
+            
+            <mat-list>
+              <mat-list-item 
+                (click)="skip()" 
+                class="org-item"
+                [class.selected]="isPersonalSelected()">
+                <div matListItemAvatar>
+                  <div class="org-avatar-placeholder personal">
+                    P
+                  </div>
+                </div>
+                <span matListItemTitle>Personal</span>
+                @if (isPersonalSelected()) {
+                  <span matListItemMeta class="selected-indicator">✓</span>
+                }
+              </mat-list-item>
             </mat-list>
           } @else {
             <p class="no-orgs">No organizations available</p>
           }
         </mat-card-content>
-
-        <mat-card-actions>
-          <button mat-button color="primary" (click)="skip()">Skip for now</button>
-        </mat-card-actions>
       </mat-card>
     </div>
   `,
@@ -65,10 +99,36 @@ import { AuthService, Organization } from '../../services/auth.service';
       cursor: pointer;
       border-radius: 8px;
       margin-bottom: 8px;
+      transition: all 0.2s ease;
     }
     
     .org-item:hover {
       background-color: #f5f5f5;
+    }
+    
+    .org-item.selected {
+      background-color: #e3f2fd;
+      border: 2px solid #2196f3;
+    }
+    
+    .org-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    
+    .org-avatar-placeholder {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 14px;
     }
     
     .no-orgs {
@@ -89,6 +149,38 @@ import { AuthService, Organization } from '../../services/auth.service';
     mat-card-actions {
       justify-content: center;
     }
+    
+    .selected-indicator {
+      color: #2196f3;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    
+    .or-separator {
+      display: flex;
+      align-items: center;
+      margin: 20px 0;
+      text-align: center;
+    }
+    
+    .or-separator::before,
+    .or-separator::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #ddd;
+    }
+    
+    .or-separator span {
+      padding: 0 15px;
+      color: #666;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .org-avatar-placeholder.personal {
+      background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+    }
   `]
 })
 export class SelectOrganizationComponent {
@@ -103,31 +195,35 @@ export class SelectOrganizationComponent {
     this.loadOrganizations();
   }
 
+  getOrgInitials(name: string): string {
+    return name.split(' ').map(word => word.charAt(0)).join('').substring(0, 2).toUpperCase();
+  }
+
+  isLastSelected(orgId: string): boolean {
+    const currentUser = this.authService.getCurrentUser();
+    return currentUser?.organizationId === orgId;
+  }
+
+  isPersonalSelected(): boolean {
+    const currentUser = this.authService.getCurrentUser();
+    return !currentUser?.organizationId;
+  }
+
   loadOrganizations() {
-    // Load both user organizations and public organizations
-    const myOrgs$ = this.authService.getMyOrganizations();
-    const publicOrgs$ = this.authService.getPublicOrganizations();
-    
-    // Combine both requests
-    Promise.all([
-      myOrgs$.toPromise(),
-      publicOrgs$.toPromise()
-    ]).then(([myOrgs, publicOrgs]) => {
-      // Merge and deduplicate organizations
-      const allOrgs = [...(myOrgs || []), ...(publicOrgs || [])];
-      const uniqueOrgs = allOrgs.filter((org, index, self) => 
-        index === self.findIndex(o => o.id === org.id)
-      );
-      
-      this.organizations.set(uniqueOrgs);
-      if (uniqueOrgs.length === 0) {
+    // Load only organizations the user is part of
+    this.authService.getMyOrganizations().subscribe({
+      next: (myOrgs) => {
+        this.organizations.set(myOrgs || []);
+        if ((myOrgs || []).length === 0) {
+          this.skip();
+        }
+      },
+      error: (error) => {
+        this.snackBar.open('Failed to load organizations', 'Close', {
+          duration: 3000
+        });
         this.skip();
       }
-    }).catch((error) => {
-      this.snackBar.open('Failed to load organizations', 'Close', {
-        duration: 3000
-      });
-      this.skip();
     });
   }
 
@@ -135,7 +231,10 @@ export class SelectOrganizationComponent {
     this.loading.set(true);
     this.authService.updateUserOrganization(organizationId);
     this.loading.set(false);
-    this.router.navigate(['/dashboard']);
+    // Small delay to ensure user object is updated before navigation
+    setTimeout(() => {
+      this.router.navigate(['/dashboard']);
+    }, 100);
   }
 
   skip() {

@@ -34,8 +34,10 @@ export interface AuthResponse {
 
 export interface Organization {
   id: string;
+  _id?: string;
   name: string;
   code: string;
+  avatar?: string;
 }
 
 @Injectable({

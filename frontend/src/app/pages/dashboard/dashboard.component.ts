@@ -11,7 +11,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthService, User } from '../../services/auth.service';
 
 export interface Organization {
-  id?: string;
+  id: string;
   _id?: string;
   name: string;
   settings?: {
@@ -429,13 +429,13 @@ export class DashboardComponent implements OnInit {
       this.currentUser.set(user);
       if (user && this.authService.isAuthenticated()) {
         this.loadOrganizations();
-        // Initialize with current organization or personal
-        const initialContext = user.organizationId || 'personal';
-        this.selectedContext.set(initialContext);
-        console.log('Initial context set to:', initialContext);
+        // Wait for organizations to load before setting context
         setTimeout(() => {
+          const initialContext = user.organizationId || 'personal';
+          this.selectedContext.set(initialContext);
+          console.log('Initial context set to:', initialContext);
           this.loadModulesForContext(initialContext);
-        }, 100);
+        }, 300);
       }
     });
   }
@@ -584,7 +584,7 @@ export class DashboardComponent implements OnInit {
       });
     } else {
       // Validate organization exists before loading modules
-      const org = this.organizations().find(o => o.id === context);
+      const org = this.organizations().find(o => (o._id || o.id) === context);
       if (!org) {
         console.error('Organization not found for context:', context);
         this.selectedContext.set('personal');

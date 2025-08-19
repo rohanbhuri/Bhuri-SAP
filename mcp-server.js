@@ -1,11 +1,26 @@
 const http = require('http');
-const { chromium } = require('playwright');
+const { firefox, chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
 const PORT = 8931;
 let browser = null;
 let page = null;
+
+// MCP Configuration for AI agents like Zencoder
+const MCP_CONFIG = {
+  command: "npx",
+  args: [
+    "-y",
+    "@playwright/mcp@latest",
+    "--isolated",
+    "--headless",
+    "--browser",
+    "firefox",
+    "--user-agent",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.6422.112 Safari/537.3"
+  ]
+};
 
 const server = http.createServer(async (req, res) => {
   if (req.url === '/mcp' && req.method === 'GET') {
@@ -18,8 +33,14 @@ const server = http.createServer(async (req, res) => {
 
     // Initialize browser if not already done
     if (!browser) {
-      browser = await chromium.launch({ headless: false });
-      page = await browser.newPage();
+      // Use Firefox with headless mode for AI agent compatibility
+      browser = await firefox.launch({ 
+        headless: true,
+        args: ['--no-sandbox', '--disable-dev-shm-usage']
+      });
+      page = await browser.newPage({
+        userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.6422.112 Safari/537.3"
+      });
       
       // Wait for the frontend to be ready
       await new Promise(resolve => setTimeout(resolve, 3000));
@@ -46,8 +67,13 @@ const server = http.createServer(async (req, res) => {
         capabilities: {
           tools: {
             analyzeUI: { description: 'Analyze UI accessibility and theme' },
-            screenshot: { description: 'Take screenshot' }
+            screenshot: { description: 'Take screenshot' },
+            getConfig: { description: 'Get MCP configuration for AI agents' }
           }
+        },
+        serverInfo: {
+          name: 'Bhuri-SAP MCP Server',
+          version: '1.0.0'
         }
       }
     };
@@ -75,6 +101,12 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(404);
       res.end('Browser not initialized');
     }
+  } else if (req.url === '/config' && req.method === 'GET') {
+    res.writeHead(200, { 
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*'
+    });
+    res.end(JSON.stringify(MCP_CONFIG, null, 2));
   } else {
     res.writeHead(404);
     res.end();
@@ -156,6 +188,8 @@ server.listen(PORT, () => {
   console.log(`MCP Server running on http://${host}:${PORT}/mcp`);
   console.log(`Screenshot endpoint: http://${host}:${PORT}/screenshot`);
   console.log(`Analysis endpoint: http://${host}:${PORT}/analyze`);
+  console.log(`Config endpoint: http://${host}:${PORT}/config`);
+  console.log(`\nFor AI agents like Zencoder, use config from: http://${host}:${PORT}/config`);
 });
 
 process.on('SIGINT', async () => {
