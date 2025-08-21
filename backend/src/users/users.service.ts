@@ -38,7 +38,7 @@ export class UsersService {
       users = await this.userRepository.find();
     } else {
       users = await this.userRepository.find({
-        where: { currentOrganizationId: user.currentOrganizationId }
+        where: { organizationId: user.organizationId }
       });
     }
 
@@ -248,7 +248,7 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
-    user.currentOrganizationId = new ObjectId(organizationId);
+    user.organizationId = new ObjectId(organizationId);
     await this.userRepository.save(user);
     
     return {

@@ -23,7 +23,7 @@ async function checkOrgModules() {
       console.log(`- ${user.email}: activeModuleIds = ${user.activeModuleIds?.length || 0} modules`);
       console.log(`  IDs: ${user.activeModuleIds?.map(id => id.toString()) || []}`);
       console.log(`  organizationIds: ${user.organizationIds?.map(id => id.toString()) || []}`);
-      console.log(`  currentOrganizationId: ${user.currentOrganizationId?.toString() || 'none'}`);
+      console.log(`  organizationId: ${user.organizationId?.toString() || 'none'}`);
     });
     
   } finally {

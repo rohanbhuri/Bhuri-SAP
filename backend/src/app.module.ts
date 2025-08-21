@@ -12,6 +12,7 @@ import { OrganizationManagementModule } from './organization-management/organiza
 import { CrmModule } from './crm/crm.module';
 import { HrManagementModule } from './hr-management/hr-management.module';
 import { ProjectsManagementModule } from './projects-management/projects-management.module';
+import { ProjectTrackingModule } from './project-tracking/project-tracking.module';
 import { MessagesModule } from './messages/messages.module';
 import { ProjectTimesheetModule } from './project-timesheet/project-timesheet.module';
 
@@ -35,6 +36,7 @@ import { ProjectTimesheetModule } from './project-timesheet/project-timesheet.mo
     CrmModule,
     HrManagementModule,
     ProjectsManagementModule,
+    ProjectTrackingModule,
     MessagesModule,
     ProjectTimesheetModule,
   ],

@@ -1,11 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { ProjectsManagementService, Project, Deliverable } from '../projects-management.service';
 
-interface ProjectTask {
+interface GanttTask {
   id: string;
   name: string;
   startDate: Date;
@@ -13,6 +14,8 @@ interface ProjectTask {
   progress: number;
   assignee: string;
   priority: 'low' | 'medium' | 'high';
+  type: 'project' | 'deliverable';
+  projectName?: string;
 }
 
 @Component({
@@ -33,7 +36,7 @@ interface ProjectTask {
       <div class="gantt-content">
         <div class="gantt-sidebar">
           <div class="task-header">Project Tasks</div>
-          <div *ngFor="let task of tasks" class="task-row">
+          <div *ngFor="let task of tasks()" class="task-row">
             <div class="task-info">
               <div class="task-name" [matTooltip]="task.name">{{ task.name }}</div>
               <div class="task-meta">
@@ -52,7 +55,7 @@ interface ProjectTask {
           </div>
           
           <div class="timeline-body">
-            <div *ngFor="let task of tasks" class="timeline-row">
+            <div *ngFor="let task of tasks()" class="timeline-row">
               <div class="task-bar-container">
                 <div class="task-bar"
                      [style.left.%]="getTaskPosition(task).left"
@@ -189,73 +192,104 @@ interface ProjectTask {
   `]
 })
 export class ProjectsGanttPageComponent implements OnInit {
-  tasks: ProjectTask[] = [
-    {
-      id: '1',
-      name: 'Project Portfolio Review',
-      startDate: new Date(2024, 0, 1),
-      endDate: new Date(2024, 0, 10),
-      progress: 100,
-      assignee: 'Portfolio Manager',
-      priority: 'high'
-    },
-    {
-      id: '2',
-      name: 'Resource Allocation',
-      startDate: new Date(2024, 0, 8),
-      endDate: new Date(2024, 0, 20),
-      progress: 75,
-      assignee: 'Resource Manager',
-      priority: 'high'
-    },
-    {
-      id: '3',
-      name: 'Project Alpha Development',
-      startDate: new Date(2024, 0, 15),
-      endDate: new Date(2024, 2, 15),
-      progress: 40,
-      assignee: 'Team Alpha',
-      priority: 'medium'
-    },
-    {
-      id: '4',
-      name: 'Project Beta Planning',
-      startDate: new Date(2024, 1, 1),
-      endDate: new Date(2024, 1, 28),
-      progress: 25,
-      assignee: 'Team Beta',
-      priority: 'medium'
-    },
-    {
-      id: '5',
-      name: 'Deliverables Review',
-      startDate: new Date(2024, 2, 1),
-      endDate: new Date(2024, 2, 15),
-      progress: 0,
-      assignee: 'Quality Team',
-      priority: 'low'
-    },
-    {
-      id: '6',
-      name: 'Client Presentation',
-      startDate: new Date(2024, 2, 10),
-      endDate: new Date(2024, 2, 20),
-      progress: 0,
-      assignee: 'Sales Team',
-      priority: 'high'
-    }
-  ];
+  private projectsService = inject(ProjectsManagementService);
+  
+  projects = signal<Project[]>([]);
+  deliverables = signal<Deliverable[]>([]);
+  tasks = signal<GanttTask[]>([]);
 
   timelineDates: Date[] = [];
   private zoomLevel = 1;
 
   ngOnInit() {
+    this.loadData();
+  }
+
+  private loadData() {
+    this.projectsService.getProjects().subscribe((projects) => {
+      this.projects.set(projects);
+      this.loadDeliverables(projects);
+    });
+  }
+
+  private loadDeliverables(projects: Project[]) {
+    const allDeliverables: Deliverable[] = [];
+    let loadedCount = 0;
+    
+    if (projects.length === 0) {
+      this.generateGanttTasks([], []);
+      return;
+    }
+    
+    projects.forEach(project => {
+      this.projectsService.getProjectDeliverables(project._id).subscribe((deliverables) => {
+        allDeliverables.push(...deliverables);
+        loadedCount++;
+        
+        if (loadedCount === projects.length) {
+          this.deliverables.set(allDeliverables);
+          this.generateGanttTasks(projects, allDeliverables);
+        }
+      });
+    });
+  }
+
+  private generateGanttTasks(projects: Project[], deliverables: Deliverable[]) {
+    const ganttTasks: GanttTask[] = [];
+    
+    // Add projects as tasks
+    projects.forEach(project => {
+      ganttTasks.push({
+        id: project._id,
+        name: project.name,
+        startDate: new Date(project.startDate),
+        endDate: new Date(project.endDate),
+        progress: project.progress,
+        assignee: 'Project Manager',
+        priority: this.mapPriority(project.priority),
+        type: 'project'
+      });
+    });
+    
+    // Add deliverables as tasks
+    deliverables.forEach(deliverable => {
+      const project = projects.find(p => p._id === deliverable.projectId);
+      ganttTasks.push({
+        id: deliverable._id,
+        name: deliverable.name,
+        startDate: new Date(deliverable.dueDate.getTime() - (7 * 24 * 60 * 60 * 1000)), // 7 days before due date
+        endDate: new Date(deliverable.dueDate),
+        progress: deliverable.progress,
+        assignee: 'Team Member',
+        priority: 'medium',
+        type: 'deliverable',
+        projectName: project?.name
+      });
+    });
+    
+    this.tasks.set(ganttTasks);
     this.generateTimeline();
+  }
+  
+  private mapPriority(priority: string): 'low' | 'medium' | 'high' {
+    switch (priority) {
+      case 'critical': return 'high';
+      case 'high': return 'high';
+      case 'medium': return 'medium';
+      case 'low': return 'low';
+      default: return 'medium';
+    }
   }
 
   private generateTimeline() {
-    const startDate = new Date(Math.min(...this.tasks.map(t => t.startDate.getTime())));
-    const endDate = new Date(Math.max(...this.tasks.map(t => t.endDate.getTime())));
+    const tasks = this.tasks();
+    if (tasks.length === 0) {
+      this.timelineDates = [];
+      return;
+    }
+    
+    const startDate = new Date(Math.min(...tasks.map((t: GanttTask) => t.startDate.getTime())));
+    const endDate = new Date(Math.max(...tasks.map((t: GanttTask) => t.endDate.getTime())));
     
     startDate.setDate(startDate.getDate() - 2);
     endDate.setDate(endDate.getDate() + 2);
@@ -269,7 +303,7 @@ export class ProjectsGanttPageComponent implements OnInit {
     }
   }
 
-  getTaskPosition(task: ProjectTask): { left: number; width: number } {
+  getTaskPosition(task: GanttTask): { left: number; width: number } {
     if (this.timelineDates.length === 0) return { left: 0, width: 0 };
 
     const timelineStart = this.timelineDates[0].getTime();
@@ -285,8 +319,9 @@ export class ProjectsGanttPageComponent implements OnInit {
     return { left: Math.max(0, left), width: Math.max(1, width) };
   }
 
-  getTaskTooltip(task: ProjectTask): string {
-    return `${task.name}\nStart: ${task.startDate.toDateString()}\nEnd: ${task.endDate.toDateString()}\nProgress: ${task.progress}%\nAssignee: ${task.assignee}`;
+  getTaskTooltip(task: GanttTask): string {
+    const tooltip = `${task.name}\\nType: ${task.type}\\nStart: ${task.startDate.toDateString()}\\nEnd: ${task.endDate.toDateString()}\\nProgress: ${task.progress}%\\nAssignee: ${task.assignee}`;
+    return task.projectName ? tooltip + `\\nProject: ${task.projectName}` : tooltip;
   }
 
   zoomIn() { this.zoomLevel = Math.min(this.zoomLevel * 1.2, 3); }

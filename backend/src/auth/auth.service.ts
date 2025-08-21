@@ -40,7 +40,7 @@ export class AuthService {
     const payload = { 
       email: user.email, 
       sub: user._id.toString(), 
-      organizationId: user.organizationId?.toString(),
+      organizationId: user.organizationId?.toString() || user.organizationIds[0]?.toString(),
       roles: roles.map(r => r.type)
     };
 

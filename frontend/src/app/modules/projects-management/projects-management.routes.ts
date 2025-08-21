@@ -7,18 +7,7 @@ export const PROJECTS_MANAGEMENT_ROUTES: Routes = [
     path: '',
     component: ProjectsManagementLayoutComponent,
     children: [
-      { path: '', redirectTo: 'gantt', pathMatch: 'full' },
-      {
-        path: 'gantt',
-        loadComponent: () =>
-          import('./pages/gantt.page').then((m) => m.ProjectsGanttPageComponent),
-        title: 'Projects Gantt Chart',
-      },
-      {
-        path: 'overview',
-        component: ProjectsManagementComponent,
-        title: 'Projects Management',
-      },
+      { path: '', redirectTo: 'projects', pathMatch: 'full' },
       {
         path: 'projects',
         loadComponent: () =>
@@ -36,6 +25,12 @@ export const PROJECTS_MANAGEMENT_ROUTES: Routes = [
         loadComponent: () =>
           import('./pages/analytics.page').then((m) => m.AnalyticsPageComponent),
         title: 'Project Analytics',
+      },
+      {
+        path: 'gantt',
+        loadComponent: () =>
+          import('./pages/gantt.page').then((m) => m.ProjectsGanttPageComponent),
+        title: 'Projects Gantt Chart',
       },
     ],
   },

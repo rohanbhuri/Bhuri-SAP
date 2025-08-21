@@ -24,7 +24,7 @@ export class User {
   organizationIds: ObjectId[];
 
   @Column({ type: String, nullable: true })
-  currentOrganizationId?: ObjectId;
+  organizationId?: ObjectId;
 
   @Column('array')
   roleIds: ObjectId[];

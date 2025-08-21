@@ -15,7 +15,7 @@ async function testOrgSwitch() {
     console.log('User:', {
       email: user.email,
       organizationIds: user.organizationIds?.map(id => id.toString()),
-      currentOrganizationId: user.currentOrganizationId?.toString()
+      organizationId: user.organizationId?.toString()
     });
     
     console.log('Organization:', {

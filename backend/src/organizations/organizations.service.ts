@@ -96,8 +96,8 @@ export class OrganizationsService {
     if (creator) {
       if (!creator.organizationIds) creator.organizationIds = [];
       creator.organizationIds.push(savedOrg._id);
-      if (!creator.currentOrganizationId) {
-        creator.currentOrganizationId = savedOrg._id;
+      if (!creator.organizationId) {
+        creator.organizationId = savedOrg._id;
       }
       await this.userRepository.save(creator);
     }

@@ -8,17 +8,25 @@ export interface Project {
   _id: string;
   name: string;
   description: string;
+  code: string;
   status: 'planning' | 'active' | 'on-hold' | 'completed' | 'cancelled';
+  stage: 'discovery' | 'planning' | 'execution' | 'delivery' | 'closure';
   priority: 'low' | 'medium' | 'high' | 'critical';
   startDate: Date;
   endDate: Date;
   budget: number;
   spent: number;
+  currency: string;
+  billingType: 'fixed' | 'hourly' | 'milestone';
+  hourlyRate?: number;
   managerId: string;
-  teamMembers: string[];
-  organizationId: string;
-  progress: number;
   clientId?: string;
+  teamMemberIds: string[];
+  progress: number;
+  health: 'green' | 'yellow' | 'red';
+  tags: string[];
+  convertedFromLead: boolean;
+  leadId?: string;
 }
 
 export interface Deliverable {
@@ -26,20 +34,29 @@ export interface Deliverable {
   projectId: string;
   name: string;
   description: string;
-  status: 'pending' | 'in-progress' | 'review' | 'completed';
-  dueDate: Date;
-  assignedTo: string;
+  type: 'document' | 'software' | 'design' | 'report';
+  status: 'pending' | 'in-progress' | 'review' | 'completed' | 'rejected';
   progress: number;
+  assignedTo?: string;
+  reviewerId?: string;
+  dueDate: Date;
+  completedDate?: Date;
+  dependencies: string[];
+  billable: boolean;
+  estimatedHours?: number;
+  actualHours?: number;
 }
 
 export interface ProjectStats {
   total: number;
   active: number;
   completed: number;
-  onHold: number;
-  totalBudget: number;
-  totalSpent: number;
-  overdue: number;
+  conversions: number;
+}
+
+export interface LeadConversionData {
+  leadId: string;
+  projectData: Partial<Project>;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -60,10 +77,7 @@ export class ProjectsManagementService {
             total: 0,
             active: 0,
             completed: 0,
-            onHold: 0,
-            totalBudget: 0,
-            totalSpent: 0,
-            overdue: 0,
+            conversions: 0,
           })
         )
       );
@@ -72,20 +86,32 @@ export class ProjectsManagementService {
   getProjects(): Observable<Project[]> {
     return this.http
       .get<Project[]>(`${this.apiUrl}/projects-management/projects`)
-      .pipe(catchError(() => of([])));
+      .pipe(
+        catchError((error) => {
+          console.error('Error fetching projects:', error);
+          return of([]);
+        })
+      );
   }
 
-  getDeliverables(projectId?: string): Observable<Deliverable[]> {
-    const url = projectId 
-      ? `${this.apiUrl}/projects-management/deliverables?projectId=${projectId}`
-      : `${this.apiUrl}/projects-management/deliverables`;
+  getProject(id: string): Observable<Project> {
+    return this.http.get<Project>(`${this.apiUrl}/projects-management/projects/${id}`);
+  }
+
+  getProjectDeliverables(projectId: string): Observable<Deliverable[]> {
     return this.http
-      .get<Deliverable[]>(url)
+      .get<Deliverable[]>(`${this.apiUrl}/projects-management/projects/${projectId}/deliverables`)
       .pipe(catchError(() => of([])));
   }
 
   createProject(project: Partial<Project>): Observable<Project> {
-    return this.http.post<Project>(`${this.apiUrl}/projects-management/projects`, project);
+    return this.http.post<Project>(`${this.apiUrl}/projects-management/projects`, project)
+      .pipe(
+        catchError((error) => {
+          console.error('Service error creating project:', error);
+          throw error;
+        })
+      );
   }
 
   updateProject(id: string, project: Partial<Project>): Observable<Project> {
@@ -96,11 +122,23 @@ export class ProjectsManagementService {
     return this.http.delete(`${this.apiUrl}/projects-management/projects/${id}`);
   }
 
-  createDeliverable(deliverable: Partial<Deliverable>): Observable<Deliverable> {
-    return this.http.post<Deliverable>(`${this.apiUrl}/projects-management/deliverables`, deliverable);
+  convertLeadToProject(conversionData: LeadConversionData): Observable<Project> {
+    return this.http.post<Project>(`${this.apiUrl}/projects-management/convert-lead`, conversionData);
+  }
+
+  assignUsersToProject(projectId: string, userIds: string[]): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/projects-management/projects/${projectId}/assign-users`, { userIds });
+  }
+
+  createDeliverable(projectId: string, deliverable: Partial<Deliverable>): Observable<Deliverable> {
+    return this.http.post<Deliverable>(`${this.apiUrl}/projects-management/projects/${projectId}/deliverables`, deliverable);
   }
 
   updateDeliverable(id: string, deliverable: Partial<Deliverable>): Observable<Deliverable> {
     return this.http.put<Deliverable>(`${this.apiUrl}/projects-management/deliverables/${id}`, deliverable);
+  }
+
+  deleteDeliverable(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/projects-management/deliverables/${id}`);
   }
 }

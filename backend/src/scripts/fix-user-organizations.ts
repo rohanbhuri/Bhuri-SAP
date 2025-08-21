@@ -27,7 +27,7 @@ async function fixUserOrganizations() {
             { 
               $set: { 
                 organizationIds: [defaultOrgId],
-                currentOrganizationId: defaultOrgId
+                organizationId: defaultOrgId
               } 
             }
           );

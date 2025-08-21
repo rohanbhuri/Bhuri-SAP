@@ -63,7 +63,7 @@ export class UserManagementService {
       firstName: userData.firstName,
       lastName: userData.lastName,
       isActive: userData.isActive ?? true,
-      currentOrganizationId: userData.organizationId ? new ObjectId(userData.organizationId) : null,
+      organizationId: userData.organizationId ? new ObjectId(userData.organizationId) : null,
       organizationIds: userData.organizationId ? [new ObjectId(userData.organizationId)] : [],
       roleIds: userData.roleIds?.map(id => new ObjectId(id)) || [],
       permissionIds: userData.permissionIds?.map(id => new ObjectId(id)) || []
@@ -94,7 +94,7 @@ export class UserManagementService {
     if (userData.lastName) user.lastName = userData.lastName;
     if (userData.isActive !== undefined) user.isActive = userData.isActive;
     if (userData.organizationId) {
-      user.currentOrganizationId = new ObjectId(userData.organizationId);
+      user.organizationId = new ObjectId(userData.organizationId);
       if (!user.organizationIds.some(id => id.equals(new ObjectId(userData.organizationId)))) {
         user.organizationIds.push(new ObjectId(userData.organizationId));
       }

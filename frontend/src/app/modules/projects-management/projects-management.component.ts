@@ -90,8 +90,8 @@ import {
                   <th mat-header-cell *matHeaderCellDef>Budget</th>
                   <td mat-cell *matCellDef="let project">
                     <div class="budget-info">
-                      <div>{{ project.budget | currency }}</div>
-                      <div class="spent">Spent: {{ project.spent | currency }}</div>
+                      <div>{{ project.budget | currency:project.currency }}</div>
+                      <div class="spent">Spent: {{ project.spent | currency:project.currency }}</div>
                     </div>
                   </td>
                 </ng-container>
@@ -227,18 +227,10 @@ import {
 
               <mat-card class="stat-card">
                 <div class="stat-content">
-                  <div class="stat-number">{{ stats().totalBudget | currency:'USD':'symbol':'1.0-0' }}</div>
-                  <div class="stat-label">Total Budget</div>
+                  <div class="stat-number">{{ stats().conversions }}</div>
+                  <div class="stat-label">Lead Conversions</div>
                 </div>
-                <mat-icon class="stat-icon">account_balance</mat-icon>
-              </mat-card>
-
-              <mat-card class="stat-card">
-                <div class="stat-content">
-                  <div class="stat-number">{{ stats().totalSpent | currency:'USD':'symbol':'1.0-0' }}</div>
-                  <div class="stat-label">Total Spent</div>
-                </div>
-                <mat-icon class="stat-icon">payments</mat-icon>
+                <mat-icon class="stat-icon">trending_up</mat-icon>
               </mat-card>
             </div>
           </div>
@@ -406,10 +398,7 @@ export class ProjectsManagementComponent implements OnInit {
     total: 0,
     active: 0,
     completed: 0,
-    onHold: 0,
-    totalBudget: 0,
-    totalSpent: 0,
-    overdue: 0,
+    conversions: 0,
   });
 
   projectColumns = ['name', 'status', 'progress', 'budget', 'dates', 'actions'];
@@ -428,8 +417,15 @@ export class ProjectsManagementComponent implements OnInit {
   }
 
   loadDeliverables() {
-    this.projectsService.getDeliverables().subscribe((data) => {
-      this.deliverables.set(data);
+    // Load all deliverables from all projects
+    this.projectsService.getProjects().subscribe((projects) => {
+      const allDeliverables: Deliverable[] = [];
+      projects.forEach(project => {
+        this.projectsService.getProjectDeliverables(project._id).subscribe((deliverables) => {
+          allDeliverables.push(...deliverables);
+          this.deliverables.set([...allDeliverables]);
+        });
+      });
     });
   }
 

@@ -74,10 +74,7 @@ export class ProjectsManagementWidgetComponent implements OnInit {
     total: 0,
     active: 0,
     completed: 0,
-    onHold: 0,
-    totalBudget: 0,
-    totalSpent: 0,
-    overdue: 0,
+    conversions: 0,
   });
 
   ngOnInit() {

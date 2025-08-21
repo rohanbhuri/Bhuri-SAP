@@ -160,8 +160,8 @@ export class OrganizationManagementService {
     
     if (user && !user.organizationIds.some(id => id.toString() === request.organizationId.toString())) {
       user.organizationIds.push(request.organizationId);
-      if (!user.currentOrganizationId) {
-        user.currentOrganizationId = request.organizationId;
+      if (!user.organizationId) {
+        user.organizationId = request.organizationId;
       }
       await this.userRepository.save(user);
     }
@@ -289,7 +289,7 @@ export class OrganizationManagementService {
 
     await this.userRepository.update(
       new ObjectId(userId),
-      { currentOrganizationId: orgObjectId }
+      { organizationId: orgObjectId }
     );
 
     return { success: true };
