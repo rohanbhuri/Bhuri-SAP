@@ -2,14 +2,14 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title id="app-title">Beax Resource Manager</title>
+    <title id="app-title">True Process Manager</title>
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Resource Management System" />
+    <meta name="description" content="Process Management System" />
     <meta name="keywords" content="business management, resource management, HR, CRM, project management, inventory" />
     <meta name="author" content="Rohan Bhuri" />
     <meta name="robots" content="index, follow" />
-    <meta name="theme-color" content="#3B82F6" />
+    <meta name="theme-color" content="#10B981" />
     <meta name="color-scheme" content="light dark" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     
@@ -20,25 +20,25 @@
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Beax Resource Manager" />
-    <meta property="og:description" content="Resource Management System" />
-    <meta property="og:site_name" content="Beax RM" />
-    <meta property="og:url" content="http://localhost:4200" />
+    <meta property="og:title" content="True Process Manager" />
+    <meta property="og:description" content="Process Management System" />
+    <meta property="og:site_name" content="True Process" />
+    <meta property="og:url" content="http://localhost:4201" />
     <meta property="og:locale" content="en_US" />
     
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Beax Resource Manager" />
-    <meta name="twitter:description" content="Resource Management System" />
-    <meta name="twitter:site" content="@Beax RM" />
+    <meta name="twitter:title" content="True Process Manager" />
+    <meta name="twitter:description" content="Process Management System" />
+    <meta name="twitter:site" content="@True Process" />
     
     <!-- Icons -->
     <link rel="icon" type="image/x-icon" href="favicon.ico" id="app-favicon" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/config/assets/beaxrm/icons/BEAX-icon.png" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/config/assets/beaxrm/icons/BEAX-icon.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/config/assets/beaxrm/icons/BEAX-icon.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/config/assets/true-process/icons/icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/config/assets/true-process/icons/icon.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/config/assets/true-process/icons/icon.png" />
     
-    <link rel="canonical" href="http://localhost:4200" />
+    <link rel="canonical" href="http://localhost:4201" />
     <link rel="manifest" href="/manifest.json" />
     
     <!-- Optimized font loading -->
@@ -51,9 +51,9 @@
     <!-- Critical CSS inlined -->
     <style>
       :root {
-        --primary-color: #3B82F6;
-        --accent-color: #F59E0B;
-        --secondary-color: #6B7280;
+        --primary-color: #10B981;
+        --accent-color: #EF4444;
+        --secondary-color: #374151;
       }
       body { margin: 0; font-family: Roboto, sans-serif; background: var(--primary-color); }
       .loading { display: flex; justify-content: center; align-items: center; height: 100vh; color: white; }
@@ -65,21 +65,21 @@
       // Load brand configuration from environment
       window.brandConfig = {
         brand: {
-          name: "Beax RM",
-          logo: "/config/assets/beaxrm/icons/BEAX.png",
-          icon: "/config/assets/beaxrm/icons/BEAX-icon.png",
+          name: "True Process",
+          logo: "/config/assets/true-process/icons/logo.png",
+          icon: "/config/assets/true-process/icons/icon.png",
         },
         colors: {
-          primary: "#3B82F6",
-          accent: "#F59E0B",
-          secondary: "#6B7280",
+          primary: "#10B981",
+          accent: "#EF4444",
+          secondary: "#374151",
         },
         app: {
-          name: "Beax Resource Manager",
+          name: "True Process Manager",
           version: "1.0.0",
-          description: "Resource Management System",
-          port: parseInt("4200"),
-          apiUrl: "http://localhost:3000/api",
+          description: "Process Management System",
+          port: parseInt("4201"),
+          apiUrl: "http://localhost:3001/api",
         },
       };
 
