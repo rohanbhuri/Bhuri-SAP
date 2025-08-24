@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -124,7 +124,7 @@ import { AuthService } from '../../services/auth.service';
     }
   `]
 })
-export class PreferencesComponent {
+export class PreferencesComponent implements OnInit {
   private fb = inject(FormBuilder);
   private preferencesService = inject(PreferencesService);
   private themeService = inject(ThemeService);

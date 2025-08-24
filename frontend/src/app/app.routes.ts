@@ -8,6 +8,7 @@ import { ProfileComponent } from './pages/profile/profile.component';
 import { EditProfileComponent } from './pages/profile/edit-profile.component';
 import { SettingsComponent } from './pages/settings/settings.component';
 import { PreferencesComponent } from './pages/settings/preferences.component';
+import { NotificationsSettingsComponent } from './pages/settings/notifications.component';
 import { MessagesComponent } from './pages/messages/messages.component';
 import { SearchComponent } from './pages/search/search.component';
 import { NotificationsComponent } from './pages/notifications/notifications.component';
@@ -42,6 +43,24 @@ export const routes: Routes = [
     component: PreferencesComponent,
     canActivate: [authGuard],
   },
+  {
+    path: 'settings/notifications',
+    component: NotificationsSettingsComponent,
+    canActivate: [authGuard],
+  },
+  // Placeholder routes for settings sub-pages
+  { path: 'settings/account', redirectTo: '/profile/edit', pathMatch: 'full' },
+  { path: 'settings/display', redirectTo: '/settings/preferences', pathMatch: 'full' },
+  { path: 'settings/quiet-hours', redirectTo: '/settings/notifications', pathMatch: 'full' },
+  { path: 'settings/privacy', redirectTo: '/settings', pathMatch: 'full' },
+  { path: 'settings/security', redirectTo: '/settings', pathMatch: 'full' },
+  { path: 'settings/organization-privacy', redirectTo: '/settings', pathMatch: 'full' },
+  { path: 'settings/organization-notifications', redirectTo: '/settings/notifications', pathMatch: 'full' },
+  { path: 'settings/accessibility', redirectTo: '/settings', pathMatch: 'full' },
+  { path: 'settings/keyboard', redirectTo: '/settings', pathMatch: 'full' },
+  { path: 'settings/export-data', redirectTo: '/settings', pathMatch: 'full' },
+  { path: 'settings/storage', redirectTo: '/settings', pathMatch: 'full' },
+  { path: 'settings/delete-account', redirectTo: '/settings', pathMatch: 'full' },
   { path: 'messages', component: MessagesComponent, canActivate: [authGuard] },
   { path: 'search', component: SearchComponent, canActivate: [authGuard] },
   {
