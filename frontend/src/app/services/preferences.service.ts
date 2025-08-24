@@ -31,12 +31,20 @@ export class PreferencesService {
     return this.brandConfig.getApiUrl();
   }
 
-  getUserPreferences(): Observable<UserPreferences> {
+  getUserPreferences(): Observable<UserPreferences | null> {
     return this.http.get<UserPreferences>(`${this.apiUrl}/preferences`);
   }
 
   saveUserPreferences(preferences: Partial<UserPreferences>): Observable<UserPreferences> {
-    return this.http.post<UserPreferences>(`${this.apiUrl}/preferences`, preferences);
+    const payload: any = {};
+    if (preferences.theme) payload.theme = preferences.theme;
+    if (preferences.primaryColor) payload.primaryColor = preferences.primaryColor;
+    if (preferences.accentColor) payload.accentColor = preferences.accentColor;
+    if (preferences.secondaryColor) payload.secondaryColor = preferences.secondaryColor;
+    if (preferences.pinnedModules) payload.pinnedModules = preferences.pinnedModules;
+    if (preferences.dashboardPreferences) payload.dashboardPreferences = preferences.dashboardPreferences;
+    
+    return this.http.post<UserPreferences>(`${this.apiUrl}/preferences`, payload);
   }
 
   togglePinnedModule(moduleId: string): Observable<any> {

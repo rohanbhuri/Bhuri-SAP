@@ -11,6 +11,7 @@ import { AuthService, Organization } from '../../services/auth.service';
 import { BrandConfigService } from '../../services/brand-config.service';
 import { SeoService } from '../../services/seo.service';
 import { SeoConfigService } from '../../services/seo-config.service';
+import { ErrorHandlerService } from '../../services/error-handler.service';
 
 @Component({
   selector: 'app-signup',
@@ -146,6 +147,7 @@ export class SignupComponent implements OnInit {
   private snackBar = inject(MatSnackBar);
   private seoService = inject(SeoService);
   private seoConfigService = inject(SeoConfigService);
+  private errorHandler = inject(ErrorHandlerService);
   protected brandConfig = inject(BrandConfigService);
 
   loading = signal(false);
@@ -173,16 +175,18 @@ export class SignupComponent implements OnInit {
       this.authService.signup(this.signupForm.value as any).subscribe({
         next: (response) => {
           this.loading.set(false);
-          this.snackBar.open('Account created successfully!', 'Close', {
-            duration: 3000,
-          });
+          this.errorHandler.showSuccess('Account created successfully! Welcome aboard!');
           this.router.navigate(['/select-organization']);
         },
         error: (error) => {
           this.loading.set(false);
-          this.snackBar.open('Signup failed. Please try again.', 'Close', {
-            duration: 3000,
-          });
+          
+          // Handle validation errors specifically
+          if (error?.status === 400 && error?.error?.message && Array.isArray(error.error.message)) {
+            this.errorHandler.handleValidationError(error);
+          } else {
+            this.errorHandler.handleAuthError(error);
+          }
         },
       });
     }

@@ -68,15 +68,7 @@ import { PreferencesService } from '../services/preferences.service';
           <mat-icon>{{ getModuleIcon(module.name) }}</mat-icon>
         </button>
       }
-      <button
-        mat-icon-button
-        (click)="goToMore()"
-        [attr.aria-current]="activeRoute === '/more' ? 'page' : null"
-        [color]="activeRoute === '/more' ? 'primary' : ''"
-        aria-label="More"
-      >
-        <mat-icon>more_horiz</mat-icon>
-      </button>
+
     </nav>
   `,
   styles: [
@@ -201,7 +193,5 @@ export class BottomNavbarComponent {
     return iconMap[moduleName] || 'extension';
   }
 
-  goToMore() {
-    this.router.navigate(['/more']);
-  }
+
 }

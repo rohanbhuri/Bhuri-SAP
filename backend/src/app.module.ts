@@ -15,6 +15,7 @@ import { ProjectsManagementModule } from './projects-management/projects-managem
 import { ProjectTrackingModule } from './project-tracking/project-tracking.module';
 import { MessagesModule } from './messages/messages.module';
 import { ProjectTimesheetModule } from './project-timesheet/project-timesheet.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { ProjectTimesheetModule } from './project-timesheet/project-timesheet.mo
       autoLoadEntities: true,
       synchronize: process.env.NODE_ENV !== 'production',
     }),
+    HealthModule,
     AuthModule,
     UsersModule,
     OrganizationsModule,

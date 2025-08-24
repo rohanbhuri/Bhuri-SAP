@@ -10,8 +10,32 @@ export interface User {
   email: string;
   firstName: string;
   lastName: string;
+  avatar?: string;
+  isActive: boolean;
+  createdAt: Date;
+  roles: UserRole[];
+  organizations: UserOrganization[];
   organizationId?: string;
-  roles?: string[];
+  currentOrganization?: UserOrganization;
+}
+
+export interface UserRole {
+  id: string;
+  name: string;
+  type: string;
+}
+
+export interface UserOrganization {
+  id: string;
+  name: string;
+  code: string;
+  description?: string;
+  settings?: {
+    primaryColor?: string;
+    secondaryColor?: string;
+    accentColor?: string;
+    theme?: string;
+  };
 }
 
 export interface LoginRequest {
@@ -25,6 +49,11 @@ export interface SignupRequest {
   firstName: string;
   lastName: string;
   organizationId?: string;
+}
+
+export interface UpdateProfileRequest {
+  firstName: string;
+  lastName: string;
 }
 
 export interface AuthResponse {
@@ -141,6 +170,45 @@ export class AuthService {
 
   hasRole(role: string): boolean {
     const user = this.getCurrentUser();
-    return user?.roles?.includes(role) || false;
+    return user?.roles?.some(r => r.type === role) || false;
+  }
+
+  getProfile(): Observable<User> {
+    return this.http.get<User>(`${this.apiUrl}/auth/profile`);
+  }
+
+  updateProfile(profileData: UpdateProfileRequest): Observable<User> {
+    return this.http.patch<User>(`${this.apiUrl}/auth/profile`, profileData)
+      .pipe(
+        tap(updatedUser => {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+          }
+          this.currentUserSubject.next(updatedUser);
+        })
+      );
+  }
+
+  uploadAvatar(file: File): Observable<User> {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    
+    return this.http.post<User>(`${this.apiUrl}/auth/profile/avatar`, formData)
+      .pipe(
+        tap(updatedUser => {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+          }
+          this.currentUserSubject.next(updatedUser);
+        })
+      );
+  }
+
+  getAvatarUrl(avatarPath?: string): string {
+    if (!avatarPath) {
+      return '/assets/default-avatar.svg';
+    }
+    // avatarPath should already include /uploads/ prefix from backend
+    return `${this.apiUrl}${avatarPath}`;
   }
 }

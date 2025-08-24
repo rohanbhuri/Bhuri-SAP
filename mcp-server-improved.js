@@ -10,6 +10,7 @@ const MIN_FOCUSABLE_ELEMENTS = 5;
 // Trusted origins for CORS
 const TRUSTED_ORIGINS = [
   'http://localhost:3000',
+  'http://localhost:3001',
   'http://localhost:4200', 
   'http://localhost:4201',
   'http://13.126.228.247:3000',

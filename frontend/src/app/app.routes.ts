@@ -12,7 +12,7 @@ import { MessagesComponent } from './pages/messages/messages.component';
 import { SearchComponent } from './pages/search/search.component';
 import { NotificationsComponent } from './pages/notifications/notifications.component';
 import { ModulesComponent } from './pages/modules/modules.component';
-import { MoreComponent } from './pages/more/more.component';
+
 import { NotFoundComponent } from './pages/not-found/not-found.component';
 import { authGuard } from './guards/auth.guard';
 
@@ -112,7 +112,7 @@ export const routes: Routes = [
       ),
     canActivate: [authGuard],
   },
-  { path: 'more', component: MoreComponent, canActivate: [authGuard] },
+
   { path: '404', component: NotFoundComponent },
   { path: '**', component: NotFoundComponent },
 ];

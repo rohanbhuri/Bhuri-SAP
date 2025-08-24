@@ -11,6 +11,7 @@ import { AuthService, Organization } from '../../services/auth.service';
 import { BrandConfigService } from '../../services/brand-config.service';
 import { SeoService } from '../../services/seo.service';
 import { SeoConfigService } from '../../services/seo-config.service';
+import { ErrorHandlerService } from '../../services/error-handler.service';
 
 @Component({
   selector: 'app-login',
@@ -92,7 +93,15 @@ import { SeoConfigService } from '../../services/seo-config.service';
         max-width: 400px;
         padding: 20px;
         border: 2px solid;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        border-radius: var(--border-radius);
+        box-shadow: 0 8px 32px color-mix(in srgb, var(--theme-on-surface) 10%, transparent);
+        background: var(--theme-surface);
+        transition: var(--transition);
+      }
+      
+      :host-context(body.dark-theme) .auth-card {
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        border-color: color-mix(in srgb, var(--theme-primary) 40%, transparent);
       }
 
       .full-width {
@@ -113,10 +122,25 @@ import { SeoConfigService } from '../../services/seo-config.service';
 
       a {
         text-decoration: none;
+        color: var(--theme-primary);
+        font-weight: 500;
+        transition: var(--transition);
+      }
+      
+      a:hover {
+        color: color-mix(in srgb, var(--theme-primary) 80%, black);
+        text-decoration: underline;
       }
 
       mat-card-actions {
         justify-content: center;
+        color: var(--theme-on-surface);
+      }
+      
+      .full-width button {
+        height: 48px;
+        font-weight: 500;
+        border-radius: var(--border-radius);
       }
     `,
   ],
@@ -128,6 +152,7 @@ export class LoginComponent implements OnInit {
   private snackBar = inject(MatSnackBar);
   private seoService = inject(SeoService);
   private seoConfigService = inject(SeoConfigService);
+  private errorHandler = inject(ErrorHandlerService);
   protected brandConfig = inject(BrandConfigService);
 
   loading = signal(false);
@@ -154,17 +179,12 @@ export class LoginComponent implements OnInit {
       this.authService.login({ email, password } as any).subscribe({
         next: (response) => {
           this.loading.set(false);
+          this.errorHandler.showSuccess('Login successful! Welcome back!');
           this.router.navigate(['/select-organization']);
         },
         error: (error) => {
           this.loading.set(false);
-          this.snackBar.open(
-            'Login failed. Please check your credentials.',
-            'Close',
-            {
-              duration: 3000,
-            }
-          );
+          this.errorHandler.handleAuthError(error);
         },
       });
     }

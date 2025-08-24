@@ -47,6 +47,7 @@ import { ProjectTimesheetWidgetComponent } from '../../modules/project-timesheet
 import { PendingWorkWidgetComponent } from '../../components/pending-work-widget.component';
 import { OrganizationManagementService } from '../../modules/organization-management/organization-management.service';
 import { SeoService } from '../../services/seo.service';
+import { ThemeService } from '../../services/theme.service';
 
 interface DashboardWidget {
   id: string;
@@ -299,10 +300,16 @@ interface DashboardWidget {
       .widget {
         grid-column: span 12;
         background: var(--theme-surface);
-        border: 1px solid
-          color-mix(in srgb, var(--theme-on-surface) 10%, transparent);
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        border: 1px solid color-mix(in srgb, var(--theme-on-surface) 12%, transparent);
+        border-radius: var(--border-radius);
+        box-shadow: 0 2px 8px color-mix(in srgb, var(--theme-on-surface) 8%, transparent);
+        transition: var(--transition);
+      }
+
+      .widget:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px color-mix(in srgb, var(--theme-on-surface) 15%, transparent);
+        border-color: color-mix(in srgb, var(--theme-primary) 25%, transparent);
       }
 
       .widgets.compact .widget {
@@ -320,6 +327,18 @@ interface DashboardWidget {
         margin: 0;
         font-size: 1.05rem;
         font-weight: 600;
+        color: var(--theme-on-surface);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .widget-title::before {
+        content: '';
+        width: 4px;
+        height: 20px;
+        background: linear-gradient(135deg, var(--theme-primary), var(--theme-accent));
+        border-radius: 2px;
       }
 
       .widgets.compact .widget-header {
@@ -412,6 +431,7 @@ export class DashboardComponent implements OnInit {
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
   private seoService = inject(SeoService);
+  private themeService = inject(ThemeService);
   protected brandConfig = inject(BrandConfigService);
   private modulesService = inject(ModulesService);
   private orgService = inject(OrganizationManagementService);
@@ -495,6 +515,14 @@ export class DashboardComponent implements OnInit {
     } else {
       console.log('Loading organization modules for:', context);
       this.loadOrganizationModules(context);
+      // Update user's current organization
+      this.authService.updateUserOrganization(context).subscribe({
+        next: () => {
+          // Re-evaluate theme hierarchy after organization change
+          this.themeService.onOrganizationChange();
+        },
+        error: (error) => console.error('Failed to update organization:', error)
+      });
     }
     
     const contextName = context === 'personal' ? 'Personal' : 
@@ -623,7 +651,7 @@ export class DashboardComponent implements OnInit {
     
     // Add pending work widget if user has super admin role and in organization context
     const user = this.currentUser();
-    if (user?.roles?.includes('super_admin') && this.selectedContext() !== 'personal') {
+    if (this.authService.hasRole('super_admin') && this.selectedContext() !== 'personal') {
       this.orgService.getOrganizationRequests().subscribe({
         next: (requests) => {
           const pendingCount = requests.filter(r => r.status === 'pending').length;

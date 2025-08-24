@@ -1,12 +1,31 @@
-import { Controller, Get, Post, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Request, ValidationPipe } from '@nestjs/common';
 import { PreferencesService } from './preferences.service';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { IsOptional, IsString, IsArray } from 'class-validator';
 
 class UserPreferencesDto {
-  theme: string;
-  primaryColor: string;
-  accentColor: string;
-  secondaryColor: string;
+  @IsOptional()
+  @IsString()
+  theme?: string;
+  
+  @IsOptional()
+  @IsString()
+  primaryColor?: string;
+  
+  @IsOptional()
+  @IsString()
+  accentColor?: string;
+  
+  @IsOptional()
+  @IsString()
+  secondaryColor?: string;
+  
+  @IsOptional()
+  @IsArray()
+  pinnedModules?: string[];
+  
+  @IsOptional()
+  dashboardPreferences?: any;
 }
 
 @Controller('preferences')
@@ -20,7 +39,8 @@ export class PreferencesController {
   }
 
   @Post()
-  async saveUserPreferences(@Request() req, @Body() preferencesDto: UserPreferencesDto) {
+  async saveUserPreferences(@Request() req, @Body(ValidationPipe) preferencesDto: UserPreferencesDto) {
+    console.log('Saving preferences for user:', req.user.userId, 'Data:', preferencesDto);
     return this.preferencesService.saveUserPreferences(req.user.userId, preferencesDto);
   }
 

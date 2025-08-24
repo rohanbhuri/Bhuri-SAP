@@ -58,6 +58,8 @@ Secondary application for process management.
 - [Database Setup](./documentation/database-setup.md)
 - [User Management Setup](./documentation/user-management-setup.md)
 - [User Management Complete](./documentation/user-management-complete.md)
+- [Dynamic Theme System](./documentation/DYNAMIC_THEME_SYSTEM.md) - Comprehensive theming guide
+- [Theme Implementation Guide](./documentation/THEME_IMPLEMENTATION_GUIDE.md) - Current status and roadmap
 
 
 ## Brand Configuration System

@@ -17,6 +17,40 @@
   margin: 16px;
 }
 
+/* Custom Snackbar Styles for Success and Error Messages */
+.success-snackbar {
+  --mdc-snackbar-container-color: #4caf50 !important;
+  --mat-snack-bar-button-color: white !important;
+  --mdc-snackbar-supporting-text-color: white !important;
+}
+
+.success-snackbar .mat-mdc-snack-bar-container {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.error-snackbar {
+  --mdc-snackbar-container-color: #f44336 !important;
+  --mat-snack-bar-button-color: white !important;
+  --mdc-snackbar-supporting-text-color: white !important;
+}
+
+.error-snackbar .mat-mdc-snack-bar-container {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+}
+
+.warning-snackbar {
+  --mdc-snackbar-container-color: #ff9800 !important;
+  --mat-snack-bar-button-color: white !important;
+  --mdc-snackbar-supporting-text-color: white !important;
+}
+
+.warning-snackbar .mat-mdc-snack-bar-container {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+}
+
 :root {
   // Default theme variables
   --theme-primary: #1976d2;
@@ -218,6 +252,24 @@ body.dark-theme {
   --theme-on-surface: #e0e0e0;
   --theme-on-primary: #000000;
 
+  .mat-mdc-card {
+    background-color: var(--theme-surface) !important;
+    color: var(--theme-on-surface) !important;
+    border: 1px solid color-mix(in srgb, var(--theme-on-surface) 15%, transparent);
+  }
+
+  .mat-mdc-card-header {
+    color: var(--theme-on-surface) !important;
+  }
+
+  .mat-mdc-card-title {
+    color: #ffffff !important;
+  }
+
+  .mat-mdc-card-content {
+    color: var(--theme-on-surface) !important;
+  }
+
   .mat-mdc-form-field {
     .mat-mdc-text-field-wrapper {
       background-color: #2d2d2d !important;
@@ -272,6 +324,20 @@ body.dark-theme {
     .mat-icon {
       color: #e0e0e0 !important;
     }
+  }
+
+  .mat-mdc-chip {
+    background-color: color-mix(in srgb, var(--theme-on-surface) 15%, transparent) !important;
+    color: var(--theme-on-surface) !important;
+  }
+
+  .mat-mdc-chip.mat-primary {
+    background-color: color-mix(in srgb, var(--theme-primary) 25%, transparent) !important;
+    color: #ffffff !important;
+  }
+
+  .mat-divider {
+    border-color: color-mix(in srgb, var(--theme-on-surface) 20%, transparent) !important;
   }
 
   // Better text contrast in dark mode

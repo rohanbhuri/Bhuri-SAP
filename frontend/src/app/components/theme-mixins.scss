@@ -1,0 +1,235 @@
+// Theme Mixins for Consistent Styling Across Components
+
+// Card styling with theme support
+@mixin themed-card($border-accent: false) {
+  background: var(--theme-surface);
+  border: 1px solid color-mix(in srgb, var(--theme-on-surface) 12%, transparent);
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--theme-on-surface) 8%, transparent);
+  transition: var(--transition);
+  
+  @if $border-accent {
+    border-left: 4px solid var(--theme-primary);
+  }
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px color-mix(in srgb, var(--theme-on-surface) 15%, transparent);
+  }
+  
+  :host-context(body.dark-theme) & {
+    border-color: color-mix(in srgb, var(--theme-on-surface) 20%, transparent);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    
+    &:hover {
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    }
+  }
+}
+
+// Button styling with theme support
+@mixin themed-button($variant: 'primary') {
+  border-radius: var(--border-radius);
+  transition: var(--transition);
+  font-weight: 500;
+  
+  @if $variant == 'primary' {
+    background-color: var(--theme-primary);
+    color: var(--theme-on-primary);
+    
+    &:hover {
+      background-color: color-mix(in srgb, var(--theme-primary) 85%, black);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px color-mix(in srgb, var(--theme-primary) 25%, transparent);
+    }
+  } @else if $variant == 'secondary' {
+    background-color: transparent;
+    color: var(--theme-secondary);
+    border: 1px solid var(--theme-secondary);
+    
+    &:hover {
+      background-color: color-mix(in srgb, var(--theme-secondary) 10%, transparent);
+    }
+  } @else if $variant == 'accent' {
+    background-color: var(--theme-accent);
+    color: var(--theme-on-primary);
+    
+    &:hover {
+      background-color: color-mix(in srgb, var(--theme-accent) 85%, black);
+      transform: translateY(-1px);
+    }
+  }
+  
+  &:focus-visible {
+    outline: var(--focus-outline);
+    outline-offset: 2px;
+  }
+}
+
+// Status indicator styling
+@mixin status-indicator($status: 'success') {
+  padding: 4px 12px;
+  border-radius: calc(var(--border-radius) / 2);
+  font-size: 0.875rem;
+  font-weight: 500;
+  
+  @if $status == 'success' {
+    background-color: color-mix(in srgb, var(--theme-success) 15%, transparent);
+    color: var(--theme-success);
+    border: 1px solid color-mix(in srgb, var(--theme-success) 30%, transparent);
+  } @else if $status == 'warning' {
+    background-color: color-mix(in srgb, var(--theme-warning) 15%, transparent);
+    color: var(--theme-warning);
+    border: 1px solid color-mix(in srgb, var(--theme-warning) 30%, transparent);
+  } @else if $status == 'error' {
+    background-color: color-mix(in srgb, var(--theme-error) 15%, transparent);
+    color: var(--theme-error);
+    border: 1px solid color-mix(in srgb, var(--theme-error) 30%, transparent);
+  }
+}
+
+// Gradient background mixin
+@mixin themed-gradient($opacity1: 10%, $opacity2: 5%) {
+  background: linear-gradient(135deg, 
+    color-mix(in srgb, var(--theme-primary) #{$opacity1}, var(--theme-surface)),
+    color-mix(in srgb, var(--theme-accent) #{$opacity2}, var(--theme-surface))
+  );
+}
+
+// Icon styling with theme colors
+@mixin themed-icon($color: 'primary', $background: false) {
+  @if $background {
+    border-radius: 50%;
+    padding: 8px;
+    margin-right: 8px;
+  }
+  
+  @if $color == 'primary' {
+    color: var(--theme-primary);
+    @if $background {
+      background-color: color-mix(in srgb, var(--theme-primary) 15%, transparent);
+    }
+  } @else if $color == 'secondary' {
+    color: var(--theme-secondary);
+    @if $background {
+      background-color: color-mix(in srgb, var(--theme-secondary) 15%, transparent);
+    }
+  } @else if $color == 'accent' {
+    color: var(--theme-accent);
+    @if $background {
+      background-color: color-mix(in srgb, var(--theme-accent) 15%, transparent);
+    }
+  }
+}
+
+// Form field styling
+@mixin themed-form-field {
+  .mat-mdc-form-field {
+    .mat-mdc-text-field-wrapper {
+      background-color: var(--theme-surface);
+      border-radius: var(--border-radius);
+      transition: var(--transition);
+    }
+    
+    .mat-mdc-floating-label {
+      color: color-mix(in srgb, var(--theme-on-surface) 70%, transparent);
+    }
+    
+    input, .mat-mdc-select-value {
+      color: var(--theme-on-surface);
+    }
+    
+    &.mat-focused {
+      .mat-mdc-text-field-wrapper {
+        border-color: var(--theme-primary);
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-primary) 20%, transparent);
+      }
+    }
+  }
+  
+  :host-context(body.dark-theme) & {
+    .mat-mdc-form-field .mat-mdc-text-field-wrapper {
+      background-color: #2d2d2d;
+      border: 1px solid color-mix(in srgb, var(--theme-on-surface) 20%, transparent);
+    }
+  }
+}
+
+// List item styling
+@mixin themed-list-item {
+  .mat-mdc-list-item {
+    color: var(--theme-on-surface);
+    transition: var(--transition);
+    border-radius: var(--border-radius);
+    margin: 2px 0;
+    
+    &:hover {
+      background-color: color-mix(in srgb, var(--theme-on-surface) 8%, transparent);
+    }
+    
+    .mat-mdc-list-item-title {
+      color: var(--theme-on-surface);
+      font-weight: 500;
+    }
+    
+    .mat-mdc-list-item-line {
+      color: color-mix(in srgb, var(--theme-on-surface) 70%, transparent);
+    }
+    
+    .mat-icon {
+      color: var(--theme-on-surface);
+    }
+  }
+}
+
+// Responsive breakpoints
+@mixin mobile {
+  @media (max-width: 768px) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (min-width: 769px) and (max-width: 1024px) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: 1025px) {
+    @content;
+  }
+}
+
+// Accessibility mixins
+@mixin high-contrast {
+  @media (prefers-contrast: high) {
+    @content;
+  }
+}
+
+@mixin reduced-motion {
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+    @content;
+  }
+}
+
+// Focus management
+@mixin focus-visible {
+  &:focus-visible {
+    outline: var(--focus-outline);
+    outline-offset: 2px;
+  }
+}
+
+// Dark theme specific adjustments
+@mixin dark-theme-adjustments {
+  :host-context(body.dark-theme) & {
+    @content;
+  }
+}

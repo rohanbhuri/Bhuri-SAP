@@ -7,15 +7,16 @@ import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
 import { User } from '../entities/user.entity';
 import { Role } from '../entities/role.entity';
+import { Organization } from '../entities/organization.entity';
 import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Role]),
+    TypeOrmModule.forFeature([User, Role, Organization]),
     forwardRef(() => UsersModule),
     PassportModule,
     JwtModule.register({
-      secret: process.env.JWT_SECRET || 'secret',
+      secret: process.env.JWT_SECRET || 'rohanbhuri',
       signOptions: { expiresIn: '1h' },
     }),
   ],

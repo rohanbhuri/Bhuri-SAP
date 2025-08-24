@@ -1,0 +1,56 @@
+{
+  "name": "default-agent",
+  "version": "1.0.0",
+  "description": "Default agent configuration",
+  "mcpServers": {
+    "trueprocess-frontend": {
+      "url": "http://localhost:8931/mcp",
+      "disabled": false,
+      "timeout": 60000
+    }
+  },
+  "tools": [
+    "fsRead",
+    "fsWrite",
+    "fsReplace",
+    "listDirectory",
+    "fileSearch",
+    "executeBash",
+    "codeReview",
+    "displayFindings",
+    "@trueprocess-frontend"
+  ],
+  "allowedTools": [
+    "fsRead",
+    "listDirectory",
+    "fileSearch",
+    "codeReview",
+    "displayFindings",
+    "@trueprocess-frontend/screenshot",
+    "@trueprocess-frontend/analyzeUI",
+    "@trueprocess-frontend/click",
+    "@trueprocess-frontend/type",
+    "@trueprocess-frontend/navigate",
+    "@trueprocess-frontend/wait",
+    "@trueprocess-frontend/scroll",
+    "@trueprocess-frontend/getElements"
+  ],
+  "toolsSettings": {
+    "execute_bash": {
+      "alwaysAllow": [
+        {
+          "preset": "readOnly"
+        }
+      ]
+    },
+    "use_aws": {
+      "alwaysAllow": [
+        {
+          "preset": "readOnly"
+        }
+      ]
+    }
+  },
+  "includedFiles": [],
+  "resources": []
+}

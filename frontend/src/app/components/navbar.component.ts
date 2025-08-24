@@ -6,19 +6,25 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
+import { CommonModule } from '@angular/common';
 import { AuthService, User } from '../services/auth.service';
 import { BrandConfigService } from '../services/brand-config.service';
 import { PwaService } from '../services/pwa.service';
+import { ThemeService } from '../services/theme.service';
 import { PwaInstallModalComponent } from './pwa-install-modal.component';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [MatToolbarModule, MatButtonModule, MatIconModule, MatMenuModule, MatTooltipModule],
+  imports: [CommonModule, MatToolbarModule, MatButtonModule, MatIconModule, MatMenuModule, MatTooltipModule],
   template: `
     <mat-toolbar color="primary">
       <img [src]="brandConfig.getIcon()" [alt]="brandConfig.getBrandName()" class="logo" (click)="goToDashboard()">
       <span class="spacer"></span>
+      
+      <button mat-icon-button (click)="toggleTheme()" [matTooltip]="isDarkTheme() ? 'Switch to Light Mode' : 'Switch to Dark Mode'" class="theme-toggle">
+        <mat-icon>{{ isDarkTheme() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+      </button>
       
       @if (showInstallButton()) {
         <button mat-icon-button (click)="showInstallModal()" matTooltip="Install App" class="install-button">
@@ -28,7 +34,13 @@ import { PwaInstallModalComponent } from './pwa-install-modal.component';
       
       @if (currentUser()) {
         <button mat-button [matMenuTriggerFor]="userMenu" class="user-button">
-          <mat-icon>account_circle</mat-icon>
+          <div class="user-avatar">
+            @if (currentUser()?.avatar) {
+              <img [src]="getAvatarUrl()" alt="User Avatar" class="avatar-image">
+            } @else {
+              <mat-icon>account_circle</mat-icon>
+            }
+          </div>
           <span>{{ currentUser()?.firstName }} {{ currentUser()?.lastName }}</span>
         </button>
         
@@ -96,6 +108,41 @@ import { PwaInstallModalComponent } from './pwa-install-modal.component';
     .install-button:hover {
       background-color: rgba(255, 255, 255, 0.1);
     }
+    
+    .theme-toggle {
+      color: var(--theme-on-primary);
+      margin-right: 8px;
+      transition: var(--transition);
+    }
+    
+    .theme-toggle:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      transform: rotate(180deg);
+    }
+    
+    .user-avatar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      overflow: hidden;
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .avatar-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+    
+    .user-avatar mat-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+    }
   `]
 })
 export class NavbarComponent implements OnInit {
@@ -103,11 +150,13 @@ export class NavbarComponent implements OnInit {
   private router = inject(Router);
   private dialog = inject(MatDialog);
   private pwaService = inject(PwaService);
+  private themeService = inject(ThemeService);
   private cdr = inject(ChangeDetectorRef);
   protected brandConfig = inject(BrandConfigService);
   
   currentUser = signal<User | null>(null);
   showInstallButton = signal(false);
+  isDarkTheme = signal(false);
   
   ngOnInit() {
     this.authService.currentUser$.subscribe(user => {
@@ -118,6 +167,14 @@ export class NavbarComponent implements OnInit {
     this.pwaService.installable$.subscribe((installable) => {
       this.showInstallButton.set(installable);
     });
+    
+    // Subscribe to theme changes
+    this.themeService.currentTheme$.subscribe(theme => {
+      this.isDarkTheme.set(theme === 'dark');
+    });
+    
+    // Load user theme preferences
+    this.themeService.loadAndApplyUserTheme();
   }
   
   showInstallModal() {
@@ -143,5 +200,14 @@ export class NavbarComponent implements OnInit {
   
   logout() {
     this.authService.logout();
+  }
+
+  getAvatarUrl(): string {
+    const user = this.currentUser();
+    return this.authService.getAvatarUrl(user?.avatar);
+  }
+  
+  toggleTheme() {
+    this.themeService.toggleTheme();
   }
 }

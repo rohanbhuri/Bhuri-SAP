@@ -141,69 +141,91 @@ export class PreferencesComponent {
   });
   
   ngOnInit() {
+    // Check if user is authenticated
+    if (!this.authService.isAuthenticated()) {
+      this.snackBar.open('Please log in to access preferences', 'Close', { duration: 3000 });
+      return;
+    }
+    
     this.loadPreferences();
     
     // Apply theme changes on form value changes
     this.preferencesForm.valueChanges.subscribe(values => {
-      console.log('Form values changed:', values);
-      this.themeService.applyTheme(values);
-    });
-  }
-  
-  loadPreferences() {
-    this.preferencesService.getUserPreferences().subscribe({
-      next: (prefs) => {
-        if (prefs) {
-          this.preferencesForm.patchValue(prefs);
-          this.themeService.applyTheme(prefs);
-        } else {
-          // Use default theme when no preferences found
-          this.themeService.applyTheme();
-        }
-      },
-      error: () => {
-        // Use default theme if error loading preferences
-        this.themeService.applyTheme();
+      if (values.primaryColor && values.accentColor && values.secondaryColor) {
+        this.themeService.applyTheme(values);
       }
     });
   }
   
+  loadPreferences() {
+    // Load brand colors as defaults
+    const brandColors = this.getBrandColors();
+    const defaults = {
+      theme: 'light',
+      primaryColor: brandColors.primary,
+      accentColor: brandColors.accent,
+      secondaryColor: brandColors.secondary
+    };
+    
+    this.preferencesForm.patchValue(defaults);
+    
+    this.preferencesService.getUserPreferences().subscribe({
+      next: (prefs) => {
+        if (prefs) {
+          this.preferencesForm.patchValue({ ...defaults, ...prefs });
+        }
+      },
+      error: () => {
+        console.log('No user preferences found, using defaults');
+      }
+    });
+  }
+  
+  private getBrandColors() {
+    if (typeof window !== 'undefined' && (window as any).brandConfig) {
+      return (window as any).brandConfig.colors;
+    }
+    return { primary: '#10B981', secondary: '#374151', accent: '#EF4444' };
+  }
+  
   savePreferences() {
-    if (!this.authService.isAuthenticated() || !this.authService.getToken()) {
+    if (!this.authService.isAuthenticated()) {
       this.snackBar.open('Please log in to save preferences', 'Close', { duration: 3000 });
       return;
     }
     
     this.loading.set(true);
-    const preferences = this.preferencesForm.value;
+    const formValues = this.preferencesForm.value;
+    const preferences = {
+      theme: formValues.theme || 'light',
+      primaryColor: formValues.primaryColor || '#10B981',
+      accentColor: formValues.accentColor || '#EF4444',
+      secondaryColor: formValues.secondaryColor || '#374151'
+    };
     
-    this.preferencesService.saveUserPreferences(preferences as any).subscribe({
+    this.preferencesService.saveUserPreferences(preferences).subscribe({
       next: () => {
         this.loading.set(false);
-        this.themeService.applyTheme(preferences);
         this.snackBar.open('Preferences saved successfully', 'Close', { duration: 3000 });
       },
       error: (error: any) => {
         this.loading.set(false);
         console.error('Save preferences error:', error);
-        if (error.status === 401) {
-          this.snackBar.open('Session expired. Please log in again.', 'Close', { duration: 3000 });
-          this.authService.logout();
-        } else {
-          this.snackBar.open('Failed to save preferences', 'Close', { duration: 3000 });
-        }
+        this.snackBar.open('Failed to save preferences', 'Close', { duration: 3000 });
       }
     });
   }
   
   resetToDefault() {
-    this.preferencesForm.patchValue({
+    const brandColors = this.getBrandColors();
+    const defaults = {
       theme: 'light',
-      primaryColor: '#1976d2',
-      accentColor: '#ff4081',
-      secondaryColor: '#424242'
-    });
-    this.themeService.applyTheme({ theme: 'light' });
+      primaryColor: brandColors.primary,
+      accentColor: brandColors.accent,
+      secondaryColor: brandColors.secondary
+    };
+    
+    this.preferencesForm.patchValue(defaults);
     this.savePreferences();
   }
   
