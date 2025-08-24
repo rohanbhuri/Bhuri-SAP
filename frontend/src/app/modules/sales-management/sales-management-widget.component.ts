@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -42,9 +42,16 @@ import { Router } from '@angular/router';
     button { width: 100%; }
   `],
 })
-export class SalesManagementWidgetComponent {
+export class SalesManagementWidgetComponent implements OnInit {
   private router = inject(Router);
-  stats = signal({ revenue: 0, deals: 0, leads: 0 });
+  stats = signal({ revenue: 125, deals: 18, leads: 34 });
+
+  ngOnInit() {
+    // Simulate loading stats
+    setTimeout(() => {
+      this.stats.set({ revenue: 125, deals: 18, leads: 34 });
+    }, 500);
+  }
 
   openModule() {
     this.router.navigate(['/modules/sales-management']);

@@ -76,7 +76,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Patch('update-organization')
   async updateOrganization(@Request() req, @Body() body: { organizationId: string }) {
-    const updatedUser = await this.usersService.updateUserOrganization(req.user.id, body.organizationId);
+    const updatedUser = await this.usersService.updateUserOrganization(req.user.userId, body.organizationId);
     return updatedUser;
   }
 

@@ -6,9 +6,9 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:prod": "node dist/main",
-    "init:crm": "node src/scripts/init-crm-module.js",
-    "init:modules": "node src/scripts/init-modules.js",
-    "seed:modules": "npx ts-node src/scripts/run-seed.ts"
+    "seed:demo": "node src/scripts/demo-seed.js",
+    "seed:beax-rm": "node src/scripts/demo-seed.js beax-rm",
+    "seed:true-process": "node src/scripts/demo-seed.js true-process"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",

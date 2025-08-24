@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -75,7 +75,7 @@ import { CrmService } from './crm.service';
     }
   `],
 })
-export class CrmWidgetComponent {
+export class CrmWidgetComponent implements OnInit {
   private router = inject(Router);
   private crmService = inject(CrmService);
 

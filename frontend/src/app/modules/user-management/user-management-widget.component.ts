@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -72,7 +72,7 @@ import { UserManagementService } from './user-management.service';
     `,
   ],
 })
-export class UserManagementWidgetComponent {
+export class UserManagementWidgetComponent implements OnInit {
   private router = inject(Router);
   private userService = inject(UserManagementService);
 

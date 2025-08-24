@@ -145,8 +145,14 @@ interface DashboardWidget {
         role="list"
         aria-label="Dashboard widgets grid"
       >
-        @for (w of widgets(); track w.id) {
-        <mat-card
+        @if (isLoadingWidgets()) {
+          <div class="loading-state" role="status" aria-live="polite">
+            <mat-icon>hourglass_empty</mat-icon>
+            <p>Loading dashboard widgets...</p>
+          </div>
+        } @else {
+          @for (w of widgets(); track w.id) {
+          <mat-card
           class="widget"
           color="primary"
           [attr.data-size]="isCompactView() ? 's' : w.size"
@@ -213,23 +219,19 @@ interface DashboardWidget {
             <app-project-timesheet-widget></app-project-timesheet-widget>
             } @case ('pending-work') {
             <app-pending-work-widget></app-pending-work-widget>
-            } @default {
-            <div class="placeholder-widget">
-              <p class="metric">{{ w.title }}</p>
-              <p class="trend">Ready for implementation</p>
-            </div>
             } }
           </div>
         </mat-card>
-        } @if (widgets().length === 0) {
-        <mat-card class="empty" color="primary" tabindex="0" aria-live="polite">
-          <mat-card-title>No active modules</mat-card-title>
-          <mat-card-content>
-            <p>
-              Ask your administrator to activate modules for your organization.
-            </p>
-          </mat-card-content>
-        </mat-card>
+          } @if (widgets().length === 0) {
+          <mat-card class="empty" color="primary" tabindex="0" aria-live="polite">
+            <mat-card-title>No active modules</mat-card-title>
+            <mat-card-content>
+              <p>
+                Ask your administrator to activate modules for your organization.
+              </p>
+            </mat-card-content>
+          </mat-card>
+          }
         }
       </section>
     </div>
@@ -423,6 +425,29 @@ interface DashboardWidget {
         outline: var(--focus-outline);
         outline-offset: 2px;
       }
+
+      .loading-state {
+        grid-column: 1 / -1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 200px;
+        color: color-mix(in srgb, var(--theme-on-surface) 60%, transparent);
+        gap: 12px;
+      }
+
+      .loading-state mat-icon {
+        font-size: 2rem;
+        width: 2rem;
+        height: 2rem;
+        animation: spin 2s linear infinite;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
     `,
   ],
 })
@@ -442,22 +467,46 @@ export class DashboardComponent implements OnInit {
   widgets = signal<DashboardWidget[]>([]);
   selectedContext = signal<string>('personal');
   isCompactView = signal<boolean>(false);
+  isLoadingWidgets = signal<boolean>(true);
 
   ngOnInit() {
     this.setupSEO();
+    this.loadCompactViewPreference();
+    
+    // Fallback timeout to ensure widgets load
+    setTimeout(() => {
+      if (this.isLoadingWidgets() && this.widgets().length === 0) {
+        console.warn('Widget loading timeout, showing default widgets');
+        this.isLoadingWidgets.set(false);
+        this.loadDefaultWidgets();
+      }
+    }, 3000);
+    
     this.authService.currentUser$.subscribe((user) => {
       this.currentUser.set(user);
       if (user && this.authService.isAuthenticated()) {
         this.loadOrganizations();
-        // Wait for organizations to load before setting context
-        setTimeout(() => {
-          const initialContext = user.organizationId || 'personal';
-          this.selectedContext.set(initialContext);
-          console.log('Initial context set to:', initialContext);
-          this.loadModulesForContext(initialContext);
-        }, 300);
+      } else {
+        this.selectedContext.set('personal');
+        this.isLoadingWidgets.set(false);
+        this.loadDefaultWidgets();
       }
     });
+  }
+
+  private loadDefaultWidgets() {
+    const defaultWidgets: DashboardWidget[] = [
+      { id: 'user-management', title: 'User Management', size: 'm' },
+      { id: 'crm', title: 'CRM', size: 'm' },
+      { id: 'projects-management', title: 'Projects Management', size: 'l' },
+      { id: 'tasks-management', title: 'Tasks Management', size: 's' },
+      { id: 'hr-management', title: 'HR Management', size: 'm' },
+      { id: 'sales-management', title: 'Sales Management', size: 's' },
+      { id: 'inventory-management', title: 'Inventory Management', size: 's' },
+      { id: 'project-tracking', title: 'Project Tracking', size: 'm' }
+    ];
+    this.widgets.set(defaultWidgets);
+    this.isLoadingWidgets.set(false);
   }
 
   drop(event: CdkDragDrop<DashboardWidget[]>) {
@@ -477,6 +526,8 @@ export class DashboardComponent implements OnInit {
     this.authService.getMyOrganizations().subscribe({
       next: (orgs) => {
         this.organizations.set(orgs);
+        // After organizations are loaded, validate and set the context
+        this.setInitialContext();
       },
       error: (error) => {
         if (error.status === 401 || error.status === 403) {
@@ -508,6 +559,7 @@ export class DashboardComponent implements OnInit {
     }
     
     this.selectedContext.set(context);
+    this.saveContext(context);
     
     if (context === 'personal') {
       console.log('Loading personal modules...');
@@ -521,7 +573,12 @@ export class DashboardComponent implements OnInit {
           // Re-evaluate theme hierarchy after organization change
           this.themeService.onOrganizationChange();
         },
-        error: (error) => console.error('Failed to update organization:', error)
+        error: (error) => {
+          console.error('Failed to update organization:', error);
+          this.snackBar.open('Failed to update organization preference', 'Close', {
+            duration: 3000,
+          });
+        }
       });
     }
     
@@ -549,7 +606,8 @@ export class DashboardComponent implements OnInit {
       error: (error) => {
         console.error('=== ERROR LOADING ORG MODULES ===');
         console.error('Error details:', error);
-        this.updateWidgets([]);
+        this.isLoadingWidgets.set(false);
+        this.loadDefaultWidgets();
       }
     });
   }
@@ -584,7 +642,8 @@ export class DashboardComponent implements OnInit {
       error: (error) => {
         console.error('=== ERROR LOADING PERSONAL MODULES ===');
         console.error('Error details:', error);
-        this.updateWidgets([]);
+        this.isLoadingWidgets.set(false);
+        this.loadDefaultWidgets();
       }
     });
   }
@@ -607,7 +666,8 @@ export class DashboardComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error loading personal modules:', error);
-          this.widgets.set([]);
+          this.isLoadingWidgets.set(false);
+          this.loadDefaultWidgets();
         }
       });
     } else {
@@ -628,7 +688,8 @@ export class DashboardComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error loading organization modules:', error);
-          this.widgets.set([]);
+          this.isLoadingWidgets.set(false);
+          this.loadDefaultWidgets();
         }
       });
     }
@@ -636,18 +697,38 @@ export class DashboardComponent implements OnInit {
 
   updateWidgets(modules: AppModuleInfo[]) {
     console.log('Updating widgets with modules:', modules?.length || 0);
+    console.log('Module details:', modules?.map(m => ({ name: m.name, displayName: m.displayName })));
     
+    // If no modules from API, use default widgets
     if (!modules || modules.length === 0) {
-      this.widgets.set([]);
+      console.log('No modules returned, using default widgets');
+      this.loadDefaultWidgets();
       return;
     }
     
-    const mapped: DashboardWidget[] = modules.map((m, idx) => ({
+    // Filter modules that have corresponding widget components
+    const supportedWidgets = [
+      'user-management', 'organization-management', 'my-organizations', 'crm',
+      'hr-management', 'projects-management', 'tasks-management', 'inventory-management',
+      'payroll-management', 'sales-management', 'project-tracking', 'project-timesheet'
+    ];
+    
+    const filtered = modules.filter(m => supportedWidgets.includes(m.name));
+    console.log('Filtered supported modules:', filtered.length);
+    
+    const mapped: DashboardWidget[] = filtered.map((m, idx) => ({
       id: m.name,
       title: m.displayName,
       description: m.description,
       size: idx === 0 ? 'm' : idx === 1 ? 'm' : idx % 3 === 0 ? 'l' : 'm',
     }));
+    
+    // If no supported modules, use default widgets
+    if (mapped.length === 0) {
+      console.log('No supported widget modules found, using defaults');
+      this.loadDefaultWidgets();
+      return;
+    }
     
     // Add pending work widget if user has super admin role and in organization context
     const user = this.currentUser();
@@ -666,11 +747,17 @@ export class DashboardComponent implements OnInit {
           } else {
             this.widgets.set(mapped);
           }
+          this.isLoadingWidgets.set(false);
         },
-        error: () => this.widgets.set(mapped)
+        error: () => {
+          this.widgets.set(mapped);
+          this.isLoadingWidgets.set(false);
+        }
       });
     } else {
+      console.log('Setting widgets:', mapped.length);
       this.widgets.set(mapped);
+      this.isLoadingWidgets.set(false);
     }
   }
 
@@ -683,15 +770,118 @@ export class DashboardComponent implements OnInit {
 
   getModuleColor(moduleId: string): string | null {
     const module = this.activeModules().find((m) => m.name === moduleId);
-    return module?.color || null;
+    if (module?.color) return module.color;
+    
+    // Fallback to module registry
+    const registryModule = this.getModuleFromRegistry(moduleId);
+    return registryModule?.color || '#2196F3';
+  }
+
+  private getModuleFromRegistry(moduleId: string) {
+    const moduleMap = {
+      'user-management': { color: '#2196F3' },
+      'organization-management': { color: '#FF5722' },
+      'my-organizations': { color: '#9C27B0' },
+      'crm': { color: '#4CAF50' },
+      'hr-management': { color: '#FF9800' },
+      'projects-management': { color: '#3F51B5' },
+      'project-tracking': { color: '#009688' },
+      'project-timesheet': { color: '#FFC107' },
+      'tasks-management': { color: '#9C27B0' },
+      'inventory-management': { color: '#FF9800' },
+      'payroll-management': { color: '#795548' },
+      'sales-management': { color: '#4CAF50' }
+    };
+    return moduleMap[moduleId as keyof typeof moduleMap];
   }
 
   toggleCompactView() {
     this.isCompactView.set(!this.isCompactView());
+    this.saveCompactViewPreference();
     const viewType = this.isCompactView() ? 'Compact' : 'Normal';
     this.snackBar.open(`Switched to ${viewType} view`, 'Close', {
       duration: 2000,
     });
+  }
+
+  private saveContext(context: string) {
+    try {
+      localStorage.setItem('dashboard-context', context);
+    } catch (error) {
+      console.warn('Failed to save dashboard context:', error);
+    }
+  }
+
+  private getSavedContext(): string | null {
+    try {
+      return localStorage.getItem('dashboard-context');
+    } catch (error) {
+      console.warn('Failed to load dashboard context:', error);
+      return null;
+    }
+  }
+
+  private saveCompactViewPreference() {
+    try {
+      localStorage.setItem('dashboard-compact-view', this.isCompactView().toString());
+    } catch (error) {
+      console.warn('Failed to save compact view preference:', error);
+    }
+  }
+
+  private loadCompactViewPreference() {
+    try {
+      const saved = localStorage.getItem('dashboard-compact-view');
+      if (saved !== null) {
+        this.isCompactView.set(saved === 'true');
+      }
+    } catch (error) {
+      console.warn('Failed to load compact view preference:', error);
+    }
+  }
+
+  private validateAndGetContext(savedContext: string | null): string | null {
+    if (!savedContext) return null;
+    
+    // 'personal' is always valid
+    if (savedContext === 'personal') return savedContext;
+    
+    // Check if the saved organization ID is still valid
+    const orgs = this.organizations();
+    const isValidOrg = orgs.some(org => (org._id || org.id) === savedContext);
+    
+    if (isValidOrg) {
+      return savedContext;
+    } else {
+      // Clear invalid saved context
+      this.clearSavedContext();
+      return null;
+    }
+  }
+
+  private clearSavedContext() {
+    try {
+      localStorage.removeItem('dashboard-context');
+    } catch (error) {
+      console.warn('Failed to clear dashboard context:', error);
+    }
+  }
+
+  private setInitialContext() {
+    const user = this.currentUser();
+    if (!user) {
+      this.isLoadingWidgets.set(false);
+      this.loadDefaultWidgets();
+      return;
+    }
+    
+    const savedContext = this.getSavedContext();
+    const validatedContext = this.validateAndGetContext(savedContext);
+    const initialContext = validatedContext || user.organizationId || 'personal';
+    
+    this.selectedContext.set(initialContext);
+    console.log('Initial context set to:', initialContext);
+    this.loadModulesForContext(initialContext);
   }
 
   private setupSEO() {

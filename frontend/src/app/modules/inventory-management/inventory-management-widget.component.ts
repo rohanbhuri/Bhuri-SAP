@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -42,9 +42,16 @@ import { Router } from '@angular/router';
     button { width: 100%; }
   `],
 })
-export class InventoryManagementWidgetComponent {
+export class InventoryManagementWidgetComponent implements OnInit {
   private router = inject(Router);
-  stats = signal({ totalItems: 0, lowStock: 0, totalValue: 0 });
+  stats = signal({ totalItems: 156, lowStock: 8, totalValue: 45 });
+
+  ngOnInit() {
+    // Simulate loading stats
+    setTimeout(() => {
+      this.stats.set({ totalItems: 156, lowStock: 8, totalValue: 45 });
+    }, 500);
+  }
 
   openModule() {
     this.router.navigate(['/modules/inventory-management']);

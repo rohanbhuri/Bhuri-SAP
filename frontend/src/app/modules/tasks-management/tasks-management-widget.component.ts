@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -42,9 +42,16 @@ import { Router } from '@angular/router';
     button { width: 100%; }
   `],
 })
-export class TasksManagementWidgetComponent {
+export class TasksManagementWidgetComponent implements OnInit {
   private router = inject(Router);
-  stats = signal({ pending: 0, inProgress: 0, completed: 0 });
+  stats = signal({ pending: 12, inProgress: 8, completed: 24 });
+
+  ngOnInit() {
+    // Simulate loading stats
+    setTimeout(() => {
+      this.stats.set({ pending: 12, inProgress: 8, completed: 24 });
+    }, 500);
+  }
 
   openModule() {
     this.router.navigate(['/modules/tasks-management']);
