@@ -48,6 +48,7 @@ import { PendingWorkWidgetComponent } from '../../components/pending-work-widget
 import { OrganizationManagementService } from '../../modules/organization-management/organization-management.service';
 import { SeoService } from '../../services/seo.service';
 import { ThemeService } from '../../services/theme.service';
+import { MODULE_REGISTRY } from '../../modules/module-registry';
 
 interface DashboardWidget {
   id: string;
@@ -241,20 +242,21 @@ interface DashboardWidget {
   styles: [
     `
       .page {
-        padding: 24px;
+        padding: 16px;
         max-width: 1400px;
         margin: 0 auto;
       }
 
       .page-header {
-        margin-bottom: 20px;
+        margin-bottom: 16px;
       }
 
       .header-controls {
         display: flex;
         align-items: center;
-        gap: 16px;
+        gap: 12px;
         margin-bottom: 6px;
+        flex-wrap: wrap;
       }
 
       .dashboard-menu {
@@ -262,20 +264,31 @@ interface DashboardWidget {
       }
 
       .view-selector {
-        min-width: 160px;
+        min-width: 140px;
+        flex-shrink: 0;
       }
 
       .view-selector .mat-mdc-form-field-subscript-wrapper {
         display: none;
       }
 
+      .view-selector .mat-mdc-select {
+        font-size: 0.9rem;
+      }
+
+      .view-selector .mat-mdc-select-value {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
       .breadcrumb {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
+        gap: 4px;
         color: color-mix(in srgb, var(--theme-on-surface) 60%, transparent);
-        font-size: 0.9rem;
-        margin-bottom: 8px;
+        font-size: 0.8rem;
+        margin-bottom: 6px;
       }
       .breadcrumb .current {
         color: var(--theme-on-surface);
@@ -284,9 +297,12 @@ interface DashboardWidget {
       h1 {
         margin: 0;
         font-weight: 600;
+        font-size: 1.5rem;
       }
       .subtitle {
         color: color-mix(in srgb, var(--theme-on-surface) 65%, transparent);
+        font-size: 0.9rem;
+        line-height: 1.4;
       }
 
       .widgets {
@@ -327,27 +343,29 @@ interface DashboardWidget {
       }
       .widget-title {
         margin: 0;
-        font-size: 1.05rem;
+        font-size: 1rem;
         font-weight: 600;
         color: var(--theme-on-surface);
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
+        line-height: 1.3;
       }
 
       .widget-title::before {
         content: '';
-        width: 4px;
-        height: 20px;
+        width: 3px;
+        height: 16px;
         background: linear-gradient(135deg, var(--theme-primary), var(--theme-accent));
         border-radius: 2px;
+        flex-shrink: 0;
       }
 
       .widgets.compact .widget-header {
-        padding: 8px 12px 0 12px;
+        padding: 6px 10px 0 10px;
       }
       .widgets.compact .widget-title {
-        font-size: 0.95rem;
+        font-size: 0.85rem;
       }
       .widget-actions {
         display: inline-flex;
@@ -377,7 +395,76 @@ interface DashboardWidget {
         color: var(--theme-error, #f44336);
       }
 
+      /* Mobile-first responsive design */
+      @media (max-width: 599px) {
+        .page {
+          padding: 12px;
+        }
+        
+        .header-controls {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 8px;
+        }
+        
+        .view-selector {
+          min-width: auto;
+          width: 100%;
+        }
+        
+        h1 {
+          font-size: 1.3rem;
+          text-align: center;
+        }
+        
+        .subtitle {
+          font-size: 0.85rem;
+          text-align: center;
+        }
+        
+        .breadcrumb {
+          font-size: 0.75rem;
+          justify-content: center;
+        }
+        
+        .widgets {
+          gap: 12px;
+        }
+        
+        .widget-title {
+          font-size: 0.9rem;
+        }
+        
+        .widgets.compact .widget-title {
+          font-size: 0.8rem;
+        }
+      }
+      
+      @media (min-width: 600px) and (max-width: 899px) {
+        .page {
+          padding: 16px;
+        }
+        
+        .widget[data-size='s'] {
+          grid-column: span 6;
+        }
+        .widget[data-size='m'] {
+          grid-column: span 12;
+        }
+        .widget[data-size='l'] {
+          grid-column: span 12;
+        }
+        
+        .widgets.compact .widget {
+          grid-column: span 4;
+        }
+      }
+
       @media (min-width: 900px) {
+        .page {
+          padding: 20px;
+        }
+        
         .widget[data-size='s'] {
           grid-column: span 4;
         }
@@ -394,6 +481,10 @@ interface DashboardWidget {
       }
 
       @media (min-width: 1200px) {
+        .page {
+          padding: 24px;
+        }
+        
         .widget[data-size='s'] {
           grid-column: span 3;
         }
@@ -706,14 +797,11 @@ export class DashboardComponent implements OnInit {
       return;
     }
     
-    // Filter modules that have corresponding widget components
-    const supportedWidgets = [
-      'user-management', 'organization-management', 'my-organizations', 'crm',
-      'hr-management', 'projects-management', 'tasks-management', 'inventory-management',
-      'payroll-management', 'sales-management', 'project-tracking', 'project-timesheet'
-    ];
-    
-    const filtered = modules.filter(m => supportedWidgets.includes(m.name));
+    // Filter modules that have corresponding widget components using module registry
+    const filtered = modules.filter(m => {
+      const registryModule = this.getModuleFromRegistry(m.name);
+      return registryModule && registryModule.widgetComponent;
+    });
     console.log('Filtered supported modules:', filtered.length);
     
     const mapped: DashboardWidget[] = filtered.map((m, idx) => ({
@@ -778,21 +866,7 @@ export class DashboardComponent implements OnInit {
   }
 
   private getModuleFromRegistry(moduleId: string) {
-    const moduleMap = {
-      'user-management': { color: '#2196F3' },
-      'organization-management': { color: '#FF5722' },
-      'my-organizations': { color: '#9C27B0' },
-      'crm': { color: '#4CAF50' },
-      'hr-management': { color: '#FF9800' },
-      'projects-management': { color: '#3F51B5' },
-      'project-tracking': { color: '#009688' },
-      'project-timesheet': { color: '#FFC107' },
-      'tasks-management': { color: '#9C27B0' },
-      'inventory-management': { color: '#FF9800' },
-      'payroll-management': { color: '#795548' },
-      'sales-management': { color: '#4CAF50' }
-    };
-    return moduleMap[moduleId as keyof typeof moduleMap];
+    return MODULE_REGISTRY.find(m => m.name === moduleId);
   }
 
   toggleCompactView() {
