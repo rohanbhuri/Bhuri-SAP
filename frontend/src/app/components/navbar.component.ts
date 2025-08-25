@@ -5,22 +5,38 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatBadgeModule } from '@angular/material/badge';
 import { MatDialog } from '@angular/material/dialog';
 import { CommonModule } from '@angular/common';
 import { AuthService, User } from '../services/auth.service';
 import { BrandConfigService } from '../services/brand-config.service';
 import { PwaService } from '../services/pwa.service';
 import { ThemeService } from '../services/theme.service';
+import { NotificationsService } from '../services/notifications.service';
+import { WebSocketService } from '../services/websocket.service';
 import { PwaInstallModalComponent } from './pwa-install-modal.component';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, MatToolbarModule, MatButtonModule, MatIconModule, MatMenuModule, MatTooltipModule],
+  imports: [CommonModule, MatToolbarModule, MatButtonModule, MatIconModule, MatMenuModule, MatTooltipModule, MatBadgeModule],
   template: `
     <mat-toolbar color="primary">
       <img [src]="brandConfig.getIcon()" [alt]="brandConfig.getBrandName()" class="logo" (click)="goToDashboard()">
       <span class="spacer"></span>
+      
+      @if (currentUser()) {
+        <button mat-icon-button
+                (click)="goToNotifications()"
+                matTooltip="Notifications"
+                class="notifications-button"
+                [matBadge]="unreadCount()"
+                [matBadgeHidden]="unreadCount() === 0"
+                matBadgeColor="accent"
+                matBadgeSize="small">
+          <mat-icon>notifications</mat-icon>
+        </button>
+      }
       
       <button mat-icon-button (click)="toggleTheme()" [matTooltip]="isDarkTheme() ? 'Switch to Light Mode' : 'Switch to Dark Mode'" class="theme-toggle">
         <mat-icon>{{ isDarkTheme() ? 'light_mode' : 'dark_mode' }}</mat-icon>
@@ -143,6 +159,21 @@ import { PwaInstallModalComponent } from './pwa-install-modal.component';
       width: 24px;
       height: 24px;
     }
+    
+    .notifications-button {
+      color: var(--theme-on-primary);
+      margin-right: 8px;
+      transition: var(--transition);
+    }
+    
+    .notifications-button:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .notifications-button .mat-badge-content {
+      background: var(--theme-accent);
+      color: var(--theme-on-accent);
+    }
   `]
 })
 export class NavbarComponent implements OnInit {
@@ -151,16 +182,24 @@ export class NavbarComponent implements OnInit {
   private dialog = inject(MatDialog);
   private pwaService = inject(PwaService);
   private themeService = inject(ThemeService);
+  private notificationsService = inject(NotificationsService);
+  private wsService = inject(WebSocketService);
   private cdr = inject(ChangeDetectorRef);
   protected brandConfig = inject(BrandConfigService);
   
   currentUser = signal<User | null>(null);
   showInstallButton = signal(false);
   isDarkTheme = signal(false);
+  unreadCount = signal<number>(0);
   
   ngOnInit() {
     this.authService.currentUser$.subscribe(user => {
       this.currentUser.set(user);
+      
+      // Initialize WebSocket and notifications when user is authenticated
+      if (user) {
+        this.initializeNotifications();
+      }
     });
     
     // Check if PWA is installable
@@ -175,6 +214,19 @@ export class NavbarComponent implements OnInit {
     
     // Load user theme preferences
     this.themeService.loadAndApplyUserTheme();
+  }
+
+  private initializeNotifications() {
+    // Connect WebSocket for real-time updates
+    this.wsService.connect();
+    
+    // Subscribe to notification count updates
+    this.notificationsService.unreadCount$.subscribe(count => {
+      this.unreadCount.set(count);
+    });
+    
+    // Request notification permission
+    this.notificationsService.requestNotificationPermission();
   }
   
   showInstallModal() {
@@ -196,6 +248,10 @@ export class NavbarComponent implements OnInit {
   
   goToDashboard() {
     this.router.navigate(['/dashboard']);
+  }
+
+  goToNotifications() {
+    this.router.navigate(['/notifications']);
   }
   
   logout() {

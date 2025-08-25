@@ -23,11 +23,15 @@ export class Message {
   @Column('array')
   readBy: ObjectId[];
 
+  @Column({ type: 'array', nullable: true })
+  reactions?: { userId: ObjectId; emoji: string; createdAt: Date }[];
+
   @Column('datetime')
   createdAt: Date;
 
   constructor() {
     this.readBy = [];
+    this.reactions = [];
     this.createdAt = new Date();
   }
 }

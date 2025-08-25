@@ -32,7 +32,8 @@ const MODULE_THEMES: Record<string, Partial<ThemeColors>> = {
   'hr-management': { primary: '#8bc34a', accent: '#ff9800', secondary: '#607d8b' },
   'tasks-management': { primary: '#f44336', accent: '#ffeb3b', secondary: '#9e9e9e' },
   'project-tracking': { primary: '#00bcd4', accent: '#4caf50', secondary: '#795548' },
-  'project-timesheet': { primary: '#673ab7', accent: '#e91e63', secondary: '#607d8b' }
+  'project-timesheet': { primary: '#673ab7', accent: '#e91e63', secondary: '#607d8b' },
+  'messages': { primary: '#10B981', accent: '#EF4444', secondary: '#374151' }
 };
 
 @Injectable({

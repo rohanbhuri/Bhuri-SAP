@@ -103,7 +103,7 @@ const backend = spawn('npm', ['run', 'start:dev'], {
 });
 
 // Start frontend with dynamic port
-const frontend = spawn('npm', ['start', '--', '--port', brandConfig.app.port.toString()], {
+const frontend = spawn('npm', ['start', '--', '--project', brand, '--port', brandConfig.app.port.toString()], {
   cwd: './frontend',
   stdio: 'inherit',
   shell: true,

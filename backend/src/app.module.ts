@@ -14,6 +14,7 @@ import { HrManagementModule } from './hr-management/hr-management.module';
 import { ProjectsManagementModule } from './projects-management/projects-management.module';
 import { ProjectTrackingModule } from './project-tracking/project-tracking.module';
 import { MessagesModule } from './messages/messages.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { ProjectTimesheetModule } from './project-timesheet/project-timesheet.module';
 import { HealthModule } from './health/health.module';
 
@@ -40,6 +41,7 @@ import { HealthModule } from './health/health.module';
     ProjectsManagementModule,
     ProjectTrackingModule,
     MessagesModule,
+    NotificationsModule,
     ProjectTimesheetModule,
   ],
 })

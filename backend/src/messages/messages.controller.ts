@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body, Query, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, Body, Query, UseGuards, Request } from '@nestjs/common';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { PermissionsGuard } from '../guards/permissions.guard';
 import { MessagesService } from './messages.service';
@@ -19,8 +19,9 @@ export class MessagesController {
   }
 
   @Post('group/:organizationId')
-  async createGroup(@Param('organizationId') organizationId: string, @Body() body: { name: string; memberIds: string[] }) {
-    return this.messagesService.createGroup(organizationId, body.name, body.memberIds || []);
+  async createGroup(@Request() req, @Param('organizationId') organizationId: string, @Body() body: { name: string; memberIds: string[] }) {
+    const memberIds = [...(body.memberIds || []), req.user.userId];
+    return this.messagesService.createGroup(organizationId, body.name, memberIds);
   }
 
   @Get('conversations/:organizationId')
@@ -36,5 +37,30 @@ export class MessagesController {
   @Post('chat/:conversationId')
   async sendMessage(@Request() req, @Param('conversationId') conversationId: string, @Body() body: { content: string }) {
     return this.messagesService.sendMessage(conversationId, req.user.userId, body.content);
+  }
+
+  @Post('chat/:conversationId/read')
+  async markAsRead(@Request() req, @Param('conversationId') conversationId: string) {
+    return this.messagesService.markAsRead(conversationId, req.user.userId);
+  }
+
+  @Post('chat/:conversationId/typing')
+  async setTyping(@Request() req, @Param('conversationId') conversationId: string, @Body() body: { isTyping: boolean }) {
+    return this.messagesService.setTyping(conversationId, req.user.userId, body.isTyping);
+  }
+
+  @Post(':messageId/reactions')
+  async addReaction(@Request() req, @Param('messageId') messageId: string, @Body() body: { emoji: string }) {
+    return this.messagesService.addReaction(messageId, req.user.userId, body.emoji);
+  }
+
+  @Delete(':messageId/reactions/:emoji')
+  async removeReaction(@Request() req, @Param('messageId') messageId: string, @Param('emoji') emoji: string) {
+    return this.messagesService.removeReaction(messageId, req.user.userId, emoji);
+  }
+
+  @Get('search')
+  async searchMessages(@Request() req, @Query('q') query: string, @Query('conversationId') conversationId?: string) {
+    return this.messagesService.searchMessages(req.user.userId, query, conversationId);
   }
 }

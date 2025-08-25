@@ -111,6 +111,7 @@ export class NotificationsComponent {
 
   ngOnInit() {
     this.loadNotifications();
+    this.subscribeToRealTimeUpdates();
   }
 
   loadNotifications() {
@@ -124,13 +125,27 @@ export class NotificationsComponent {
     });
   }
 
+  subscribeToRealTimeUpdates() {
+    // Subscribe to real-time notification updates
+    this.notificationsService.notifications$.subscribe(notifications => {
+      this.notifications.set(notifications);
+    });
+  }
+
   handleNotificationClick(notification: Notification) {
     if (!notification.isRead) {
       this.markAsRead(notification);
     }
     
     if (notification.type === 'message') {
-      this.router.navigate(['/messages']);
+      // Navigate to messages page and optionally open specific conversation
+      if (notification.data?.conversationId) {
+        this.router.navigate(['/messages'], {
+          queryParams: { conversation: notification.data.conversationId }
+        });
+      } else {
+        this.router.navigate(['/messages']);
+      }
     }
   }
 

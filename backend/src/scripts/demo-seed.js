@@ -37,7 +37,7 @@ class DemoSeeder {
   }
 
   async clearCollections() {
-    const collections = ['users', 'organizations', 'roles', 'permissions', 'modules', 'departments', 'projects', 'contacts', 'leads', 'deals', 'tasks', 'employees'];
+    const collections = ['users', 'organizations', 'roles', 'permissions', 'modules', 'departments', 'projects', 'contacts', 'leads', 'deals', 'tasks', 'employees', 'conversations', 'messages'];
     
     for (const collectionName of collections) {
       try {
@@ -108,6 +108,7 @@ class DemoSeeder {
     await this.seedProjects();
     await this.seedLeads();
     await this.seedTasks();
+    await this.seedMessages();
   }
 
   async activateModulesForSuperAdmins() {
@@ -300,6 +301,132 @@ class DemoSeeder {
     if (tasks.length > 0) {
       await this.db.collection('tasks').insertMany(tasks);
       console.log(`✅ Seeded ${tasks.length} tasks`);
+    }
+  }
+
+  async seedMessages() {
+    const organizations = await this.db.collection('organizations').find({}).toArray();
+    const users = await this.db.collection('users').find({}).toArray();
+    
+    if (organizations.length === 0 || users.length < 2) {
+      console.log('⚠️ Not enough organizations or users for messages seeding');
+      return;
+    }
+
+    const conversations = [];
+    const messages = [];
+
+    for (const org of organizations) {
+      const orgUsers = users.filter(u => u.organizationIds.some(id => id.equals(org._id)));
+      
+      if (orgUsers.length < 2) continue;
+
+      // Create DM conversations between users
+      for (let i = 0; i < orgUsers.length - 1; i++) {
+        for (let j = i + 1; j < Math.min(i + 3, orgUsers.length); j++) {
+          const user1 = orgUsers[i];
+          const user2 = orgUsers[j];
+          
+          const conversationId = new ObjectId();
+          conversations.push({
+            _id: conversationId,
+            organizationId: org._id,
+            type: 'dm',
+            memberIds: [user1._id, user2._id],
+            lastMessagePreview: [],
+            createdAt: new Date()
+          });
+
+          // Add sample messages
+          const sampleMessages = [
+            { sender: user1, content: `Hey ${user2.firstName}! How are you doing?` },
+            { sender: user2, content: `Hi ${user1.firstName}! I'm doing great, thanks for asking. How about you?` },
+            { sender: user1, content: 'I\'m good too! Just working on some new features for our system.' },
+            { sender: user2, content: 'That sounds exciting! Can\'t wait to see what you\'ve built.' }
+          ];
+
+          for (let k = 0; k < sampleMessages.length; k++) {
+            const msgData = sampleMessages[k];
+            const messageId = new ObjectId();
+            
+            messages.push({
+              _id: messageId,
+              conversationId: conversationId,
+              organizationId: org._id,
+              senderId: msgData.sender._id,
+              content: msgData.content,
+              readBy: [msgData.sender._id],
+              reactions: [],
+              createdAt: new Date(Date.now() - (sampleMessages.length - k) * 60000) // 1 minute apart
+            });
+          }
+
+          // Update conversation with last message preview
+          const lastMessage = sampleMessages[sampleMessages.length - 1];
+          conversations[conversations.length - 1].lastMessagePreview = [{
+            senderId: lastMessage.sender._id,
+            content: lastMessage.content.slice(0, 120),
+            at: new Date()
+          }];
+        }
+      }
+
+      // Create a group conversation if there are enough users
+      if (orgUsers.length >= 3) {
+        const groupConversationId = new ObjectId();
+        const groupMembers = orgUsers.slice(0, Math.min(5, orgUsers.length));
+        
+        conversations.push({
+          _id: groupConversationId,
+          organizationId: org._id,
+          type: 'group',
+          name: `${org.name} Team Chat`,
+          memberIds: groupMembers.map(u => u._id),
+          lastMessagePreview: [],
+          createdAt: new Date()
+        });
+
+        // Add group messages
+        const groupMessages = [
+          { sender: groupMembers[0], content: `Welcome to our ${org.name} team chat!` },
+          { sender: groupMembers[1], content: 'Thanks for setting this up!' },
+          { sender: groupMembers[2], content: 'Great to be part of the team! 🎉' }
+        ];
+
+        for (let k = 0; k < groupMessages.length; k++) {
+          const msgData = groupMessages[k];
+          const messageId = new ObjectId();
+          
+          messages.push({
+            _id: messageId,
+            conversationId: groupConversationId,
+            organizationId: org._id,
+            senderId: msgData.sender._id,
+            content: msgData.content,
+            readBy: [msgData.sender._id],
+            reactions: [],
+            createdAt: new Date(Date.now() - (groupMessages.length - k) * 120000) // 2 minutes apart
+          });
+        }
+
+        // Update group conversation with last message preview
+        const lastGroupMessage = groupMessages[groupMessages.length - 1];
+        conversations[conversations.length - 1].lastMessagePreview = [{
+          senderId: lastGroupMessage.sender._id,
+          content: lastGroupMessage.content.slice(0, 120),
+          at: new Date()
+        }];
+      }
+    }
+
+    if (conversations.length > 0) {
+      await this.db.collection('conversations').insertMany(conversations);
+      console.log(`💬 Seeded ${conversations.length} conversations`);
+    }
+
+    if (messages.length > 0) {
+      await this.db.collection('messages').insertMany(messages);
+      console.log(`📨 Seeded ${messages.length} messages`);
     }
   }
 

@@ -1,6 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, interval } from 'rxjs';
+import { finalize } from 'rxjs/operators';
 import { BrandConfigService } from './brand-config.service';
 
 export interface OrgMember {
@@ -76,14 +77,30 @@ export class MessagesApiService {
   private messageState = signal<MessageState>({ loading: false, error: null, sending: false });
   private typingUsers = new BehaviorSubject<{[conversationId: string]: string[]}>({});
   private onlineUsers = new BehaviorSubject<string[]>([]);
+  private unreadMessages = new BehaviorSubject<{[userId: string]: boolean}>({});
 
   getMessageState = this.messageState.asReadonly();
   getTypingUsers = () => this.typingUsers.asObservable();
   getOnlineUsers = () => this.onlineUsers.asObservable();
+  getUnreadMessages = () => this.unreadMessages.asObservable();
+
+  setUnreadMessage(userId: string, hasUnread: boolean) {
+    const current = this.unreadMessages.value;
+    this.unreadMessages.next({ ...current, [userId]: hasUnread });
+  }
+
+  clearUnreadMessage(userId: string) {
+    const current = this.unreadMessages.value;
+    const updated = { ...current };
+    delete updated[userId];
+    this.unreadMessages.next(updated);
+  }
 
   getOrganizationsWithMembers(): Observable<OrgWithMembers[]> {
     this.messageState.update(s => ({ ...s, loading: true, error: null }));
-    return this.http.get<OrgWithMembers[]>(`${this.api}/messages/org-members`);
+    return this.http.get<OrgWithMembers[]>(`${this.api}/messages/org-members`).pipe(
+      finalize(() => this.messageState.update(s => ({ ...s, loading: false })))
+    );
   }
 
   getOrCreateDM(organizationId: string, otherUserId: string): Observable<Conversation> {
@@ -116,7 +133,9 @@ export class MessagesApiService {
     this.messageState.update(s => ({ ...s, sending: true }));
     return this.http.post<Message>(`${this.api}/messages/chat/${conversationId}`, {
       content,
-    });
+    }).pipe(
+      finalize(() => this.messageState.update(s => ({ ...s, sending: false })))
+    );
   }
 
   // Enhanced messaging features
@@ -149,37 +168,12 @@ export class MessagesApiService {
     return this.http.get<Message[]>(`${this.api}/messages/search?${params.toString()}`);
   }
 
-  // Real-time simulation (replace with WebSocket in production)
-  simulateRealTimeUpdates() {
-    interval(5000).subscribe(() => {
-      // Simulate typing indicators
-      const currentTyping = this.typingUsers.value;
-      // Update typing status randomly for demo
+
+  // Create group conversation
+  createGroup(organizationId: string, name: string, memberIds: string[]): Observable<Conversation> {
+    return this.http.post<Conversation>(`${this.api}/messages/group/${organizationId}`, {
+      name,
+      memberIds,
     });
-  }
-}
-
-// WebSocket service for real-time messaging (future implementation)
-@Injectable({ providedIn: 'root' })
-export class MessageWebSocketService {
-  private socket?: WebSocket;
-  private messageSubject = new BehaviorSubject<Message | null>(null);
-  private typingSubject = new BehaviorSubject<{conversationId: string, users: string[]} | null>(null);
-
-  connect(token: string) {
-    // WebSocket connection implementation
-    // this.socket = new WebSocket(`ws://localhost:3000/messages?token=${token}`);
-  }
-
-  disconnect() {
-    this.socket?.close();
-  }
-
-  getMessages() {
-    return this.messageSubject.asObservable();
-  }
-
-  getTypingUpdates() {
-    return this.typingSubject.asObservable();
   }
 }

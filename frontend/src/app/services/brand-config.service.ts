@@ -39,8 +39,8 @@ export class BrandConfigService {
       name: 'Beax Resource Manager',
       version: '1.0.0',
       description: 'Resource Management System',
-      port: 3000,
-      apiUrl: typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? 
+      port: 4200,
+      apiUrl: typeof window !== 'undefined' && window.location.hostname !== 'localhost' ?
         `http://${window.location.hostname}:3000/api` : 'http://localhost:3000/api'
     }
   };

@@ -5,8 +5,8 @@
   "mcpServers": {
     "trueprocess-frontend": {
       "url": "http://localhost:8931/mcp",
-      "disabled": false,
-      "timeout": 60000
+      "timeout": 60000,
+      "disabled": false
     }
   },
   "tools": [
@@ -52,5 +52,6 @@
     }
   },
   "includedFiles": [],
-  "resources": []
+  "resources": [],
+  "promptHooks": []
 }
