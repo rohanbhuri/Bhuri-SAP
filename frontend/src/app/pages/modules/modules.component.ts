@@ -22,6 +22,7 @@ import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { SeoService } from '../../services/seo.service';
 import { BrandConfigService } from '../../services/brand-config.service';
+import { ThemeService } from '../../services/theme.service';
 
 @Component({
   selector: 'app-modules',
@@ -93,11 +94,11 @@ import { BrandConfigService } from '../../services/brand-config.service';
               >
                 <div class="module-header">
                   <div class="module-info">
-                    <h3
+                    <h3 
                       class="module-title"
-                      [style.color]="module.color || 'inherit'"
+                      [style.color]="module.color || '#ffffff'"
                     >
-                      {{ module.displayName }}
+                      {{ module.name }}
                     </h3>
                     <div class="module-status">
                       @if (module.isActive) {
@@ -289,83 +290,183 @@ import { BrandConfigService } from '../../services/brand-config.service';
         padding: 24px;
         max-width: 1400px;
         margin: 0 auto;
+        background: var(--theme-background);
+        min-height: calc(100vh - 120px);
       }
 
       .page-header {
-        margin-bottom: 24px;
+        background: linear-gradient(135deg, 
+          color-mix(in srgb, var(--theme-primary) 8%, var(--theme-surface)),
+          color-mix(in srgb, var(--theme-accent) 3%, var(--theme-surface))
+        );
+        padding: 32px;
+        border-radius: 16px;
+        margin-bottom: 32px;
+        border: 1px solid color-mix(in srgb, var(--theme-primary) 20%, transparent);
+        position: relative;
+        overflow: hidden;
+        
+        &::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 4px;
+          background: linear-gradient(90deg, var(--theme-primary), var(--theme-accent));
+        }
       }
 
       .breadcrumb {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
-        color: color-mix(in srgb, var(--theme-on-surface) 60%, transparent);
-        font-size: 0.9rem;
-        margin-bottom: 8px;
+        gap: 8px;
+        color: color-mix(in srgb, var(--theme-on-surface) 70%, transparent);
+        font-size: 0.875rem;
+        margin-bottom: 12px;
+        font-weight: 500;
+        
+        mat-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+        }
       }
+      
       .breadcrumb .current {
-        color: var(--theme-on-surface);
+        color: var(--theme-primary);
+        font-weight: 600;
       }
 
       h1 {
-        margin: 0 0 6px;
-        font-weight: 600;
+        margin: 0 0 8px;
+        font-weight: 700;
+        font-size: 2.25rem;
+        color: var(--theme-on-surface);
+        letter-spacing: -0.025em;
       }
+      
       .subtitle {
-        color: color-mix(in srgb, var(--theme-on-surface) 65%, transparent);
+        color: color-mix(in srgb, var(--theme-on-surface) 70%, transparent);
         margin: 0;
+        font-size: 1.125rem;
+        font-weight: 400;
       }
 
       .module-tabs {
         background: var(--theme-surface);
-        border-radius: 12px;
+        border: 1px solid color-mix(in srgb, var(--theme-on-surface) 12%, transparent);
+        border-radius: 16px;
+        box-shadow: 0 2px 8px color-mix(in srgb, var(--theme-on-surface) 8%, transparent);
+        transition: all 0.2s ease;
         overflow: hidden;
+        
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px color-mix(in srgb, var(--theme-on-surface) 15%, transparent);
+        }
+        
+        ::ng-deep .mat-mdc-tab-group {
+          .mat-mdc-tab-header {
+            background: color-mix(in srgb, var(--theme-primary) 5%, var(--theme-surface));
+            border-bottom: 1px solid color-mix(in srgb, var(--theme-on-surface) 8%, transparent);
+          }
+          
+          .mat-mdc-tab {
+            &.mdc-tab--active .mdc-tab__text-label {
+              color: var(--theme-primary);
+              font-weight: 600;
+            }
+          }
+          
+          .mat-mdc-tab-body-content {
+            overflow: visible;
+          }
+        }
       }
 
       .tab-content {
-        padding: 24px;
+        padding: 32px;
       }
 
       .search-bar {
-        margin-bottom: 24px;
+        margin-bottom: 32px;
       }
 
       .search-field {
         width: 100%;
-        max-width: 400px;
+        max-width: 500px;
+        
+        ::ng-deep .mat-mdc-form-field {
+          .mat-mdc-text-field-wrapper {
+            background-color: var(--theme-surface);
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px color-mix(in srgb, var(--theme-on-surface) 5%, transparent);
+          }
+          
+          &.mat-focused {
+            .mat-mdc-text-field-wrapper {
+              border-color: var(--theme-primary);
+              box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-primary) 20%, transparent);
+            }
+          }
+        }
       }
 
       .modules-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-        gap: 20px;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 24px;
       }
 
       .module-card {
-        border: 1px solid
-          color-mix(in srgb, var(--theme-on-surface) 12%, transparent);
+        background: var(--theme-surface);
+        border: 1px solid color-mix(in srgb, var(--theme-on-surface) 12%, transparent);
         border-radius: 12px;
-        transition: all 0.2s ease;
+        box-shadow: 0 2px 8px color-mix(in srgb, var(--theme-on-surface) 8%, transparent);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-left: 4px solid var(--theme-primary);
         position: relative;
         overflow: hidden;
-      }
-
-      .module-card:hover {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        transform: translateY(-2px);
-      }
-
-      .module-card.active {
-        border-color: var(--theme-primary);
-        background: color-mix(
-          in srgb,
-          var(--theme-primary) 5%,
-          var(--theme-surface)
-        );
+        
+        &:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 12px 40px color-mix(in srgb, var(--theme-on-surface) 15%, transparent);
+        }
+        
+        &.active {
+          border-left: 6px solid var(--theme-primary);
+          background: linear-gradient(135deg, 
+            color-mix(in srgb, var(--theme-primary) 8%, var(--theme-surface)),
+            color-mix(in srgb, var(--theme-accent) 3%, var(--theme-surface))
+          );
+          
+          &::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-top: 20px solid var(--theme-success);
+          }
+          
+          &::after {
+            content: '✓';
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            color: white;
+            font-size: 10px;
+            font-weight: bold;
+          }
+        }
       }
 
       .module-header {
-        padding: 16px 16px 8px;
+        padding: 20px 20px 12px;
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
@@ -373,141 +474,297 @@ import { BrandConfigService } from '../../services/brand-config.service';
 
       .module-title {
         margin: 0;
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: var(--theme-on-surface);
+        font-size: 1.25rem;
+        font-weight: 700;
+        letter-spacing: -0.01em;
       }
 
       .module-status {
-        margin-top: 8px;
+        margin-top: 12px;
       }
 
       .status-chip {
         font-size: 0.75rem;
-        height: 24px;
-        font-weight: 500;
-      }
-
-      .status-chip.active {
-        background: color-mix(in srgb, #4caf50 15%, transparent);
-        color: #2e7d32;
-      }
-
-      .status-chip.available {
-        background: color-mix(in srgb, #2196f3 15%, transparent);
-        color: #1565c0;
-      }
-
-      .status-chip.restricted {
-        background: color-mix(in srgb, #ff9800 15%, transparent);
-        color: #ef6c00;
-      }
-
-      .status-chip.pending {
-        background: color-mix(in srgb, #ff9800 15%, transparent);
-        color: #ef6c00;
+        height: 28px;
+        font-weight: 600;
+        border-radius: 14px;
+        padding: 0 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        
+        &:focus-visible {
+          outline: 2px solid var(--theme-primary);
+          outline-offset: 2px;
+        }
+        
+        mat-icon {
+          font-size: 14px;
+          width: 14px;
+          height: 14px;
+        }
+        
+        &.active {
+          background-color: color-mix(in srgb, var(--theme-success) 15%, transparent);
+          color: var(--theme-success);
+          border: 1px solid color-mix(in srgb, var(--theme-success) 30%, transparent);
+        }
+        
+        &.available {
+          background: color-mix(in srgb, var(--theme-primary) 15%, transparent);
+          color: var(--theme-primary);
+          border: 1px solid color-mix(in srgb, var(--theme-primary) 30%, transparent);
+        }
+        
+        &.restricted {
+          background-color: color-mix(in srgb, var(--theme-warning) 15%, transparent);
+          color: var(--theme-warning);
+          border: 1px solid color-mix(in srgb, var(--theme-warning) 30%, transparent);
+        }
+        
+        &.pending {
+          background-color: color-mix(in srgb, var(--theme-warning) 15%, transparent);
+          color: var(--theme-warning);
+          border: 1px solid color-mix(in srgb, var(--theme-warning) 30%, transparent);
+        }
       }
 
       .module-description {
-        color: color-mix(in srgb, var(--theme-on-surface) 70%, transparent);
-        line-height: 1.5;
+        color: color-mix(in srgb, var(--theme-on-surface) 75%, transparent);
+        line-height: 1.6;
         margin: 0;
+        font-size: 0.9375rem;
       }
 
       .module-actions {
-        padding: 16px;
-        border-top: 1px solid
-          color-mix(in srgb, var(--theme-on-surface) 8%, transparent);
+        padding: 20px;
+        border-top: 1px solid color-mix(in srgb, var(--theme-on-surface) 8%, transparent);
+        background: color-mix(in srgb, var(--theme-surface) 50%, transparent);
       }
 
       .active-module-actions {
         display: flex;
-        gap: 8px;
-      }
-
-      .active-module-actions button {
-        flex: 1;
+        gap: 12px;
+        align-items: center;
+        
+        button {
+          border-radius: 8px;
+          font-weight: 600;
+          transition: all 0.2s ease;
+          
+          &[color="primary"] {
+            flex: 1;
+            background-color: var(--theme-primary);
+            color: var(--theme-on-primary);
+            
+            &:hover {
+              background-color: color-mix(in srgb, var(--theme-primary) 85%, black);
+              transform: translateY(-1px);
+              box-shadow: 0 6px 20px color-mix(in srgb, var(--theme-primary) 25%, transparent);
+            }
+          }
+          
+          &[color="warn"] {
+            background-color: transparent;
+            color: var(--theme-error);
+            border: 1px solid var(--theme-error);
+            
+            &:hover {
+              background: color-mix(in srgb, var(--theme-error) 10%, transparent);
+            }
+          }
+        }
+        
+        .mat-mdc-icon-button {
+          color: var(--theme-primary);
+          background-color: color-mix(in srgb, var(--theme-primary) 15%, transparent);
+          border-radius: 50%;
+          padding: 8px;
+          margin-right: 8px;
+          width: 40px;
+          height: 40px;
+          
+          &:hover {
+            transform: scale(1.1);
+          }
+        }
       }
 
       .requests-list {
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 20px;
       }
 
       .request-card {
-        border: 1px solid
-          color-mix(in srgb, var(--theme-on-surface) 12%, transparent);
-        border-radius: 8px;
+        background: var(--theme-surface);
+        border: 1px solid color-mix(in srgb, var(--theme-on-surface) 12%, transparent);
+        border-radius: 12px;
+        box-shadow: 0 2px 8px color-mix(in srgb, var(--theme-on-surface) 8%, transparent);
+        transition: all 0.2s ease;
+        overflow: hidden;
+        
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px color-mix(in srgb, var(--theme-on-surface) 15%, transparent);
+        }
       }
 
       .request-header {
-        padding: 16px;
+        padding: 20px;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        background: color-mix(in srgb, var(--theme-primary) 3%, var(--theme-surface));
       }
 
       .request-info h4 {
-        margin: 0 0 4px;
-        font-weight: 600;
+        margin: 0 0 6px;
+        font-weight: 700;
+        font-size: 1.125rem;
+        color: var(--theme-on-surface);
       }
 
       .request-user {
         margin: 0 0 4px;
-        font-size: 0.9rem;
+        font-size: 0.9375rem;
         color: var(--theme-primary);
-        font-weight: 500;
+        font-weight: 600;
       }
 
       .request-date {
         margin: 0;
-        font-size: 0.9rem;
-        color: color-mix(in srgb, var(--theme-on-surface) 60%, transparent);
+        font-size: 0.875rem;
+        color: color-mix(in srgb, var(--theme-on-surface) 65%, transparent);
       }
 
       .request-actions {
-        padding: 0 16px 16px;
+        padding: 0 20px 20px;
         display: flex;
-        gap: 12px;
+        gap: 16px;
+        
+        button {
+          border-radius: 8px;
+          font-weight: 600;
+          transition: all 0.2s ease;
+          
+          &[color="primary"] {
+            background-color: var(--theme-primary);
+            color: var(--theme-on-primary);
+            
+            &:hover {
+              background-color: color-mix(in srgb, var(--theme-primary) 85%, black);
+              transform: translateY(-1px);
+            }
+          }
+          
+          &[color="warn"] {
+            background-color: transparent;
+            color: var(--theme-error);
+            border: 1px solid var(--theme-error);
+            
+            &:hover {
+              background: color-mix(in srgb, var(--theme-error) 10%, transparent);
+            }
+          }
+        }
       }
 
       .empty-state {
         text-align: center;
-        padding: 48px 24px;
+        padding: 64px 32px;
         color: color-mix(in srgb, var(--theme-on-surface) 60%, transparent);
-      }
-
-      .empty-icon {
-        font-size: 48px;
-        width: 48px;
-        height: 48px;
-        margin-bottom: 16px;
-        opacity: 0.5;
-      }
-
-      .empty-state h3 {
-        margin: 0 0 8px;
-        color: var(--theme-on-surface);
-      }
-
-      .empty-state p {
-        margin: 0;
+        
+        .empty-icon {
+          color: var(--theme-primary);
+          background-color: color-mix(in srgb, var(--theme-primary) 15%, transparent);
+          font-size: 64px;
+          width: 64px;
+          height: 64px;
+          margin: 0 auto 24px;
+          opacity: 0.7;
+          border-radius: 50%;
+          padding: 16px;
+        }
+        
+        h3 {
+          margin: 0 0 12px;
+          color: var(--theme-on-surface);
+          font-weight: 600;
+          font-size: 1.5rem;
+        }
+        
+        p {
+          margin: 0;
+          font-size: 1rem;
+          line-height: 1.5;
+        }
       }
 
       @media (max-width: 768px) {
+        .page {
+          padding: 16px;
+        }
+        
+        .page-header {
+          padding: 24px;
+          margin-bottom: 24px;
+          
+          h1 {
+            font-size: 1.875rem;
+          }
+        }
+        
+        .tab-content {
+          padding: 20px;
+        }
+        
         .modules-grid {
           grid-template-columns: 1fr;
+          gap: 16px;
         }
-
+        
         .request-header {
           flex-direction: column;
           align-items: flex-start;
-          gap: 12px;
+          gap: 16px;
         }
-
+        
         .request-actions {
           flex-direction: column;
+        }
+        
+        .active-module-actions {
+          flex-wrap: wrap;
+          
+          button {
+            min-width: 120px;
+          }
+        }
+      }
+      
+      :host-context(body.dark-theme) .module-card {
+        border-color: color-mix(in srgb, var(--theme-on-surface) 20%, transparent);
+      }
+      
+      :host-context(body.dark-theme) .module-card:hover {
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+      }
+      
+      :host-context(body.dark-theme) .page-header {
+        border-color: color-mix(in srgb, var(--theme-primary) 30%, transparent);
+      }
+      
+
+      
+      @media (prefers-reduced-motion: reduce) {
+        .module-card,
+        .request-card {
+          transition: none;
+          
+          &:hover {
+            transform: none;
+          }
         }
       }
     `,
@@ -521,6 +778,7 @@ export class ModulesComponent implements OnInit {
   private snackBar = inject(MatSnackBar);
   private seoService = inject(SeoService);
   private brandConfig = inject(BrandConfigService);
+  private themeService = inject(ThemeService);
 
   modules = signal<AppModuleInfo[]>([]);
   filteredModules = signal<AppModuleInfo[]>([]);
@@ -535,6 +793,8 @@ export class ModulesComponent implements OnInit {
     this.loadModules();
     this.loadPendingRequests();
     this.loadPinnedModules();
+    // Apply module-specific theme for modules page
+    this.themeService.applyModuleTheme('user-management');
   }
 
   private setupSEO() {

@@ -378,102 +378,64 @@ class DemoSeeder {
     if (this.projectName === 'beax-rm') {
       return [
         // Core Modules
-        { name: 'Dashboard', description: 'Main dashboard with widgets', isActive: true, icon: 'dashboard', route: '/dashboard', category: 'Core', permissionType: 'public' },
-        { name: 'Projects Management', description: 'Manage projects and deliverables', isActive: true, icon: 'work', route: '/modules/projects-management', category: 'Project Management', permissionType: 'admin' },
-        { name: 'Project Tracking', description: 'Track project progress and milestones', isActive: true, icon: 'track_changes', route: '/modules/project-tracking', category: 'Project Management', permissionType: 'admin' },
-        { name: 'Project Timesheet', description: 'Track time spent on projects', isActive: true, icon: 'schedule', route: '/modules/project-timesheet', category: 'Project Management', permissionType: 'admin' },
-        { name: 'Tasks Management', description: 'Task creation and assignment', isActive: true, icon: 'task', route: '/modules/tasks-management', category: 'Project Management', permissionType: 'admin' },
+        { name: 'User Management', description: 'Manage users, roles, and permissions', isActive: true, icon: 'people', route: '/modules/user-management', category: 'Core', permissionType: 'super_admin' },
+        { name: 'Organization Management', description: 'Manage organizations and membership requests', isActive: true, icon: 'business', route: '/modules/organization-management', category: 'Core', permissionType: 'super_admin' },
+        { name: 'My Organizations', description: 'View and join public organizations', isActive: true, icon: 'groups', route: '/modules/my-organizations', category: 'Core', permissionType: 'public' },
+        { name: 'CRM', description: 'Customer relationship management', isActive: true, icon: 'business_center', route: '/modules/crm', category: 'Sales', permissionType: 'admin' },
         
-        // CRM & Sales
-        { name: 'CRM', description: 'Customer relationship management', isActive: true, icon: 'contacts', route: '/modules/crm', category: 'Sales & CRM', permissionType: 'admin' },
-        { name: 'Leads Management', description: 'Manage sales leads', isActive: true, icon: 'trending_up', route: '/modules/leads', category: 'Sales & CRM', permissionType: 'admin' },
-        { name: 'Deals Management', description: 'Manage sales deals', isActive: true, icon: 'handshake', route: '/modules/deals', category: 'Sales & CRM', permissionType: 'admin' },
-        { name: 'Contacts Management', description: 'Manage customer contacts', isActive: true, icon: 'contact_phone', route: '/modules/contacts', category: 'Sales & CRM', permissionType: 'admin' },
+        // HR Modules
+        { name: 'HR Management', description: 'Human resources management', isActive: true, icon: 'people', route: '/modules/hr-management', category: 'HR', permissionType: 'admin' },
+        { name: 'Staff Management', description: 'Manage staff records and information', isActive: false, icon: 'badge', route: '/modules/staff-management', category: 'HR', permissionType: 'admin' },
+        { name: 'Payroll Management', description: 'Manage employee payroll and compensation', isActive: false, icon: 'payments', route: '/modules/payroll-management', category: 'HR', permissionType: 'admin' },
+        { name: 'Role Assignment', description: 'Assign roles and responsibilities', isActive: false, icon: 'assignment_ind', route: '/modules/assigning-roles', category: 'HR', permissionType: 'admin' },
         
-        // HR Management
-        { name: 'HR Management', description: 'Human resource management', isActive: true, icon: 'badge', route: '/modules/hr-management', category: 'Human Resources', permissionType: 'admin' },
-        { name: 'Employee Management', description: 'Manage employee records', isActive: true, icon: 'people', route: '/modules/employees', category: 'Human Resources', permissionType: 'admin' },
-        { name: 'Attendance Management', description: 'Track employee attendance', isActive: true, icon: 'access_time', route: '/modules/attendance', category: 'Human Resources', permissionType: 'admin' },
-        { name: 'Leave Management', description: 'Manage employee leaves', isActive: true, icon: 'event_busy', route: '/modules/leaves', category: 'Human Resources', permissionType: 'admin' },
-        { name: 'Payroll Management', description: 'Manage employee payroll', isActive: true, icon: 'payment', route: '/modules/payroll', category: 'Human Resources', permissionType: 'admin' },
-        { name: 'Performance Management', description: 'Track employee performance', isActive: true, icon: 'trending_up', route: '/modules/performance', category: 'Human Resources', permissionType: 'admin' },
+        // Project Management
+        { name: 'Tasks Management', description: 'Manage tasks and assignments', isActive: false, icon: 'task', route: '/modules/tasks-management', category: 'Project', permissionType: 'admin' },
+        { name: 'Projects Management', description: 'Manage projects and deliverables', isActive: true, icon: 'work', route: '/modules/projects-management', category: 'Project', permissionType: 'admin' },
+        { name: 'Project Tracking', description: 'Track project progress and milestones', isActive: true, icon: 'track_changes', route: '/modules/project-tracking', category: 'Project', permissionType: 'admin' },
+        { name: 'Project Timesheet', description: 'Track time spent on projects', isActive: true, icon: 'schedule', route: '/modules/project-timesheet', category: 'Project', permissionType: 'admin' },
         
-        // Administration
-        { name: 'User Management', description: 'Manage system users', isActive: true, icon: 'manage_accounts', route: '/modules/user-management', category: 'Administration', permissionType: 'super_admin' },
-        { name: 'Organization Management', description: 'Manage organizations', isActive: true, icon: 'business', route: '/modules/organization-management', category: 'Administration', permissionType: 'super_admin' },
-        { name: 'Roles & Permissions', description: 'Manage user roles', isActive: true, icon: 'security', route: '/modules/roles', category: 'Administration', permissionType: 'super_admin' },
-        { name: 'Module Management', description: 'Manage system modules', isActive: true, icon: 'extension', route: '/modules', category: 'Administration', permissionType: 'super_admin' },
+        // Sales & CRM
+        { name: 'Leads Management', description: 'Manage sales leads and prospects', isActive: false, icon: 'person_add', route: '/modules/leads-management', category: 'Sales', permissionType: 'admin' },
+        { name: 'Sales Management', description: 'Manage sales processes and pipeline', isActive: false, icon: 'trending_up', route: '/modules/sales-management', category: 'Sales', permissionType: 'admin' },
+        { name: 'Deal Management', description: 'Manage deals and opportunities', isActive: false, icon: 'handshake', route: '/modules/deal-management', category: 'Sales', permissionType: 'admin' },
         
-        // Communication
-        { name: 'Messages', description: 'Internal messaging system', isActive: true, icon: 'message', route: '/modules/messages', category: 'Communication', permissionType: 'public' },
-        { name: 'Conversations', description: 'Manage conversations', isActive: true, icon: 'chat', route: '/modules/conversations', category: 'Communication', permissionType: 'public' },
+        // Operations
+        { name: 'Inventory Management', description: 'Manage inventory and stock levels', isActive: false, icon: 'inventory', route: '/modules/inventory-management', category: 'Operations', permissionType: 'admin' },
+        { name: 'Item Management', description: 'Manage items and products', isActive: false, icon: 'category', route: '/modules/item-management', category: 'Operations', permissionType: 'admin' },
         
-        // Analytics & Reporting
-        { name: 'Analytics Dashboard', description: 'Business analytics', isActive: true, icon: 'analytics', route: '/modules/analytics', category: 'Analytics', permissionType: 'admin' },
-        { name: 'Reports', description: 'Generate business reports', isActive: true, icon: 'assessment', route: '/modules/reports', category: 'Analytics', permissionType: 'admin' },
-        
-        // Asset & Inventory
-        { name: 'Asset Management', description: 'Manage company assets', isActive: true, icon: 'inventory', route: '/modules/assets', category: 'Operations', permissionType: 'admin' },
-        { name: 'Inventory Management', description: 'Manage inventory items', isActive: true, icon: 'warehouse', route: '/modules/inventory', category: 'Operations', permissionType: 'admin' },
-        
-        // Compliance & Documents
-        { name: 'Compliance Management', description: 'Manage compliance requirements', isActive: true, icon: 'verified', route: '/modules/compliance', category: 'Compliance', permissionType: 'admin' },
-        { name: 'Document Management', description: 'Manage documents', isActive: true, icon: 'description', route: '/modules/documents', category: 'Operations', permissionType: 'admin' },
-        
-        // Settings
-        { name: 'User Preferences', description: 'User preference settings', isActive: true, icon: 'tune', route: '/modules/preferences', category: 'Settings', permissionType: 'public' },
-        { name: 'System Settings', description: 'System configuration', isActive: true, icon: 'settings', route: '/settings', category: 'Settings', permissionType: 'super_admin' }
+        // Finance
+        { name: 'Budget Planner', description: 'Plan and manage budgets', isActive: false, icon: 'account_balance', route: '/modules/budget-planner', category: 'Finance', permissionType: 'admin' },
+        { name: 'Estimates Management', description: 'Create and manage estimates', isActive: false, icon: 'receipt', route: '/modules/estimates-management', category: 'Finance', permissionType: 'admin' },
+        { name: 'Contract Management', description: 'Manage contracts and agreements', isActive: false, icon: 'description', route: '/modules/contract-module', category: 'Finance', permissionType: 'admin' }
       ];
     } else if (this.projectName === 'true-process') {
       return [
-        // Core Process Modules
-        { name: 'Dashboard', description: 'Process management dashboard', isActive: true, icon: 'dashboard', route: '/dashboard', category: 'Core', permissionType: 'public' },
-        { name: 'Process Management', description: 'Core process management', isActive: true, icon: 'account_tree', route: '/modules/processes', category: 'Process Management', permissionType: 'admin' },
-        { name: 'Workflow Designer', description: 'Visual workflow design', isActive: true, icon: 'schema', route: '/modules/workflows', category: 'Process Management', permissionType: 'admin' },
-        { name: 'Task Management', description: 'Process task management', isActive: true, icon: 'task', route: '/modules/tasks-management', category: 'Process Management', permissionType: 'admin' },
-        { name: 'Process Templates', description: 'Pre-built process templates', isActive: true, icon: 'library_books', route: '/modules/templates', category: 'Process Management', permissionType: 'admin' },
+        // Core Modules (matching module-registry.ts and existing folders)
+        { name: 'User Management', description: 'Manage users, roles, and permissions', isActive: true, icon: 'people', route: '/modules/user-management', category: 'Core', permissionType: 'super_admin' },
+        { name: 'Organization Management', description: 'Manage organizations and membership requests', isActive: true, icon: 'business', route: '/modules/organization-management', category: 'Core', permissionType: 'super_admin' },
+        { name: 'My Organizations', description: 'View and join public organizations', isActive: true, icon: 'groups', route: '/modules/my-organizations', category: 'Core', permissionType: 'public' },
+        { name: 'CRM', description: 'Customer relationship management', isActive: true, icon: 'business_center', route: '/modules/crm', category: 'Sales', permissionType: 'admin' },
         
-        // Automation & Rules
-        { name: 'Automation Rules', description: 'Automated process triggers', isActive: true, icon: 'smart_toy', route: '/modules/automation', category: 'Automation', permissionType: 'admin' },
-        { name: 'Process Triggers', description: 'Event-based process triggers', isActive: true, icon: 'play_arrow', route: '/modules/triggers', category: 'Automation', permissionType: 'admin' },
-        { name: 'Rule Engine', description: 'Business rule management', isActive: true, icon: 'rule', route: '/modules/rules', category: 'Automation', permissionType: 'admin' },
+        // HR Modules
+        { name: 'HR Management', description: 'Human resources management', isActive: true, icon: 'people', route: '/modules/hr-management', category: 'HR', permissionType: 'admin' },
+        { name: 'Payroll Management', description: 'Manage employee payroll and compensation', isActive: false, icon: 'payments', route: '/modules/payroll-management', category: 'HR', permissionType: 'admin' },
         
-        // Analytics & Monitoring
-        { name: 'Process Analytics', description: 'Process performance analytics', isActive: true, icon: 'analytics', route: '/modules/analytics', category: 'Analytics', permissionType: 'admin' },
-        { name: 'Performance Monitoring', description: 'Real-time process monitoring', isActive: true, icon: 'monitor', route: '/modules/monitoring', category: 'Analytics', permissionType: 'admin' },
-        { name: 'Process Reports', description: 'Generate process reports', isActive: true, icon: 'assessment', route: '/modules/reports', category: 'Analytics', permissionType: 'admin' },
-        { name: 'KPI Dashboard', description: 'Key performance indicators', isActive: true, icon: 'speed', route: '/modules/kpi', category: 'Analytics', permissionType: 'admin' },
+        // Project Management
+        { name: 'Tasks Management', description: 'Manage tasks and assignments', isActive: false, icon: 'task', route: '/modules/tasks-management', category: 'Project', permissionType: 'admin' },
+        { name: 'Projects Management', description: 'Manage projects and deliverables', isActive: true, icon: 'work', route: '/modules/projects-management', category: 'Project', permissionType: 'admin' },
+        { name: 'Project Tracking', description: 'Track project progress and milestones', isActive: true, icon: 'track_changes', route: '/modules/project-tracking', category: 'Project', permissionType: 'admin' },
+        { name: 'Project Timesheet', description: 'Track time spent on projects', isActive: true, icon: 'schedule', route: '/modules/project-timesheet', category: 'Project', permissionType: 'admin' },
         
-        // Quality & Compliance
-        { name: 'Quality Management', description: 'Process quality assurance', isActive: true, icon: 'verified', route: '/modules/quality', category: 'Quality & Compliance', permissionType: 'admin' },
-        { name: 'Compliance Tracking', description: 'Track compliance requirements', isActive: true, icon: 'policy', route: '/modules/compliance', category: 'Quality & Compliance', permissionType: 'admin' },
-        { name: 'Audit Management', description: 'Process audit management', isActive: true, icon: 'fact_check', route: '/modules/audits', category: 'Quality & Compliance', permissionType: 'admin' },
-        
-        // Resource Management
-        { name: 'Resource Allocation', description: 'Allocate resources to processes', isActive: true, icon: 'assignment_ind', route: '/modules/resources', category: 'Resource Management', permissionType: 'admin' },
-        { name: 'Capacity Planning', description: 'Plan process capacity', isActive: true, icon: 'timeline', route: '/modules/capacity', category: 'Resource Management', permissionType: 'admin' },
-        { name: 'Workload Management', description: 'Manage team workloads', isActive: true, icon: 'work', route: '/modules/workload', category: 'Resource Management', permissionType: 'admin' },
-        
-        // Communication & Collaboration
-        { name: 'Process Communication', description: 'Process-based messaging', isActive: true, icon: 'message', route: '/modules/messages', category: 'Communication', permissionType: 'public' },
-        { name: 'Team Collaboration', description: 'Collaborative process management', isActive: true, icon: 'groups', route: '/modules/collaboration', category: 'Communication', permissionType: 'public' },
-        { name: 'Notifications', description: 'Process notification system', isActive: true, icon: 'notifications', route: '/modules/notifications', category: 'Communication', permissionType: 'public' },
-        
-        // Administration
-        { name: 'User Management', description: 'Manage process users', isActive: true, icon: 'manage_accounts', route: '/modules/user-management', category: 'Administration', permissionType: 'super_admin' },
-        { name: 'Organization Management', description: 'Manage process organizations', isActive: true, icon: 'business', route: '/modules/organization-management', category: 'Administration', permissionType: 'super_admin' },
-        { name: 'Roles & Permissions', description: 'Process role management', isActive: true, icon: 'security', route: '/modules/roles', category: 'Administration', permissionType: 'super_admin' },
-        { name: 'Module Management', description: 'Manage process modules', isActive: true, icon: 'extension', route: '/modules', category: 'Administration', permissionType: 'super_admin' },
-        
-        // Configuration
-        { name: 'Process Configuration', description: 'Configure process settings', isActive: true, icon: 'tune', route: '/modules/preferences', category: 'Configuration', permissionType: 'admin' },
-        { name: 'System Settings', description: 'System configuration', isActive: true, icon: 'settings', route: '/settings', category: 'Configuration', permissionType: 'super_admin' }
+        // Sales & Operations
+        { name: 'Sales Management', description: 'Manage sales processes and pipeline', isActive: false, icon: 'trending_up', route: '/modules/sales-management', category: 'Sales', permissionType: 'admin' },
+        { name: 'Inventory Management', description: 'Manage inventory and stock levels', isActive: false, icon: 'inventory', route: '/modules/inventory-management', category: 'Operations', permissionType: 'admin' }
       ];
     }
 
     return [
-      { name: 'Dashboard', description: 'Main dashboard', isActive: true, icon: 'dashboard', route: '/dashboard', category: 'Core', permissionType: 'public' },
-      { name: 'Settings', description: 'System settings', isActive: true, icon: 'settings', route: '/settings', category: 'Administration', permissionType: 'admin' }
+      { name: 'User Management', description: 'Manage users, roles, and permissions', isActive: true, icon: 'people', route: '/modules/user-management', category: 'Core', permissionType: 'super_admin' },
+      { name: 'Organization Management', description: 'Manage organizations', isActive: true, icon: 'business', route: '/modules/organization-management', category: 'Core', permissionType: 'super_admin' }
     ];
   }
 

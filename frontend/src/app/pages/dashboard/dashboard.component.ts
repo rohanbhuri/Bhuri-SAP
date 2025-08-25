@@ -100,7 +100,7 @@ interface DashboardWidget {
           <span class="current">Dashboard</span>
         </nav>
         <div class="header-controls">
-          <mat-form-field appearance="outline" class="view-selector">
+          <mat-form-field class="view-selector">
             <mat-select 
               [ngModel]="selectedContext()" 
               (ngModelChange)="onContextChange($event)">
@@ -264,23 +264,46 @@ interface DashboardWidget {
       }
 
       .view-selector {
-        min-width: 140px;
-        flex-shrink: 0;
+        width: auto;
+        min-width: 0;
       }
-
-      .view-selector .mat-mdc-form-field-subscript-wrapper {
+      
+      .view-selector ::ng-deep .mat-mdc-form-field-subscript-wrapper {
         display: none;
       }
-
-      .view-selector .mat-mdc-select {
-        font-size: 0.9rem;
+      
+      .view-selector ::ng-deep .mdc-notched-outline {
+        border: none !important;
       }
-
-      .view-selector .mat-mdc-select-value {
+      
+      .view-selector ::ng-deep .mat-mdc-text-field-wrapper {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+      }
+      
+      .view-selector ::ng-deep .mat-mdc-form-field-infix {
+        padding: 0 !important;
+        min-height: auto !important;
+      }
+      
+      .view-selector ::ng-deep .mat-mdc-select {
+        font-size: 1.5rem;
+        font-weight: 600;
+        padding: 0px 8px;
+        margin: 0;
+      }
+      
+      .view-selector ::ng-deep .mat-mdc-select-value {
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 0;
+        padding: 0px;
+        margin: 0;
       }
+      
+
 
       .breadcrumb {
         display: inline-flex;
@@ -408,8 +431,11 @@ interface DashboardWidget {
         }
         
         .view-selector {
-          min-width: auto;
-          width: 100%;
+          width: auto;
+        }
+        
+        .view-selector ::ng-deep .mat-mdc-select {
+          font-size: 1.3rem;
         }
         
         h1 {

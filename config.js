@@ -51,7 +51,7 @@ const configs = {
       version: "1.0.0",
       description: "Process Management System",
       port: 4201,
-      apiUrl: process.env.NODE_ENV === 'production' ? "http://13.126.228.247:3001/api" : "http://localhost:3001/api"
+      apiUrl: process.env.NODE_ENV === 'production' ? "http://3.111.139.181:3001/api" : "http://localhost:3001/api"
     },
 
     database: {
