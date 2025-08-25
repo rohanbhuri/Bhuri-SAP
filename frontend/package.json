@@ -5,8 +5,8 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "node replace-env.js && ng build --configuration=production",
-    "build:prerender:ssr": "node replace-env.js && ng build --configuration=production --ssr && ng build --configuration=production --prerender --ssr",
+    "build": "node replace-env.js && ng build --project=${BRAND:-beax-rm} --configuration=production",
+    "build:prerender:ssr": "node replace-env.js && ng build --project=${BRAND:-beax-rm} --configuration=production --ssr && ng build --project=${BRAND:-beax-rm} --configuration=production --prerender --ssr",
     "build:analyze": "node replace-env.js && ng build --configuration=production --stats-json",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
