@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, ObjectIdColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { ObjectId } from 'mongodb';
 import { Organization } from './organization.entity';
 import { User } from './user.entity';
 import { Contact } from './contact.entity';
@@ -6,8 +7,8 @@ import { Lead } from './lead.entity';
 
 @Entity('deals')
 export class Deal {
-  @PrimaryGeneratedColumn('uuid')
-  _id: string;
+  @ObjectIdColumn()
+  _id: ObjectId;
 
   @Column()
   title: string;
@@ -34,25 +35,25 @@ export class Deal {
   contact: Contact;
 
   @Column({ nullable: true })
-  contactId: string;
+  contactId: ObjectId;
 
   @ManyToOne(() => Lead, { nullable: true })
   lead: Lead;
 
   @Column({ nullable: true })
-  leadId: string;
+  leadId: ObjectId;
 
   @ManyToOne(() => Organization)
   organization: Organization;
 
   @Column()
-  organizationId: string;
+  organizationId: ObjectId;
 
   @ManyToOne(() => User)
   assignedTo: User;
 
   @Column({ nullable: true })
-  assignedToId: string;
+  assignedToId: ObjectId;
 
   @CreateDateColumn()
   createdAt: Date;

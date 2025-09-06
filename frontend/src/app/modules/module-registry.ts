@@ -15,6 +15,9 @@ import { PayrollManagementWidgetComponent } from './payroll-management/payroll-m
 import { SalesManagementWidgetComponent } from './sales-management/sales-management-widget.component';
 import { OrderManagementWidgetComponent } from './order-management/order-management-widget.component';
 import { FinanceWidgetComponent } from './finance/finance-widget.component';
+import { ReportsManagementWidgetComponent } from './reports-management/reports-management-widget.component';
+import { FormBuilderWidgetComponent } from './form-builder/form-builder-widget.component';
+import { MessagesWidgetComponent } from './messages-module/messages-widget.component';
 
 // Main Components
 import { UserManagementComponent } from './user-management/user-management.component';
@@ -317,6 +320,48 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     route: '/modules/finance',
     isActive: true,
     category: 'finance',
+  },
+
+  // Reports Management Module
+  {
+    id: 'reports-management',
+    name: 'reports-management',
+    displayName: 'Reports Management',
+    description: 'Generate and manage business reports',
+    icon: 'assessment',
+    color: '#7B1FA2',
+    widgetComponent: ReportsManagementWidgetComponent,
+    route: '/modules/reports-management',
+    isActive: false,
+    category: 'operations',
+  },
+
+  // Form Builder Module
+  {
+    id: 'form-builder',
+    name: 'form-builder',
+    displayName: 'Form Builder',
+    description: 'Create and manage dynamic forms',
+    icon: 'dynamic_form',
+    color: '#E65100',
+    widgetComponent: FormBuilderWidgetComponent,
+    route: '/modules/form-builder',
+    isActive: false,
+    category: 'operations',
+  },
+
+  // Messages Module
+  {
+    id: 'messages',
+    name: 'messages',
+    displayName: 'Messages',
+    description: 'Team communication and chat',
+    icon: 'chat',
+    color: '#2196F3',
+    widgetComponent: MessagesWidgetComponent,
+    route: '/messages',
+    isActive: true,
+    category: 'core',
   },
 ];
 

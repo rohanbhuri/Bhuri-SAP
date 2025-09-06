@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
 import { NavbarComponent } from '../../components/navbar.component';
@@ -36,7 +37,7 @@ import { ReportsPageComponent } from './pages/reports-page.component';
         <p class="subtitle">Manage your contacts, leads, deals, and sales pipeline</p>
       </div>
 
-      <mat-tab-group class="crm-tabs">
+      <mat-tab-group class="crm-tabs" [selectedIndex]="selectedTabIndex" (selectedTabChange)="onTabChange($event)">
         <mat-tab label="Contacts">
           <app-contacts-page></app-contacts-page>
         </mat-tab>
@@ -58,4 +59,28 @@ import { ReportsPageComponent } from './pages/reports-page.component';
   `,
   styleUrls: ['./crm.component.css']
 })
-export class CrmComponent {}
+export class CrmComponent implements OnInit {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  
+  selectedTabIndex = 0;
+  private tabs = ['contacts', 'leads', 'deals', 'tasks', 'reports'];
+
+  ngOnInit() {
+    this.route.queryParams.subscribe(params => {
+      const tab = params['tab'];
+      if (tab && this.tabs.includes(tab)) {
+        this.selectedTabIndex = this.tabs.indexOf(tab);
+      }
+    });
+  }
+
+  onTabChange(event: any) {
+    const tabName = this.tabs[event.index];
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab: tabName },
+      queryParamsHandling: 'merge'
+    });
+  }
+}

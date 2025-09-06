@@ -63,6 +63,10 @@ import { LeadDialogComponent } from '../dialogs/lead-dialog.component';
                   <mat-icon>edit</mat-icon>
                   <span>Edit</span>
                 </button>
+                <button mat-menu-item (click)="convertToDeal(lead)" [disabled]="lead.status === 'converted'">
+                  <mat-icon>handshake</mat-icon>
+                  <span>Convert to Deal</span>
+                </button>
                 <button mat-menu-item (click)="deleteLead(lead._id)">
                   <mat-icon>delete</mat-icon>
                   <span>Delete</span>
@@ -164,6 +168,28 @@ export class LeadsPageComponent implements OnInit {
 
   editLead(lead: Lead) {
     this.openLeadDialog(lead);
+  }
+
+  convertToDeal(lead: Lead) {
+    const dealData = {
+      title: lead.title,
+      description: `Converted from lead: ${lead.description || lead.title}`,
+      value: lead.estimatedValue || 0,
+      stage: 'prospecting',
+      probability: 50
+    };
+
+    this.crmService.convertLeadToDeal(lead._id, dealData).subscribe({
+      next: () => {
+        // Update the lead status to converted
+        const updatedList = this.leads().map(l => 
+          l._id === lead._id ? { ...l, status: 'converted' } : l
+        );
+        this.leads.set(updatedList);
+        this.snackBar.open('Lead converted to deal successfully', 'Close', { duration: 3000 });
+      },
+      error: () => this.snackBar.open('Error converting lead to deal', 'Close', { duration: 3000 })
+    });
   }
 
   deleteLead(id: string) {

@@ -1,4 +1,4 @@
-@import '../../components/theme-mixins.scss';
+@use '../../components/theme-mixins.scss' as mixins;
 
 .layout {
   display: flex;
@@ -250,7 +250,7 @@
   flex-direction: column;
   margin: 0;
   border-radius: 0;
-  @include themed-card(false);
+  @include mixins.themed-card(false);
 }
 
 .chat-header {
@@ -592,7 +592,7 @@
   }
   
   .start-chat-btn {
-    @include themed-button('primary');
+    @include mixins.themed-button('primary');
   }
 }
 
@@ -618,7 +618,7 @@
 }
 
 // Mobile responsive
-@include mobile {
+@include mixins.mobile {
   .layout {
     height: calc(100vh - 140px);
   }
@@ -650,7 +650,7 @@
 }
 
 // High contrast mode
-@include high-contrast {
+@include mixins.high-contrast {
   .member {
     border: 1px solid var(--theme-on-surface);
     
@@ -672,5 +672,5 @@
 // Focus management
 .member:focus,
 button:focus {
-  @include focus-visible;
+  @include mixins.focus-visible;
 }

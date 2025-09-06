@@ -10,68 +10,151 @@ import { CrmService } from './crm.service';
   standalone: true,
   imports: [MatCardModule, MatButtonModule, MatIconModule],
   template: `
-    <div class="widget-content">
-      <div class="widget-stats">
-        <div class="stat-item">
-          <div class="stat-number">{{ stats().leads }}</div>
-          <div class="stat-label">Active Leads</div>
+    <div class="crm-widget">
+      <div class="header">
+        <div class="icon-container">
+          <mat-icon>business_center</mat-icon>
         </div>
-        <div class="stat-item">
-          <div class="stat-number">{{ stats().deals }}</div>
-          <div class="stat-label">Open Deals</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-number">\${{ formatCurrency(stats().pipelineValue) }}</div>
-          <div class="stat-label">Pipeline Value</div>
+        <div class="title-section">
+          <span class="subtitle">Sales pipeline & leads</span>
         </div>
       </div>
-      <div class="widget-actions">
-        <button
-          mat-raised-button
-          color="primary"
-          (click)="openCrm()"
-        >
-          <mat-icon>business_center</mat-icon>
+      
+      <div class="pipeline-overview">
+        <div class="pipeline-value">
+          <div class="value">\${{ formatCurrency(stats().pipelineValue) }}</div>
+          <div class="label">Pipeline Value</div>
+        </div>
+        <div class="conversion-rate">
+          <div class="rate">{{ getConversionRate() }}%</div>
+          <div class="label">Conversion</div>
+        </div>
+      </div>
+      
+      <div class="metrics-row">
+        <div class="metric">
+          <div class="metric-number leads">{{ stats().leads }}</div>
+          <div class="metric-label">Active Leads</div>
+        </div>
+        <div class="metric">
+          <div class="metric-number deals">{{ stats().deals }}</div>
+          <div class="metric-label">Open Deals</div>
+        </div>
+      </div>
+      
+      <div class="action-section">
+        <button mat-flat-button color="primary" (click)="openCrm()">
+          <mat-icon>trending_up</mat-icon>
           Open CRM
         </button>
       </div>
     </div>
   `,
   styles: [`
-    .widget-content {
-      padding: 16px;
-    }
-
-    .widget-stats {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-
-    .stat-item {
-      text-align: center;
-    }
-
-    .stat-number {
-      font-size: 1.4rem;
-      font-weight: 700;
-      color: var(--theme-primary);
-      margin-bottom: 4px;
-    }
-
-    .stat-label {
-      font-size: 0.8rem;
-      color: rgba(0, 0, 0, 0.6);
-    }
-
-    .widget-actions {
+    .crm-widget {
+      padding: 20px;
+      height: 100%;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
     }
-
-    button {
+    
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .icon-container {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #4CAF50, #66BB6A);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+    
+    .subtitle {
+      font-size: 0.9rem;
+      color: color-mix(in srgb, var(--theme-on-surface) 70%, transparent);
+      font-weight: 500;
+    }
+    
+    .pipeline-overview {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 16px;
+      padding: 16px;
+      background: linear-gradient(135deg, color-mix(in srgb, #4CAF50 10%, transparent), color-mix(in srgb, #4CAF50 5%, transparent));
+      border-radius: 12px;
+      border: 1px solid color-mix(in srgb, #4CAF50 20%, transparent);
+    }
+    
+    .pipeline-value .value {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #4CAF50;
+      line-height: 1;
+    }
+    
+    .conversion-rate .rate {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #FF9800;
+      line-height: 1;
+    }
+    
+    .pipeline-value .label,
+    .conversion-rate .label {
+      font-size: 0.8rem;
+      color: color-mix(in srgb, var(--theme-on-surface) 60%, transparent);
+      margin-top: 4px;
+    }
+    
+    .metrics-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    
+    .metric {
+      text-align: center;
+      padding: 12px;
+      border-radius: 8px;
+      background: color-mix(in srgb, var(--theme-surface) 95%, var(--theme-primary));
+    }
+    
+    .metric-number {
+      font-size: 1.6rem;
+      font-weight: 600;
+      line-height: 1;
+    }
+    
+    .metric-number.leads {
+      color: #2196F3;
+    }
+    
+    .metric-number.deals {
+      color: #FF5722;
+    }
+    
+    .metric-label {
+      font-size: 0.8rem;
+      color: color-mix(in srgb, var(--theme-on-surface) 70%, transparent);
+      margin-top: 4px;
+    }
+    
+    .action-section {
+      margin-top: auto;
+    }
+    
+    .action-section button {
       width: 100%;
+      height: 40px;
+      border-radius: 8px;
+      font-weight: 500;
     }
   `],
 })
@@ -108,6 +191,12 @@ export class CrmWidgetComponent implements OnInit {
 
   formatCurrency(value: number): string {
     return (value / 1000).toFixed(0) + 'K';
+  }
+  
+  getConversionRate(): number {
+    const stats = this.stats();
+    if (stats.leads === 0) return 0;
+    return Math.round((stats.deals / stats.leads) * 100);
   }
 
   openCrm() {

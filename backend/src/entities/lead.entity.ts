@@ -1,12 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, ObjectIdColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { ObjectId } from 'mongodb';
 import { Organization } from './organization.entity';
 import { User } from './user.entity';
 import { Contact } from './contact.entity';
 
 @Entity('leads')
 export class Lead {
-  @PrimaryGeneratedColumn('uuid')
-  _id: string;
+  @ObjectIdColumn()
+  _id: ObjectId;
 
   @Column()
   title: string;
@@ -30,19 +31,19 @@ export class Lead {
   contact: Contact;
 
   @Column({ nullable: true })
-  contactId: string;
+  contactId: ObjectId;
 
   @ManyToOne(() => Organization)
   organization: Organization;
 
   @Column()
-  organizationId: string;
+  organizationId: ObjectId;
 
   @ManyToOne(() => User)
   assignedTo: User;
 
   @Column({ nullable: true })
-  assignedToId: string;
+  assignedToId: ObjectId;
 
   @CreateDateColumn()
   createdAt: Date;

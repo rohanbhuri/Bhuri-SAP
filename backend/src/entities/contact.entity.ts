@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, ObjectIdColumn, Column, ManyToOne, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { ObjectId } from 'mongodb';
 import { Organization } from './organization.entity';
 import { User } from './user.entity';
 import { Lead } from './lead.entity';
@@ -7,8 +8,8 @@ import { Task } from './task.entity';
 
 @Entity('contacts')
 export class Contact {
-  @PrimaryGeneratedColumn('uuid')
-  _id: string;
+  @ObjectIdColumn()
+  _id: ObjectId;
 
   @Column()
   firstName: string;
@@ -41,13 +42,13 @@ export class Contact {
   organization: Organization;
 
   @Column()
-  organizationId: string;
+  organizationId: ObjectId;
 
   @ManyToOne(() => User)
   assignedTo: User;
 
   @Column({ nullable: true })
-  assignedToId: string;
+  assignedToId: ObjectId;
 
   @OneToMany(() => Lead, lead => lead.contact)
   leads: Lead[];

@@ -63,6 +63,10 @@ import { DealDialogComponent } from '../dialogs/deal-dialog.component';
                   <mat-icon>edit</mat-icon>
                   <span>Edit</span>
                 </button>
+                <button mat-menu-item (click)="createTaskForDeal(deal)">
+                  <mat-icon>task</mat-icon>
+                  <span>Create Task</span>
+                </button>
                 <button mat-menu-item (click)="deleteDeal(deal._id)">
                   <mat-icon>delete</mat-icon>
                   <span>Delete</span>
@@ -144,6 +148,23 @@ export class DealsPageComponent implements OnInit {
 
   editDeal(deal: Deal) {
     this.openDealDialog(deal);
+  }
+
+  createTaskForDeal(deal: Deal) {
+    const taskData = {
+      title: `Follow up on ${deal.title}`,
+      description: `Task created for deal: ${deal.title}`,
+      status: 'pending',
+      priority: 'medium',
+      type: 'follow-up'
+    };
+
+    this.crmService.createTaskForDeal(deal._id, taskData).subscribe({
+      next: () => {
+        this.snackBar.open('Task created for deal successfully', 'Close', { duration: 3000 });
+      },
+      error: () => this.snackBar.open('Error creating task for deal', 'Close', { duration: 3000 })
+    });
   }
 
   deleteDeal(id: string) {

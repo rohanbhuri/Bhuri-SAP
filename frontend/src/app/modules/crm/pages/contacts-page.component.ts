@@ -73,6 +73,10 @@ import { ContactDialogComponent } from '../dialogs/contact-dialog.component';
                   <mat-icon>edit</mat-icon>
                   <span>Edit</span>
                 </button>
+                <button mat-menu-item (click)="convertToLead(contact)">
+                  <mat-icon>trending_up</mat-icon>
+                  <span>Convert to Lead</span>
+                </button>
                 <button mat-menu-item (click)="deleteContact(contact._id)">
                   <mat-icon>delete</mat-icon>
                   <span>Delete</span>
@@ -174,6 +178,22 @@ export class ContactsPageComponent implements OnInit {
 
   editContact(contact: Contact) {
     this.openContactDialog(contact);
+  }
+
+  convertToLead(contact: Contact) {
+    const leadData = {
+      title: `Lead from ${contact.firstName} ${contact.lastName}`,
+      description: `Converted from contact: ${contact.email}`,
+      status: 'new',
+      source: 'contact_conversion'
+    };
+
+    this.crmService.convertContactToLead(contact._id, leadData).subscribe({
+      next: () => {
+        this.snackBar.open('Contact converted to lead successfully', 'Close', { duration: 3000 });
+      },
+      error: () => this.snackBar.open('Error converting contact to lead', 'Close', { duration: 3000 })
+    });
   }
 
   deleteContact(id: string) {

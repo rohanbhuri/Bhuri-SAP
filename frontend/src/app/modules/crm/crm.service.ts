@@ -85,6 +85,17 @@ export interface CrmStats {
   pipelineValue: number;
 }
 
+export interface ConversionReport {
+  totalContacts: number;
+  totalLeads: number;
+  convertedLeads: number;
+  totalDeals: number;
+  wonDeals: number;
+  contactToLeadRate: number;
+  leadToDealRate: number;
+  dealWinRate: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class CrmService {
   private http = inject(HttpClient);
@@ -176,5 +187,59 @@ export class CrmService {
 
   deleteDeal(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/crm/deals/${id}`);
+  }
+
+  // Conversion methods - enforcing proper CRM flow
+  convertContactToLead(contactId: string, leadData: Partial<Lead>): Observable<Lead> {
+    return this.http.post<Lead>(`${this.apiUrl}/crm/contacts/${contactId}/convert-to-lead`, leadData);
+  }
+
+  convertLeadToDeal(leadId: string, dealData: Partial<Deal>): Observable<Deal> {
+    return this.http.post<Deal>(`${this.apiUrl}/crm/leads/${leadId}/convert-to-deal`, dealData);
+  }
+
+  createTaskForDeal(dealId: string, taskData: Partial<Task>): Observable<Task> {
+    return this.http.post<Task>(`${this.apiUrl}/crm/deals/${dealId}/create-task`, taskData);
+  }
+
+  // Enhanced methods with relationship data
+  getContactsWithLeads(): Observable<Contact[]> {
+    return this.http
+      .get<Contact[]>(`${this.apiUrl}/crm/contacts-with-leads`)
+      .pipe(catchError(() => of([])));
+  }
+
+  getLeadsWithDeals(): Observable<Lead[]> {
+    return this.http
+      .get<Lead[]>(`${this.apiUrl}/crm/leads-with-deals`)
+      .pipe(catchError(() => of([])));
+  }
+
+  getDealsWithTasks(): Observable<Deal[]> {
+    return this.http
+      .get<Deal[]>(`${this.apiUrl}/crm/deals-with-tasks`)
+      .pipe(catchError(() => of([])));
+  }
+
+  getTasksWithRelations(): Observable<Task[]> {
+    return this.http
+      .get<Task[]>(`${this.apiUrl}/crm/tasks-with-relations`)
+      .pipe(catchError(() => of([])));
+  }
+
+  // Reporting methods
+  getConversionReport(): Observable<ConversionReport> {
+    return this.http
+      .get<ConversionReport>(`${this.apiUrl}/crm/conversion-report`)
+      .pipe(catchError(() => of({
+        totalContacts: 0,
+        totalLeads: 0,
+        convertedLeads: 0,
+        totalDeals: 0,
+        wonDeals: 0,
+        contactToLeadRate: 0,
+        leadToDealRate: 0,
+        dealWinRate: 0
+      })));
   }
 }

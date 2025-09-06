@@ -45,6 +45,11 @@ import { SalesManagementWidgetComponent } from '../../modules/sales-management/s
 import { ProjectTrackingWidgetComponent } from '../../modules/project-tracking/project-tracking-widget.component';
 import { ProjectTimesheetWidgetComponent } from '../../modules/project-timesheet/project-timesheet-widget.component';
 import { PendingWorkWidgetComponent } from '../../components/pending-work-widget.component';
+import { OrderManagementWidgetComponent } from '../../modules/order-management/order-management-widget.component';
+import { FinanceWidgetComponent } from '../../modules/finance/finance-widget.component';
+import { ReportsManagementWidgetComponent } from '../../modules/reports-management/reports-management-widget.component';
+import { FormBuilderWidgetComponent } from '../../modules/form-builder/form-builder-widget.component';
+import { MessagesWidgetComponent } from '../../modules/messages-module/messages-widget.component';
 import { OrganizationManagementService } from '../../modules/organization-management/organization-management.service';
 import { SeoService } from '../../services/seo.service';
 import { ThemeService } from '../../services/theme.service';
@@ -88,6 +93,11 @@ interface DashboardWidget {
     ProjectTrackingWidgetComponent,
     ProjectTimesheetWidgetComponent,
     PendingWorkWidgetComponent,
+    OrderManagementWidgetComponent,
+    FinanceWidgetComponent,
+    ReportsManagementWidgetComponent,
+    FormBuilderWidgetComponent,
+    MessagesWidgetComponent,
   ],
   template: `
     <app-navbar></app-navbar>
@@ -218,6 +228,16 @@ interface DashboardWidget {
             <app-project-tracking-widget></app-project-tracking-widget>
             } @case ('project-timesheet') {
             <app-project-timesheet-widget></app-project-timesheet-widget>
+            } @case ('order-management') {
+            <app-order-management-widget></app-order-management-widget>
+            } @case ('finance') {
+            <app-finance-widget></app-finance-widget>
+            } @case ('reports-management') {
+            <app-reports-management-widget></app-reports-management-widget>
+            } @case ('form-builder') {
+            <app-form-builder-widget></app-form-builder-widget>
+            } @case ('messages') {
+            <app-messages-widget></app-messages-widget>
             } @case ('pending-work') {
             <app-pending-work-widget></app-pending-work-widget>
             } }
@@ -873,7 +893,7 @@ export class DashboardComponent implements OnInit {
 
   updateWidgets(modules: AppModuleInfo[]) {
     console.log('Updating widgets with modules:', modules?.length || 0);
-    console.log('Module details:', modules?.map(m => ({ name: m.name, displayName: m.displayName })));
+    console.log('Module details:', modules?.map(m => ({ id: m.id, name: m.name, displayName: m.displayName })));
     
     // If no modules from API, show empty state
     if (!modules || modules.length === 0) {
@@ -885,17 +905,17 @@ export class DashboardComponent implements OnInit {
     
     // Filter modules that have corresponding widget components using module registry
     const filtered = modules.filter(m => {
-      const registryModule = this.getModuleFromRegistry(m.name);
+      const registryModule = this.getModuleFromRegistry(m.name || m.id);
       return registryModule && registryModule.widgetComponent;
     });
     console.log('Filtered supported modules:', filtered.length);
     
     const mapped: DashboardWidget[] = filtered.map((m, idx) => {
-      const registryModule = this.getModuleFromRegistry(m.name);
+      const registryModule = this.getModuleFromRegistry(m.name || m.id);
       return {
-        id: registryModule?.name || m.name.toLowerCase().replace(/\s+/g, '-'),
-        title: m.displayName,
-        description: m.description,
+        id: registryModule?.name || m.name || m.id || 'unknown',
+        title: m.displayName || m.name || 'Unknown Module',
+        description: m.description || '',
         size: idx === 0 ? 'm' : idx === 1 ? 'm' : idx % 3 === 0 ? 'l' : 'm',
       };
     });
