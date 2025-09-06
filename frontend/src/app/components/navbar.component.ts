@@ -1,4 +1,10 @@
-import { Component, inject, signal, OnInit, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  inject,
+  signal,
+  OnInit,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { Router } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
@@ -19,48 +25,67 @@ import { PwaInstallModalComponent } from './pwa-install-modal.component';
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, MatToolbarModule, MatButtonModule, MatIconModule, MatMenuModule, MatTooltipModule, MatBadgeModule],
+  imports: [
+    CommonModule,
+    MatToolbarModule,
+    MatButtonModule,
+    MatIconModule,
+    MatMenuModule,
+    MatTooltipModule,
+    MatBadgeModule,
+  ],
   template: `
-    <mat-toolbar color="primary">
-      <img [src]="brandConfig.getIcon()" [alt]="brandConfig.getBrandName()" class="logo" (click)="goToDashboard()">
-      <span class="spacer"></span>
-      
-      @if (currentUser()) {
-        <button mat-icon-button
-                (click)="goToNotifications()"
-                matTooltip="Notifications"
-                class="notifications-button"
-                [matBadge]="unreadCount()"
-                [matBadgeHidden]="unreadCount() === 0"
-                matBadgeColor="accent"
-                matBadgeSize="small">
-          <mat-icon>notifications</mat-icon>
+    <mat-toolbar class="navbar">
+      <div class="nav-brand" (click)="goToDashboard()">
+        <img
+          [src]="brandConfig.getIcon()"
+          [alt]="brandConfig.getBrandName()"
+          class="logo"
+        />
+        <span class="brand-name">{{ brandConfig.getBrandName() }}</span>
+      </div>
+
+      <div class="nav-actions">
+        <button
+          mat-icon-button
+          (click)="toggleTheme()"
+          [matTooltip]="isDarkTheme() ? 'Light Mode' : 'Dark Mode'"
+          class="theme-toggle"
+        >
+          <mat-icon>{{ isDarkTheme() ? 'light_mode' : 'dark_mode' }}</mat-icon>
         </button>
-      }
-      
-      <button mat-icon-button (click)="toggleTheme()" [matTooltip]="isDarkTheme() ? 'Switch to Light Mode' : 'Switch to Dark Mode'" class="theme-toggle">
-        <mat-icon>{{ isDarkTheme() ? 'light_mode' : 'dark_mode' }}</mat-icon>
-      </button>
-      
-      @if (showInstallButton()) {
-        <button mat-icon-button (click)="showInstallModal()" matTooltip="Install App" class="install-button">
+
+        @if (showInstallButton()) {
+        <button
+          mat-icon-button
+          (click)="showInstallModal()"
+          matTooltip="Install App"
+          class="install-button"
+        >
           <mat-icon>download</mat-icon>
         </button>
-      }
-      
-      @if (currentUser()) {
+        } @if (currentUser()) {
         <button mat-button [matMenuTriggerFor]="userMenu" class="user-button">
-          <div class="user-avatar">
-            @if (currentUser()?.avatar) {
-              <img [src]="getAvatarUrl()" alt="User Avatar" class="avatar-image">
-            } @else {
+          <div class="display-flex">
+            <div class="user-avatar">
+              @if (currentUser()?.avatar) {
+              <img
+                [src]="getAvatarUrl()"
+                alt="User Avatar"
+                class="avatar-image"
+              />
+              } @else {
               <mat-icon>account_circle</mat-icon>
-            }
+              }
+            </div>
+            <span class="user-name"
+              >{{ currentUser()?.firstName }}
+              {{ currentUser()?.lastName }}</span
+            >
           </div>
-          <span>{{ currentUser()?.firstName }} {{ currentUser()?.lastName }}</span>
         </button>
-        
-        <mat-menu #userMenu="matMenu">
+
+        <mat-menu #userMenu="matMenu" class="user-menu">
           <button mat-menu-item (click)="openProfile()">
             <mat-icon>person</mat-icon>
             <span>Profile</span>
@@ -74,107 +99,167 @@ import { PwaInstallModalComponent } from './pwa-install-modal.component';
             <span>Logout</span>
           </button>
         </mat-menu>
-      }
+        }
+      </div>
     </mat-toolbar>
   `,
-  styles: [`
-    .logo {
-      height: 32px;
-      margin-right: 16px;
-      cursor: pointer;
-      transition: var(--transition);
-    }
-    
-    .logo:hover {
-      opacity: 0.8;
-    }
-    
-    .logo:focus-visible {
-      outline: var(--focus-outline);
-      outline-offset: 2px;
-      border-radius: 4px;
-    }
-    
-    .spacer {
-      flex: 1 1 auto;
-    }
-    
-    .user-button {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--theme-on-primary);
-      transition: var(--transition);
-    }
-    
-    .user-button:hover {
-      background-color: rgba(255, 255, 255, 0.1);
-    }
-    
-    .user-button:focus-visible {
-      outline: 2px solid var(--theme-on-primary);
-      outline-offset: 2px;
-    }
-    
-    .install-button {
-      color: var(--theme-on-primary);
-      margin-right: 8px;
-    }
-    
-    .install-button:hover {
-      background-color: rgba(255, 255, 255, 0.1);
-    }
-    
-    .theme-toggle {
-      color: var(--theme-on-primary);
-      margin-right: 8px;
-      transition: var(--transition);
-    }
-    
-    .theme-toggle:hover {
-      background-color: rgba(255, 255, 255, 0.1);
-      transform: rotate(180deg);
-    }
-    
-    .user-avatar {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      overflow: hidden;
-      background-color: rgba(255, 255, 255, 0.1);
-    }
-    
-    .avatar-image {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 50%;
-    }
-    
-    .user-avatar mat-icon {
-      font-size: 24px;
-      width: 24px;
-      height: 24px;
-    }
-    
-    .notifications-button {
-      color: var(--theme-on-primary);
-      margin-right: 8px;
-      transition: var(--transition);
-    }
-    
-    .notifications-button:hover {
-      background-color: rgba(255, 255, 255, 0.1);
-    }
-    
-    .notifications-button .mat-badge-content {
-      background: var(--theme-accent);
-      color: var(--theme-on-accent);
-    }
-  `]
+  styles: [
+    `
+      .display-flex {
+        display: flex;
+      }
+      .navbar {
+        background: #ffffff;
+        color: #000000;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 0 24px;
+        height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+
+      :host-context(body.dark-theme) .navbar {
+        background: #000000;
+        color: #ffffff;
+        border-bottom-color: #374151;
+      }
+
+      .nav-brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+        transition: opacity 0.2s ease;
+      }
+
+      .nav-brand:hover {
+        opacity: 0.8;
+      }
+
+      .logo {
+        height: 32px;
+        width: auto;
+      }
+
+      .brand-name {
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--theme-primary);
+      }
+
+      .nav-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .theme-toggle,
+      .install-button {
+        color: var(--theme-primary);
+        transition: all 0.2s ease;
+      }
+
+      .theme-toggle:hover,
+      .install-button:hover {
+        background-color: color-mix(
+          in srgb,
+          var(--theme-primary) 10%,
+          transparent
+        );
+        transform: scale(1.05);
+      }
+
+      .user-button {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 16px;
+        border-radius: 24px;
+        background: transparent;
+        border: 1px solid #e5e7eb;
+        color: #000000;
+        transition: all 0.2s ease;
+        min-width: 120px;
+      }
+
+      :host-context(body.dark-theme) .user-button {
+        border-color: #374151;
+        color: #ffffff;
+      }
+
+      .user-button:hover {
+        background: color-mix(in srgb, var(--theme-primary) 5%, transparent);
+        border-color: var(--theme-primary);
+        transform: translateY(-1px);
+      }
+
+      .user-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: color-mix(in srgb, var(--theme-primary) 10%, transparent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .avatar-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .user-avatar mat-icon {
+        color: var(--theme-primary);
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+
+      .user-name {
+        font-weight: 500;
+        font-size: 14px;
+      }
+
+      @media (max-width: 768px) {
+        .navbar {
+          padding: 0 16px;
+          height: 56px;
+        }
+
+        .brand-name {
+          display: none;
+        }
+
+        .user-name {
+          display: none;
+        }
+
+        .user-button {
+          min-width: auto;
+          padding: 8px;
+          border-radius: 50%;
+        }
+
+        .nav-actions {
+          gap: 4px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .navbar {
+          padding: 0 12px;
+        }
+
+        .logo {
+          height: 28px;
+        }
+      }
+    `,
+  ],
 })
 export class NavbarComponent implements OnInit {
   private authService = inject(AuthService);
@@ -186,32 +271,31 @@ export class NavbarComponent implements OnInit {
   private wsService = inject(WebSocketService);
   private cdr = inject(ChangeDetectorRef);
   protected brandConfig = inject(BrandConfigService);
-  
+
   currentUser = signal<User | null>(null);
   showInstallButton = signal(false);
   isDarkTheme = signal(false);
-  unreadCount = signal<number>(0);
-  
+
   ngOnInit() {
-    this.authService.currentUser$.subscribe(user => {
+    this.authService.currentUser$.subscribe((user) => {
       this.currentUser.set(user);
-      
+
       // Initialize WebSocket and notifications when user is authenticated
       if (user) {
         this.initializeNotifications();
       }
     });
-    
+
     // Check if PWA is installable
     this.pwaService.installable$.subscribe((installable) => {
       this.showInstallButton.set(installable);
     });
-    
+
     // Subscribe to theme changes
-    this.themeService.currentTheme$.subscribe(theme => {
+    this.themeService.currentTheme$.subscribe((theme) => {
       this.isDarkTheme.set(theme === 'dark');
     });
-    
+
     // Load user theme preferences
     this.themeService.loadAndApplyUserTheme();
   }
@@ -219,41 +303,32 @@ export class NavbarComponent implements OnInit {
   private initializeNotifications() {
     // Connect WebSocket for real-time updates
     this.wsService.connect();
-    
-    // Subscribe to notification count updates
-    this.notificationsService.unreadCount$.subscribe(count => {
-      this.unreadCount.set(count);
-    });
-    
+
     // Request notification permission
     this.notificationsService.requestNotificationPermission();
   }
-  
+
   showInstallModal() {
     this.dialog.open(PwaInstallModalComponent, {
       width: '500px',
       maxWidth: '90vw',
       disableClose: false,
-      panelClass: 'pwa-install-dialog'
+      panelClass: 'pwa-install-dialog',
     });
   }
-  
+
   openProfile() {
     this.router.navigate(['/profile']);
   }
-  
+
   openSettings() {
     this.router.navigate(['/settings']);
   }
-  
+
   goToDashboard() {
     this.router.navigate(['/dashboard']);
   }
 
-  goToNotifications() {
-    this.router.navigate(['/notifications']);
-  }
-  
   logout() {
     this.authService.logout();
   }
@@ -262,7 +337,7 @@ export class NavbarComponent implements OnInit {
     const user = this.currentUser();
     return this.authService.getAvatarUrl(user?.avatar);
   }
-  
+
   toggleTheme() {
     this.themeService.toggleTheme();
   }
