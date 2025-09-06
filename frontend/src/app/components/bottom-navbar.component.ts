@@ -86,19 +86,81 @@ import { PreferencesService } from '../services/preferences.service';
           color-mix(in srgb, var(--theme-on-surface) 10%, transparent);
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         display: flex;
-        gap: 8px;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
         z-index: 1000;
+        max-width: calc(100vw - 40px);
+        overflow-x: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+
+      .bottom-nav::-webkit-scrollbar {
+        display: none;
       }
 
       button {
-        width: 48px;
-        height: 48px;
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
         border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      button mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
 
       .bottom-nav:focus-within {
         outline: var(--focus-outline);
         outline-offset: 4px;
+      }
+
+      @media (max-width: 599px) {
+        .bottom-nav {
+          gap: 2px;
+          padding: 6px 12px;
+        }
+        
+        button {
+          width: 40px;
+          height: 40px;
+          min-width: 40px;
+        }
+        
+        button mat-icon {
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .bottom-nav {
+          gap: 1px;
+          padding: 4px 8px;
+        }
+        
+        button {
+          width: 36px;
+          height: 36px;
+          min-width: 36px;
+        }
+        
+        button mat-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+        }
       }
     `,
   ],
@@ -180,17 +242,8 @@ export class BottomNavbarComponent {
   }
 
   getModuleIcon(moduleName: string): string {
-    const iconMap: { [key: string]: string } = {
-      'user-management': 'people',
-      'crm': 'business_center',
-      'hr-management': 'people',
-      'projects-management': 'work',
-      'tasks-management': 'task',
-      'inventory-management': 'inventory',
-      'payroll-management': 'payments',
-      'sales-management': 'trending_up'
-    };
-    return iconMap[moduleName] || 'extension';
+    const module = this.activeModules().find(m => m.name === moduleName);
+    return module?.icon || 'extension';
   }
 
 

@@ -8,9 +8,13 @@ import { User } from '../entities/user.entity';
 import { Role } from '../entities/role.entity';
 import { Permission } from '../entities/permission.entity';
 import { ModuleRequest } from '../entities/module-request.entity';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ModuleEntity, Organization, User, Role, Permission, ModuleRequest])],
+  imports: [
+    TypeOrmModule.forFeature([ModuleEntity, Organization, User, Role, Permission, ModuleRequest]),
+    NotificationsModule
+  ],
   providers: [ModulesService],
   controllers: [ModulesController],
 })

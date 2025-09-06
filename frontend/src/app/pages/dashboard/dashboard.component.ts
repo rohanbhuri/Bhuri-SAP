@@ -225,11 +225,20 @@ interface DashboardWidget {
         </mat-card>
           } @if (widgets().length === 0) {
           <mat-card class="empty" color="primary" tabindex="0" aria-live="polite">
+            <mat-icon class="empty-icon">extension_off</mat-icon>
             <mat-card-title>No active modules</mat-card-title>
             <mat-card-content>
               <p>
-                Ask your administrator to activate modules for your organization.
+                @if (selectedContext() === 'personal') {
+                  You don't have any personal modules activated. Contact your administrator to request access to modules.
+                } @else {
+                  This organization doesn't have any modules activated. Ask your administrator to activate modules for your organization.
+                }
               </p>
+              <button mat-raised-button color="primary" (click)="router.navigate(['/modules'])">
+                <mat-icon>extension</mat-icon>
+                Browse Available Modules
+              </button>
             </mat-card-content>
           </mat-card>
           }
@@ -536,6 +545,34 @@ interface DashboardWidget {
         grid-column: 1 / -1;
         margin: 40px auto;
         max-width: 400px;
+        gap: 16px;
+      }
+
+      .empty .empty-icon {
+        font-size: 4rem;
+        width: 4rem;
+        height: 4rem;
+        color: color-mix(in srgb, var(--theme-on-surface) 40%, transparent);
+        margin-bottom: 8px;
+      }
+
+      .empty mat-card-title {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 600;
+      }
+
+      .empty mat-card-content {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        align-items: center;
+      }
+
+      .empty mat-card-content p {
+        color: color-mix(in srgb, var(--theme-on-surface) 70%, transparent);
+        line-height: 1.5;
+        margin: 0;
       }
 
       .widget:focus-visible {
@@ -570,7 +607,7 @@ interface DashboardWidget {
 })
 export class DashboardComponent implements OnInit {
   private authService = inject(AuthService);
-  private router = inject(Router);
+  protected router = inject(Router);
   private snackBar = inject(MatSnackBar);
   private seoService = inject(SeoService);
   private themeService = inject(ThemeService);
@@ -590,23 +627,32 @@ export class DashboardComponent implements OnInit {
     this.setupSEO();
     this.loadCompactViewPreference();
     
-    // Fallback timeout to ensure widgets load
+    console.log('=== DASHBOARD INIT ===');
+    console.log('Is authenticated:', this.authService.isAuthenticated());
+    console.log('Token exists:', !!this.authService.getToken());
+    
+    // Fallback timeout to ensure loading state is cleared
     setTimeout(() => {
-      if (this.isLoadingWidgets() && this.widgets().length === 0) {
-        console.warn('Widget loading timeout, showing default widgets');
+      if (this.isLoadingWidgets()) {
+        console.warn('Widget loading timeout, clearing loading state');
         this.isLoadingWidgets.set(false);
-        this.loadDefaultWidgets();
       }
-    }, 3000);
+    }, 5000);
     
     this.authService.currentUser$.subscribe((user) => {
+      console.log('=== USER SUBSCRIPTION ===');
+      console.log('Current user:', user);
+      console.log('Is authenticated:', this.authService.isAuthenticated());
+      
       this.currentUser.set(user);
       if (user && this.authService.isAuthenticated()) {
+        console.log('User authenticated, loading organizations...');
         this.loadOrganizations();
       } else {
+        console.log('User not authenticated, showing empty state');
         this.selectedContext.set('personal');
         this.isLoadingWidgets.set(false);
-        this.loadDefaultWidgets();
+        this.widgets.set([]);
       }
     });
   }
@@ -640,16 +686,23 @@ export class DashboardComponent implements OnInit {
   }
 
   loadOrganizations() {
+    console.log('=== LOADING ORGANIZATIONS ===');
     this.authService.getMyOrganizations().subscribe({
       next: (orgs) => {
-        this.organizations.set(orgs);
+        console.log('Organizations loaded:', orgs);
+        this.organizations.set(orgs || []);
         // After organizations are loaded, validate and set the context
         this.setInitialContext();
       },
       error: (error) => {
+        console.error('Error loading organizations:', error);
         if (error.status === 401 || error.status === 403) {
+          console.log('Authentication error, logging out');
           this.authService.logout();
         } else {
+          console.log('Setting empty organizations array due to error');
+          this.organizations.set([]);
+          this.setInitialContext();
           this.snackBar.open('Failed to load organizations', 'Close', {
             duration: 3000,
           });
@@ -724,7 +777,10 @@ export class DashboardComponent implements OnInit {
         console.error('=== ERROR LOADING ORG MODULES ===');
         console.error('Error details:', error);
         this.isLoadingWidgets.set(false);
-        this.loadDefaultWidgets();
+        this.widgets.set([]);
+        this.snackBar.open('Failed to load organization modules', 'Close', {
+          duration: 3000,
+        });
       }
     });
   }
@@ -760,7 +816,10 @@ export class DashboardComponent implements OnInit {
         console.error('=== ERROR LOADING PERSONAL MODULES ===');
         console.error('Error details:', error);
         this.isLoadingWidgets.set(false);
-        this.loadDefaultWidgets();
+        this.widgets.set([]);
+        this.snackBar.open('Failed to load personal modules', 'Close', {
+          duration: 3000,
+        });
       }
     });
   }
@@ -784,7 +843,7 @@ export class DashboardComponent implements OnInit {
         error: (error) => {
           console.error('Error loading personal modules:', error);
           this.isLoadingWidgets.set(false);
-          this.loadDefaultWidgets();
+          this.widgets.set([]);
         }
       });
     } else {
@@ -806,7 +865,7 @@ export class DashboardComponent implements OnInit {
         error: (error) => {
           console.error('Error loading organization modules:', error);
           this.isLoadingWidgets.set(false);
-          this.loadDefaultWidgets();
+          this.widgets.set([]);
         }
       });
     }
@@ -816,10 +875,11 @@ export class DashboardComponent implements OnInit {
     console.log('Updating widgets with modules:', modules?.length || 0);
     console.log('Module details:', modules?.map(m => ({ name: m.name, displayName: m.displayName })));
     
-    // If no modules from API, use default widgets
+    // If no modules from API, show empty state
     if (!modules || modules.length === 0) {
-      console.log('No modules returned, using default widgets');
-      this.loadDefaultWidgets();
+      console.log('No modules returned, showing empty state');
+      this.widgets.set([]);
+      this.isLoadingWidgets.set(false);
       return;
     }
     
@@ -830,17 +890,21 @@ export class DashboardComponent implements OnInit {
     });
     console.log('Filtered supported modules:', filtered.length);
     
-    const mapped: DashboardWidget[] = filtered.map((m, idx) => ({
-      id: m.name,
-      title: m.displayName,
-      description: m.description,
-      size: idx === 0 ? 'm' : idx === 1 ? 'm' : idx % 3 === 0 ? 'l' : 'm',
-    }));
+    const mapped: DashboardWidget[] = filtered.map((m, idx) => {
+      const registryModule = this.getModuleFromRegistry(m.name);
+      return {
+        id: registryModule?.name || m.name.toLowerCase().replace(/\s+/g, '-'),
+        title: m.displayName,
+        description: m.description,
+        size: idx === 0 ? 'm' : idx === 1 ? 'm' : idx % 3 === 0 ? 'l' : 'm',
+      };
+    });
     
-    // If no supported modules, use default widgets
+    // If no supported modules, show empty state with helpful message
     if (mapped.length === 0) {
-      console.log('No supported widget modules found, using defaults');
-      this.loadDefaultWidgets();
+      console.log('No supported widget modules found, showing empty state');
+      this.widgets.set([]);
+      this.isLoadingWidgets.set(false);
       return;
     }
     
@@ -892,7 +956,20 @@ export class DashboardComponent implements OnInit {
   }
 
   private getModuleFromRegistry(moduleId: string) {
-    return MODULE_REGISTRY.find(m => m.name === moduleId);
+    // Try exact match first
+    let module = MODULE_REGISTRY.find(m => m.name === moduleId);
+    if (module) return module;
+    
+    // Try converting display name to kebab-case
+    const kebabCase = moduleId.toLowerCase().replace(/\s+/g, '-');
+    module = MODULE_REGISTRY.find(m => m.name === kebabCase);
+    if (module) return module;
+    
+    // Try matching by display name
+    module = MODULE_REGISTRY.find(m => m.displayName === moduleId);
+    if (module) return module;
+    
+    return undefined;
   }
 
   toggleCompactView() {
@@ -969,7 +1046,15 @@ export class DashboardComponent implements OnInit {
 
   private setInitialContext() {
     const user = this.currentUser();
+    const orgs = this.organizations();
+    
+    console.log('=== SETTING INITIAL CONTEXT ===');
+    console.log('User:', user);
+    console.log('Organizations:', orgs);
+    
     if (!user) {
+      console.log('No user, showing default widgets');
+      this.selectedContext.set('personal');
       this.isLoadingWidgets.set(false);
       this.loadDefaultWidgets();
       return;
@@ -977,10 +1062,24 @@ export class DashboardComponent implements OnInit {
     
     const savedContext = this.getSavedContext();
     const validatedContext = this.validateAndGetContext(savedContext);
-    const initialContext = validatedContext || user.organizationId || 'personal';
     
+    // Determine initial context priority:
+    // 1. Valid saved context
+    // 2. User's current organizationId (if exists in organizations)
+    // 3. First available organization
+    // 4. Personal context
+    let initialContext = 'personal';
+    
+    if (validatedContext) {
+      initialContext = validatedContext;
+    } else if (user.organizationId && orgs.some(org => (org._id || org.id) === user.organizationId)) {
+      initialContext = user.organizationId;
+    } else if (orgs.length > 0) {
+      initialContext = orgs[0]._id || orgs[0].id;
+    }
+    
+    console.log('Initial context determined:', initialContext);
     this.selectedContext.set(initialContext);
-    console.log('Initial context set to:', initialContext);
     this.loadModulesForContext(initialContext);
   }
 

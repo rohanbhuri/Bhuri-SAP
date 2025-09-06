@@ -23,6 +23,7 @@ import { FormsModule } from '@angular/forms';
 import { SeoService } from '../../services/seo.service';
 import { BrandConfigService } from '../../services/brand-config.service';
 import { ThemeService } from '../../services/theme.service';
+import { getModuleById } from '../../modules/module-registry';
 
 @Component({
   selector: 'app-modules',
@@ -94,40 +95,42 @@ import { ThemeService } from '../../services/theme.service';
               >
                 <div class="module-header">
                   <div class="module-info">
-                    <h3 
-                      class="module-title"
-                      [style.color]="module.color || '#ffffff'"
-                    >
-                      {{ module.name }}
-                    </h3>
-                    <div class="module-status">
-                      @if (module.isActive) {
-                      <mat-chip class="status-chip active">
-                        <mat-icon>check_circle</mat-icon>
-                        Active
-                      </mat-chip>
-                      } @else if (module.permissionType === 'public') {
-                      <mat-chip class="status-chip available">
-                        <mat-icon>public</mat-icon>
-                        Public
-                      </mat-chip>
-                      } @else if (module.isPending) {
-                      <mat-chip class="status-chip pending">
-                        <mat-icon>schedule</mat-icon>
-                        Pending
-                      </mat-chip>
-                      } @else {
-                      <mat-chip class="status-chip restricted">
-                        <mat-icon>lock</mat-icon>
-                        Restricted
-                      </mat-chip>
-                      }
+                    <div class="module-icon" [style.background-color]="getModuleColor(module)">
+                      <mat-icon>{{ getModuleIcon(module) }}</mat-icon>
+                    </div>
+                    <div class="module-details">
+                      <h3 class="module-title">
+                        {{ getModuleDisplayName(module) }}
+                      </h3>
+                      <div class="module-status">
+                        @if (module.isActive) {
+                        <mat-chip class="status-chip active">
+                          <mat-icon>check_circle</mat-icon>
+                          Active
+                        </mat-chip>
+                        } @else if (module.permissionType === 'public') {
+                        <mat-chip class="status-chip available">
+                          <mat-icon>public</mat-icon>
+                          Public
+                        </mat-chip>
+                        } @else if (module.isPending) {
+                        <mat-chip class="status-chip pending">
+                          <mat-icon>schedule</mat-icon>
+                          Pending
+                        </mat-chip>
+                        } @else {
+                        <mat-chip class="status-chip restricted">
+                          <mat-icon>lock</mat-icon>
+                          Restricted
+                        </mat-chip>
+                        }
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 <mat-card-content>
-                  <p class="module-description">{{ module.description }}</p>
+                  <p class="module-description">{{ getModuleDescription(module) }}</p>
                 </mat-card-content>
 
                 <div class="module-actions">
@@ -144,23 +147,29 @@ import { ThemeService } from '../../services/theme.service';
                     <button
                       mat-icon-button
                       (click)="togglePin(module)"
+                      [disabled]="pinLoading() === module.id"
+                      [class.pinned]="isPinned(module.id)"
                       [attr.aria-label]="
                         isPinned(module.id)
                           ? 'Unpin from navbar'
                           : 'Pin to navbar'
                       "
                     >
-                      <mat-icon>{{
-                        isPinned(module.id) ? 'push_pin' : 'push_pin'
-                      }}</mat-icon>
+                      @if (pinLoading() === module.id) {
+                        <mat-spinner diameter="20"></mat-spinner>
+                      } @else {
+                        <mat-icon class="pin-icon">{{
+                          isPinned(module.id) ? 'push_pin' : 'push_pin_outlined'
+                        }}</mat-icon>
+                      }
                     </button>
                     <button
                       mat-stroked-button
                       color="warn"
                       (click)="deactivateModule(module)"
-                      [disabled]="loading()"
+                      [disabled]="moduleLoading() === module.id"
                     >
-                      @if (loading()) {
+                      @if (moduleLoading() === module.id) {
                       <mat-spinner diameter="16"></mat-spinner>
                       } @else {
                       <mat-icon>remove</mat-icon>
@@ -177,9 +186,9 @@ import { ThemeService } from '../../services/theme.service';
                     mat-raised-button
                     color="accent"
                     (click)="activateModule(module)"
-                    [disabled]="loading()"
+                    [disabled]="moduleLoading() === module.id"
                   >
-                    @if (loading()) {
+                    @if (moduleLoading() === module.id) {
                     <mat-spinner diameter="16"></mat-spinner>
                     } @else {
                     <mat-icon>add</mat-icon>
@@ -189,9 +198,9 @@ import { ThemeService } from '../../services/theme.service';
                   <button
                     mat-raised-button
                     (click)="requestModule(module)"
-                    [disabled]="loading()"
+                    [disabled]="moduleLoading() === module.id"
                   >
-                    @if (loading()) {
+                    @if (moduleLoading() === module.id) {
                     <mat-spinner diameter="16"></mat-spinner>
                     } @else {
                     <mat-icon>request_page</mat-icon>
@@ -230,16 +239,28 @@ import { ThemeService } from '../../services/theme.service';
             @if (pendingRequests().length > 0) {
             <div class="requests-list">
               @for (request of pendingRequests(); track request._id) {
-              <mat-card class="request-card">
+              <mat-card class="request-card" [class.high-priority]="request.priority === 'high'">
                 <div class="request-header">
                   <div class="request-info">
-                    <h4>{{ getModuleName(request.moduleId) }}</h4>
+                    <h4>{{ request.moduleName || getModuleName(request.moduleId) }}</h4>
                     <p class="request-user">
                       Requested by: {{ request.userName }}
                     </p>
                     <p class="request-date">
                       {{ formatDate(request.requestedAt) }}
                     </p>
+                    <div class="request-meta">
+                      <mat-chip class="approver-chip" [class]="'approver-' + (request.approverType || 'unknown')">
+                        <mat-icon>{{ getApproverIcon(request.approverType) }}</mat-icon>
+                        {{ getApproverLabel(request.approverType) }}
+                      </mat-chip>
+                      @if (request.priority === 'high') {
+                        <mat-chip class="priority-chip high">
+                          <mat-icon>priority_high</mat-icon>
+                          High Priority
+                        </mat-chip>
+                      }
+                    </div>
                   </div>
                   <mat-chip class="status-chip pending">
                     <mat-icon>schedule</mat-icon>
@@ -248,24 +269,31 @@ import { ThemeService } from '../../services/theme.service';
                 </div>
 
                 <div class="request-actions">
-                  <button
-                    mat-raised-button
-                    color="primary"
-                    (click)="approveRequest(request)"
-                    [disabled]="loading()"
-                  >
-                    <mat-icon>check</mat-icon>
-                    Approve
-                  </button>
-                  <button
-                    mat-stroked-button
-                    color="warn"
-                    (click)="rejectRequest(request)"
-                    [disabled]="loading()"
-                  >
-                    <mat-icon>close</mat-icon>
-                    Reject
-                  </button>
+                  @if (request.canApprove !== false) {
+                    <button
+                      mat-raised-button
+                      color="primary"
+                      (click)="approveRequest(request)"
+                      [disabled]="loading()"
+                    >
+                      <mat-icon>check</mat-icon>
+                      Approve
+                    </button>
+                    <button
+                      mat-stroked-button
+                      color="warn"
+                      (click)="rejectRequest(request)"
+                      [disabled]="loading()"
+                    >
+                      <mat-icon>close</mat-icon>
+                      Reject
+                    </button>
+                  } @else {
+                    <p class="no-permission">
+                      <mat-icon>lock</mat-icon>
+                      You don't have permission to approve this request
+                    </p>
+                  }
                 </div>
               </mat-card>
               }
@@ -441,6 +469,7 @@ import { ThemeService } from '../../services/theme.service';
             color-mix(in srgb, var(--theme-primary) 8%, var(--theme-surface)),
             color-mix(in srgb, var(--theme-accent) 3%, var(--theme-surface))
           );
+          animation: moduleActivated 0.6s ease-out;
           
           &::before {
             content: '';
@@ -451,6 +480,7 @@ import { ThemeService } from '../../services/theme.service';
             height: 0;
             border-left: 20px solid transparent;
             border-top: 20px solid var(--theme-success);
+            animation: checkmarkAppear 0.8s ease-out 0.3s both;
           }
           
           &::after {
@@ -461,6 +491,7 @@ import { ThemeService } from '../../services/theme.service';
             color: white;
             font-size: 10px;
             font-weight: bold;
+            animation: checkmarkAppear 0.8s ease-out 0.3s both;
           }
         }
       }
@@ -472,15 +503,47 @@ import { ThemeService } from '../../services/theme.service';
         align-items: flex-start;
       }
 
+      .module-info {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex: 1;
+      }
+
+      .module-details {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .module-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        transition: all 0.2s ease;
+        
+        mat-icon {
+          font-size: 24px;
+          width: 24px;
+          height: 24px;
+        }
+      }
+
       .module-title {
         margin: 0;
         font-size: 1.25rem;
         font-weight: 700;
         letter-spacing: -0.01em;
+        color: var(--theme-on-surface);
+        flex: 1;
       }
 
       .module-status {
-        margin-top: 12px;
+        margin-top: 8px;
       }
 
       .status-chip {
@@ -508,6 +571,7 @@ import { ThemeService } from '../../services/theme.service';
           background-color: color-mix(in srgb, var(--theme-success) 15%, transparent);
           color: var(--theme-success);
           border: 1px solid color-mix(in srgb, var(--theme-success) 30%, transparent);
+          animation: statusChange 0.5s ease-out;
         }
         
         &.available {
@@ -583,9 +647,46 @@ import { ThemeService } from '../../services/theme.service';
           margin-right: 8px;
           width: 40px;
           height: 40px;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          position: relative;
+          overflow: hidden;
           
-          &:hover {
+          &:hover:not(:disabled) {
             transform: scale(1.1);
+            background-color: color-mix(in srgb, var(--theme-primary) 25%, transparent);
+          }
+          
+          &.pinned {
+            background-color: var(--theme-primary);
+            color: var(--theme-on-primary);
+            
+            &:hover:not(:disabled) {
+              background-color: color-mix(in srgb, var(--theme-primary) 85%, black);
+            }
+            
+            .pin-icon {
+              animation: pinPulse 0.6s ease-out;
+            }
+          }
+          
+          &:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+          }
+          
+          .pin-icon {
+            transition: all 0.2s ease;
+            
+            &:hover {
+              transform: rotate(15deg);
+            }
+          }
+          
+          mat-spinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
           }
         }
       }
@@ -607,6 +708,14 @@ import { ThemeService } from '../../services/theme.service';
         &:hover {
           transform: translateY(-2px);
           box-shadow: 0 8px 25px color-mix(in srgb, var(--theme-on-surface) 15%, transparent);
+        }
+        
+        &.high-priority {
+          border-left: 4px solid var(--theme-warning);
+          background: linear-gradient(135deg, 
+            color-mix(in srgb, var(--theme-warning) 5%, var(--theme-surface)),
+            var(--theme-surface)
+          );
         }
       }
 
@@ -636,6 +745,92 @@ import { ThemeService } from '../../services/theme.service';
         margin: 0;
         font-size: 0.875rem;
         color: color-mix(in srgb, var(--theme-on-surface) 65%, transparent);
+      }
+
+      .request-meta {
+        margin-top: 12px;
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .approver-chip {
+        font-size: 0.75rem;
+        height: 24px;
+        font-weight: 600;
+        border-radius: 12px;
+        padding: 0 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        
+        mat-icon {
+          font-size: 12px;
+          width: 12px;
+          height: 12px;
+        }
+        
+        &.approver-org_admin {
+          background-color: color-mix(in srgb, var(--theme-primary) 15%, transparent);
+          color: var(--theme-primary);
+          border: 1px solid color-mix(in srgb, var(--theme-primary) 30%, transparent);
+        }
+        
+        &.approver-super_admin {
+          background-color: color-mix(in srgb, var(--theme-accent) 15%, transparent);
+          color: var(--theme-accent);
+          border: 1px solid color-mix(in srgb, var(--theme-accent) 30%, transparent);
+        }
+        
+        &.approver-system {
+          background-color: color-mix(in srgb, var(--theme-on-surface) 15%, transparent);
+          color: var(--theme-on-surface);
+          border: 1px solid color-mix(in srgb, var(--theme-on-surface) 30%, transparent);
+        }
+        
+        &.approver-unknown {
+          background-color: color-mix(in srgb, var(--theme-warning) 15%, transparent);
+          color: var(--theme-warning);
+          border: 1px solid color-mix(in srgb, var(--theme-warning) 30%, transparent);
+        }
+      }
+
+      .priority-chip {
+        font-size: 0.75rem;
+        height: 24px;
+        font-weight: 600;
+        border-radius: 12px;
+        padding: 0 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        
+        mat-icon {
+          font-size: 12px;
+          width: 12px;
+          height: 12px;
+        }
+        
+        &.high {
+          background-color: color-mix(in srgb, var(--theme-error) 15%, transparent);
+          color: var(--theme-error);
+          border: 1px solid color-mix(in srgb, var(--theme-error) 30%, transparent);
+        }
+      }
+
+      .no-permission {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: color-mix(in srgb, var(--theme-on-surface) 60%, transparent);
+        font-size: 0.875rem;
+        margin: 0;
+        
+        mat-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+        }
       }
 
       .request-actions {
@@ -757,6 +952,72 @@ import { ThemeService } from '../../services/theme.service';
       
 
       
+      @keyframes pinPulse {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.2);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+      
+      @keyframes pinRotate {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      
+      @keyframes moduleActivated {
+        0% {
+          transform: scale(1);
+          box-shadow: 0 2px 8px color-mix(in srgb, var(--theme-on-surface) 8%, transparent);
+        }
+        50% {
+          transform: scale(1.02);
+          box-shadow: 0 8px 25px color-mix(in srgb, var(--theme-primary) 25%, transparent);
+        }
+        100% {
+          transform: scale(1);
+          box-shadow: 0 12px 40px color-mix(in srgb, var(--theme-on-surface) 15%, transparent);
+        }
+      }
+      
+      @keyframes checkmarkAppear {
+        0% {
+          opacity: 0;
+          transform: scale(0.5);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1.2);
+        }
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+      
+      @keyframes statusChange {
+        0% {
+          opacity: 0.7;
+          transform: scale(0.95);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1.05);
+        }
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+      
       @media (prefers-reduced-motion: reduce) {
         .module-card,
         .request-card {
@@ -764,6 +1025,19 @@ import { ThemeService } from '../../services/theme.service';
           
           &:hover {
             transform: none;
+          }
+        }
+        
+        .mat-mdc-icon-button {
+          transition: none;
+          
+          &:hover {
+            transform: none;
+          }
+          
+          .pin-icon {
+            animation: none !important;
+            transition: none;
           }
         }
       }
@@ -785,6 +1059,8 @@ export class ModulesComponent implements OnInit {
   pendingRequests = signal<ModuleRequest[]>([]);
   selectedTab = signal(0);
   loading = signal(false);
+  pinLoading = signal<string | null>(null);
+  moduleLoading = signal<string | null>(null);
   searchTerm = '';
   pinnedModules = signal<string[]>([]);
 
@@ -856,69 +1132,94 @@ export class ModulesComponent implements OnInit {
   }
 
   activateModule(module: AppModuleInfo) {
-    this.loading.set(true);
+    this.moduleLoading.set(module.id);
     console.log('Activating module:', module.id);
     this.modulesService.requestActivation(module.id).subscribe({
       next: (result) => {
         console.log('Activation result:', result);
         if (result.success) {
+          // Immediately update the UI optimistically
+          this.updateModuleStatus(module.id, { isActive: true, isPending: false, canActivate: false });
+          
           this.snackBar.open('Module activated successfully', 'Close', {
             duration: 3000,
           });
-          // Add delay to ensure backend has processed the change
-          setTimeout(() => {
-            this.loadModules();
-          }, 500);
+          
+          // Don't refresh immediately to avoid overriding the optimistic update
+          // The activation was successful, so trust the optimistic update
         }
-        this.loading.set(false);
+        this.moduleLoading.set(null);
       },
       error: (error) => {
         console.error('Activation error:', error);
         this.snackBar.open('Failed to activate module', 'Close', {
           duration: 3000,
         });
-        this.loading.set(false);
+        this.moduleLoading.set(null);
       },
     });
   }
 
   deactivateModule(module: AppModuleInfo) {
-    this.loading.set(true);
+    this.moduleLoading.set(module.id);
     this.modulesService.deactivateModule(module.id).subscribe({
       next: (result) => {
         if (result.success) {
+          // Immediately update the UI optimistically
+          this.updateModuleStatus(module.id, { isActive: false, isPending: false, canActivate: true });
+          
           this.snackBar.open('Module deactivated successfully', 'Close', {
             duration: 3000,
           });
-          this.loadModules();
+          
+          // Don't refresh immediately to avoid overriding the optimistic update
         }
-        this.loading.set(false);
+        this.moduleLoading.set(null);
       },
       error: () => {
         this.snackBar.open('Failed to deactivate module', 'Close', {
           duration: 3000,
         });
-        this.loading.set(false);
+        this.moduleLoading.set(null);
       },
     });
   }
 
   requestModule(module: AppModuleInfo) {
-    this.loading.set(true);
+    this.moduleLoading.set(module.id);
     this.modulesService.requestActivation(module.id).subscribe({
       next: (result) => {
         if (result.success) {
-          this.snackBar.open('Access request submitted', 'Close', {
-            duration: 3000,
-          });
+          // Check if it was auto-approved (super admin) or requires approval
+          if (result.approverType?.includes('auto_approved') || result.approverType === 'public') {
+            // Module was auto-approved, update UI immediately
+            this.updateModuleStatus(module.id, { isActive: true, isPending: false, canActivate: false });
+            this.snackBar.open('Module activated successfully', 'Close', {
+              duration: 3000,
+            });
+          } else if (result.requiresApproval) {
+            // Request submitted, update UI to show pending status
+            this.updateModuleStatus(module.id, { isActive: false, isPending: true, canActivate: false });
+            this.snackBar.open(`Access request submitted to ${result.approverType}`, 'Close', {
+              duration: 3000,
+            });
+            // Only refresh for pending requests to show in the requests tab
+            this.loadPendingRequests();
+          } else {
+            // Fallback - assume it was activated
+            this.updateModuleStatus(module.id, { isActive: true, isPending: false, canActivate: false });
+            this.snackBar.open('Module activated successfully', 'Close', {
+              duration: 3000,
+            });
+          }
         }
-        this.loading.set(false);
+        this.moduleLoading.set(null);
       },
       error: () => {
         this.snackBar.open('Failed to submit request', 'Close', {
           duration: 3000,
         });
-        this.loading.set(false);
+        this.moduleLoading.set(null);
       },
     });
   }
@@ -942,12 +1243,15 @@ export class ModulesComponent implements OnInit {
     this.loading.set(true);
     this.modulesService.approveRequest(request._id).subscribe({
       next: () => {
+        // Immediately update the UI optimistically
+        this.updateModuleStatus(request.moduleId, { isActive: true, isPending: false, canActivate: false });
+        
+        // Remove from pending requests
+        const currentRequests = this.pendingRequests();
+        const updatedRequests = currentRequests.filter(r => r._id !== request._id);
+        this.pendingRequests.set(updatedRequests);
+        
         this.snackBar.open('Request approved', 'Close', { duration: 3000 });
-        // Add delay to ensure backend processing completes
-        setTimeout(() => {
-          this.loadPendingRequests();
-          this.loadModules();
-        }, 500);
         this.loading.set(false);
       },
       error: () => {
@@ -963,8 +1267,15 @@ export class ModulesComponent implements OnInit {
     this.loading.set(true);
     this.modulesService.rejectRequest(request._id).subscribe({
       next: () => {
+        // Immediately update the UI optimistically
+        this.updateModuleStatus(request.moduleId, { isActive: false, isPending: false, canActivate: true });
+        
+        // Remove from pending requests
+        const currentRequests = this.pendingRequests();
+        const updatedRequests = currentRequests.filter(r => r._id !== request._id);
+        this.pendingRequests.set(updatedRequests);
+        
         this.snackBar.open('Request rejected', 'Close', { duration: 3000 });
-        this.loadPendingRequests();
         this.loading.set(false);
       },
       error: () => {
@@ -980,17 +1291,109 @@ export class ModulesComponent implements OnInit {
     this.selectedTab.set(index);
   }
 
+  private updateModuleStatus(moduleId: string, updates: Partial<AppModuleInfo>) {
+    // Update the modules signal
+    const currentModules = this.modules();
+    const updatedModules = currentModules.map(module => 
+      module.id === moduleId ? { ...module, ...updates } : module
+    );
+    this.modules.set(updatedModules);
+    
+    // Update the filtered modules signal
+    const currentFiltered = this.filteredModules();
+    const updatedFiltered = currentFiltered.map(module => 
+      module.id === moduleId ? { ...module, ...updates } : module
+    );
+    this.filteredModules.set(updatedFiltered);
+    
+    // Trigger change detection for immediate UI update
+    console.log(`Updated module ${moduleId} with:`, updates);
+  }
+
+  private refreshModuleData() {
+    // Reload both modules and pending requests
+    this.loadModules();
+    this.loadPendingRequests();
+  }
+
   isSuperAdmin(): boolean {
     return this.authService.hasRole('super_admin');
   }
 
   getModuleName(moduleId: string): string {
     const module = this.modules().find((m) => m.id === moduleId);
-    return module?.displayName || 'Unknown Module';
+    return this.getModuleDisplayName(module) || 'Unknown Module';
+  }
+
+  getModuleDisplayName(module: any): string {
+    let registryModule = getModuleById(module?.id);
+    if (!registryModule) registryModule = getModuleById(module?.name);
+    if (!registryModule && module?.displayName) {
+      registryModule = getModuleById(module.displayName.toLowerCase().replace(/\s+/g, '-'));
+    }
+    return registryModule?.displayName || module?.displayName || module?.name || 'Unknown Module';
+  }
+
+  getModuleDescription(module: any): string {
+    let registryModule = getModuleById(module?.id);
+    if (!registryModule) registryModule = getModuleById(module?.name);
+    if (!registryModule && module?.displayName) {
+      registryModule = getModuleById(module.displayName.toLowerCase().replace(/\s+/g, '-'));
+    }
+    return registryModule?.description || module?.description || 'No description available';
+  }
+
+  getModuleIcon(module: any): string {
+    // Try multiple lookup strategies
+    let registryModule = getModuleById(module?.id);
+    if (!registryModule) {
+      registryModule = getModuleById(module?.name);
+    }
+    if (!registryModule && module?.displayName) {
+      // Try to find by display name match
+      registryModule = getModuleById(module.displayName.toLowerCase().replace(/\s+/g, '-'));
+    }
+    
+    return registryModule?.icon || module?.icon || 'extension';
+  }
+
+  getModuleColor(module: any): string {
+    let registryModule = getModuleById(module?.id);
+    if (!registryModule) registryModule = getModuleById(module?.name);
+    if (!registryModule && module?.displayName) {
+      registryModule = getModuleById(module.displayName.toLowerCase().replace(/\s+/g, '-'));
+    }
+    return registryModule?.color || module?.color || '#9E9E9E';
   }
 
   formatDate(dateString: string): string {
     return new Date(dateString).toLocaleDateString();
+  }
+
+  getApproverIcon(approverType?: string): string {
+    switch (approverType) {
+      case 'org_admin':
+        return 'admin_panel_settings';
+      case 'super_admin':
+        return 'security';
+      case 'system':
+        return 'settings';
+      default:
+        return 'help';
+    }
+  }
+
+  getApproverLabel(approverType?: string): string {
+    switch (approverType) {
+      case 'org_admin':
+        return 'Org Admin';
+      case 'super_admin':
+        return 'Super Admin';
+      case 'system':
+        return 'System';
+      default:
+        return 'Unknown';
+    }
   }
 
   loadPinnedModules() {
@@ -1009,19 +1412,26 @@ export class ModulesComponent implements OnInit {
   }
 
   togglePin(module: AppModuleInfo) {
+    const wasAlreadyPinned = this.isPinned(module.id);
+    const action = wasAlreadyPinned ? 'unpinned from' : 'pinned to';
+    
+    this.pinLoading.set(module.id);
+    
     this.preferencesService.togglePinnedModule(module.id).subscribe({
       next: (prefs) => {
         this.pinnedModules.set(prefs.pinnedModules || []);
         this.preferencesService.updatePinnedModules(prefs.pinnedModules || []);
-        const action = this.isPinned(module.id) ? 'pinned to' : 'unpinned from';
-        this.snackBar.open(`${module.displayName} ${action} navbar`, 'Close', {
+        const displayName = this.getModuleDisplayName(module);
+        this.snackBar.open(`${displayName} ${action} navbar`, 'Close', {
           duration: 2000,
         });
+        this.pinLoading.set(null);
       },
       error: () => {
         this.snackBar.open('Failed to update pin status', 'Close', {
           duration: 3000,
         });
+        this.pinLoading.set(null);
       },
     });
   }

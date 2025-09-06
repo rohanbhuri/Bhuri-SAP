@@ -52,7 +52,21 @@ The Module Management system allows organizations and users to activate/deactiva
   status: "pending" | "approved" | "rejected",
   requestedAt: Date,
   processedAt: Date,
-  processedBy: ObjectId
+  processedBy: ObjectId,
+  approverType: "org_admin" | "super_admin" | "system",
+  approverId: ObjectId | null,
+  priority: "high" | "normal"
+}
+```
+
+### 5. audit_logs
+```javascript
+{
+  _id: ObjectId,
+  action: String,
+  data: Object,
+  timestamp: Date,
+  source: String
 }
 ```
 
@@ -81,22 +95,30 @@ The Module Management system allows organizations and users to activate/deactiva
 
 **Process:**
 1. User clicks "Request Access" on restricted module
-2. System creates entry in `module-requests` collection:
-   - moduleId, userId, organizationId, status: "pending"
-3. Module shows as "Pending" for the user
-4. Admin receives notification of pending request
+2. System determines appropriate approver based on:
+   - Organization admins (for org users)
+   - Super admins (for critical modules or no org)
+   - System fallback (for edge cases)
+3. System creates entry in `module-requests` collection with approver information
+4. Module shows as "Pending" for the user
+5. Appropriate approvers receive notification based on request priority
 
 ### Story 4: Approve Module Request
 **As an admin, I want to approve/reject module requests**
 
 **Process:**
-1. Admin views pending requests with user names
-2. On approval:
+1. Admin views pending requests with approver information and priority levels
+2. System validates admin permissions before allowing approval/rejection
+3. On approval:
    - Adds module ID to organization's `activeModuleIds`
    - Updates request status to "approved"
+   - Creates audit log entry
+   - Notifies requester of approval
    - Module becomes active for the organization
-3. On rejection:
+4. On rejection:
    - Updates request status to "rejected"
+   - Creates audit log entry
+   - Notifies requester of rejection
    - Module remains inactive
 
 ### Story 5: Deactivate Module
@@ -113,18 +135,27 @@ The Module Management system allows organizations and users to activate/deactiva
 ### Module Activation Logic
 - **Priority**: Organization `activeModuleIds` > User `activeModuleIds`
 - **Public Modules**: Instant activation without approval
-- **Restricted Modules**: Require admin approval
+- **Restricted Modules**: Require admin approval via intelligent routing
+- **Super Admin Requests**: Auto-approved (bypass approval workflow)
 - **Status Determination**: Only based on presence in `activeModuleIds` arrays
+
+### Request Routing Logic
+- **Organization Users**: Requests routed to organization admins first
+- **Critical Modules**: Always routed to super admins regardless of organization
+- **No Organization**: Requests routed to super admins
+- **Priority Levels**: Core modules and super admin requests marked as high priority
 
 ### Permission Types
 - **public**: Anyone can activate instantly
-- **require_permission**: Needs admin approval via request system
+- **require_permission**: Needs admin approval via intelligent routing system
 
 ### Data Consistency
 - Module status is determined ONLY by `activeModuleIds` arrays
 - No module-level `isActive` field is used
-- Requests are organization/user specific
+- Requests are organization/user specific with approver routing
 - Super admins see all pending requests
+- Regular admins see only their organization's requests
+- All approval/rejection actions are logged for audit purposes
 
 ## API Endpoints
 

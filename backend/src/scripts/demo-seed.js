@@ -121,12 +121,19 @@ class DemoSeeder {
     
     const superAdminRoleIds = superAdminRoles.map(r => r._id);
     
+    // Activate modules for super admin users
     await this.db.collection('users').updateMany(
       { roleIds: { $in: superAdminRoleIds } },
       { $set: { activeModuleIds: moduleIds } }
     );
     
-    console.log(`🔓 Activated all modules for super admins`);
+    // Activate modules for all organizations
+    await this.db.collection('organizations').updateMany(
+      {},
+      { $set: { activeModuleIds: moduleIds } }
+    );
+    
+    console.log(`🔓 Activated all modules for super admins and organizations`);
   }
 
   async seedContacts() {
@@ -534,7 +541,9 @@ class DemoSeeder {
         // Finance
         { name: 'Budget Planner', description: 'Plan and manage budgets', isActive: false, icon: 'account_balance', route: '/modules/budget-planner', category: 'Finance', permissionType: 'admin' },
         { name: 'Estimates Management', description: 'Create and manage estimates', isActive: false, icon: 'receipt', route: '/modules/estimates-management', category: 'Finance', permissionType: 'admin' },
-        { name: 'Contract Management', description: 'Manage contracts and agreements', isActive: false, icon: 'description', route: '/modules/contract-module', category: 'Finance', permissionType: 'admin' }
+        { name: 'Contract Management', description: 'Manage contracts and agreements', isActive: false, icon: 'description', route: '/modules/contract-module', category: 'Finance', permissionType: 'admin' },
+        { name: 'Order Management', description: 'Manage orders, track status, and monitor fulfillment', isActive: true, icon: 'shopping_cart', route: '/modules/order-management', category: 'Operations', permissionType: 'admin' },
+        { name: 'Finance Management', description: 'Manage invoices, receipts, and payments', isActive: true, icon: 'account_balance_wallet', route: '/modules/finance', category: 'Finance', permissionType: 'admin' }
       ];
     } else if (this.projectName === 'true-process') {
       return [
@@ -556,7 +565,9 @@ class DemoSeeder {
         
         // Sales & Operations
         { name: 'Sales Management', description: 'Manage sales processes and pipeline', isActive: false, icon: 'trending_up', route: '/modules/sales-management', category: 'Sales', permissionType: 'admin' },
-        { name: 'Inventory Management', description: 'Manage inventory and stock levels', isActive: false, icon: 'inventory', route: '/modules/inventory-management', category: 'Operations', permissionType: 'admin' }
+        { name: 'Inventory Management', description: 'Manage inventory and stock levels', isActive: false, icon: 'inventory', route: '/modules/inventory-management', category: 'Operations', permissionType: 'admin' },
+        { name: 'Order Management', description: 'Manage orders, track status, and monitor fulfillment', isActive: true, icon: 'shopping_cart', route: '/modules/order-management', category: 'Operations', permissionType: 'admin' },
+        { name: 'Finance Management', description: 'Manage invoices, receipts, and payments', isActive: true, icon: 'account_balance_wallet', route: '/modules/finance', category: 'Finance', permissionType: 'admin' }
       ];
     }
 

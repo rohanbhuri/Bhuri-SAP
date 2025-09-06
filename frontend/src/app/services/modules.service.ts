@@ -28,6 +28,10 @@ export interface ModuleRequest {
   processedAt?: string;
   processedBy?: string;
   userName?: string;
+  moduleName?: string;
+  approverType?: 'org_admin' | 'super_admin' | 'system' | 'unknown';
+  priority?: 'high' | 'normal';
+  canApprove?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -76,7 +80,15 @@ export class ModulesService {
   requestActivation(moduleId: string): Observable<any> {
     return this.http
       .post(`${this.apiUrl}/modules/${moduleId}/request`, {})
-      .pipe(catchError(() => of({ success: false })));
+      .pipe(
+        map((response: any) => ({
+          success: response.success || false,
+          message: response.message || '',
+          approverType: response.approverType || 'unknown',
+          requiresApproval: response.requiresApproval || false
+        })),
+        catchError(() => of({ success: false, message: 'Request failed', approverType: 'unknown' }))
+      );
   }
 
   getPendingRequests(): Observable<ModuleRequest[]> {
