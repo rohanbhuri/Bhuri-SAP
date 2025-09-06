@@ -126,30 +126,48 @@ export class ContactsPageComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        if (contact) {
-          this.crmService.updateContact(contact._id, result).subscribe({
-            next: () => {
+      if (!result) return;
+
+      if (contact) {
+        this.crmService.updateContact(contact._id, result).subscribe({
+          next: (updated) => {
+            // Update list in place for instant refresh
+            const updatedList = this.contacts().map(c => c._id === contact._id ? { ...c, ...updated } : c);
+            this.contacts.set(updatedList);
+            this.snackBar.open('Contact updated successfully', 'Close', { duration: 3000 });
+          },
+          error: (error: any) => {
+            const status = error?.status;
+            const backendMsg = (error?.error?.message || '').toString().toLowerCase();
+            let message = 'Error updating contact';
+            if (status === 409 || backendMsg.includes('duplicate')) message = 'Duplicate entry: email already exists';
+            else if (status === 400 && (backendMsg.includes('email') || backendMsg.includes('phone'))) message = 'Incorrect email or phone format';
+            else if (status === 422) message = 'Validation failed: please check required fields';
+            this.snackBar.open(message, 'Close', { duration: 5000 });
+          }
+        });
+      } else {
+        this.crmService.createContact(result).subscribe({
+          next: (created) => {
+            // Optimistic prepend for instant visual update
+            if (created && created._id) {
+              this.contacts.set([created, ...this.contacts()]);
+            } else {
+              // Fallback to reload if backend didn't return created entity
               this.loadContacts();
-              this.snackBar.open('Contact updated successfully', 'Close', { duration: 3000 });
-            },
-            error: (error: any) => {
-              const message = error.status === 409 ? 'Email already exists' : 'Error updating contact';
-              this.snackBar.open(message, 'Close', { duration: 5000 });
             }
-          });
-        } else {
-          this.crmService.createContact(result).subscribe({
-            next: () => {
-              this.loadContacts();
-              this.snackBar.open('Contact created successfully', 'Close', { duration: 3000 });
-            },
-            error: (error: any) => {
-              const message = error.status === 409 ? 'Email already exists' : 'Error creating contact';
-              this.snackBar.open(message, 'Close', { duration: 5000 });
-            }
-          });
-        }
+            this.snackBar.open('Contact created successfully', 'Close', { duration: 3000 });
+          },
+          error: (error: any) => {
+            const status = error?.status;
+            const backendMsg = (error?.error?.message || '').toString().toLowerCase();
+            let message = 'Error creating contact';
+            if (status === 409 || backendMsg.includes('duplicate')) message = 'Duplicate entry: email already exists';
+            else if (status === 400 && (backendMsg.includes('email') || backendMsg.includes('phone'))) message = 'Incorrect email or phone format';
+            else if (status === 422) message = 'Validation failed: please check required fields';
+            this.snackBar.open(message, 'Close', { duration: 5000 });
+          }
+        });
       }
     });
   }

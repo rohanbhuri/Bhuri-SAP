@@ -19,55 +19,61 @@ import { Lead } from '../crm.service';
     MatDatepickerModule, MatNativeDateModule
   ],
   template: `
-    <h2 mat-dialog-title>{{ data ? 'Edit Lead' : 'Add Lead' }}</h2>
-    <form [formGroup]="form" (ngSubmit)="submit()">
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Title</mat-label>
-        <input matInput formControlName="title" required />
-      </mat-form-field>
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Description</mat-label>
-        <textarea matInput rows="3" formControlName="description"></textarea>
-      </mat-form-field>
-      <div class="form-grid">
+    <h2 mat-dialog-title class="dialog-title">{{ data ? 'Edit Lead' : 'Add Lead' }}</h2>
+    <div class="dialog-content" mat-dialog-content>
+      <form [formGroup]="form" (ngSubmit)="submit()">
         <mat-form-field appearance="outline">
-          <mat-label>Status</mat-label>
-          <mat-select formControlName="status">
-            <mat-option value="new">New</mat-option>
-            <mat-option value="qualified">Qualified</mat-option>
-            <mat-option value="contacted">Contacted</mat-option>
-            <mat-option value="converted">Converted</mat-option>
-            <mat-option value="lost">Lost</mat-option>
-          </mat-select>
+          <mat-label>Title</mat-label>
+          <input matInput formControlName="title" required />
         </mat-form-field>
         <mat-form-field appearance="outline">
-          <mat-label>Estimated Value</mat-label>
-          <input matInput formControlName="estimatedValue" type="number" min="0" />
+          <mat-label>Description</mat-label>
+          <textarea matInput rows="3" formControlName="description"></textarea>
         </mat-form-field>
-      </div>
-      <div class="form-grid">
-        <mat-form-field appearance="outline">
-          <mat-label>Source</mat-label>
-          <input matInput formControlName="source" />
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>Expected Close Date</mat-label>
-          <input matInput [matDatepicker]="picker" formControlName="expectedCloseDate" />
-          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-          <mat-datepicker #picker></mat-datepicker>
-        </mat-form-field>
-      </div>
-      <div class="actions">
-        <button mat-button type="button" (click)="close()">Cancel</button>
-        <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">Save</button>
-      </div>
-    </form>
+        <div class="form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Status</mat-label>
+            <mat-select formControlName="status">
+              <mat-option value="new">New</mat-option>
+              <mat-option value="qualified">Qualified</mat-option>
+              <mat-option value="contacted">Contacted</mat-option>
+              <mat-option value="converted">Converted</mat-option>
+              <mat-option value="lost">Lost</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Estimated Value</mat-label>
+            <input matInput formControlName="estimatedValue" type="number" min="0" />
+          </mat-form-field>
+        </div>
+        <div class="form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Source</mat-label>
+            <input matInput formControlName="source" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Expected Close Date</mat-label>
+            <input matInput [matDatepicker]="picker" formControlName="expectedCloseDate" />
+            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+          </mat-form-field>
+        </div>
+        <div class="dialog-actions" mat-dialog-actions>
+          <button mat-button type="button" (click)="close()">Cancel</button>
+          <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">Save</button>
+        </div>
+      </form>
+    </div>
   `,
   styles: [`
-    form { display: flex; flex-direction: column; gap: 16px; padding: 16px 0; }
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .full-width { width: 100%; }
-    .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+    :host { display: block; max-width: 640px; }
+    .dialog-title { margin: 0; padding: 16px 24px 0; }
+    .dialog-content { padding: 0 24px 8px; }
+    form { display: grid; grid-auto-rows: min-content; row-gap: 16px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    mat-form-field { width: 100%; }
+    .dialog-actions { display: flex; justify-content: flex-end; gap: 12px; padding: 0 0 8px; }
+    button[mat-raised-button] { min-width: 96px; }
     @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
   `]
 })

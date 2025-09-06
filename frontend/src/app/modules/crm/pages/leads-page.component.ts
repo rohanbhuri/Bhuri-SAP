@@ -119,24 +119,45 @@ export class LeadsPageComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        if (lead) {
-          this.crmService.updateLead(lead._id, result).subscribe({
-            next: () => {
+      if (!result) return;
+
+      if (lead) {
+        this.crmService.updateLead(lead._id, result).subscribe({
+          next: (updated) => {
+            const updatedList = this.leads().map(l => l._id === lead._id ? { ...l, ...updated } : l);
+            this.leads.set(updatedList);
+            this.snackBar.open('Lead updated successfully', 'Close', { duration: 3000 });
+          },
+          error: (error: any) => {
+            const status = error?.status;
+            const backendMsg = (error?.error?.message || '').toString().toLowerCase();
+            let message = 'Error updating lead';
+            if (status === 409 || backendMsg.includes('duplicate')) message = 'Duplicate entry: lead already exists';
+            else if (status === 400) message = 'Validation failed: please check form fields';
+            else if (status === 422) message = 'Validation failed: please check required fields';
+            this.snackBar.open(message, 'Close', { duration: 5000 });
+          }
+        });
+      } else {
+        this.crmService.createLead(result).subscribe({
+          next: (created) => {
+            if (created && created._id) {
+              this.leads.set([created, ...this.leads()]);
+            } else {
               this.loadLeads();
-              this.snackBar.open('Lead updated successfully', 'Close', { duration: 3000 });
-            },
-            error: () => this.snackBar.open('Error updating lead', 'Close', { duration: 3000 })
-          });
-        } else {
-          this.crmService.createLead(result).subscribe({
-            next: () => {
-              this.loadLeads();
-              this.snackBar.open('Lead created successfully', 'Close', { duration: 3000 });
-            },
-            error: () => this.snackBar.open('Error creating lead', 'Close', { duration: 3000 })
-          });
-        }
+            }
+            this.snackBar.open('Lead created successfully', 'Close', { duration: 3000 });
+          },
+          error: (error: any) => {
+            const status = error?.status;
+            const backendMsg = (error?.error?.message || '').toString().toLowerCase();
+            let message = 'Error creating lead';
+            if (status === 409 || backendMsg.includes('duplicate')) message = 'Duplicate entry: lead already exists';
+            else if (status === 400) message = 'Validation failed: please check form fields';
+            else if (status === 422) message = 'Validation failed: please check required fields';
+            this.snackBar.open(message, 'Close', { duration: 5000 });
+          }
+        });
       }
     });
   }

@@ -19,56 +19,62 @@ import { Deal } from '../crm.service';
     MatDatepickerModule, MatNativeDateModule
   ],
   template: `
-    <h2 mat-dialog-title>{{ data ? 'Edit Deal' : 'Add Deal' }}</h2>
-    <form [formGroup]="form" (ngSubmit)="submit()">
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Title</mat-label>
-        <input matInput formControlName="title" required />
-      </mat-form-field>
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Description</mat-label>
-        <textarea matInput rows="3" formControlName="description"></textarea>
-      </mat-form-field>
-      <div class="form-grid">
+    <h2 mat-dialog-title class="dialog-title">{{ data ? 'Edit Deal' : 'Add Deal' }}</h2>
+    <div class="dialog-content" mat-dialog-content>
+      <form [formGroup]="form" (ngSubmit)="submit()">
         <mat-form-field appearance="outline">
-          <mat-label>Value</mat-label>
-          <input matInput formControlName="value" type="number" min="0" required />
+          <mat-label>Title</mat-label>
+          <input matInput formControlName="title" required />
         </mat-form-field>
         <mat-form-field appearance="outline">
-          <mat-label>Stage</mat-label>
-          <mat-select formControlName="stage">
-            <mat-option value="prospecting">Prospecting</mat-option>
-            <mat-option value="qualification">Qualification</mat-option>
-            <mat-option value="proposal">Proposal</mat-option>
-            <mat-option value="negotiation">Negotiation</mat-option>
-            <mat-option value="closed-won">Closed Won</mat-option>
-            <mat-option value="closed-lost">Closed Lost</mat-option>
-          </mat-select>
+          <mat-label>Description</mat-label>
+          <textarea matInput rows="3" formControlName="description"></textarea>
         </mat-form-field>
-      </div>
-      <div class="form-grid">
-        <mat-form-field appearance="outline">
-          <mat-label>Probability (%)</mat-label>
-          <input matInput formControlName="probability" type="number" min="0" max="100" />
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>Expected Close Date</mat-label>
-          <input matInput [matDatepicker]="picker" formControlName="expectedCloseDate" />
-          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-          <mat-datepicker #picker></mat-datepicker>
-        </mat-form-field>
-      </div>
-      <div class="actions">
-        <button mat-button type="button" (click)="close()">Cancel</button>
-        <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">Save</button>
-      </div>
-    </form>
+        <div class="form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Value</mat-label>
+            <input matInput formControlName="value" type="number" min="0" required />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Stage</mat-label>
+            <mat-select formControlName="stage">
+              <mat-option value="prospecting">Prospecting</mat-option>
+              <mat-option value="qualification">Qualification</mat-option>
+              <mat-option value="proposal">Proposal</mat-option>
+              <mat-option value="negotiation">Negotiation</mat-option>
+              <mat-option value="closed-won">Closed Won</mat-option>
+              <mat-option value="closed-lost">Closed Lost</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <div class="form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Probability (%)</mat-label>
+            <input matInput formControlName="probability" type="number" min="0" max="100" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Expected Close Date</mat-label>
+            <input matInput [matDatepicker]="picker" formControlName="expectedCloseDate" />
+            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+          </mat-form-field>
+        </div>
+        <div class="dialog-actions" mat-dialog-actions>
+          <button mat-button type="button" (click)="close()">Cancel</button>
+          <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">Save</button>
+        </div>
+      </form>
+    </div>
   `,
   styles: [`
-    form { display: flex; flex-direction: column; gap: 16px; padding: 16px 0; }
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .full-width { width: 100%; }
-    .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+    :host { display: block; max-width: 640px; }
+    .dialog-title { margin: 0; padding: 16px 24px 0; }
+    .dialog-content { padding: 0 24px 8px; }
+    form { display: grid; grid-auto-rows: min-content; row-gap: 16px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    mat-form-field { width: 100%; }
+    .dialog-actions { display: flex; justify-content: flex-end; gap: 12px; padding: 0 0 8px; }
+    button[mat-raised-button] { min-width: 96px; }
     @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
   `]
 })
