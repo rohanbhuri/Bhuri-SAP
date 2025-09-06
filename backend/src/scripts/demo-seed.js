@@ -107,6 +107,7 @@ class DemoSeeder {
     await this.seedContacts();
     await this.seedProjects();
     await this.seedLeads();
+    await this.seedDeals();
     await this.seedTasks();
     await this.seedMessages();
   }
@@ -267,22 +268,76 @@ class DemoSeeder {
     }
   }
 
+  async seedDeals() {
+    const organizations = await this.db.collection('organizations').find({}).toArray();
+    const contacts = await this.db.collection('contacts').find({}).toArray();
+    const leads = await this.db.collection('leads').find({}).toArray();
+    const users = await this.db.collection('users').find({}).toArray();
+    const deals = [];
+    
+    const dealTemplates = [
+      { title: 'Enterprise Software License', value: 250000, stage: 'proposal', probability: 75 },
+      { title: 'Cloud Infrastructure Setup', value: 180000, stage: 'negotiation', probability: 60 },
+      { title: 'Digital Transformation Consulting', value: 320000, stage: 'qualification', probability: 40 },
+      { title: 'Custom Application Development', value: 150000, stage: 'prospecting', probability: 25 },
+      { title: 'IT Support Services Contract', value: 90000, stage: 'closed-won', probability: 100 },
+      { title: 'Data Analytics Platform', value: 200000, stage: 'closed-lost', probability: 0 },
+      { title: 'Mobile App Development', value: 120000, stage: 'proposal', probability: 70 },
+      { title: 'Security Audit Services', value: 75000, stage: 'negotiation', probability: 80 }
+    ];
+    
+    for (const org of organizations) {
+      for (const template of dealTemplates) {
+        const contact = contacts.find(c => c.organizationId.equals(org._id));
+        const lead = leads.find(l => l.organizationId.equals(org._id));
+        const assignedUser = users.find(u => u.organizationIds.includes(org._id));
+        
+        deals.push({
+          _id: new ObjectId(),
+          title: template.title,
+          description: `${template.title} opportunity for ${org.name}`,
+          value: template.value,
+          stage: template.stage,
+          probability: template.probability,
+          expectedCloseDate: new Date(Date.now() + Math.random() * 120 * 24 * 60 * 60 * 1000),
+          actualCloseDate: template.stage.includes('closed') ? new Date() : null,
+          contactId: contact?._id,
+          leadId: lead?._id,
+          organizationId: org._id,
+          assignedToId: assignedUser?._id,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+      }
+    }
+    
+    if (deals.length > 0) {
+      await this.db.collection('deals').insertMany(deals);
+      console.log(`🤝 Seeded ${deals.length} deals`);
+    }
+  }
+
   async seedTasks() {
     const projects = await this.db.collection('projects').find({}).toArray();
     const users = await this.db.collection('users').find({}).toArray();
+    const deals = await this.db.collection('deals').find({}).toArray();
     const tasks = [];
     
     const taskTemplates = [
-      { title: 'Requirements Analysis', description: 'Analyze and document requirements' },
-      { title: 'Design Mockups', description: 'Create design mockups and wireframes' },
-      { title: 'Backend Development', description: 'Develop backend APIs and services' },
-      { title: 'Frontend Implementation', description: 'Implement user interface' },
-      { title: 'Testing & QA', description: 'Perform testing and quality assurance' },
-      { title: 'Deployment', description: 'Deploy to production environment' }
+      { title: 'Requirements Analysis', description: 'Analyze and document requirements', type: 'crm' },
+      { title: 'Design Mockups', description: 'Create design mockups and wireframes', type: 'crm' },
+      { title: 'Backend Development', description: 'Develop backend APIs and services', type: 'crm' },
+      { title: 'Frontend Implementation', description: 'Implement user interface', type: 'crm' },
+      { title: 'Testing & QA', description: 'Perform testing and quality assurance', type: 'crm' },
+      { title: 'Deployment', description: 'Deploy to production environment', type: 'crm' },
+      { title: 'Follow up with client', description: 'Schedule follow-up call with potential client', type: 'crm' },
+      { title: 'Prepare proposal', description: 'Create detailed project proposal', type: 'crm' },
+      { title: 'Contract negotiation', description: 'Negotiate contract terms and conditions', type: 'crm' }
     ];
     
+    // Project tasks
     for (const project of projects) {
-      for (let i = 0; i < taskTemplates.length; i++) {
+      for (let i = 0; i < Math.min(6, taskTemplates.length); i++) {
         const template = taskTemplates[i];
         const assignee = users.find(u => project.teamMemberIds.includes(u._id));
         
@@ -292,6 +347,7 @@ class DemoSeeder {
           description: template.description,
           status: ['todo', 'in-progress', 'completed'][Math.floor(Math.random() * 3)],
           priority: ['low', 'medium', 'high'][Math.floor(Math.random() * 3)],
+          type: 'project',
           projectId: project._id,
           assigneeId: assignee?._id,
           organizationId: project.organizationId,
@@ -299,6 +355,32 @@ class DemoSeeder {
           estimatedHours: Math.floor(Math.random() * 40) + 8,
           actualHours: Math.floor(Math.random() * 30),
           tags: ['development', 'design', 'testing'][Math.floor(Math.random() * 3)],
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+      }
+    }
+    
+    // CRM tasks
+    for (const deal of deals) {
+      const crmTasks = taskTemplates.filter(t => t.type === 'crm').slice(0, 3);
+      for (const template of crmTasks) {
+        const assignee = users.find(u => u.organizationIds.some(id => id.equals(deal.organizationId)));
+        
+        tasks.push({
+          _id: new ObjectId(),
+          title: template.title,
+          description: template.description,
+          status: ['pending', 'in-progress', 'completed'][Math.floor(Math.random() * 3)],
+          priority: ['low', 'medium', 'high'][Math.floor(Math.random() * 3)],
+          type: 'crm',
+          dealId: deal._id,
+          leadId: deal.leadId,
+          contactId: deal.contactId,
+          organizationId: deal.organizationId,
+          assignedToId: assignee?._id,
+          dueDate: new Date(Date.now() + Math.random() * 14 * 24 * 60 * 60 * 1000),
+          reminderDate: new Date(Date.now() + Math.random() * 7 * 24 * 60 * 60 * 1000),
           createdAt: new Date(),
           updatedAt: new Date()
         });

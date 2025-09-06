@@ -180,13 +180,17 @@ export class CrmService {
   async getConversionReport(organizationId: string) {
     const orgId = new ObjectId(organizationId);
     
-    const [totalContacts, totalLeads, convertedLeads, totalDeals, wonDeals] = await Promise.all([
-      this.contactRepository.count({ where: { organizationId: orgId } }),
-      this.leadRepository.count({ where: { organizationId: orgId } }),
-      this.leadRepository.count({ where: { organizationId: orgId, status: 'converted' } }),
-      this.dealRepository.count({ where: { organizationId: orgId } }),
-      this.dealRepository.count({ where: { organizationId: orgId, stage: 'closed-won' } })
+    const [contacts, leads, deals] = await Promise.all([
+      this.contactRepository.find({ where: { organizationId: orgId } }),
+      this.leadRepository.find({ where: { organizationId: orgId } }),
+      this.dealRepository.find({ where: { organizationId: orgId } })
     ]);
+
+    const totalContacts = contacts.length;
+    const totalLeads = leads.length;
+    const convertedLeads = leads.filter(lead => lead.status === 'converted').length;
+    const totalDeals = deals.length;
+    const wonDeals = deals.filter(deal => deal.stage === 'closed-won').length;
 
     const contactToLeadRate = totalContacts > 0 ? (totalLeads / totalContacts * 100) : 0;
     const leadToDealRate = totalLeads > 0 ? (convertedLeads / totalLeads * 100) : 0;
@@ -277,27 +281,24 @@ export class CrmService {
   async getDashboardStats(organizationId: string) {
     const orgId = new ObjectId(organizationId);
     
-    const [contactsCount, leadsCount, dealsCount, tasksCount] = await Promise.all([
-      this.contactRepository.count({ where: { organizationId: orgId } }),
-      this.leadRepository.count({ where: { organizationId: orgId } }),
-      this.dealRepository.count({ where: { organizationId: orgId } }),
-      this.taskRepository.count({ where: { organizationId: orgId, status: 'pending' } })
+    const [contacts, leads, deals, tasks] = await Promise.all([
+      this.contactRepository.find({ where: { organizationId: orgId } }),
+      this.leadRepository.find({ where: { organizationId: orgId } }),
+      this.dealRepository.find({ where: { organizationId: orgId } }),
+      this.taskRepository.find({ where: { organizationId: orgId, status: 'pending' } })
     ]);
 
-    const openDeals = await this.dealRepository.find({
-      where: {
-        organizationId: orgId,
-        stage: { $in: ['prospecting', 'qualification', 'proposal', 'negotiation'] }
-      }
-    });
+    const openDeals = deals.filter(deal => 
+      ['prospecting', 'qualification', 'proposal', 'negotiation'].includes(deal.stage)
+    );
     
     const pipelineValue = openDeals.reduce((sum, deal) => sum + (deal.value || 0), 0);
 
     return {
-      contacts: contactsCount,
-      leads: leadsCount,
-      deals: dealsCount,
-      pendingTasks: tasksCount,
+      contacts: contacts.length,
+      leads: leads.length,
+      deals: deals.length,
+      pendingTasks: tasks.length,
       pipelineValue
     };
   }

@@ -365,6 +365,7 @@ interface DashboardWidget {
 
       .widgets.compact {
         gap: 12px;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
       }
 
       .widget {
@@ -493,6 +494,11 @@ interface DashboardWidget {
         .widgets.compact .widget-title {
           font-size: 0.8rem;
         }
+        
+        /* Compact mode: single column on mobile */
+        .widgets.compact .widget {
+          grid-column: span 12;
+        }
       }
       
       @media (min-width: 600px) and (max-width: 899px) {
@@ -510,12 +516,13 @@ interface DashboardWidget {
           grid-column: span 12;
         }
         
+        /* Compact mode: up to 3 columns on medium screens */
         .widgets.compact .widget {
           grid-column: span 4;
         }
       }
 
-      @media (min-width: 900px) {
+      @media (min-width: 900px) and (max-width: 1199px) {
         .page {
           padding: 20px;
         }
@@ -530,6 +537,7 @@ interface DashboardWidget {
           grid-column: span 12;
         }
 
+        /* Compact mode: up to 4 columns on large screens */
         .widgets.compact .widget {
           grid-column: span 3;
         }
@@ -550,8 +558,13 @@ interface DashboardWidget {
           grid-column: span 12;
         }
 
+        /* Compact mode: 5 columns on xl screens */
+        .widgets.compact {
+          grid-template-columns: repeat(5, minmax(0, 1fr));
+        }
+        
         .widgets.compact .widget {
-          grid-column: span 2;
+          grid-column: span 1;
         }
       }
 
@@ -703,6 +716,12 @@ export class DashboardComponent implements OnInit {
       x.id === w.id ? { ...x, size } : x
     );
     this.widgets.set(updated);
+    this.saveWidgetSizes(updated);
+    
+    const sizeNames = { s: 'Small', m: 'Medium', l: 'Large' };
+    this.snackBar.open(`${w.title} resized to ${sizeNames[size]}`, 'Close', {
+      duration: 2000,
+    });
   }
 
   loadOrganizations() {
@@ -910,13 +929,15 @@ export class DashboardComponent implements OnInit {
     });
     console.log('Filtered supported modules:', filtered.length);
     
+    const savedSizes = this.loadWidgetSizes();
     const mapped: DashboardWidget[] = filtered.map((m, idx) => {
       const registryModule = this.getModuleFromRegistry(m.name || m.id);
+      const widgetId = registryModule?.name || m.name || m.id || 'unknown';
       return {
-        id: registryModule?.name || m.name || m.id || 'unknown',
+        id: widgetId,
         title: m.displayName || m.name || 'Unknown Module',
         description: m.description || '',
-        size: idx === 0 ? 'm' : idx === 1 ? 'm' : idx % 3 === 0 ? 'l' : 'm',
+        size: savedSizes[widgetId] || (idx === 0 ? 'm' : idx === 1 ? 'm' : idx % 3 === 0 ? 'l' : 'm'),
       };
     });
     
@@ -1034,6 +1055,28 @@ export class DashboardComponent implements OnInit {
       }
     } catch (error) {
       console.warn('Failed to load compact view preference:', error);
+    }
+  }
+
+  private saveWidgetSizes(widgets: DashboardWidget[]) {
+    try {
+      const sizes = widgets.reduce((acc, widget) => {
+        acc[widget.id] = widget.size;
+        return acc;
+      }, {} as Record<string, 's' | 'm' | 'l'>);
+      localStorage.setItem('dashboard-widget-sizes', JSON.stringify(sizes));
+    } catch (error) {
+      console.warn('Failed to save widget sizes:', error);
+    }
+  }
+
+  private loadWidgetSizes(): Record<string, 's' | 'm' | 'l'> {
+    try {
+      const saved = localStorage.getItem('dashboard-widget-sizes');
+      return saved ? JSON.parse(saved) : {};
+    } catch (error) {
+      console.warn('Failed to load widget sizes:', error);
+      return {};
     }
   }
 
