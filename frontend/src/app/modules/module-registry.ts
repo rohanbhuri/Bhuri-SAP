@@ -13,6 +13,8 @@ import { TasksManagementWidgetComponent } from './tasks-management/tasks-managem
 import { InventoryManagementWidgetComponent } from './inventory-management/inventory-management-widget.component';
 import { PayrollManagementWidgetComponent } from './payroll-management/payroll-management-widget.component';
 import { SalesManagementWidgetComponent } from './sales-management/sales-management-widget.component';
+import { OrderManagementWidgetComponent } from './order-management/order-management-widget.component';
+import { FinanceWidgetComponent } from './finance/finance-widget.component';
 
 // Main Components
 import { UserManagementComponent } from './user-management/user-management.component';
@@ -22,6 +24,8 @@ import { HrManagementComponent } from './hr-management/hr-management.component';
 import { ProjectsManagementComponent } from './projects-management/projects-management.component';
 import { ProjectTrackingComponent } from './project-tracking/project-tracking.component';
 import { ProjectTimesheetComponent } from './project-timesheet/project-timesheet.component';
+import { OrderManagementComponent } from './order-management/order-management.component';
+import { FinanceComponent } from './finance/finance.component';
 
 export interface ModuleConfig {
   id: string;
@@ -282,6 +286,36 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     color: '#607D8B',
     widgetComponent: PayrollManagementWidgetComponent,
     isActive: false,
+    category: 'finance',
+  },
+
+  // Order Management Module
+  {
+    id: 'order-management',
+    name: 'order-management',
+    displayName: 'Order Management',
+    description: 'Manage orders, track status, and monitor fulfillment',
+    icon: 'shopping_cart',
+    color: '#FF5722',
+    widgetComponent: OrderManagementWidgetComponent,
+    mainComponent: OrderManagementComponent,
+    route: '/modules/order-management',
+    isActive: true,
+    category: 'operations',
+  },
+
+  // Finance Module
+  {
+    id: 'finance',
+    name: 'finance',
+    displayName: 'Finance Management',
+    description: 'Manage invoices, receipts, and payments',
+    icon: 'account_balance',
+    color: '#4CAF50',
+    widgetComponent: FinanceWidgetComponent,
+    mainComponent: FinanceComponent,
+    route: '/modules/finance',
+    isActive: true,
     category: 'finance',
   },
 ];

@@ -16,6 +16,8 @@ import { ProjectTrackingModule } from './project-tracking/project-tracking.modul
 import { MessagesModule } from './messages/messages.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ProjectTimesheetModule } from './project-timesheet/project-timesheet.module';
+import { OrderManagementModule } from './order-management/order-management.module';
+import { FinanceModule } from './finance/finance.module';
 import { HealthModule } from './health/health.module';
 
 @Module({
@@ -43,6 +45,8 @@ import { HealthModule } from './health/health.module';
     MessagesModule,
     NotificationsModule,
     ProjectTimesheetModule,
+    OrderManagementModule,
+    FinanceModule,
   ],
 })
 export class AppModule {}

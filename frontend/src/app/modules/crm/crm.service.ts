@@ -150,31 +150,31 @@ export class CrmService {
     return this.http.put<Contact>(`${this.apiUrl}/crm/contacts/${id}`, contact);
   }
 
-  updateLead(id: string, lead: Partial<Lead>): Observable<Lead> {
-    return this.http.put<Lead>(`${this.apiUrl}/crm/leads/${id}`, lead);
-  }
-
-  updateDeal(id: string, deal: Partial<Deal>): Observable<Deal> {
-    return this.http.put<Deal>(`${this.apiUrl}/crm/deals/${id}`, deal);
+  deleteContact(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/crm/contacts/${id}`);
   }
 
   updateTask(id: string, task: Partial<Task>): Observable<Task> {
     return this.http.put<Task>(`${this.apiUrl}/crm/tasks/${id}`, task);
   }
 
-  deleteContact(id: string): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/crm/contacts/${id}`);
+  deleteTask(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/crm/tasks/${id}`);
   }
 
-  deleteLead(id: string): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/crm/leads/${id}`);
+  updateLead(id: string, lead: Partial<Lead>): Observable<Lead> {
+    return this.http.put<Lead>(`${this.apiUrl}/crm/leads/${id}`, lead);
   }
 
-  deleteDeal(id: string): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/crm/deals/${id}`);
+  deleteLead(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/crm/leads/${id}`);
   }
 
-  deleteTask(id: string): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/crm/tasks/${id}`);
+  updateDeal(id: string, deal: Partial<Deal>): Observable<Deal> {
+    return this.http.put<Deal>(`${this.apiUrl}/crm/deals/${id}`, deal);
+  }
+
+  deleteDeal(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/crm/deals/${id}`);
   }
 }

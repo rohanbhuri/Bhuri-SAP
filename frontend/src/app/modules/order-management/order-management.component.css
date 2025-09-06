@@ -1,0 +1,73 @@
+.page {
+  min-height: 100vh;
+  background: var(--theme-background);
+  padding-bottom: 80px;
+}
+
+.page-header {
+  background: var(--theme-surface);
+  padding: 24px;
+  border-bottom: 1px solid color-mix(in srgb, var(--theme-on-surface) 12%, transparent);
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.6);
+  margin-bottom: 16px;
+}
+
+.breadcrumb .current {
+  color: var(--theme-primary);
+  font-weight: 500;
+}
+
+.page-header h1 {
+  margin: 0 0 8px 0;
+  color: var(--theme-on-surface);
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+.subtitle {
+  margin: 0;
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 1rem;
+}
+
+.order-tabs {
+  margin: 24px;
+  background: var(--theme-surface);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--theme-on-surface) 8%, transparent);
+  overflow: hidden;
+}
+
+.order-tabs ::ng-deep .mat-mdc-tab-group {
+  --mdc-tab-indicator-active-indicator-color: var(--theme-primary);
+  --mdc-tab-text-label-text-color: var(--theme-on-surface);
+  --mdc-tab-text-label-text-color-active: var(--theme-primary);
+}
+
+.order-tabs ::ng-deep .mat-mdc-tab-body-wrapper {
+  padding: 24px;
+}
+
+/* Dark theme adjustments */
+:host-context(body.dark-theme) .breadcrumb {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+:host-context(body.dark-theme) .subtitle {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+:host-context(body.dark-theme) .page-header {
+  border-bottom-color: color-mix(in srgb, var(--theme-on-surface) 20%, transparent);
+}
+
+:host-context(body.dark-theme) .order-tabs {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}

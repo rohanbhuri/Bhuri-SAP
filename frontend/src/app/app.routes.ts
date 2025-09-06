@@ -131,6 +131,22 @@ export const routes: Routes = [
       ),
     canActivate: [authGuard],
   },
+  {
+    path: 'modules/order-management',
+    loadChildren: () =>
+      import('./modules/order-management/order-management.routes').then(
+        (m) => m.ORDER_MANAGEMENT_ROUTES
+      ),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'modules/finance',
+    loadChildren: () =>
+      import('./modules/finance/finance.routes').then(
+        (m) => m.FINANCE_ROUTES
+      ),
+    canActivate: [authGuard],
+  },
 
   { path: '404', component: NotFoundComponent },
   { path: '**', component: NotFoundComponent },
