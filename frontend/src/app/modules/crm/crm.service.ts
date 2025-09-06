@@ -14,6 +14,11 @@ export interface Contact {
   position?: string;
   notes?: string;
   status: string;
+  customFields?: Record<string, any>;
+  organizationId: string;
+  assignedToId?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface Lead {
@@ -24,7 +29,12 @@ export interface Lead {
   estimatedValue?: number;
   source?: string;
   expectedCloseDate?: Date;
+  contactId?: string;
   contact?: Contact;
+  organizationId: string;
+  assignedToId?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface Deal {
@@ -35,7 +45,15 @@ export interface Deal {
   stage: string;
   probability: number;
   expectedCloseDate?: Date;
+  actualCloseDate?: Date;
+  contactId?: string;
   contact?: Contact;
+  leadId?: string;
+  lead?: Lead;
+  organizationId: string;
+  assignedToId?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface Task {
@@ -45,10 +63,18 @@ export interface Task {
   status: string;
   priority: string;
   dueDate?: Date;
+  reminderDate?: Date;
   type: string;
+  contactId?: string;
   contact?: Contact;
+  leadId?: string;
   lead?: Lead;
+  dealId?: string;
   deal?: Deal;
+  organizationId: string;
+  assignedToId?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface CrmStats {
@@ -118,5 +144,37 @@ export class CrmService {
 
   createTask(task: Partial<Task>): Observable<Task> {
     return this.http.post<Task>(`${this.apiUrl}/crm/tasks`, task);
+  }
+
+  updateContact(id: string, contact: Partial<Contact>): Observable<Contact> {
+    return this.http.put<Contact>(`${this.apiUrl}/crm/contacts/${id}`, contact);
+  }
+
+  updateLead(id: string, lead: Partial<Lead>): Observable<Lead> {
+    return this.http.put<Lead>(`${this.apiUrl}/crm/leads/${id}`, lead);
+  }
+
+  updateDeal(id: string, deal: Partial<Deal>): Observable<Deal> {
+    return this.http.put<Deal>(`${this.apiUrl}/crm/deals/${id}`, deal);
+  }
+
+  updateTask(id: string, task: Partial<Task>): Observable<Task> {
+    return this.http.put<Task>(`${this.apiUrl}/crm/tasks/${id}`, task);
+  }
+
+  deleteContact(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/crm/contacts/${id}`);
+  }
+
+  deleteLead(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/crm/leads/${id}`);
+  }
+
+  deleteDeal(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/crm/deals/${id}`);
+  }
+
+  deleteTask(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/crm/tasks/${id}`);
   }
 }

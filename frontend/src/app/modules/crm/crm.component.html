@@ -1,0 +1,280 @@
+<app-navbar></app-navbar>
+<div class="page">
+  <div class="page-header">
+    <nav class="breadcrumb">
+      <span>Modules</span>
+      <mat-icon>chevron_right</mat-icon>
+      <span class="current">CRM</span>
+    </nav>
+    <h1>Customer Relationship Management</h1>
+    <p class="subtitle">Manage your contacts, leads, deals, and sales pipeline</p>
+  </div>
+
+  <mat-tab-group class="crm-tabs">
+    <mat-tab label="Contacts">
+      <div class="tab-content">
+        <div class="tab-header">
+          <h2>Contacts</h2>
+          <button mat-raised-button color="primary" (click)="openContactDialog()">
+            <mat-icon>person_add</mat-icon>
+            Add Contact
+          </button>
+        </div>
+        <div class="table-container">
+          <table mat-table [dataSource]="contacts()" class="crm-table">
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef>Name</th>
+              <td mat-cell *matCellDef="let contact">
+                <div class="contact-info">
+                  <div class="contact-avatar">{{ getInitials(contact.firstName, contact.lastName) }}</div>
+                  <div>
+                    <div class="contact-name">{{ contact.firstName }} {{ contact.lastName }}</div>
+                    <div class="contact-email">{{ contact.email }}</div>
+                  </div>
+                </div>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="company">
+              <th mat-header-cell *matHeaderCellDef>Company</th>
+              <td mat-cell *matCellDef="let contact">{{ contact.company || '-' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let contact">
+                <mat-chip [color]="contact.status === 'active' ? 'primary' : 'warn'">{{ contact.status }}</mat-chip>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Actions</th>
+              <td mat-cell *matCellDef="let contact">
+                <button mat-icon-button [matMenuTriggerFor]="contactMenu" class="action-button">
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+                <mat-menu #contactMenu="matMenu">
+                  <button mat-menu-item (click)="editContact(contact)">
+                    <mat-icon>edit</mat-icon>
+                    <span>Edit</span>
+                  </button>
+                  <button mat-menu-item (click)="deleteContact(contact._id)">
+                    <mat-icon>delete</mat-icon>
+                    <span>Delete</span>
+                  </button>
+                </mat-menu>
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="contactColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: contactColumns"></tr>
+          </table>
+        </div>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Leads">
+      <div class="tab-content">
+        <div class="tab-header">
+          <h2>Leads</h2>
+          <button mat-raised-button color="primary" (click)="openLeadDialog()">
+            <mat-icon>add</mat-icon>
+            Add Lead
+          </button>
+        </div>
+        <div class="table-container">
+          <table mat-table [dataSource]="leads()" class="crm-table">
+            <ng-container matColumnDef="title">
+              <th mat-header-cell *matHeaderCellDef>Title</th>
+              <td mat-cell *matCellDef="let lead">{{ lead.title }}</td>
+            </ng-container>
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let lead">
+                <mat-chip [color]="getLeadStatusColor(lead.status)">{{ lead.status }}</mat-chip>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="value">
+              <th mat-header-cell *matHeaderCellDef>Est. Value</th>
+              <td mat-cell *matCellDef="let lead">{{ lead.estimatedValue ? '$' + lead.estimatedValue : '-' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Actions</th>
+              <td mat-cell *matCellDef="let lead">
+                <button mat-icon-button [matMenuTriggerFor]="leadMenu" class="action-button">
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+                <mat-menu #leadMenu="matMenu">
+                  <button mat-menu-item (click)="editLead(lead)">
+                    <mat-icon>edit</mat-icon>
+                    <span>Edit</span>
+                  </button>
+                  <button mat-menu-item (click)="deleteLead(lead._id)">
+                    <mat-icon>delete</mat-icon>
+                    <span>Delete</span>
+                  </button>
+                </mat-menu>
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="leadColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: leadColumns"></tr>
+          </table>
+        </div>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Deals">
+      <div class="tab-content">
+        <div class="tab-header">
+          <h2>Deals</h2>
+          <button mat-raised-button color="primary" (click)="openDealDialog()">
+            <mat-icon>add</mat-icon>
+            Add Deal
+          </button>
+        </div>
+        <div class="table-container">
+          <table mat-table [dataSource]="deals()" class="crm-table">
+            <ng-container matColumnDef="title">
+              <th mat-header-cell *matHeaderCellDef>Title</th>
+              <td mat-cell *matCellDef="let deal">{{ deal.title }}</td>
+            </ng-container>
+            <ng-container matColumnDef="stage">
+              <th mat-header-cell *matHeaderCellDef>Stage</th>
+              <td mat-cell *matCellDef="let deal">
+                <mat-chip [color]="getDealStageColor(deal.stage)">{{ deal.stage }}</mat-chip>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="value">
+              <th mat-header-cell *matHeaderCellDef>Value</th>
+              <td mat-cell *matCellDef="let deal">${{ deal.value }}</td>
+            </ng-container>
+            <ng-container matColumnDef="probability">
+              <th mat-header-cell *matHeaderCellDef>Probability</th>
+              <td mat-cell *matCellDef="let deal">{{ deal.probability }}%</td>
+            </ng-container>
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Actions</th>
+              <td mat-cell *matCellDef="let deal">
+                <button mat-icon-button [matMenuTriggerFor]="dealMenu" class="action-button">
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+                <mat-menu #dealMenu="matMenu">
+                  <button mat-menu-item (click)="editDeal(deal)">
+                    <mat-icon>edit</mat-icon>
+                    <span>Edit</span>
+                  </button>
+                  <button mat-menu-item (click)="deleteDeal(deal._id)">
+                    <mat-icon>delete</mat-icon>
+                    <span>Delete</span>
+                  </button>
+                </mat-menu>
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="dealColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: dealColumns"></tr>
+          </table>
+        </div>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Tasks">
+      <div class="tab-content">
+        <div class="tab-header">
+          <h2>Tasks & Reminders</h2>
+          <button mat-raised-button color="primary" (click)="openTaskDialog()">
+            <mat-icon>add_task</mat-icon>
+            Add Task
+          </button>
+        </div>
+        <div class="table-container">
+          <table mat-table [dataSource]="tasks()" class="crm-table">
+            <ng-container matColumnDef="title">
+              <th mat-header-cell *matHeaderCellDef>Title</th>
+              <td mat-cell *matCellDef="let task">{{ task.title }}</td>
+            </ng-container>
+            <ng-container matColumnDef="type">
+              <th mat-header-cell *matHeaderCellDef>Type</th>
+              <td mat-cell *matCellDef="let task">
+                <mat-chip>{{ task.type }}</mat-chip>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="priority">
+              <th mat-header-cell *matHeaderCellDef>Priority</th>
+              <td mat-cell *matCellDef="let task">
+                <mat-chip [color]="getTaskPriorityColor(task.priority)">{{ task.priority }}</mat-chip>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let task">
+                <mat-chip [color]="task.status === 'completed' ? 'primary' : 'accent'">{{ task.status }}</mat-chip>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Actions</th>
+              <td mat-cell *matCellDef="let task">
+                <button mat-icon-button [matMenuTriggerFor]="taskMenu" class="action-button">
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+                <mat-menu #taskMenu="matMenu">
+                  <button mat-menu-item (click)="editTask(task)">
+                    <mat-icon>edit</mat-icon>
+                    <span>Edit</span>
+                  </button>
+                  <button mat-menu-item (click)="deleteTask(task._id)">
+                    <mat-icon>delete</mat-icon>
+                    <span>Delete</span>
+                  </button>
+                </mat-menu>
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="taskColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: taskColumns"></tr>
+          </table>
+        </div>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Reports">
+      <div class="tab-content">
+        <div class="tab-header">
+          <h2>Reports & Analytics</h2>
+        </div>
+        <div class="reports-grid">
+          <mat-card class="stats-card">
+            <mat-card-header>
+              <mat-card-title>Overview</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="stats-grid">
+                <div class="stat-item">
+                  <div class="stat-value">{{ stats()?.contacts || 0 }}</div>
+                  <div class="stat-label">Total Contacts</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-value">{{ stats()?.leads || 0 }}</div>
+                  <div class="stat-label">Active Leads</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-value">{{ stats()?.deals || 0 }}</div>
+                  <div class="stat-label">Open Deals</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-value">${{ stats()?.pipelineValue || 0 | number:'1.0-0' }}</div>
+                  <div class="stat-label">Pipeline Value</div>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <mat-card class="stats-card">
+            <mat-card-header>
+              <mat-card-title>Pending Tasks</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="stat-value large">{{ stats()?.pendingTasks || 0 }}</div>
+              <div class="stat-label">Tasks requiring attention</div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>
+<app-bottom-navbar></app-bottom-navbar>
