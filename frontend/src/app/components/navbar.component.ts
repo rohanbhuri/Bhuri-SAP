@@ -38,7 +38,7 @@ import { PwaInstallModalComponent } from './pwa-install-modal.component';
     <mat-toolbar class="navbar">
       <div class="nav-brand" (click)="goToDashboard()">
         <img
-          [src]="brandConfig.getIcon()"
+          [src]="brandConfig.getThemeAwareLogo(isDarkTheme())"
           [alt]="brandConfig.getBrandName()"
           class="logo"
         />

@@ -2,7 +2,8 @@ const configs = {
   "beax-rm": {
     brand: {
       name: "Beax RM",
-      logo: "/config/assets/beaxrm/icons/XRM-white-logo.png",
+      logo: "/config/assets/beaxrm/icons/XRM-logo-black.png",
+      logoDark: "/config/assets/beaxrm/icons/XRM-white-logo.png",
       icon: "/config/assets/beaxrm/icons/XRM-white-logo.png"
     },
 
@@ -37,6 +38,7 @@ const configs = {
     brand: {
       name: "True Process",
       logo: "/config/assets/true-process/icons/logo.png",
+      logoDark: "/config/assets/beaxrm/icons/icon-only-dark.png",
       icon: "/config/assets/true-process/icons/icon.png"
     },
 

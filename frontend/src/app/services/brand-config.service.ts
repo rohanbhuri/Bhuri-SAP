@@ -4,6 +4,7 @@ export interface BrandConfig {
   brand: {
     name: string;
     logo: string;
+    logoDark: string;
     icon: string;
   };
   colors: {
@@ -28,6 +29,7 @@ export class BrandConfigService {
     brand: {
       name: 'Beax RM',
       logo: '/config/assets/beax-rm/logo.png',
+      logoDark: '/config/assets/beax-rm/logo-dark.png',
       icon: '/config/assets/beax-rm/icon.png'
     },
     colors: {
@@ -74,6 +76,14 @@ export class BrandConfigService {
 
   getLogo(): string {
     return this.config.brand.logo;
+  }
+
+  getLogoDark(): string {
+    return this.config.brand.logoDark;
+  }
+
+  getThemeAwareLogo(isDark: boolean): string {
+    return isDark ? this.config.brand.logoDark : this.config.brand.logo;
   }
 
   getIcon(): string {

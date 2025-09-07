@@ -31,6 +31,7 @@ let sitemapContent = fs.readFileSync(sitemapPath, 'utf8');
 const replacements = {
   '{{BRAND_NAME}}': brandConfig.brand.name,
   '{{BRAND_LOGO}}': brandConfig.brand.logo,
+  '{{BRAND_LOGO_DARK}}': brandConfig.brand.logoDark,
   '{{BRAND_ICON}}': brandConfig.brand.icon,
   '{{PRIMARY_COLOR}}': brandConfig.colors.primary,
   '{{ACCENT_COLOR}}': brandConfig.colors.accent,
@@ -86,6 +87,7 @@ process.env.PRIMARY_COLOR = brandConfig.colors.primary;
 process.env.ACCENT_COLOR = brandConfig.colors.accent;
 process.env.SECONDARY_COLOR = brandConfig.colors.secondary;
 process.env.BRAND_LOGO = brandConfig.brand.logo;
+process.env.BRAND_LOGO_DARK = brandConfig.brand.logoDark;
 process.env.BRAND_ICON = brandConfig.brand.icon;
 process.env.CANONICAL_URL = `http://localhost:${brandConfig.app.port}`;
 
