@@ -13,59 +13,65 @@ import { PreferencesService } from '../services/preferences.service';
   template: `
     <nav class="bottom-nav" role="navigation" aria-label="Primary">
       <button
-        mat-icon-button
+        class="nav-button"
         (click)="goToDashboard()"
         [attr.aria-current]="activeRoute === '/dashboard' ? 'page' : null"
-        [color]="activeRoute === '/dashboard' ? 'primary' : ''"
+        [class.active]="activeRoute === '/dashboard'"
         aria-label="Dashboard"
       >
         <mat-icon>dashboard</mat-icon>
+        <span class="nav-label">Dashboard</span>
       </button>
       <button
-        mat-icon-button
+        class="nav-button"
         (click)="goToMessages()"
         [attr.aria-current]="activeRoute === '/messages' ? 'page' : null"
-        [color]="activeRoute === '/messages' ? 'primary' : ''"
+        [class.active]="activeRoute === '/messages'"
         aria-label="Messages"
       >
         <mat-icon>message</mat-icon>
+        <span class="nav-label">Messages</span>
       </button>
       <button
-        mat-icon-button
+        class="nav-button"
         (click)="goToSearch()"
         [attr.aria-current]="activeRoute === '/search' ? 'page' : null"
-        [color]="activeRoute === '/search' ? 'primary' : ''"
+        [class.active]="activeRoute === '/search'"
         aria-label="Search"
       >
         <mat-icon>search</mat-icon>
+        <span class="nav-label">Search</span>
       </button>
       <button
-        mat-icon-button
+        class="nav-button"
         (click)="goToNotifications()"
         [attr.aria-current]="activeRoute === '/notifications' ? 'page' : null"
-        [color]="activeRoute === '/notifications' ? 'primary' : ''"
+        [class.active]="activeRoute === '/notifications'"
         aria-label="Notifications"
       >
         <mat-icon>notifications</mat-icon>
+        <span class="nav-label">Notifications</span>
       </button>
       <button
-        mat-icon-button
+        class="nav-button"
         (click)="goToModules()"
         [attr.aria-current]="activeRoute === '/modules' ? 'page' : null"
-        [color]="activeRoute === '/modules' ? 'primary' : ''"
+        [class.active]="activeRoute === '/modules'"
         aria-label="Modules"
       >
         <mat-icon>apps</mat-icon>
+        <span class="nav-label">Modules</span>
       </button>
       @for (module of pinnedModules(); track module.id) {
         <button
-          mat-icon-button
+          class="nav-button"
           (click)="goToModule(module)"
           [attr.aria-current]="activeRoute.includes('/modules/' + module.name) ? 'page' : null"
-          [color]="activeRoute.includes('/modules/' + module.name) ? 'primary' : ''"
+          [class.active]="activeRoute.includes('/modules/' + module.name)"
           [attr.aria-label]="module.displayName"
         >
           <mat-icon>{{ getModuleIcon(module.name) }}</mat-icon>
+          <span class="nav-label">{{ module.displayName || module.name }}</span>
         </button>
       }
 
@@ -81,43 +87,73 @@ import { PreferencesService } from '../services/preferences.service';
         background: color-mix(in srgb, var(--theme-surface) 80%, transparent);
         backdrop-filter: blur(10px);
         border-radius: 25px;
-        padding: 8px 16px;
+        padding: 8px 12px;
         border: 1px solid
           color-mix(in srgb, var(--theme-on-surface) 10%, transparent);
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         display: flex;
         align-items: center;
-        justify-content: center;
-        gap: 4px;
+        justify-content: flex-start;
+        gap: 8px;
         z-index: 1000;
         max-width: calc(100vw - 40px);
         overflow-x: auto;
+        overflow-y: hidden;
         scrollbar-width: none;
         -ms-overflow-style: none;
+        scroll-behavior: smooth;
       }
 
       .bottom-nav::-webkit-scrollbar {
         display: none;
       }
 
-      button {
-        width: 44px;
-        height: 44px;
-        min-width: 44px;
-        border-radius: 50%;
+      .nav-button {
+        width: auto;
+        height: 56px;
+        min-width: 56px;
+        border-radius: 16px;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
+        padding: 4px 8px;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: var(--theme-on-surface);
       }
 
-      button mat-icon {
+      .nav-button:hover {
+        background: color-mix(in srgb, var(--theme-primary) 10%, transparent);
+      }
+
+      .nav-button.active {
+        background: color-mix(in srgb, var(--theme-primary) 15%, transparent);
+        color: var(--theme-primary);
+      }
+
+      .nav-button mat-icon {
         font-size: 20px;
         width: 20px;
         height: 20px;
         display: flex;
         align-items: center;
         justify-content: center;
+        margin-bottom: 2px;
+      }
+
+      .nav-label {
+        font-size: 10px;
+        font-weight: 500;
+        line-height: 1;
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 60px;
       }
 
       .bottom-nav:focus-within {
@@ -127,39 +163,59 @@ import { PreferencesService } from '../services/preferences.service';
 
       @media (max-width: 599px) {
         .bottom-nav {
-          gap: 2px;
-          padding: 6px 12px;
+          gap: 4px;
+          padding: 6px 8px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: fit-content;
+          min-width: auto;
         }
         
-        button {
-          width: 40px;
-          height: 40px;
-          min-width: 40px;
+        .nav-button {
+          height: 48px;
+          min-width: 48px;
+          padding: 2px 6px;
+          flex-shrink: 0;
         }
         
-        button mat-icon {
+        .nav-button mat-icon {
           font-size: 18px;
           width: 18px;
           height: 18px;
+        }
+        
+        .nav-label {
+          font-size: 9px;
+          max-width: 50px;
         }
       }
 
       @media (max-width: 480px) {
         .bottom-nav {
-          gap: 1px;
-          padding: 4px 8px;
+          gap: 2px;
+          padding: 4px 6px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: fit-content;
+          min-width: auto;
         }
         
-        button {
-          width: 36px;
-          height: 36px;
-          min-width: 36px;
+        .nav-button {
+          height: 44px;
+          min-width: 44px;
+          padding: 2px 4px;
+          flex-shrink: 0;
         }
         
-        button mat-icon {
+        .nav-button mat-icon {
           font-size: 16px;
           width: 16px;
           height: 16px;
+        }
+        
+        .nav-label {
+          font-size: 8px;
+          max-width: 40px;
         }
       }
     `,
