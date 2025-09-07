@@ -19,6 +19,7 @@ import { ProjectTimesheetModule } from './project-timesheet/project-timesheet.mo
 import { OrderManagementModule } from './order-management/order-management.module';
 import { FinanceModule } from './finance/finance.module';
 import { HealthModule } from './health/health.module';
+import { SearchModule } from './search/search.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { HealthModule } from './health/health.module';
     ProjectTimesheetModule,
     OrderManagementModule,
     FinanceModule,
+    SearchModule,
   ],
 })
 export class AppModule {}
