@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -26,7 +26,7 @@ import {
     MatProgressBarModule,
   ],
   template: `
-    <div class="crm-widget">
+    <div class="crm-widget" (mouseenter)="pauseAutoSlide()" (mouseleave)="resumeAutoSlide()">
       <div class="header">
         <div class="icon-container">
           <mat-icon>business_center</mat-icon>
@@ -439,7 +439,7 @@ import {
     `,
   ],
 })
-export class CrmWidgetComponent implements OnInit {
+export class CrmWidgetComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private crmService = inject(CrmService);
 
@@ -454,9 +454,34 @@ export class CrmWidgetComponent implements OnInit {
   conversionReport = signal<ConversionReport | null>(null);
   deals = signal<Deal[]>([]);
   currentSlide = signal(0);
+  private slideInterval: any;
 
   ngOnInit() {
     this.loadAllData();
+    this.startAutoSlide();
+  }
+
+  ngOnDestroy() {
+    if (this.slideInterval) {
+      clearInterval(this.slideInterval);
+    }
+  }
+
+  startAutoSlide() {
+    this.slideInterval = setInterval(() => {
+      const nextSlide = (this.currentSlide() + 1) % 3;
+      this.currentSlide.set(nextSlide);
+    }, 5000);
+  }
+
+  pauseAutoSlide() {
+    if (this.slideInterval) {
+      clearInterval(this.slideInterval);
+    }
+  }
+
+  resumeAutoSlide() {
+    this.startAutoSlide();
   }
 
   loadAllData() {
@@ -532,6 +557,11 @@ export class CrmWidgetComponent implements OnInit {
 
   goToSlide(index: number) {
     this.currentSlide.set(index);
+    // Reset auto-slide timer when user manually navigates
+    if (this.slideInterval) {
+      clearInterval(this.slideInterval);
+      this.startAutoSlide();
+    }
   }
 
   openCrm() {

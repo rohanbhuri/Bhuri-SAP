@@ -7,9 +7,12 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { FormsModule } from '@angular/forms';
 import { HrManagementService, AssetDto } from '../hr-management.service';
 import { AuthService } from '../../../services/auth.service';
+import { AssetDialogComponent } from '../dialogs/asset-dialog.component';
 
 @Component({
   selector: 'app-hr-assets-page',
@@ -29,29 +32,13 @@ import { AuthService } from '../../../services/auth.service';
     <div class="page-content">
       <div class="page-header">
         <h2>Asset Management</h2>
-        <button mat-raised-button color="primary" (click)="create()">
+        <button mat-raised-button color="primary" (click)="openAssetDialog()">
           <mat-icon>add</mat-icon>
           Add Asset
         </button>
       </div>
 
-      <div class="asset-form-section">
-        <h3>Register New Asset</h3>
-        <div class="new-asset">
-          <mat-form-field appearance="outline">
-            <mat-label>Asset Name</mat-label>
-            <input matInput [(ngModel)]="name" placeholder="e.g., Laptop, Desk, Phone" />
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Serial Number</mat-label>
-            <input matInput [(ngModel)]="serial" placeholder="Asset serial number" />
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Category</mat-label>
-            <input matInput [(ngModel)]="category" placeholder="e.g., IT Equipment, Furniture" />
-          </mat-form-field>
-        </div>
-      </div>
+
 
       <div class="cards-container">
         <div class="asset-card" *ngFor="let asset of displayedAssets()">
@@ -210,13 +197,12 @@ import { AuthService } from '../../../services/auth.service';
 export class AssetsPageComponent implements OnInit {
   private hr = inject(HrManagementService);
   private auth = inject(AuthService);
+  private dialog = inject(MatDialog);
+  private snackBar = inject(MatSnackBar);
 
   assets = signal<AssetDto[]>([]);
   displayedAssets = signal<AssetDto[]>([]);
   loading = signal(false);
-  name = '';
-  serial = '';
-  category = '';
   
   private pageSize = 12;
   private currentPage = 0;
@@ -276,17 +262,27 @@ export class AssetsPageComponent implements OnInit {
     }
   }
 
-  create(): void {
-    if (!this.name) return;
-    this.hr.createAsset({
-      name: this.name,
-      serialNumber: this.serial || undefined,
-      category: this.category || undefined,
-    }).subscribe(() => {
-      this.name = '';
-      this.serial = '';
-      this.category = '';
-      this.load();
+  openAssetDialog(asset?: AssetDto): void {
+    const dialogRef = this.dialog.open(AssetDialogComponent, {
+      width: '500px',
+      data: asset || null
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (!result) return;
+
+      this.hr.createAsset(result).subscribe({
+        next: (created) => {
+          if (created && created._id) {
+            this.assets.set([created, ...this.assets()]);
+            this.displayedAssets.set([created, ...this.displayedAssets()]);
+          } else {
+            this.load();
+          }
+          this.snackBar.open('Asset created successfully', 'Close', { duration: 3000 });
+        },
+        error: () => this.snackBar.open('Error creating asset', 'Close', { duration: 3000 })
+      });
     });
   }
   

@@ -37,7 +37,7 @@ class DemoSeeder {
   }
 
   async clearCollections() {
-    const collections = ['users', 'organizations', 'roles', 'permissions', 'modules', 'departments', 'projects', 'contacts', 'leads', 'deals', 'tasks', 'employees', 'conversations', 'messages', 'attendancerecords', 'leaverequests', 'goals', 'payrollruns', 'complianceitems', 'complianceevents', 'documentrecords', 'assets'];
+    const collections = ['users', 'organizations', 'roles', 'permissions', 'modules', 'departments', 'projects', 'contacts', 'leads', 'deals', 'tasks', 'employees', 'conversations', 'messages', 'attendance', 'leaverequests', 'goals', 'payrollruns', 'complianceitems', 'complianceevents', 'documentrecords', 'assets'];
     
     for (const collectionName of collections) {
       try {
@@ -583,13 +583,15 @@ class DemoSeeder {
     const attendanceRecords = [];
     
     for (const employee of employees) {
-      // Generate attendance for last 30 days
-      for (let i = 0; i < 30; i++) {
-        const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+      // Generate attendance for last 45 days, including recent weekdays
+      for (let i = 0; i < 45; i++) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
         
         // Skip weekends
         if (date.getDay() === 0 || date.getDay() === 6) continue;
         
+        const workDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
         const checkInTime = new Date(date);
         checkInTime.setHours(8 + Math.floor(Math.random() * 2), Math.floor(Math.random() * 60));
         
@@ -600,11 +602,21 @@ class DemoSeeder {
         
         attendanceRecords.push({
           _id: new ObjectId(),
-          employeeId: employee.employeeId,
-          date: new Date(date.getFullYear(), date.getMonth(), date.getDate()),
+          employeeId: employee._id,
+          date: workDate,
           checkIn: checkInTime,
           checkOut: checkOutTime,
           totalHours: Math.round(totalHours * 100) / 100,
+          checkInLocation: {
+            latitude: 40.7128 + (Math.random() - 0.5) * 0.01,
+            longitude: -74.0060 + (Math.random() - 0.5) * 0.01,
+            address: `Office Location ${Math.floor(Math.random() * 5) + 1}`
+          },
+          checkOutLocation: {
+            latitude: 40.7128 + (Math.random() - 0.5) * 0.01,
+            longitude: -74.0060 + (Math.random() - 0.5) * 0.01,
+            address: `Office Location ${Math.floor(Math.random() * 5) + 1}`
+          },
           organizationId: employee.organizationId,
           createdAt: new Date()
         });
@@ -612,7 +624,7 @@ class DemoSeeder {
     }
     
     if (attendanceRecords.length > 0) {
-      await this.db.collection('attendancerecords').insertMany(attendanceRecords);
+      await this.db.collection('attendance').insertMany(attendanceRecords);
       console.log(`⏰ Seeded ${attendanceRecords.length} attendance records`);
     }
   }
@@ -859,7 +871,23 @@ class DemoSeeder {
       { name: 'organization:read', description: 'View organizations' },
       { name: 'organization:create', description: 'Create organizations' },
       { name: 'organization:update', description: 'Update organizations' },
-      { name: 'organization:delete', description: 'Delete organizations' }
+      { name: 'organization:delete', description: 'Delete organizations' },
+      { name: 'hr:read', description: 'View HR data' },
+      { name: 'hr:create', description: 'Create HR records' },
+      { name: 'hr:update', description: 'Update HR records' },
+      { name: 'hr:delete', description: 'Delete HR records' },
+      { name: 'employee:read', description: 'View employees' },
+      { name: 'employee:create', description: 'Create employees' },
+      { name: 'employee:update', description: 'Update employees' },
+      { name: 'employee:delete', description: 'Delete employees' },
+      { name: 'department:read', description: 'View departments' },
+      { name: 'department:create', description: 'Create departments' },
+      { name: 'department:update', description: 'Update departments' },
+      { name: 'department:delete', description: 'Delete departments' },
+      { name: 'attendance:read', description: 'View attendance' },
+      { name: 'attendance:create', description: 'Create attendance' },
+      { name: 'payroll:read', description: 'View payroll' },
+      { name: 'payroll:create', description: 'Create payroll' }
     ];
 
     if (this.projectName === 'beax-rm') {
@@ -899,7 +927,10 @@ class DemoSeeder {
     if (this.projectName === 'beax-rm') {
       return [
         { name: 'Super Admin', description: 'Full system access', type: 'super_admin' },
+        { name: 'Admin', description: 'Administrative access', type: 'admin' },
         { name: 'Project Manager', description: 'Manage projects and resources', type: 'admin' },
+        { name: 'HR Manager', description: 'Manage HR operations', type: 'admin' },
+        { name: 'Staff', description: 'Standard staff access', type: 'staff' },
         { name: 'Resource Manager', description: 'Manage resources and assignments', type: 'staff' },
         { name: 'Team Lead', description: 'Lead project teams', type: 'staff' },
         { name: 'Developer', description: 'Work on assigned projects', type: 'staff' },
@@ -908,7 +939,10 @@ class DemoSeeder {
     } else if (this.projectName === 'true-process') {
       return [
         { name: 'Process Admin', description: 'Full process management access', type: 'super_admin' },
+        { name: 'Admin', description: 'Administrative access', type: 'admin' },
         { name: 'Process Manager', description: 'Manage processes and workflows', type: 'admin' },
+        { name: 'HR Manager', description: 'Manage HR operations', type: 'admin' },
+        { name: 'Staff', description: 'Standard staff access', type: 'staff' },
         { name: 'Process Analyst', description: 'Analyze and optimize processes', type: 'staff' },
         { name: 'Team Lead', description: 'Lead process execution teams', type: 'staff' },
         { name: 'Process Executor', description: 'Execute assigned processes', type: 'staff' }
@@ -916,8 +950,9 @@ class DemoSeeder {
     }
 
     return [
+      { name: 'Super Admin', description: 'Full system access', type: 'super_admin' },
       { name: 'Admin', description: 'Administrator access', type: 'admin' },
-      { name: 'User', description: 'Standard user access', type: 'staff' }
+      { name: 'Staff', description: 'Standard staff access', type: 'staff' }
     ];
   }
 
@@ -1061,11 +1096,12 @@ class DemoSeeder {
     if (this.projectName === 'beax-rm') {
       const userTemplates = [
         { email: 'admin@beax.com', firstName: 'Beax', lastName: 'Admin', roleName: 'Super Admin' },
-        { email: 'manager@beax.com', firstName: 'Project', lastName: 'Manager', roleName: 'Project Manager' },
-        { email: 'resource@beax.com', firstName: 'Resource', lastName: 'Manager', roleName: 'Resource Manager' },
-        { email: 'lead@beax.com', firstName: 'Team', lastName: 'Lead', roleName: 'Team Lead' },
-        { email: 'dev1@beax.com', firstName: 'John', lastName: 'Developer', roleName: 'Developer' },
-        { email: 'dev2@beax.com', firstName: 'Jane', lastName: 'Developer', roleName: 'Developer' },
+        { email: 'manager@beax.com', firstName: 'Project', lastName: 'Manager', roleName: 'Admin' },
+        { email: 'hr@beax.com', firstName: 'HR', lastName: 'Manager', roleName: 'HR Manager' },
+        { email: 'resource@beax.com', firstName: 'Resource', lastName: 'Manager', roleName: 'Staff' },
+        { email: 'lead@beax.com', firstName: 'Team', lastName: 'Lead', roleName: 'Staff' },
+        { email: 'dev1@beax.com', firstName: 'John', lastName: 'Developer', roleName: 'Staff' },
+        { email: 'dev2@beax.com', firstName: 'Jane', lastName: 'Developer', roleName: 'Staff' },
         { email: 'client@beax.com', firstName: 'Client', lastName: 'User', roleName: 'Client' }
       ];
       
@@ -1091,10 +1127,11 @@ class DemoSeeder {
     } else if (this.projectName === 'true-process') {
       const userTemplates = [
         { email: 'admin@trueprocess.com', firstName: 'Process', lastName: 'Admin', roleName: 'Process Admin' },
-        { email: 'manager@trueprocess.com', firstName: 'Process', lastName: 'Manager', roleName: 'Process Manager' },
-        { email: 'analyst@trueprocess.com', firstName: 'Process', lastName: 'Analyst', roleName: 'Process Analyst' },
-        { email: 'lead@trueprocess.com', firstName: 'Team', lastName: 'Lead', roleName: 'Team Lead' },
-        { email: 'executor@trueprocess.com', firstName: 'Process', lastName: 'Executor', roleName: 'Process Executor' }
+        { email: 'manager@trueprocess.com', firstName: 'Process', lastName: 'Manager', roleName: 'Admin' },
+        { email: 'hr@trueprocess.com', firstName: 'HR', lastName: 'Manager', roleName: 'HR Manager' },
+        { email: 'analyst@trueprocess.com', firstName: 'Process', lastName: 'Analyst', roleName: 'Staff' },
+        { email: 'lead@trueprocess.com', firstName: 'Team', lastName: 'Lead', roleName: 'Staff' },
+        { email: 'executor@trueprocess.com', firstName: 'Process', lastName: 'Executor', roleName: 'Staff' }
       ];
       
       for (const org of organizations) {

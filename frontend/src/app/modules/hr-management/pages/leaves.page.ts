@@ -8,10 +8,13 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { HrManagementService, LeaveRequestDto } from '../hr-management.service';
 import { AuthService } from '../../../services/auth.service';
+import { LeaveDialogComponent } from '../dialogs/leave-dialog.component';
 
 @Component({
   selector: 'app-hr-leaves-page',
@@ -33,37 +36,13 @@ import { AuthService } from '../../../services/auth.service';
     <div class="page-content">
       <div class="page-header">
         <h2>Leave Management</h2>
-        <button mat-raised-button color="primary" (click)="create()">
+        <button mat-raised-button color="primary" (click)="openLeaveDialog()">
           <mat-icon>send</mat-icon>
           Submit Leave Request
         </button>
       </div>
 
-      <div class="leave-form-section">
-        <h3>New Leave Request</h3>
-        <div class="new-leave">
-          <mat-form-field appearance="outline">
-            <mat-label>Start Date</mat-label>
-            <input matInput [(ngModel)]="startDate" placeholder="YYYY-MM-DD" />
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>End Date</mat-label>
-            <input matInput [(ngModel)]="endDate" placeholder="YYYY-MM-DD" />
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Leave Type</mat-label>
-            <select matNativeControl [(ngModel)]="leaveType">
-              <option value="casual">Casual Leave</option>
-              <option value="sick">Sick Leave</option>
-              <option value="earned">Earned Leave</option>
-            </select>
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="reason">
-            <mat-label>Reason</mat-label>
-            <input matInput [(ngModel)]="reason" placeholder="Brief reason for leave" />
-          </mat-form-field>
-        </div>
-      </div>
+
 
       <div class="filters-section">
         <div class="filters">
@@ -264,14 +243,12 @@ import { AuthService } from '../../../services/auth.service';
 export class LeavesPageComponent implements OnInit {
   private hr = inject(HrManagementService);
   private auth = inject(AuthService);
+  private dialog = inject(MatDialog);
+  private snackBar = inject(MatSnackBar);
 
   leaves = signal<LeaveRequestDto[]>([]);
   displayedLeaves = signal<LeaveRequestDto[]>([]);
   loading = signal(false);
-  startDate = '';
-  endDate = '';
-  leaveType = 'casual';
-  reason = '';
   statusFilter = '';
   
   private pageSize = 12;
@@ -344,22 +321,33 @@ export class LeavesPageComponent implements OnInit {
     }
   }
 
-  create(): void {
-    if (!this.employeeId || !this.startDate || !this.endDate) return;
-    this.hr
-      .createLeave({
-        employeeId: this.employeeId,
-        startDate: this.startDate,
-        endDate: this.endDate,
-        leaveType: this.leaveType,
-        reason: this.reason || undefined,
-      })
-      .subscribe(() => {
-        this.startDate = '';
-        this.endDate = '';
-        this.reason = '';
-        this.load();
+  openLeaveDialog(leave?: LeaveRequestDto): void {
+    const dialogRef = this.dialog.open(LeaveDialogComponent, {
+      width: '500px',
+      data: leave || null
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (!result) return;
+
+      const leaveData = {
+        ...result,
+        employeeId: this.employeeId
+      };
+
+      this.hr.createLeave(leaveData).subscribe({
+        next: (created) => {
+          if (created && created._id) {
+            this.leaves.set([created, ...this.leaves()]);
+            this.displayedLeaves.set([created, ...this.displayedLeaves()]);
+          } else {
+            this.load();
+          }
+          this.snackBar.open('Leave request submitted successfully', 'Close', { duration: 3000 });
+        },
+        error: () => this.snackBar.open('Error submitting leave request', 'Close', { duration: 3000 })
       });
+    });
   }
 
   approve(l: LeaveRequestDto): void {

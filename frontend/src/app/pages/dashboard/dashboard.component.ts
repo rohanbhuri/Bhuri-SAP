@@ -7,6 +7,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormsModule } from '@angular/forms';
 import { AuthService, User } from '../../services/auth.service';
 
@@ -74,6 +75,7 @@ interface DashboardWidget {
     MatSelectModule,
     MatFormFieldModule,
     MatSnackBarModule,
+    MatTooltipModule,
     FormsModule,
     NavbarComponent,
     BottomNavbarComponent,
@@ -130,17 +132,12 @@ interface DashboardWidget {
           <div class="dashboard-menu">
             <button
               mat-icon-button
-              [matMenuTriggerFor]="dashboardMenu"
-              aria-label="Dashboard options"
+              (click)="toggleCompactView()"
+              [attr.aria-label]="isCompactView() ? 'Switch to Normal View' : 'Switch to Compact View'"
+              [matTooltip]="isCompactView() ? 'Normal View' : 'Compact View'"
             >
-              <mat-icon>more_vert</mat-icon>
+              <mat-icon>{{ isCompactView() ? 'view_module' : 'view_compact' }}</mat-icon>
             </button>
-            <mat-menu #dashboardMenu="matMenu">
-              <button mat-menu-item (click)="toggleCompactView()">
-                <mat-icon>{{ isCompactView() ? 'view_module' : 'view_compact' }}</mat-icon>
-                <span>{{ isCompactView() ? 'Normal View' : 'Compact View' }}</span>
-              </button>
-            </mat-menu>
           </div>
         </div>
         <p class="subtitle">
@@ -712,6 +709,15 @@ export class DashboardComponent implements OnInit {
   }
 
   resize(w: DashboardWidget, size: 's' | 'm' | 'l') {
+    // Auto-switch to normal mode if in compact mode
+    if (this.isCompactView()) {
+      this.isCompactView.set(false);
+      this.saveCompactViewPreference();
+      this.snackBar.open('Switched to Normal view for resizing', 'Close', {
+        duration: 2000,
+      });
+    }
+    
     const updated = this.widgets().map((x) =>
       x.id === w.id ? { ...x, size } : x
     );

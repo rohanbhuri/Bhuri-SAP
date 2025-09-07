@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, HostListener } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -6,11 +6,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSelectModule } from '@angular/material/select';
+import { MatTableModule } from '@angular/material/table';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import {
   HrManagementService,
   AttendanceRecord,
+  Employee,
 } from '../hr-management.service';
 import { AuthService } from '../../../services/auth.service';
 
@@ -25,102 +28,120 @@ import { AuthService } from '../../../services/auth.service';
     MatFormFieldModule,
     MatInputModule,
     MatProgressSpinnerModule,
+    MatSelectModule,
+    MatTableModule,
     FormsModule,
     DatePipe,
   ],
   template: `
     <div class="page-content">
       <div class="page-header">
-        <h2>Attendance Management</h2>
-        <div class="actions">
-          <button mat-raised-button color="primary" (click)="checkIn()">
-            <mat-icon>login</mat-icon>
-            Check In
-          </button>
-          <button mat-raised-button color="accent" (click)="checkOut()">
-            <mat-icon>logout</mat-icon>
-            Check Out
-          </button>
-        </div>
+        <h2>Employee Attendance Records</h2>
       </div>
 
       <div class="filters-section">
         <div class="filters">
           <mat-form-field appearance="outline">
+            <mat-label>Search Employee</mat-label>
+            <input matInput [(ngModel)]="searchTerm" placeholder="Name or ID" (input)="filterRecords()" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Select Employee</mat-label>
+            <mat-select [(ngModel)]="employeeIdFilter" (selectionChange)="load()">
+              <mat-option value="">All Employees</mat-option>
+              <mat-option *ngFor="let emp of employees()" [value]="emp._id">
+                {{emp.firstName}} {{emp.lastName}} ({{emp.employeeId}})
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
             <mat-label>From Date</mat-label>
-            <input matInput [(ngModel)]="from" placeholder="2025-08-01" />
+            <input matInput type="date" [(ngModel)]="from" />
           </mat-form-field>
           <mat-form-field appearance="outline">
             <mat-label>To Date</mat-label>
-            <input matInput [(ngModel)]="to" placeholder="2025-08-31" />
+            <input matInput type="date" [(ngModel)]="to" />
           </mat-form-field>
           <button mat-stroked-button (click)="setToday()">Today</button>
-          <button mat-stroked-button (click)="clearRange()">Clear</button>
+          <button mat-stroked-button (click)="clearFilters()">Clear</button>
           <button mat-raised-button color="primary" (click)="load()">Load</button>
-        </div>
-
-        <div class="admin-filter" *ngIf="isAdmin">
-          <mat-form-field appearance="outline">
-            <mat-label>Employee ID (Admin)</mat-label>
-            <input matInput [(ngModel)]="employeeIdFilter" placeholder="EMP001" />
-          </mat-form-field>
-          <button mat-stroked-button (click)="load()">Apply</button>
         </div>
       </div>
 
-      <div class="cards-container">
-        <div class="attendance-card" *ngFor="let record of displayedRecords()">
-          <mat-card class="attendance-card-content">
-            <div class="card-header">
-              <div class="date-info">
-                <mat-icon>calendar_today</mat-icon>
-                <span class="date-text">{{ record.date | date : 'mediumDate' }}</span>
+      <div class="table-container" *ngIf="!loading()">
+        <table mat-table [dataSource]="filteredRecords()" class="attendance-table">
+          <ng-container matColumnDef="employee">
+            <th mat-header-cell *matHeaderCellDef>Employee</th>
+            <td mat-cell *matCellDef="let record">
+              <div class="employee-cell">
+                <strong>{{ getEmployeeName(record.employeeId) }}</strong>
+                <span class="employee-id">{{ getEmployeeId(record.employeeId) }}</span>
               </div>
-              <div class="hours-badge" [class.full-day]="(record.totalHours || 0) >= 8">
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="date">
+            <th mat-header-cell *matHeaderCellDef>Date</th>
+            <td mat-cell *matCellDef="let record">{{ record.date | date : 'mediumDate' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="checkIn">
+            <th mat-header-cell *matHeaderCellDef>Check In</th>
+            <td mat-cell *matCellDef="let record">
+              <div class="time-cell">
+                <span class="time">{{ record.checkIn ? (record.checkIn | date : 'shortTime') : '-' }}</span>
+                <span class="location" *ngIf="record.checkInLocation?.address">
+                  <mat-icon>location_on</mat-icon>
+                  {{ record.checkInLocation.address }}
+                </span>
+              </div>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="checkOut">
+            <th mat-header-cell *matHeaderCellDef>Check Out</th>
+            <td mat-cell *matCellDef="let record">
+              <div class="time-cell">
+                <span class="time">{{ record.checkOut ? (record.checkOut | date : 'shortTime') : '-' }}</span>
+                <span class="location" *ngIf="record.checkOutLocation?.address">
+                  <mat-icon>location_on</mat-icon>
+                  {{ record.checkOutLocation.address }}
+                </span>
+              </div>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="hours">
+            <th mat-header-cell *matHeaderCellDef>Hours</th>
+            <td mat-cell *matCellDef="let record">
+              <span class="hours-badge" [class.full-day]="(record.totalHours || 0) >= 8">
                 {{ record.totalHours || 0 }}h
-              </div>
-            </div>
-            
-            <div class="card-body">
-              <div class="time-grid">
-                <div class="time-item">
-                  <mat-icon>login</mat-icon>
-                  <div class="time-details">
-                    <span class="time-label">Check In</span>
-                    <span class="time-value">{{ record.checkIn ? (record.checkIn | date : 'shortTime') : 'Not checked in' }}</span>
-                  </div>
-                </div>
-                <div class="time-item">
-                  <mat-icon>logout</mat-icon>
-                  <div class="time-details">
-                    <span class="time-label">Check Out</span>
-                    <span class="time-value">{{ record.checkOut ? (record.checkOut | date : 'shortTime') : 'Not checked out' }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </mat-card>
-        </div>
+              </span>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
       </div>
       
       <div class="loading-container" *ngIf="loading()">
         <mat-spinner diameter="40"></mat-spinner>
-        <span>Loading more records...</span>
+        <span>Loading attendance records...</span>
       </div>
       
       <div class="no-data" *ngIf="records().length === 0 && !loading()">
         <mat-icon>schedule</mat-icon>
         <h3>No attendance records found</h3>
-        <p>Check in to start tracking your attendance</p>
+        <p>Try adjusting your filters</p>
       </div>
     </div>
   `,
   styles: [
     `
       .page-content { padding: 24px; min-height: 100vh; }
-      .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+      .page-header { margin-bottom: 24px; }
       .page-header h2 { margin: 0; color: var(--theme-on-surface); font-size: 24px; font-weight: 500; }
-      .actions { display: flex; gap: 12px; }
       
       .filters-section {
         background: var(--theme-surface);
@@ -130,67 +151,67 @@ import { AuthService } from '../../../services/auth.service';
         border: 1px solid color-mix(in srgb, var(--theme-on-surface) 12%, transparent);
       }
       
-      .filters, .admin-filter { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-      .admin-filter { margin-top: 16px; padding-top: 16px; border-top: 1px solid color-mix(in srgb, var(--theme-on-surface) 12%, transparent); }
+      .filters { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
       
-      .cards-container { 
-        display: grid; 
-        gap: 20px;
-        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-      }
-      
-      .attendance-card-content {
-        transition: all 0.3s ease;
+      .table-container {
+        background: var(--theme-surface);
+        border-radius: 8px;
+        overflow: hidden;
         border: 1px solid color-mix(in srgb, var(--theme-on-surface) 12%, transparent);
       }
       
-      .attendance-card-content:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px color-mix(in srgb, var(--theme-on-surface) 15%, transparent);
+      .attendance-table {
+        width: 100%;
       }
       
-      .card-header { 
-        display: flex; 
-        justify-content: space-between; 
-        align-items: center; 
-        margin-bottom: 16px; 
-        padding: 16px 16px 0;
+      .employee-cell {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
       }
       
-      .date-info { display: flex; align-items: center; gap: 8px; font-weight: 500; }
-      .date-info mat-icon { color: var(--theme-primary); }
+      .employee-id {
+        font-size: 12px;
+        opacity: 0.7;
+      }
+      
+      .time-cell {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      
+      .time {
+        font-weight: 500;
+      }
+      
+      .location {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 11px;
+        opacity: 0.6;
+      }
+      
+      .location mat-icon {
+        font-size: 14px;
+        width: 14px;
+        height: 14px;
+      }
       
       .hours-badge {
         background: color-mix(in srgb, var(--theme-accent) 20%, transparent);
         color: var(--theme-accent);
-        padding: 4px 12px;
+        padding: 4px 8px;
         border-radius: 12px;
         font-weight: 600;
-        font-size: 14px;
+        font-size: 12px;
       }
       
       .hours-badge.full-day {
         background: color-mix(in srgb, var(--theme-primary) 20%, transparent);
         color: var(--theme-primary);
       }
-      
-      .card-body { padding: 0 16px 16px; }
-      
-      .time-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-      
-      .time-item { 
-        display: flex; 
-        align-items: center; 
-        gap: 12px; 
-        padding: 12px;
-        background: color-mix(in srgb, var(--theme-primary) 5%, transparent);
-        border-radius: 8px;
-      }
-      
-      .time-item mat-icon { color: var(--theme-primary); flex-shrink: 0; }
-      .time-details { display: flex; flex-direction: column; gap: 2px; }
-      .time-label { font-size: 12px; opacity: 0.7; }
-      .time-value { font-weight: 500; }
       
       .loading-container { 
         display: flex; 
@@ -215,10 +236,8 @@ import { AuthService } from '../../../services/auth.service';
       
       @media (max-width: 768px) {
         .page-content { padding: 16px; }
-        .cards-container { grid-template-columns: 1fr; gap: 16px; }
-        .page-header { flex-direction: column; gap: 16px; align-items: stretch; }
-        .time-grid { grid-template-columns: 1fr; }
-        .actions { justify-content: center; }
+        .filters { flex-direction: column; align-items: stretch; }
+        .table-container { overflow-x: auto; }
       }
     `,
   ],
@@ -228,23 +247,41 @@ export class AttendancePageComponent implements OnInit {
   private auth = inject(AuthService);
 
   records = signal<AttendanceRecord[]>([]);
-  displayedRecords = signal<AttendanceRecord[]>([]);
+  filteredRecords = signal<AttendanceRecord[]>([]);
+  employees = signal<Employee[]>([]);
   loading = signal(false);
   from = '';
   to = '';
   employeeIdFilter = '';
+  searchTerm = '';
   
-  private pageSize = 12;
-  private currentPage = 0;
-  private hasMoreData = true;
-
-  get isAdmin(): boolean {
-    return this.auth.hasRole('hr_admin') || this.auth.hasRole('super_admin');
-  }
+  displayedColumns = ['employee', 'date', 'checkIn', 'checkOut', 'hours'];
 
   ngOnInit(): void {
     this.setToday();
+    this.loadEmployees();
     this.load();
+  }
+  
+  loadEmployees(): void {
+    const params: any = {};
+    if (this.organizationId) {
+      params.organizationId = this.organizationId;
+    }
+    this.hr.getEmployees(params).subscribe({
+      next: (employees) => this.employees.set(employees),
+      error: () => this.employees.set([])
+    });
+  }
+  
+  getEmployeeName(employeeId: string): string {
+    const emp = this.employees().find(e => e._id === employeeId);
+    return emp ? `${emp.firstName} ${emp.lastName}` : 'Unknown';
+  }
+  
+  getEmployeeId(employeeId: string): string {
+    const emp = this.employees().find(e => e._id === employeeId);
+    return emp ? emp.employeeId : '';
   }
 
   private get employeeId(): string {
@@ -256,66 +293,41 @@ export class AttendancePageComponent implements OnInit {
 
   load(): void {
     this.loading.set(true);
-    this.currentPage = 0;
-    this.hasMoreData = true;
-    this.displayedRecords.set([]);
     
     const params: any = {};
     params.organizationId = this.organizationId;
-    const id = this.isAdmin && this.employeeIdFilter ? this.employeeIdFilter : this.employeeId;
-    if (id) params.employeeId = id;
+    if (this.employeeIdFilter) params.employeeId = this.employeeIdFilter;
     if (this.from) params.from = this.from;
     if (this.to) params.to = this.to;
     
     this.hr.getAttendance(params).subscribe({
       next: (list) => {
         this.records.set(list);
-        this.loadMoreRecords();
+        this.filterRecords();
         this.loading.set(false);
       },
       error: () => this.loading.set(false)
     });
   }
   
-  loadMoreRecords(): void {
-    const allRecords = this.records();
-    const startIndex = this.currentPage * this.pageSize;
-    const endIndex = startIndex + this.pageSize;
-    const newRecords = allRecords.slice(startIndex, endIndex);
+  filterRecords(): void {
+    let filtered = this.records();
     
-    if (newRecords.length > 0) {
-      this.displayedRecords.set([...this.displayedRecords(), ...newRecords]);
-      this.currentPage++;
-      this.hasMoreData = endIndex < allRecords.length;
-    } else {
-      this.hasMoreData = false;
+    if (this.searchTerm) {
+      const term = this.searchTerm.toLowerCase();
+      filtered = filtered.filter(record => {
+        const emp = this.employees().find(e => e._id === record.employeeId);
+        if (!emp) return false;
+        return emp.firstName.toLowerCase().includes(term) ||
+               emp.lastName.toLowerCase().includes(term) ||
+               emp.employeeId.toLowerCase().includes(term);
+      });
     }
-  }
-  
-  @HostListener('window:scroll')
-  onScroll(): void {
-    if (this.hasMoreData && !this.loading()) {
-      const threshold = 200;
-      const position = window.pageYOffset + window.innerHeight;
-      const height = document.documentElement.scrollHeight;
-      
-      if (position > height - threshold) {
-        this.loadMoreRecords();
-      }
-    }
+    
+    this.filteredRecords.set(filtered);
   }
 
-  checkIn(): void {
-    const id = this.employeeId;
-    if (!id) return;
-    this.hr.attendanceCheckIn(id).subscribe(() => this.load());
-  }
 
-  checkOut(): void {
-    const id = this.employeeId;
-    if (!id) return;
-    this.hr.attendanceCheckOut(id).subscribe(() => this.load());
-  }
 
   setToday(): void {
     const today = new Date();
@@ -324,8 +336,11 @@ export class AttendancePageComponent implements OnInit {
     this.to = iso;
   }
 
-  clearRange(): void {
+  clearFilters(): void {
     this.from = '';
     this.to = '';
+    this.employeeIdFilter = '';
+    this.searchTerm = '';
+    this.load();
   }
 }

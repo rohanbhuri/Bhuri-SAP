@@ -23,6 +23,20 @@ export class Attendance {
   totalHours?: number; // Computed in hours
 
   @Column({ nullable: true })
+  checkInLocation?: {
+    latitude: number;
+    longitude: number;
+    address?: string;
+  };
+
+  @Column({ nullable: true })
+  checkOutLocation?: {
+    latitude: number;
+    longitude: number;
+    address?: string;
+  };
+
+  @Column({ nullable: true })
   shiftId?: string; // Reference to Shift by id string
 
   @Column({ type: String })

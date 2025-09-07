@@ -13,6 +13,14 @@ export const HR_MANAGEMENT_ROUTES: Routes = [
 // Legacy routes for backward compatibility
 export const HR_MANAGEMENT_LEGACY_ROUTES: Routes = [
   {
+    path: 'employees',
+    loadComponent: () =>
+      import('./pages/employees.page').then(
+        (m) => m.EmployeesPageComponent
+      ),
+    title: 'Employees',
+  },
+  {
     path: 'attendance',
     loadComponent: () =>
       import('./pages/attendance.page').then(

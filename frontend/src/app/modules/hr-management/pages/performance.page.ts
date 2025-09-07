@@ -6,9 +6,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { FormsModule } from '@angular/forms';
 import { HrManagementService, GoalDto } from '../hr-management.service';
 import { AuthService } from '../../../services/auth.service';
+import { GoalDialogComponent } from '../dialogs/goal-dialog.component';
 
 @Component({
   selector: 'app-hr-performance-page',
@@ -27,21 +30,13 @@ import { AuthService } from '../../../services/auth.service';
     <div class="page-content">
       <div class="page-header">
         <h2>Performance Management</h2>
-        <button mat-raised-button color="primary" (click)="createGoal()">
+        <button mat-raised-button color="primary" (click)="openGoalDialog()">
           <mat-icon>add</mat-icon>
           Add Goal
         </button>
       </div>
 
-      <div class="goal-form-section">
-        <h3>Create New Goal</h3>
-        <div class="new-goal">
-          <mat-form-field appearance="outline">
-            <mat-label>Goal Title</mat-label>
-            <input matInput [(ngModel)]="newGoalTitle" placeholder="Enter performance goal" />
-          </mat-form-field>
-        </div>
-      </div>
+
 
       <div class="cards-container">
         <div class="goal-card" *ngFor="let goal of displayedGoals()">
@@ -69,13 +64,13 @@ import { AuthService } from '../../../services/auth.service';
             </div>
             
             <div class="card-actions">
-              <button mat-button color="primary" (click)="bumpProgress(goal, 10)" [disabled]="(goal.progress || 0) >= 100">
+              <button mat-button color="primary" (click)="openGoalDialog(goal)">
+                <mat-icon>edit</mat-icon>
+                Edit
+              </button>
+              <button mat-button color="accent" (click)="bumpProgress(goal, 10)" [disabled]="(goal.progress || 0) >= 100">
                 <mat-icon>add</mat-icon>
                 +10%
-              </button>
-              <button mat-button color="accent" (click)="bumpProgress(goal, -10)" [disabled]="(goal.progress || 0) <= 0">
-                <mat-icon>remove</mat-icon>
-                -10%
               </button>
             </div>
           </mat-card>
@@ -225,11 +220,12 @@ import { AuthService } from '../../../services/auth.service';
 export class PerformancePageComponent implements OnInit {
   private hr = inject(HrManagementService);
   private auth = inject(AuthService);
+  private dialog = inject(MatDialog);
+  private snackBar = inject(MatSnackBar);
 
   goals = signal<GoalDto[]>([]);
   displayedGoals = signal<GoalDto[]>([]);
   loading = signal(false);
-  newGoalTitle = '';
   
   private pageSize = 12;
   private currentPage = 0;
@@ -290,14 +286,46 @@ export class PerformancePageComponent implements OnInit {
     }
   }
 
-  createGoal(): void {
-    if (!this.employeeId || !this.newGoalTitle) return;
-    this.hr
-      .createGoal({ employeeId: this.employeeId, title: this.newGoalTitle })
-      .subscribe(() => {
-        this.newGoalTitle = '';
-        this.load();
-      });
+  openGoalDialog(goal?: GoalDto): void {
+    const dialogRef = this.dialog.open(GoalDialogComponent, {
+      width: '500px',
+      data: goal || null
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (!result) return;
+
+      if (goal) {
+        this.hr.updateGoal(goal._id!, result).subscribe({
+          next: (updated) => {
+            const updatedGoals = this.goals().map(g => g._id === goal._id ? { ...g, ...updated } : g);
+            const updatedDisplayed = this.displayedGoals().map(g => g._id === goal._id ? { ...g, ...updated } : g);
+            this.goals.set(updatedGoals);
+            this.displayedGoals.set(updatedDisplayed);
+            this.snackBar.open('Goal updated successfully', 'Close', { duration: 3000 });
+          },
+          error: () => this.snackBar.open('Error updating goal', 'Close', { duration: 3000 })
+        });
+      } else {
+        const goalData = {
+          ...result,
+          employeeId: this.employeeId
+        };
+
+        this.hr.createGoal(goalData).subscribe({
+          next: (created) => {
+            if (created && created._id) {
+              this.goals.set([created, ...this.goals()]);
+              this.displayedGoals.set([created, ...this.displayedGoals()]);
+            } else {
+              this.load();
+            }
+            this.snackBar.open('Goal created successfully', 'Close', { duration: 3000 });
+          },
+          error: () => this.snackBar.open('Error creating goal', 'Close', { duration: 3000 })
+        });
+      }
+    });
   }
 
   bumpProgress(g: GoalDto, delta: number): void {

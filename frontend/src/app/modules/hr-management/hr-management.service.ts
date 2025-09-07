@@ -44,6 +44,16 @@ export interface AttendanceRecord {
   checkIn?: string | Date;
   checkOut?: string | Date;
   totalHours?: number;
+  checkInLocation?: {
+    latitude: number;
+    longitude: number;
+    address?: string;
+  };
+  checkOutLocation?: {
+    latitude: number;
+    longitude: number;
+    address?: string;
+  };
 }
 
 export interface LeaveRequestDto {
@@ -173,9 +183,10 @@ export class HrManagementService {
   }
 
   // Employees & Departments
-  getEmployees(): Observable<Employee[]> {
+  getEmployees(params: { organizationId?: string } = {}): Observable<Employee[]> {
+    const q = new URLSearchParams(params as any).toString();
     return this.http
-      .get<Employee[]>(`${this.apiUrl}/hr-management/employees`)
+      .get<Employee[]>(`${this.apiUrl}/hr-management/employees${q ? `?${q}` : ''}`)
       .pipe(catchError(() => of([])));
   }
 
@@ -214,17 +225,19 @@ export class HrManagementService {
   }
 
   // Attendance & Leaves
-  attendanceCheckIn(employeeId: string): Observable<AttendanceRecord> {
+  attendanceCheckIn(employeeId: string, location?: { latitude: number; longitude: number; address?: string }, organizationId?: string): Observable<AttendanceRecord> {
+    const params = organizationId ? `?organizationId=${organizationId}` : '';
     return this.http.post<AttendanceRecord>(
-      `${this.apiUrl}/hr-management/attendance/check-in`,
-      { employeeId }
+      `${this.apiUrl}/hr-management/attendance/check-in${params}`,
+      { employeeId, location }
     );
   }
 
-  attendanceCheckOut(employeeId: string): Observable<AttendanceRecord | null> {
+  attendanceCheckOut(employeeId: string, location?: { latitude: number; longitude: number; address?: string }, organizationId?: string): Observable<AttendanceRecord | null> {
+    const params = organizationId ? `?organizationId=${organizationId}` : '';
     return this.http.post<AttendanceRecord | null>(
-      `${this.apiUrl}/hr-management/attendance/check-out`,
-      { employeeId }
+      `${this.apiUrl}/hr-management/attendance/check-out${params}`,
+      { employeeId, location }
     );
   }
 

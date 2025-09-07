@@ -72,13 +72,13 @@ export class HrManagementController {
 
   // ===== Attendance & Leave Management =====
   @Post('attendance/check-in')
-  checkIn(@Body() body: { employeeId: string }, @Query('organizationId') organizationId?: string) {
-    return this.hrService.attendanceCheckIn(body.employeeId, organizationId);
+  checkIn(@Body() body: { employeeId: string; location?: { latitude: number; longitude: number; address?: string } }, @Query('organizationId') organizationId?: string) {
+    return this.hrService.attendanceCheckIn(body.employeeId, organizationId, undefined, body.location);
   }
 
   @Post('attendance/check-out')
-  checkOut(@Body() body: { employeeId: string }) {
-    return this.hrService.attendanceCheckOut(body.employeeId);
+  checkOut(@Body() body: { employeeId: string; location?: { latitude: number; longitude: number; address?: string } }, @Query('organizationId') organizationId?: string) {
+    return this.hrService.attendanceCheckOut(body.employeeId, undefined, body.location);
   }
 
   @Get('attendance')

@@ -175,7 +175,7 @@ export class HrManagementService {
   }
 
   // ===== Attendance & Leave Management =====
-  async attendanceCheckIn(employeeId: string, organizationId?: string, date?: Date) {
+  async attendanceCheckIn(employeeId: string, organizationId?: string, date?: Date, location?: { latitude: number; longitude: number; address?: string }) {
     const workDate = date ? new Date(date) : new Date();
     const day = new Date(workDate.getFullYear(), workDate.getMonth(), workDate.getDate());
     const record = await this.attendanceRepository.findOne({
@@ -188,6 +188,7 @@ export class HrManagementService {
     if (record) {
       if (!record.checkIn) {
         record.checkIn = new Date();
+        record.checkInLocation = location;
         record.updatedAt = new Date();
         await this.attendanceRepository.save(record);
       }
@@ -198,13 +199,14 @@ export class HrManagementService {
       employeeId: new ObjectId(employeeId),
       date: day,
       checkIn: new Date(),
+      checkInLocation: location,
       organizationId: organizationId ? new ObjectId(organizationId) : undefined,
       createdAt: new Date(),
     });
     return this.attendanceRepository.save(newRecord);
   }
 
-  async attendanceCheckOut(employeeId: string, date?: Date) {
+  async attendanceCheckOut(employeeId: string, date?: Date, location?: { latitude: number; longitude: number; address?: string }) {
     const workDate = date ? new Date(date) : new Date();
     const day = new Date(workDate.getFullYear(), workDate.getMonth(), workDate.getDate());
     const record = await this.attendanceRepository.findOne({
@@ -215,6 +217,7 @@ export class HrManagementService {
     });
     if (!record) return null;
     record.checkOut = new Date();
+    record.checkOutLocation = location;
     if (record.checkIn && record.checkOut) {
       record.totalHours = Math.round(((record.checkOut.getTime() - record.checkIn.getTime()) / (1000 * 60 * 60)) * 100) / 100;
     }

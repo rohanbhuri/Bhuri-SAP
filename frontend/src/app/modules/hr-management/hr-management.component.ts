@@ -4,6 +4,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
 import { NavbarComponent } from '../../components/navbar.component';
 import { BottomNavbarComponent } from '../../components/bottom-navbar.component';
+import { EmployeesPageComponent } from './pages/employees.page';
 import { AttendancePageComponent } from './pages/attendance.page';
 import { LeavesPageComponent } from './pages/leaves.page';
 import { PayrollPageComponent } from './pages/payroll.page';
@@ -21,6 +22,7 @@ import { AnalyticsPageComponent } from './pages/analytics.page';
     MatIconModule,
     NavbarComponent,
     BottomNavbarComponent,
+    EmployeesPageComponent,
     AttendancePageComponent,
     LeavesPageComponent,
     PayrollPageComponent,
@@ -44,6 +46,9 @@ import { AnalyticsPageComponent } from './pages/analytics.page';
       </div>
 
       <mat-tab-group class="hr-tabs" [selectedIndex]="selectedTabIndex" (selectedTabChange)="onTabChange($event)">
+        <mat-tab label="Employees">
+          <app-hr-employees-page></app-hr-employees-page>
+        </mat-tab>
         <mat-tab label="Attendance">
           <app-hr-attendance-page></app-hr-attendance-page>
         </mat-tab>
@@ -79,7 +84,7 @@ export class HrManagementComponent implements OnInit {
   private router = inject(Router);
   
   selectedTabIndex = 0;
-  private tabs = ['attendance', 'leaves', 'performance', 'payroll', 'compliance', 'documents', 'assets', 'analytics'];
+  private tabs = ['employees', 'attendance', 'leaves', 'performance', 'payroll', 'compliance', 'documents', 'assets', 'analytics'];
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
