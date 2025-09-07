@@ -25,9 +25,17 @@ async function bootstrap() {
   
   // Enable CORS for frontend communication
   app.enableCors({
-    origin: ['http://localhost:4200', 'http://localhost:4201'],
+    origin: [
+      'http://localhost:4200', 
+      'http://localhost:4201',
+      'http://13.126.228.247:4200',
+      'http://13.126.228.247:4201',
+      'http://3.111.139.181:4200',
+      'http://3.111.139.181:4201'
+    ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
   });
   
   // Serve static files for uploaded avatars
