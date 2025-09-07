@@ -146,11 +146,19 @@ export class CrmService {
   }
 
   createLead(lead: Partial<Lead>): Observable<Lead> {
-    return this.http.post<Lead>(`${this.apiUrl}/crm/leads`, lead);
+    const leadData = {
+      ...lead,
+      contactId: lead.contactId || null
+    };
+    return this.http.post<Lead>(`${this.apiUrl}/crm/leads`, leadData);
   }
 
   createDeal(deal: Partial<Deal>): Observable<Deal> {
-    return this.http.post<Deal>(`${this.apiUrl}/crm/deals`, deal);
+    const dealData = {
+      ...deal,
+      leadId: deal.leadId || null
+    };
+    return this.http.post<Deal>(`${this.apiUrl}/crm/deals`, dealData);
   }
 
   createTask(task: Partial<Task>): Observable<Task> {
@@ -174,7 +182,11 @@ export class CrmService {
   }
 
   updateLead(id: string, lead: Partial<Lead>): Observable<Lead> {
-    return this.http.put<Lead>(`${this.apiUrl}/crm/leads/${id}`, lead);
+    const leadData = {
+      ...lead,
+      contactId: lead.contactId || null
+    };
+    return this.http.put<Lead>(`${this.apiUrl}/crm/leads/${id}`, leadData);
   }
 
   deleteLead(id: string): Observable<void> {
@@ -182,7 +194,11 @@ export class CrmService {
   }
 
   updateDeal(id: string, deal: Partial<Deal>): Observable<Deal> {
-    return this.http.put<Deal>(`${this.apiUrl}/crm/deals/${id}`, deal);
+    const dealData = {
+      ...deal,
+      leadId: deal.leadId || null
+    };
+    return this.http.put<Deal>(`${this.apiUrl}/crm/deals/${id}`, dealData);
   }
 
   deleteDeal(id: string): Observable<void> {

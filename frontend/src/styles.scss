@@ -151,7 +151,7 @@ body {
 .mat-mdc-tab .mdc-tab__text-label {
   color: color-mix(
     in srgb,
-    var(--theme-on-surface) 65%,
+    var(--theme-on-surface) 80%,
     transparent
   ) !important;
   display: inline-flex;
@@ -223,6 +223,11 @@ body {
 .mat-mdc-standard-chip.mat-warn {
   background: color-mix(in srgb, #f44336 20%, transparent) !important;
   color: #ffffff !important;
+}
+
+.mat-mdc-standard-chip.mat-accent {
+  background: color-mix(in srgb, var(--theme-accent) 20%, transparent) !important;
+  color: var(--theme-on-surface) !important;
 }
 
 /* Enhanced Select Box Styling */
@@ -351,7 +356,7 @@ body.light-theme {
 body.dark-theme {
   --theme-background: #121212;
   --theme-surface: #1e1e1e;
-  --theme-on-surface: #e0e0e0;
+  --theme-on-surface: #ffffff;
   --theme-on-primary: #000000;
 
   .mat-mdc-card {
@@ -388,7 +393,7 @@ body.dark-theme {
 
     input,
     .mat-mdc-select-value {
-      color: #e0e0e0 !important;
+      color: #ffffff !important;
     }
   }
 
@@ -398,7 +403,7 @@ body.dark-theme {
   }
 
   .mat-mdc-option {
-    color: #e0e0e0 !important;
+    color: #ffffff !important;
 
     &:hover {
       background-color: color-mix(in srgb, var(--theme-primary) 15%, transparent) !important;
@@ -415,7 +420,7 @@ body.dark-theme {
   }
 
   .mat-mdc-list-item {
-    color: #e0e0e0 !important;
+    color: #ffffff !important;
 
     .mat-mdc-list-item-title {
       color: #ffffff !important;
@@ -434,17 +439,22 @@ body.dark-theme {
     }
 
     .mat-icon {
-      color: #e0e0e0 !important;
+      color: #ffffff !important;
     }
   }
 
   .mat-mdc-chip {
-    background-color: color-mix(in srgb, var(--theme-on-surface) 15%, transparent) !important;
-    color: var(--theme-on-surface) !important;
+    background-color: color-mix(in srgb, var(--theme-on-surface) 20%, transparent) !important;
+    color: #ffffff !important;
   }
 
   .mat-mdc-chip.mat-primary {
-    background-color: color-mix(in srgb, var(--theme-primary) 25%, transparent) !important;
+    background-color: color-mix(in srgb, var(--theme-primary) 30%, transparent) !important;
+    color: #ffffff !important;
+  }
+  
+  .mat-mdc-standard-chip.mat-warn {
+    background: color-mix(in srgb, #f44336 30%, transparent) !important;
     color: #ffffff !important;
   }
 
@@ -463,7 +473,7 @@ body.dark-theme {
   }
 
   p {
-    color: #e0e0e0;
+    color: #ffffff;
   }
 }
 
@@ -474,7 +484,22 @@ body.dark-theme {
   }
 
   .mat-mdc-card {
-    border: 1px solid var(--theme-on-surface);
+    border: 2px solid var(--theme-on-surface);
+  }
+  
+  .mat-mdc-tab .mdc-tab__text-label {
+    color: var(--theme-on-surface) !important;
+  }
+  
+  .breadcrumb,
+  .subtitle,
+  .contact-email,
+  .stat-label {
+    color: var(--theme-on-surface) !important;
+  }
+  
+  .mat-mdc-chip {
+    border: 1px solid var(--theme-on-surface) !important;
   }
 }
 

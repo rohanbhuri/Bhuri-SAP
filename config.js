@@ -2,8 +2,8 @@ const configs = {
   "beax-rm": {
     brand: {
       name: "Beax RM",
-      logo: "/config/assets/beaxrm/icons/BEAX.png",
-      icon: "/config/assets/beaxrm/icons/BEAX-icon.png"
+      logo: "/config/assets/beaxrm/icons/XRM-white-logo.png",
+      icon: "/config/assets/beaxrm/icons/XRM-white-logo.png"
     },
 
     colors: {

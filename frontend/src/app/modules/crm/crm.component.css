@@ -14,8 +14,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: var(--theme-on-surface);
-  opacity: 0.7;
+  color: color-mix(in srgb, var(--theme-on-surface) 85%, transparent);
   font-size: 14px;
   margin-bottom: 16px;
 }
@@ -34,8 +33,7 @@
 
 .subtitle {
   margin: 0;
-  color: var(--theme-on-surface);
-  opacity: 0.7;
+  color: color-mix(in srgb, var(--theme-on-surface) 85%, transparent);
   font-size: 16px;
 }
 
@@ -103,8 +101,7 @@
 
 .contact-email {
   font-size: 12px;
-  color: var(--theme-on-surface);
-  opacity: 0.7;
+  color: color-mix(in srgb, var(--theme-on-surface) 85%, transparent);
 }
 
 .reports-grid {
@@ -144,8 +141,7 @@
 
 .stat-label {
   font-size: 14px;
-  color: var(--theme-on-surface);
-  opacity: 0.7;
+  color: color-mix(in srgb, var(--theme-on-surface) 85%, transparent);
   font-weight: 500;
 }
 

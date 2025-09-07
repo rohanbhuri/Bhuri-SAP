@@ -1,14 +1,14 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatTableModule } from '@angular/material/table';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDialog } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { CrmService, Contact } from '../crm.service';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { CrmService, Contact, Lead } from '../crm.service';
 import { ContactDialogComponent } from '../dialogs/contact-dialog.component';
 
 @Component({
@@ -16,7 +16,7 @@ import { ContactDialogComponent } from '../dialogs/contact-dialog.component';
   standalone: true,
   imports: [
     CommonModule, MatCardModule, MatButtonModule, MatIconModule,
-    MatTableModule, MatChipsModule, MatMenuModule
+    MatChipsModule, MatMenuModule, MatProgressSpinnerModule
   ],
   template: `
     <div class="page-content">
@@ -28,43 +28,17 @@ import { ContactDialogComponent } from '../dialogs/contact-dialog.component';
         </button>
       </div>
       
-      <div class="table-container">
-        <table mat-table [dataSource]="contacts()" class="contacts-table">
-          <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef>Name</th>
-            <td mat-cell *matCellDef="let contact">
+      <div class="cards-container">
+        <div class="contact-card" *ngFor="let contact of displayedContacts()">
+          <mat-card class="contact-card-content">
+            <div class="card-header">
               <div class="contact-info">
                 <div class="contact-avatar">{{ getInitials(contact.firstName, contact.lastName) }}</div>
-                <div>
+                <div class="contact-details">
                   <div class="contact-name">{{ contact.firstName }} {{ contact.lastName }}</div>
                   <div class="contact-email">{{ contact.email }}</div>
                 </div>
               </div>
-            </td>
-          </ng-container>
-          
-          <ng-container matColumnDef="company">
-            <th mat-header-cell *matHeaderCellDef>Company</th>
-            <td mat-cell *matCellDef="let contact">{{ contact.company || '-' }}</td>
-          </ng-container>
-          
-          <ng-container matColumnDef="phone">
-            <th mat-header-cell *matHeaderCellDef>Phone</th>
-            <td mat-cell *matCellDef="let contact">{{ contact.phone || '-' }}</td>
-          </ng-container>
-          
-          <ng-container matColumnDef="status">
-            <th mat-header-cell *matHeaderCellDef>Status</th>
-            <td mat-cell *matCellDef="let contact">
-              <mat-chip [color]="contact.status === 'active' ? 'primary' : 'warn'">
-                {{ contact.status }}
-              </mat-chip>
-            </td>
-          </ng-container>
-          
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Actions</th>
-            <td mat-cell *matCellDef="let contact">
               <button mat-icon-button [matMenuTriggerFor]="contactMenu">
                 <mat-icon>more_vert</mat-icon>
               </button>
@@ -82,25 +56,190 @@ import { ContactDialogComponent } from '../dialogs/contact-dialog.component';
                   <span>Delete</span>
                 </button>
               </mat-menu>
-            </td>
-          </ng-container>
-          
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-        </table>
+            </div>
+            
+            <div class="card-body">
+              <div class="info-grid">
+                <div class="info-item" *ngIf="contact.company">
+                  <mat-icon>business</mat-icon>
+                  <span>{{ contact.company }}</span>
+                </div>
+                <div class="info-item" *ngIf="contact.phone">
+                  <mat-icon>phone</mat-icon>
+                  <span>{{ contact.phone }}</span>
+                </div>
+                <div class="info-item">
+                  <mat-icon>trending_up</mat-icon>
+                  <span>{{ getContactLeadCount(contact._id) }} leads</span>
+                </div>
+                <div class="info-item">
+                  <mat-icon>info</mat-icon>
+                  <mat-chip [color]="contact.status === 'active' ? 'primary' : 'warn'" class="status-chip">
+                    {{ contact.status }}
+                  </mat-chip>
+                </div>
+              </div>
+            </div>
+            
+            <div class="card-actions">
+              <button mat-button color="primary" (click)="editContact(contact)">
+                <mat-icon>edit</mat-icon>
+                Edit
+              </button>
+              <button mat-button color="accent" (click)="convertToLead(contact)">
+                <mat-icon>trending_up</mat-icon>
+                Convert
+              </button>
+            </div>
+          </mat-card>
+        </div>
+      </div>
+      
+      <div class="loading-container" *ngIf="loading()">
+        <mat-spinner diameter="40"></mat-spinner>
+        <span>Loading more contacts...</span>
+      </div>
+      
+      <div class="no-data" *ngIf="contacts().length === 0 && !loading()">
+        <mat-icon>person_off</mat-icon>
+        <h3>No contacts found</h3>
+        <p>Start by adding your first contact</p>
       </div>
     </div>
   `,
   styles: [`
-    .page-content { padding: 24px; }
+    .page-content { padding: 24px; min-height: 100vh; }
     .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
     .page-header h2 { margin: 0; color: var(--theme-on-surface); }
-    .table-container { background: var(--theme-surface); border-radius: 8px; overflow: hidden; border: 1px solid color-mix(in srgb, var(--theme-on-surface) 12%, transparent); }
-    .contacts-table { width: 100%; }
+    
+    .cards-container { 
+      display: grid; 
+      gap: 20px;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    }
+    
+    .contact-card-content {
+      transition: all 0.3s ease;
+      border: 1px solid color-mix(in srgb, var(--theme-on-surface) 12%, transparent);
+    }
+    
+    .contact-card-content:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px color-mix(in srgb, var(--theme-on-surface) 15%, transparent);
+    }
+    
+    .card-header { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      margin-bottom: 16px; 
+      padding: 16px 16px 0;
+    }
+    
     .contact-info { display: flex; align-items: center; gap: 12px; }
-    .contact-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--theme-primary), var(--theme-accent)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; }
-    .contact-name { font-weight: 500; margin-bottom: 2px; }
-    .contact-email { font-size: 12px; opacity: 0.7; }
+    
+    .contact-avatar { 
+      width: 48px; 
+      height: 48px; 
+      border-radius: 50%; 
+      background: linear-gradient(135deg, var(--theme-primary), var(--theme-accent)); 
+      color: white; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      font-weight: 600; 
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    
+    .contact-details { flex: 1; min-width: 0; }
+    .contact-name { font-weight: 600; margin-bottom: 4px; font-size: 16px; }
+    .contact-email { font-size: 13px; opacity: 0.7; word-break: break-word; }
+    
+    .card-body { padding: 0 16px 16px; }
+    
+    .info-grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
+      gap: 12px; 
+    }
+    
+    .info-item { 
+      display: flex; 
+      align-items: center; 
+      gap: 8px; 
+      font-size: 14px;
+      padding: 8px;
+      background: color-mix(in srgb, var(--theme-primary) 5%, transparent);
+      border-radius: 6px;
+    }
+    
+    .info-item mat-icon { 
+      font-size: 18px; 
+      width: 18px; 
+      height: 18px; 
+      opacity: 0.7; 
+      flex-shrink: 0;
+    }
+    
+    .status-chip { font-size: 11px; height: 22px; }
+    
+    .card-actions { 
+      display: flex; 
+      justify-content: flex-end; 
+      gap: 8px; 
+      padding: 0 16px 16px;
+      border-top: 1px solid color-mix(in srgb, var(--theme-on-surface) 8%, transparent);
+      margin-top: 16px;
+      padding-top: 16px;
+    }
+    
+    .loading-container { 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      gap: 16px; 
+      padding: 40px; 
+      color: var(--theme-on-surface);
+      opacity: 0.7;
+    }
+    
+    .no-data { 
+      text-align: center; 
+      padding: 60px 20px; 
+      color: var(--theme-on-surface); 
+      opacity: 0.6; 
+    }
+    
+    .no-data mat-icon { 
+      font-size: 64px; 
+      width: 64px; 
+      height: 64px; 
+      margin-bottom: 16px; 
+    }
+    
+    .no-data h3 { margin: 16px 0 8px; }
+    .no-data p { margin: 0; }
+    
+    @media (max-width: 768px) {
+      .page-content { padding: 16px; }
+      .cards-container { 
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      .page-header { 
+        flex-direction: column; 
+        gap: 16px; 
+        align-items: stretch; 
+      }
+      .info-grid { grid-template-columns: 1fr; }
+    }
+    
+    @media (max-width: 480px) {
+      .contact-avatar { width: 40px; height: 40px; font-size: 14px; }
+      .contact-name { font-size: 15px; }
+      .card-actions { justify-content: center; }
+    }
   `]
 })
 export class ContactsPageComponent implements OnInit {
@@ -109,18 +248,69 @@ export class ContactsPageComponent implements OnInit {
   private snackBar = inject(MatSnackBar);
 
   contacts = signal<Contact[]>([]);
-  displayedColumns = ['name', 'company', 'phone', 'status', 'actions'];
+  leads = signal<Lead[]>([]);
+  displayedContacts = signal<Contact[]>([]);
+  loading = signal(false);
+  
+  private pageSize = 12;
+  private currentPage = 0;
+  private hasMoreData = true;
 
   ngOnInit() {
     this.loadContacts();
+    this.loadLeads();
   }
 
   loadContacts() {
-    this.crmService.getContacts().subscribe(contacts => this.contacts.set(contacts));
+    this.loading.set(true);
+    this.crmService.getContacts().subscribe({
+      next: (contacts) => {
+        this.contacts.set(contacts);
+        this.loadMoreContacts();
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false)
+    });
+  }
+  
+  loadMoreContacts() {
+    const allContacts = this.contacts();
+    const startIndex = this.currentPage * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    const newContacts = allContacts.slice(startIndex, endIndex);
+    
+    if (newContacts.length > 0) {
+      this.displayedContacts.set([...this.displayedContacts(), ...newContacts]);
+      this.currentPage++;
+      this.hasMoreData = endIndex < allContacts.length;
+    } else {
+      this.hasMoreData = false;
+    }
+  }
+  
+  @HostListener('window:scroll')
+  onScroll() {
+    if (this.hasMoreData && !this.loading()) {
+      const threshold = 200;
+      const position = window.pageYOffset + window.innerHeight;
+      const height = document.documentElement.scrollHeight;
+      
+      if (position > height - threshold) {
+        this.loadMoreContacts();
+      }
+    }
+  }
+
+  loadLeads() {
+    this.crmService.getLeads().subscribe(leads => this.leads.set(leads));
   }
 
   getInitials(firstName: string, lastName: string): string {
     return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
+  }
+
+  getContactLeadCount(contactId: string): number {
+    return this.leads().filter(lead => lead.contactId === contactId).length;
   }
 
   openContactDialog(contact?: Contact) {
@@ -135,9 +325,10 @@ export class ContactsPageComponent implements OnInit {
       if (contact) {
         this.crmService.updateContact(contact._id, result).subscribe({
           next: (updated) => {
-            // Update list in place for instant refresh
-            const updatedList = this.contacts().map(c => c._id === contact._id ? { ...c, ...updated } : c);
-            this.contacts.set(updatedList);
+            const updatedContacts = this.contacts().map(c => c._id === contact._id ? { ...c, ...updated } : c);
+            const updatedDisplayed = this.displayedContacts().map(c => c._id === contact._id ? { ...c, ...updated } : c);
+            this.contacts.set(updatedContacts);
+            this.displayedContacts.set(updatedDisplayed);
             this.snackBar.open('Contact updated successfully', 'Close', { duration: 3000 });
           },
           error: (error: any) => {
@@ -153,11 +344,10 @@ export class ContactsPageComponent implements OnInit {
       } else {
         this.crmService.createContact(result).subscribe({
           next: (created) => {
-            // Optimistic prepend for instant visual update
             if (created && created._id) {
               this.contacts.set([created, ...this.contacts()]);
+              this.displayedContacts.set([created, ...this.displayedContacts()]);
             } else {
-              // Fallback to reload if backend didn't return created entity
               this.loadContacts();
             }
             this.snackBar.open('Contact created successfully', 'Close', { duration: 3000 });
@@ -200,7 +390,10 @@ export class ContactsPageComponent implements OnInit {
     if (confirm('Are you sure you want to delete this contact?')) {
       this.crmService.deleteContact(id).subscribe({
         next: () => {
-          this.loadContacts();
+          const updatedContacts = this.contacts().filter(c => c._id !== id);
+          const updatedDisplayed = this.displayedContacts().filter(c => c._id !== id);
+          this.contacts.set(updatedContacts);
+          this.displayedContacts.set(updatedDisplayed);
           this.snackBar.open('Contact deleted successfully', 'Close', { duration: 3000 });
         },
         error: () => this.snackBar.open('Error deleting contact', 'Close', { duration: 3000 })

@@ -45,7 +45,8 @@ export class CrmService {
   async createLead(leadData: any, organizationId: string) {
     const lead = this.leadRepository.create({
       ...leadData,
-      organizationId: new ObjectId(organizationId)
+      organizationId: new ObjectId(organizationId),
+      contactId: leadData.contactId ? new ObjectId(leadData.contactId) : null
     });
     return this.leadRepository.save(lead);
   }
@@ -58,9 +59,28 @@ export class CrmService {
   }
 
   async createDeal(dealData: any, organizationId: string) {
+    let contactId = null;
+    
+    // If leadId is provided, get the contactId from the lead
+    if (dealData.leadId) {
+      const lead = await this.leadRepository.findOne({
+        where: { _id: new ObjectId(dealData.leadId), organizationId: new ObjectId(organizationId) }
+      });
+      if (lead) {
+        contactId = lead.contactId;
+        // Update lead status to converted
+        await this.leadRepository.updateOne(
+          { _id: new ObjectId(dealData.leadId) },
+          { $set: { status: 'converted' } }
+        );
+      }
+    }
+
     const deal = this.dealRepository.create({
       ...dealData,
-      organizationId: new ObjectId(organizationId)
+      organizationId: new ObjectId(organizationId),
+      leadId: dealData.leadId ? new ObjectId(dealData.leadId) : null,
+      contactId: contactId
     });
     return this.dealRepository.save(deal);
   }
@@ -227,9 +247,13 @@ export class CrmService {
   }
 
   async updateLead(id: string, leadData: any, organizationId: string) {
+    const updateData = {
+      ...leadData,
+      contactId: leadData.contactId ? new ObjectId(leadData.contactId) : null
+    };
     await this.leadRepository.updateOne(
       { _id: new ObjectId(id), organizationId: new ObjectId(organizationId) },
-      { $set: leadData }
+      { $set: updateData }
     );
     return this.leadRepository.findOne({
       where: { _id: new ObjectId(id), organizationId: new ObjectId(organizationId) }
@@ -244,9 +268,24 @@ export class CrmService {
   }
 
   async updateDeal(id: string, dealData: any, organizationId: string) {
+    let updateData = { ...dealData };
+    
+    // If leadId is being updated, get the contactId from the new lead
+    if (dealData.leadId) {
+      const lead = await this.leadRepository.findOne({
+        where: { _id: new ObjectId(dealData.leadId), organizationId: new ObjectId(organizationId) }
+      });
+      if (lead) {
+        updateData.contactId = lead.contactId;
+        updateData.leadId = new ObjectId(dealData.leadId);
+      }
+    } else if (dealData.leadId === null || dealData.leadId === '') {
+      updateData.leadId = null;
+    }
+    
     await this.dealRepository.updateOne(
       { _id: new ObjectId(id), organizationId: new ObjectId(organizationId) },
-      { $set: dealData }
+      { $set: updateData }
     );
     return this.dealRepository.findOne({
       where: { _id: new ObjectId(id), organizationId: new ObjectId(organizationId) }
