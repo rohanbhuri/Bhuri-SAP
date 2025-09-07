@@ -229,7 +229,7 @@ export class HrManagementService {
   }
 
   getAttendance(
-    params: { employeeId?: string; from?: string; to?: string } = {}
+    params: { employeeId?: string; organizationId?: string; from?: string; to?: string } = {}
   ): Observable<AttendanceRecord[]> {
     const q = new URLSearchParams(params as any).toString();
     return this.http
@@ -257,7 +257,7 @@ export class HrManagementService {
   }
 
   listLeaves(
-    params: { employeeId?: string; status?: string } = {}
+    params: { employeeId?: string; organizationId?: string; status?: string } = {}
   ): Observable<LeaveRequestDto[]> {
     const q = new URLSearchParams(params as any).toString();
     return this.http
@@ -330,7 +330,7 @@ export class HrManagementService {
       payload
     );
   }
-  listGoals(params: { employeeId?: string } = {}): Observable<GoalDto[]> {
+  listGoals(params: { employeeId?: string; organizationId?: string } = {}): Observable<GoalDto[]> {
     const q = new URLSearchParams(params as any).toString();
     return this.http
       .get<GoalDto[]>(`${this.apiUrl}/hr-management/goals${q ? `?${q}` : ''}`)

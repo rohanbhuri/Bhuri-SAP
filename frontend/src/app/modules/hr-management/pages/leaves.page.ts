@@ -1,13 +1,15 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, HostListener } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatTableModule } from '@angular/material/table';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { FormsModule } from '@angular/forms';
-import { DatePipe, NgIf } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { HrManagementService, LeaveRequestDto } from '../hr-management.service';
 import { AuthService } from '../../../services/auth.service';
 
@@ -15,124 +17,246 @@ import { AuthService } from '../../../services/auth.service';
   selector: 'app-hr-leaves-page',
   standalone: true,
   imports: [
+    CommonModule,
     MatCardModule,
     MatButtonModule,
     MatIconModule,
-    MatTableModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    MatChipsModule,
+    MatProgressSpinnerModule,
     FormsModule,
     DatePipe,
-    NgIf,
   ],
   template: `
-    <mat-card>
-      <h2>Leaves</h2>
-
-      <div class="new-leave">
-        <mat-form-field appearance="outline">
-          <mat-label>Start Date (YYYY-MM-DD)</mat-label>
-          <input matInput [(ngModel)]="startDate" />
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>End Date (YYYY-MM-DD)</mat-label>
-          <input matInput [(ngModel)]="endDate" />
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>Type</mat-label>
-          <select matNativeControl [(ngModel)]="leaveType">
-            <option value="casual">Casual</option>
-            <option value="sick">Sick</option>
-            <option value="earned">Earned</option>
-          </select>
-        </mat-form-field>
-        <mat-form-field appearance="outline" class="reason">
-          <mat-label>Reason</mat-label>
-          <input matInput [(ngModel)]="reason" />
-        </mat-form-field>
+    <div class="page-content">
+      <div class="page-header">
+        <h2>Leave Management</h2>
         <button mat-raised-button color="primary" (click)="create()">
           <mat-icon>send</mat-icon>
-          Submit
+          Submit Leave Request
         </button>
       </div>
 
-      <div class="filters">
-        <mat-form-field appearance="outline">
-          <mat-label>Status</mat-label>
-          <select matNativeControl [(ngModel)]="statusFilter">
-            <option value="">All</option>
-            <option value="pending">Pending</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-        </mat-form-field>
-        <button mat-stroked-button (click)="load()">Apply</button>
+      <div class="leave-form-section">
+        <h3>New Leave Request</h3>
+        <div class="new-leave">
+          <mat-form-field appearance="outline">
+            <mat-label>Start Date</mat-label>
+            <input matInput [(ngModel)]="startDate" placeholder="YYYY-MM-DD" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>End Date</mat-label>
+            <input matInput [(ngModel)]="endDate" placeholder="YYYY-MM-DD" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Leave Type</mat-label>
+            <select matNativeControl [(ngModel)]="leaveType">
+              <option value="casual">Casual Leave</option>
+              <option value="sick">Sick Leave</option>
+              <option value="earned">Earned Leave</option>
+            </select>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="reason">
+            <mat-label>Reason</mat-label>
+            <input matInput [(ngModel)]="reason" placeholder="Brief reason for leave" />
+          </mat-form-field>
+        </div>
       </div>
 
-      <table mat-table [dataSource]="leaves()" class="full-width">
-        <ng-container matColumnDef="period">
-          <th mat-header-cell *matHeaderCellDef>Period</th>
-          <td mat-cell *matCellDef="let l">
-            {{ l.startDate | date }} - {{ l.endDate | date }}
-          </td>
-        </ng-container>
-        <ng-container matColumnDef="type">
-          <th mat-header-cell *matHeaderCellDef>Type</th>
-          <td mat-cell *matCellDef="let l">{{ l.leaveType }}</td>
-        </ng-container>
-        <ng-container matColumnDef="status">
-          <th mat-header-cell *matHeaderCellDef>Status</th>
-          <td mat-cell *matCellDef="let l">{{ l.status }}</td>
-        </ng-container>
-        <ng-container matColumnDef="actions" *ngIf="isManager">
-          <th mat-header-cell *matHeaderCellDef>Actions</th>
-          <td mat-cell *matCellDef="let l">
-            <button
-              mat-button
-              color="primary"
-              (click)="approve(l)"
-              [disabled]="l.status === 'approved'"
-            >
-              Approve
-            </button>
-            <button
-              mat-button
-              color="warn"
-              (click)="reject(l)"
-              [disabled]="l.status === 'rejected'"
-            >
-              Reject
-            </button>
-          </td>
-        </ng-container>
+      <div class="filters-section">
+        <div class="filters">
+          <mat-form-field appearance="outline">
+            <mat-label>Filter by Status</mat-label>
+            <select matNativeControl [(ngModel)]="statusFilter">
+              <option value="">All Requests</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </mat-form-field>
+          <button mat-stroked-button (click)="load()">Apply Filter</button>
+        </div>
+      </div>
 
-        <tr mat-header-row *matHeaderRowDef="cols"></tr>
-        <tr mat-row *matRowDef="let row; columns: cols"></tr>
-      </table>
-    </mat-card>
+      <div class="cards-container">
+        <div class="leave-card" *ngFor="let leave of displayedLeaves()">
+          <mat-card class="leave-card-content">
+            <div class="card-header">
+              <div class="leave-info">
+                <mat-icon>event</mat-icon>
+                <div class="leave-details">
+                  <span class="leave-period">{{ leave.startDate | date }} - {{ leave.endDate | date }}</span>
+                  <span class="leave-duration">{{ getDuration(leave.startDate, leave.endDate) }} days</span>
+                </div>
+              </div>
+              <mat-chip [color]="getStatusColor(leave.status || 'pending')" class="status-chip">
+                {{ leave.status || 'pending' }}
+              </mat-chip>
+            </div>
+            
+            <div class="card-body">
+              <div class="info-grid">
+                <div class="info-item">
+                  <mat-icon>category</mat-icon>
+                  <div class="info-details">
+                    <span class="info-label">Leave Type</span>
+                    <span class="info-value">{{ leave.leaveType | titlecase }}</span>
+                  </div>
+                </div>
+                <div class="info-item" *ngIf="leave.reason">
+                  <mat-icon>notes</mat-icon>
+                  <div class="info-details">
+                    <span class="info-label">Reason</span>
+                    <span class="info-value">{{ leave.reason }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="card-actions" *ngIf="isManager && leave.status === 'pending'">
+              <button mat-button color="primary" (click)="approve(leave)">
+                <mat-icon>check</mat-icon>
+                Approve
+              </button>
+              <button mat-button color="warn" (click)="reject(leave)">
+                <mat-icon>close</mat-icon>
+                Reject
+              </button>
+            </div>
+          </mat-card>
+        </div>
+      </div>
+      
+      <div class="loading-container" *ngIf="loading()">
+        <mat-spinner diameter="40"></mat-spinner>
+        <span>Loading more leave requests...</span>
+      </div>
+      
+      <div class="no-data" *ngIf="leaves().length === 0 && !loading()">
+        <mat-icon>beach_access</mat-icon>
+        <h3>No leave requests found</h3>
+        <p>Submit your first leave request above</p>
+      </div>
+    </div>
   `,
   styles: [
     `
-      .new-leave {
-        display: flex;
-        gap: 12px;
-        align-items: center;
-        margin: 16px 0;
-        flex-wrap: wrap;
+      .page-content { padding: 24px; min-height: 100vh; }
+      .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+      .page-header h2 { margin: 0; color: var(--theme-on-surface); font-size: 24px; font-weight: 500; }
+      
+      .leave-form-section {
+        background: var(--theme-surface);
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 24px;
+        border: 1px solid color-mix(in srgb, var(--theme-on-surface) 12%, transparent);
       }
-      .reason {
-        min-width: 240px;
+      
+      .leave-form-section h3 { margin: 0 0 16px 0; color: var(--theme-on-surface); font-size: 18px; font-weight: 500; }
+      .new-leave { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; align-items: end; }
+      .reason { grid-column: span 2; }
+      
+      .filters-section {
+        background: var(--theme-surface);
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 24px;
+        border: 1px solid color-mix(in srgb, var(--theme-on-surface) 12%, transparent);
       }
-      .filters {
-        display: flex;
-        gap: 12px;
-        align-items: center;
-        margin: 16px 0;
+      
+      .filters { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+      
+      .cards-container { 
+        display: grid; 
+        gap: 20px;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
       }
-      .full-width {
-        width: 100%;
+      
+      .leave-card-content {
+        transition: all 0.3s ease;
+        border: 1px solid color-mix(in srgb, var(--theme-on-surface) 12%, transparent);
+      }
+      
+      .leave-card-content:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px color-mix(in srgb, var(--theme-on-surface) 15%, transparent);
+      }
+      
+      .card-header { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        margin-bottom: 16px; 
+        padding: 16px 16px 0;
+      }
+      
+      .leave-info { display: flex; align-items: center; gap: 12px; }
+      .leave-info mat-icon { color: var(--theme-primary); }
+      .leave-details { display: flex; flex-direction: column; gap: 2px; }
+      .leave-period { font-weight: 500; }
+      .leave-duration { font-size: 12px; opacity: 0.7; }
+      
+      .status-chip { font-size: 11px; height: 22px; }
+      
+      .card-body { padding: 0 16px 16px; }
+      
+      .info-grid { display: grid; gap: 12px; }
+      
+      .info-item { 
+        display: flex; 
+        align-items: center; 
+        gap: 12px; 
+        padding: 12px;
+        background: color-mix(in srgb, var(--theme-primary) 5%, transparent);
+        border-radius: 8px;
+      }
+      
+      .info-item mat-icon { color: var(--theme-primary); flex-shrink: 0; }
+      .info-details { display: flex; flex-direction: column; gap: 2px; }
+      .info-label { font-size: 12px; opacity: 0.7; }
+      .info-value { font-weight: 500; }
+      
+      .card-actions { 
+        display: flex; 
+        justify-content: flex-end; 
+        gap: 8px; 
+        padding: 0 16px 16px;
+        border-top: 1px solid color-mix(in srgb, var(--theme-on-surface) 8%, transparent);
+        margin-top: 16px;
+        padding-top: 16px;
+      }
+      
+      .loading-container { 
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+        gap: 16px; 
+        padding: 40px; 
+        color: var(--theme-on-surface);
+        opacity: 0.7;
+      }
+      
+      .no-data { 
+        text-align: center; 
+        padding: 60px 20px; 
+        color: var(--theme-on-surface); 
+        opacity: 0.6; 
+      }
+      
+      .no-data mat-icon { font-size: 64px; width: 64px; height: 64px; margin-bottom: 16px; }
+      .no-data h3 { margin: 16px 0 8px; }
+      .no-data p { margin: 0; }
+      
+      @media (max-width: 768px) {
+        .page-content { padding: 16px; }
+        .cards-container { grid-template-columns: 1fr; gap: 16px; }
+        .page-header { flex-direction: column; gap: 16px; align-items: stretch; }
+        .new-leave { grid-template-columns: 1fr; }
+        .reason { grid-column: span 1; }
       }
     `,
   ],
@@ -142,15 +266,17 @@ export class LeavesPageComponent implements OnInit {
   private auth = inject(AuthService);
 
   leaves = signal<LeaveRequestDto[]>([]);
-  cols = this.auth.hasRole('hr_manager')
-    ? ['period', 'type', 'status', 'actions']
-    : ['period', 'type', 'status'];
-
+  displayedLeaves = signal<LeaveRequestDto[]>([]);
+  loading = signal(false);
   startDate = '';
   endDate = '';
   leaveType = 'casual';
   reason = '';
   statusFilter = '';
+  
+  private pageSize = 12;
+  private currentPage = 0;
+  private hasMoreData = true;
 
   get isManager(): boolean {
     return (
@@ -163,18 +289,59 @@ export class LeavesPageComponent implements OnInit {
   private get employeeId(): string {
     return this.auth.getCurrentUser()?.id || '';
   }
+  private get organizationId(): string {
+    return this.auth.getCurrentUser()?.organizationId || '';
+  }
 
   ngOnInit(): void {
     this.load();
   }
 
   load(): void {
-    this.hr
-      .listLeaves({
-        employeeId: this.employeeId,
-        status: this.statusFilter || undefined,
-      })
-      .subscribe((list) => this.leaves.set(list));
+    this.loading.set(true);
+    this.currentPage = 0;
+    this.hasMoreData = true;
+    this.displayedLeaves.set([]);
+    
+    this.hr.listLeaves({
+      organizationId: this.organizationId,
+      status: this.statusFilter || undefined,
+    }).subscribe({
+      next: (list) => {
+        this.leaves.set(list);
+        this.loadMoreLeaves();
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false)
+    });
+  }
+  
+  loadMoreLeaves(): void {
+    const allLeaves = this.leaves();
+    const startIndex = this.currentPage * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    const newLeaves = allLeaves.slice(startIndex, endIndex);
+    
+    if (newLeaves.length > 0) {
+      this.displayedLeaves.set([...this.displayedLeaves(), ...newLeaves]);
+      this.currentPage++;
+      this.hasMoreData = endIndex < allLeaves.length;
+    } else {
+      this.hasMoreData = false;
+    }
+  }
+  
+  @HostListener('window:scroll')
+  onScroll(): void {
+    if (this.hasMoreData && !this.loading()) {
+      const threshold = 200;
+      const position = window.pageYOffset + window.innerHeight;
+      const height = document.documentElement.scrollHeight;
+      
+      if (position > height - threshold) {
+        this.loadMoreLeaves();
+      }
+    }
   }
 
   create(): void {
@@ -203,5 +370,21 @@ export class LeavesPageComponent implements OnInit {
   reject(l: LeaveRequestDto): void {
     if (!l._id) return;
     this.hr.setLeaveStatus(l._id, 'rejected').subscribe(() => this.load());
+  }
+
+  getStatusColor(status: string): string {
+    switch (status) {
+      case 'approved': return 'primary';
+      case 'rejected': return 'warn';
+      case 'pending': return 'accent';
+      default: return '';
+    }
+  }
+  
+  getDuration(startDate: string | Date, endDate: string | Date): number {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
   }
 }

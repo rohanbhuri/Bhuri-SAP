@@ -5,6 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatChipsModule } from '@angular/material/chips';
 import { FormsModule } from '@angular/forms';
 import { HrManagementService, PayrollRunDto } from '../hr-management.service';
 import { AuthService } from '../../../services/auth.service';
@@ -19,57 +20,126 @@ import { AuthService } from '../../../services/auth.service';
     MatTableModule,
     MatFormFieldModule,
     MatInputModule,
+    MatChipsModule,
     FormsModule,
   ],
   template: `
-    <mat-card>
-      <h2>Payroll</h2>
-      <div class="run-controls">
-        <mat-form-field appearance="outline">
-          <mat-label>Month (1-12)</mat-label>
-          <input matInput [(ngModel)]="month" type="number" min="1" max="12" />
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>Year</mat-label>
-          <input matInput [(ngModel)]="year" type="number" />
-        </mat-form-field>
+    <div class="tab-content">
+      <div class="tab-header">
+        <h2>Payroll Management</h2>
         <button mat-raised-button color="primary" (click)="run()">
           <mat-icon>payments</mat-icon>
           Run Payroll
         </button>
-        <button mat-stroked-button (click)="load()">Refresh</button>
       </div>
 
-      <table mat-table [dataSource]="runs()" class="full-width">
-        <ng-container matColumnDef="period">
-          <th mat-header-cell *matHeaderCellDef>Period</th>
-          <td mat-cell *matCellDef="let r">{{ r.month }}/{{ r.year }}</td>
-        </ng-container>
-        <ng-container matColumnDef="status">
-          <th mat-header-cell *matHeaderCellDef>Status</th>
-          <td mat-cell *matCellDef="let r">{{ r.status }}</td>
-        </ng-container>
-        <ng-container matColumnDef="items">
-          <th mat-header-cell *matHeaderCellDef>Employees</th>
-          <td mat-cell *matCellDef="let r">{{ r.items?.length || 0 }}</td>
-        </ng-container>
+      <div class="payroll-controls-section">
+        <h3>Payroll Configuration</h3>
+        <div class="run-controls">
+          <mat-form-field appearance="outline">
+            <mat-label>Month</mat-label>
+            <input matInput [(ngModel)]="month" type="number" min="1" max="12" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Year</mat-label>
+            <input matInput [(ngModel)]="year" type="number" />
+          </mat-form-field>
+          <button mat-stroked-button (click)="load()">Refresh Data</button>
+        </div>
+      </div>
 
-        <tr mat-header-row *matHeaderRowDef="cols"></tr>
-        <tr mat-row *matRowDef="let row; columns: cols"></tr>
-      </table>
-    </mat-card>
+      <div class="table-container">
+        <table mat-table [dataSource]="runs()" class="hr-table">
+          <ng-container matColumnDef="period">
+            <th mat-header-cell *matHeaderCellDef>Pay Period</th>
+            <td mat-cell *matCellDef="let r">{{ r.month }}/{{ r.year }}</td>
+          </ng-container>
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let r">
+              <mat-chip [color]="getStatusColor(r.status)">{{ r.status }}</mat-chip>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="items">
+            <th mat-header-cell *matHeaderCellDef>Employees Processed</th>
+            <td mat-cell *matCellDef="let r">{{ r.items?.length || 0 }}</td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="cols"></tr>
+          <tr mat-row *matRowDef="let row; columns: cols"></tr>
+        </table>
+      </div>
+    </div>
   `,
   styles: [
     `
+      .tab-content {
+        padding: 24px;
+      }
+
+      .tab-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+      }
+
+      .tab-header h2 {
+        margin: 0;
+        color: var(--theme-on-surface);
+        font-size: 24px;
+        font-weight: 500;
+      }
+
+      .payroll-controls-section {
+        background: var(--theme-surface);
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 24px;
+        border: 1px solid color-mix(in srgb, var(--theme-on-surface) 12%, transparent);
+      }
+
+      .payroll-controls-section h3 {
+        margin: 0 0 16px 0;
+        color: var(--theme-on-surface);
+        font-size: 18px;
+        font-weight: 500;
+      }
+
       .run-controls {
         display: flex;
-        gap: 12px;
+        gap: 16px;
         align-items: center;
-        margin: 16px 0;
         flex-wrap: wrap;
       }
-      .full-width {
+
+      .table-container {
+        background: var(--theme-surface);
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid color-mix(in srgb, var(--theme-on-surface) 12%, transparent);
+      }
+
+      .hr-table {
         width: 100%;
+        background: var(--theme-surface);
+      }
+
+      @media (max-width: 768px) {
+        .tab-content {
+          padding: 16px;
+        }
+        
+        .tab-header {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 16px;
+        }
+        
+        .run-controls {
+          flex-direction: column;
+          align-items: stretch;
+        }
       }
     `,
   ],
@@ -104,5 +174,14 @@ export class PayrollPageComponent implements OnInit {
     this.hr
       .runPayroll(this.organizationId, this.month, this.year)
       .subscribe(() => this.load());
+  }
+
+  getStatusColor(status: string): string {
+    switch (status) {
+      case 'completed': return 'primary';
+      case 'processing': return 'accent';
+      case 'failed': return 'warn';
+      default: return '';
+    }
   }
 }

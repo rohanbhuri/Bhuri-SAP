@@ -37,7 +37,7 @@ class DemoSeeder {
   }
 
   async clearCollections() {
-    const collections = ['users', 'organizations', 'roles', 'permissions', 'modules', 'departments', 'projects', 'contacts', 'leads', 'deals', 'tasks', 'employees', 'conversations', 'messages'];
+    const collections = ['users', 'organizations', 'roles', 'permissions', 'modules', 'departments', 'projects', 'contacts', 'leads', 'deals', 'tasks', 'employees', 'conversations', 'messages', 'attendancerecords', 'leaverequests', 'goals', 'payrollruns', 'complianceitems', 'complianceevents', 'documentrecords', 'assets'];
     
     for (const collectionName of collections) {
       try {
@@ -110,6 +110,7 @@ class DemoSeeder {
     await this.seedDeals();
     await this.seedTasks();
     await this.seedMessages();
+    await this.seedHRData();
   }
 
   async activateModulesForSuperAdmins() {
@@ -516,6 +517,336 @@ class DemoSeeder {
     if (messages.length > 0) {
       await this.db.collection('messages').insertMany(messages);
       console.log(`📨 Seeded ${messages.length} messages`);
+    }
+  }
+
+  async seedHRData() {
+    await this.seedEmployees();
+    await this.seedAttendanceRecords();
+    await this.seedLeaveRequests();
+    await this.seedGoals();
+    await this.seedPayrollRuns();
+    await this.seedComplianceItems();
+    await this.seedDocumentRecords();
+    await this.seedAssets();
+  }
+
+  async seedEmployees() {
+    const organizations = await this.db.collection('organizations').find({}).toArray();
+    const departments = await this.db.collection('departments').find({}).toArray();
+    const employees = [];
+    
+    const employeeTemplates = [
+      { firstName: 'Alice', lastName: 'Johnson', email: 'alice.johnson@company.com', position: 'Software Engineer', salary: 85000, status: 'active' },
+      { firstName: 'Bob', lastName: 'Smith', email: 'bob.smith@company.com', position: 'Product Manager', salary: 95000, status: 'active' },
+      { firstName: 'Carol', lastName: 'Davis', email: 'carol.davis@company.com', position: 'UX Designer', salary: 75000, status: 'active' },
+      { firstName: 'David', lastName: 'Wilson', email: 'david.wilson@company.com', position: 'DevOps Engineer', salary: 90000, status: 'active' },
+      { firstName: 'Emma', lastName: 'Brown', email: 'emma.brown@company.com', position: 'QA Engineer', salary: 70000, status: 'active' },
+      { firstName: 'Frank', lastName: 'Miller', email: 'frank.miller@company.com', position: 'Sales Manager', salary: 80000, status: 'inactive' },
+      { firstName: 'Grace', lastName: 'Taylor', email: 'grace.taylor@company.com', position: 'HR Specialist', salary: 65000, status: 'active' },
+      { firstName: 'Henry', lastName: 'Anderson', email: 'henry.anderson@company.com', position: 'Marketing Manager', salary: 78000, status: 'active' }
+    ];
+    
+    for (const org of organizations) {
+      const orgDepartments = departments.filter(d => d.organizationId?.equals(org._id) || !d.organizationId);
+      
+      for (let i = 0; i < employeeTemplates.length; i++) {
+        const template = employeeTemplates[i];
+        const department = orgDepartments[i % orgDepartments.length];
+        
+        employees.push({
+          _id: new ObjectId(),
+          employeeId: `EMP${String(i + 1).padStart(3, '0')}`,
+          firstName: template.firstName,
+          lastName: template.lastName,
+          email: template.email.replace('@company.com', `@${org.code.toLowerCase()}.com`),
+          position: template.position,
+          department: department?.name || 'General',
+          salary: template.salary,
+          status: template.status,
+          hireDate: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000),
+          organizationId: org._id,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+      }
+    }
+    
+    if (employees.length > 0) {
+      await this.db.collection('employees').insertMany(employees);
+      console.log(`👥 Seeded ${employees.length} employees`);
+    }
+  }
+
+  async seedAttendanceRecords() {
+    const employees = await this.db.collection('employees').find({ status: 'active' }).toArray();
+    const attendanceRecords = [];
+    
+    for (const employee of employees) {
+      // Generate attendance for last 30 days
+      for (let i = 0; i < 30; i++) {
+        const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+        
+        // Skip weekends
+        if (date.getDay() === 0 || date.getDay() === 6) continue;
+        
+        const checkInTime = new Date(date);
+        checkInTime.setHours(8 + Math.floor(Math.random() * 2), Math.floor(Math.random() * 60));
+        
+        const checkOutTime = new Date(checkInTime);
+        checkOutTime.setHours(checkInTime.getHours() + 8 + Math.floor(Math.random() * 2), Math.floor(Math.random() * 60));
+        
+        const totalHours = (checkOutTime - checkInTime) / (1000 * 60 * 60);
+        
+        attendanceRecords.push({
+          _id: new ObjectId(),
+          employeeId: employee.employeeId,
+          date: new Date(date.getFullYear(), date.getMonth(), date.getDate()),
+          checkIn: checkInTime,
+          checkOut: checkOutTime,
+          totalHours: Math.round(totalHours * 100) / 100,
+          organizationId: employee.organizationId,
+          createdAt: new Date()
+        });
+      }
+    }
+    
+    if (attendanceRecords.length > 0) {
+      await this.db.collection('attendancerecords').insertMany(attendanceRecords);
+      console.log(`⏰ Seeded ${attendanceRecords.length} attendance records`);
+    }
+  }
+
+  async seedLeaveRequests() {
+    const employees = await this.db.collection('employees').find({ status: 'active' }).toArray();
+    const leaveRequests = [];
+    
+    const leaveTypes = ['casual', 'sick', 'earned'];
+    const statuses = ['pending', 'approved', 'rejected'];
+    
+    for (const employee of employees) {
+      // Generate 2-4 leave requests per employee
+      const numRequests = 2 + Math.floor(Math.random() * 3);
+      
+      for (let i = 0; i < numRequests; i++) {
+        const startDate = new Date(Date.now() + Math.random() * 90 * 24 * 60 * 60 * 1000);
+        const endDate = new Date(startDate.getTime() + (1 + Math.floor(Math.random() * 4)) * 24 * 60 * 60 * 1000);
+        
+        leaveRequests.push({
+          _id: new ObjectId(),
+          employeeId: employee.employeeId,
+          startDate: startDate,
+          endDate: endDate,
+          leaveType: leaveTypes[Math.floor(Math.random() * leaveTypes.length)],
+          reason: `${leaveTypes[Math.floor(Math.random() * leaveTypes.length)]} leave request`,
+          status: statuses[Math.floor(Math.random() * statuses.length)],
+          organizationId: employee.organizationId,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+      }
+    }
+    
+    if (leaveRequests.length > 0) {
+      await this.db.collection('leaverequests').insertMany(leaveRequests);
+      console.log(`🏖️ Seeded ${leaveRequests.length} leave requests`);
+    }
+  }
+
+  async seedGoals() {
+    const employees = await this.db.collection('employees').find({ status: 'active' }).toArray();
+    const goals = [];
+    
+    const goalTemplates = [
+      'Complete React certification',
+      'Improve code review turnaround time',
+      'Lead a cross-functional project',
+      'Mentor junior developers',
+      'Implement automated testing',
+      'Optimize application performance',
+      'Learn new technology stack',
+      'Improve customer satisfaction scores'
+    ];
+    
+    for (const employee of employees) {
+      // Generate 2-3 goals per employee
+      const numGoals = 2 + Math.floor(Math.random() * 2);
+      
+      for (let i = 0; i < numGoals; i++) {
+        goals.push({
+          _id: new ObjectId(),
+          employeeId: employee.employeeId,
+          title: goalTemplates[Math.floor(Math.random() * goalTemplates.length)],
+          progress: Math.floor(Math.random() * 101),
+          organizationId: employee.organizationId,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+      }
+    }
+    
+    if (goals.length > 0) {
+      await this.db.collection('goals').insertMany(goals);
+      console.log(`🎯 Seeded ${goals.length} performance goals`);
+    }
+  }
+
+  async seedPayrollRuns() {
+    const organizations = await this.db.collection('organizations').find({}).toArray();
+    const employees = await this.db.collection('employees').find({ status: 'active' }).toArray();
+    const payrollRuns = [];
+    
+    for (const org of organizations) {
+      const orgEmployees = employees.filter(e => e.organizationId.equals(org._id));
+      
+      // Generate payroll runs for last 6 months
+      for (let i = 0; i < 6; i++) {
+        const date = new Date();
+        date.setMonth(date.getMonth() - i);
+        
+        const items = orgEmployees.map(emp => ({
+          employeeId: emp.employeeId,
+          grossPay: emp.salary / 12,
+          deductions: emp.salary / 12 * 0.2,
+          netPay: emp.salary / 12 * 0.8
+        }));
+        
+        payrollRuns.push({
+          _id: new ObjectId(),
+          organizationId: org._id,
+          month: date.getMonth() + 1,
+          year: date.getFullYear(),
+          status: i === 0 ? 'processing' : 'completed',
+          items: items,
+          createdAt: new Date()
+        });
+      }
+    }
+    
+    if (payrollRuns.length > 0) {
+      await this.db.collection('payrollruns').insertMany(payrollRuns);
+      console.log(`💰 Seeded ${payrollRuns.length} payroll runs`);
+    }
+  }
+
+  async seedComplianceItems() {
+    const organizations = await this.db.collection('organizations').find({}).toArray();
+    const complianceItems = [];
+    const complianceEvents = [];
+    
+    const itemTemplates = [
+      'Annual Safety Training',
+      'Data Privacy Compliance Review',
+      'Financial Audit',
+      'ISO Certification Renewal',
+      'Employee Background Checks',
+      'Security Assessment',
+      'Tax Filing Requirements',
+      'Insurance Policy Review'
+    ];
+    
+    for (const org of organizations) {
+      for (const itemName of itemTemplates) {
+        const itemId = new ObjectId();
+        
+        complianceItems.push({
+          _id: itemId,
+          name: itemName,
+          organizationId: org._id,
+          createdAt: new Date()
+        });
+        
+        // Create compliance events for each item
+        const dueDate = new Date(Date.now() + Math.random() * 180 * 24 * 60 * 60 * 1000);
+        
+        complianceEvents.push({
+          _id: new ObjectId(),
+          itemId: itemId,
+          dueDate: dueDate,
+          status: Math.random() > 0.7 ? 'completed' : 'pending',
+          organizationId: org._id,
+          createdAt: new Date()
+        });
+      }
+    }
+    
+    if (complianceItems.length > 0) {
+      await this.db.collection('complianceitems').insertMany(complianceItems);
+      console.log(`📋 Seeded ${complianceItems.length} compliance items`);
+    }
+    
+    if (complianceEvents.length > 0) {
+      await this.db.collection('complianceevents').insertMany(complianceEvents);
+      console.log(`📅 Seeded ${complianceEvents.length} compliance events`);
+    }
+  }
+
+  async seedDocumentRecords() {
+    const employees = await this.db.collection('employees').find({}).toArray();
+    const documentRecords = [];
+    
+    const documentTypes = ['Contract', 'ID Copy', 'Resume', 'Certificate', 'Performance Review', 'Training Record'];
+    
+    for (const employee of employees) {
+      // Generate 2-4 documents per employee
+      const numDocs = 2 + Math.floor(Math.random() * 3);
+      
+      for (let i = 0; i < numDocs; i++) {
+        const docType = documentTypes[Math.floor(Math.random() * documentTypes.length)];
+        
+        documentRecords.push({
+          _id: new ObjectId(),
+          name: `${employee.firstName} ${employee.lastName} - ${docType}`,
+          fileId: `file_${new ObjectId().toString()}`,
+          type: docType,
+          employeeId: employee.employeeId,
+          organizationId: employee.organizationId,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+      }
+    }
+    
+    if (documentRecords.length > 0) {
+      await this.db.collection('documentrecords').insertMany(documentRecords);
+      console.log(`📄 Seeded ${documentRecords.length} document records`);
+    }
+  }
+
+  async seedAssets() {
+    const organizations = await this.db.collection('organizations').find({}).toArray();
+    const assets = [];
+    
+    const assetTemplates = [
+      { name: 'MacBook Pro 16"', category: 'IT Equipment', serialNumber: 'MBP2023001' },
+      { name: 'Dell Monitor 27"', category: 'IT Equipment', serialNumber: 'DM27001' },
+      { name: 'Office Desk', category: 'Furniture', serialNumber: 'DESK001' },
+      { name: 'Ergonomic Chair', category: 'Furniture', serialNumber: 'CHAIR001' },
+      { name: 'iPhone 14 Pro', category: 'Mobile Device', serialNumber: 'IP14001' },
+      { name: 'Wireless Keyboard', category: 'IT Equipment', serialNumber: 'KB001' },
+      { name: 'Conference Table', category: 'Furniture', serialNumber: 'CT001' },
+      { name: 'Projector', category: 'IT Equipment', serialNumber: 'PROJ001' }
+    ];
+    
+    for (const org of organizations) {
+      for (let i = 0; i < assetTemplates.length; i++) {
+        const template = assetTemplates[i];
+        
+        assets.push({
+          _id: new ObjectId(),
+          name: template.name,
+          serialNumber: `${org.code}-${template.serialNumber}`,
+          category: template.category,
+          organizationId: org._id,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+      }
+    }
+    
+    if (assets.length > 0) {
+      await this.db.collection('assets').insertMany(assets);
+      console.log(`🏢 Seeded ${assets.length} assets`);
     }
   }
 

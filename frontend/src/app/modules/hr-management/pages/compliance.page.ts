@@ -5,6 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatChipsModule } from '@angular/material/chips';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import {
@@ -24,79 +25,165 @@ import { AuthService } from '../../../services/auth.service';
     MatTableModule,
     MatFormFieldModule,
     MatInputModule,
+    MatChipsModule,
     FormsModule,
     DatePipe,
   ],
   template: `
-    <mat-card>
-      <h2>Compliance</h2>
-
-      <div class="new-item">
-        <mat-form-field appearance="outline">
-          <mat-label>New Compliance Item</mat-label>
-          <input matInput [(ngModel)]="newItemName" />
-        </mat-form-field>
+    <div class="tab-content">
+      <div class="tab-header">
+        <h2>Compliance Management</h2>
         <button mat-raised-button color="primary" (click)="createItem()">
           <mat-icon>add</mat-icon>
-          Add Item
+          Add Compliance Item
         </button>
       </div>
 
-      <div class="schedule">
-        <mat-form-field appearance="outline">
-          <mat-label>Item ID</mat-label>
-          <input matInput [(ngModel)]="scheduleItemId" />
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>Due Date (YYYY-MM-DD)</mat-label>
-          <input matInput [(ngModel)]="scheduleDueDate" />
-        </mat-form-field>
-        <button mat-stroked-button (click)="scheduleEvent()">
-          Schedule Due
-        </button>
+      <div class="compliance-form-section">
+        <h3>New Compliance Item</h3>
+        <div class="new-item">
+          <mat-form-field appearance="outline">
+            <mat-label>Compliance Item Name</mat-label>
+            <input matInput [(ngModel)]="newItemName" placeholder="e.g., Safety Training, Tax Filing" />
+          </mat-form-field>
+        </div>
       </div>
 
-      <h3>Items</h3>
-      <table mat-table [dataSource]="items()" class="full-width">
-        <ng-container matColumnDef="name">
-          <th mat-header-cell *matHeaderCellDef>Name</th>
-          <td mat-cell *matCellDef="let i">{{ i.name }}</td>
-        </ng-container>
-        <tr mat-header-row *matHeaderRowDef="itemCols"></tr>
-        <tr mat-row *matRowDef="let row; columns: itemCols"></tr>
-      </table>
+      <div class="schedule-section">
+        <h3>Schedule Compliance Event</h3>
+        <div class="schedule">
+          <mat-form-field appearance="outline">
+            <mat-label>Item ID</mat-label>
+            <input matInput [(ngModel)]="scheduleItemId" placeholder="Enter item ID" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Due Date</mat-label>
+            <input matInput [(ngModel)]="scheduleDueDate" placeholder="YYYY-MM-DD" />
+          </mat-form-field>
+          <button mat-stroked-button (click)="scheduleEvent()">
+            <mat-icon>schedule</mat-icon>
+            Schedule Due Date
+          </button>
+        </div>
+      </div>
 
-      <h3 style="margin-top:16px">Alerts</h3>
-      <table mat-table [dataSource]="alerts().upcoming" class="full-width">
-        <ng-container matColumnDef="dueDate">
-          <th mat-header-cell *matHeaderCellDef>Upcoming Due</th>
-          <td mat-cell *matCellDef="let e">{{ e.dueDate | date }}</td>
-        </ng-container>
-        <ng-container matColumnDef="action">
-          <th mat-header-cell *matHeaderCellDef>Action</th>
-          <td mat-cell *matCellDef="let e">
-            <button mat-button color="primary" (click)="complete(e)">
-              Mark Complete
-            </button>
-          </td>
-        </ng-container>
-        <tr mat-header-row *matHeaderRowDef="eventCols"></tr>
-        <tr mat-row *matRowDef="let row; columns: eventCols"></tr>
-      </table>
-    </mat-card>
+      <div class="compliance-items-section">
+        <h3>Compliance Items</h3>
+        <div class="table-container">
+          <table mat-table [dataSource]="items()" class="hr-table">
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef>Item Name</th>
+              <td mat-cell *matCellDef="let i">{{ i.name }}</td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="itemCols"></tr>
+            <tr mat-row *matRowDef="let row; columns: itemCols"></tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="alerts-section">
+        <h3>Compliance Alerts</h3>
+        <div class="table-container">
+          <table mat-table [dataSource]="alerts().upcoming" class="hr-table">
+            <ng-container matColumnDef="dueDate">
+              <th mat-header-cell *matHeaderCellDef>Due Date</th>
+              <td mat-cell *matCellDef="let e">
+                <mat-chip color="warn">{{ e.dueDate | date }}</mat-chip>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="action">
+              <th mat-header-cell *matHeaderCellDef>Actions</th>
+              <td mat-cell *matCellDef="let e">
+                <button mat-button color="primary" (click)="complete(e)">
+                  <mat-icon>check_circle</mat-icon>
+                  Mark Complete
+                </button>
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="eventCols"></tr>
+            <tr mat-row *matRowDef="let row; columns: eventCols"></tr>
+          </table>
+        </div>
+      </div>
+    </div>
   `,
   styles: [
     `
+      .tab-content {
+        padding: 24px;
+      }
+
+      .tab-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+      }
+
+      .tab-header h2 {
+        margin: 0;
+        color: var(--theme-on-surface);
+        font-size: 24px;
+        font-weight: 500;
+      }
+
+      .compliance-form-section,
+      .schedule-section,
+      .compliance-items-section,
+      .alerts-section {
+        background: var(--theme-surface);
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 24px;
+        border: 1px solid color-mix(in srgb, var(--theme-on-surface) 12%, transparent);
+      }
+
+      .compliance-form-section h3,
+      .schedule-section h3,
+      .compliance-items-section h3,
+      .alerts-section h3 {
+        margin: 0 0 16px 0;
+        color: var(--theme-on-surface);
+        font-size: 18px;
+        font-weight: 500;
+      }
+
       .new-item,
       .schedule {
         display: flex;
-        gap: 12px;
+        gap: 16px;
         align-items: center;
-        margin: 16px 0;
         flex-wrap: wrap;
       }
-      .full-width {
+
+      .table-container {
+        background: var(--theme-surface);
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid color-mix(in srgb, var(--theme-on-surface) 12%, transparent);
+      }
+
+      .hr-table {
         width: 100%;
+        background: var(--theme-surface);
+      }
+
+      @media (max-width: 768px) {
+        .tab-content {
+          padding: 16px;
+        }
+        
+        .tab-header {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 16px;
+        }
+        
+        .new-item,
+        .schedule {
+          flex-direction: column;
+          align-items: stretch;
+        }
       }
     `,
   ],
