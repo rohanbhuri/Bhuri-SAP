@@ -6,10 +6,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatIconModule } from '@angular/material/icon';
-import { Lead, Contact, CrmService } from '../crm.service';
+import { Observable, of } from 'rxjs';
+import { startWith, map, debounceTime, switchMap, distinctUntilChanged } from 'rxjs/operators';
+import { Lead, Contact, CrmUser, CrmService } from '../crm.service';
 
 @Component({
   selector: 'app-lead-dialog',
@@ -17,7 +20,7 @@ import { Lead, Contact, CrmService } from '../crm.service';
   imports: [
     CommonModule, FormsModule, ReactiveFormsModule, MatDialogModule,
     MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule,
-    MatDatepickerModule, MatNativeDateModule, MatIconModule
+    MatAutocompleteModule, MatDatepickerModule, MatNativeDateModule, MatIconModule
   ],
   template: `
     <div class="dialog-header">
@@ -40,12 +43,13 @@ import { Lead, Contact, CrmService } from '../crm.service';
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Contact</mat-label>
-          <mat-select formControlName="contactId">
+          <input matInput formControlName="contactSearch" [matAutocomplete]="contactAuto" placeholder="Search contacts...">
+          <mat-autocomplete #contactAuto="matAutocomplete" [displayWith]="displayContact" (optionSelected)="onContactSelected($event)">
             <mat-option value="">No Contact</mat-option>
-            <mat-option *ngFor="let contact of contacts" [value]="contact._id">
-              {{contact.firstName}} {{contact.lastName}} ({{contact.email}})
+            <mat-option *ngFor="let contact of filteredContacts | async" [value]="contact">
+              {{ contact.firstName }} {{ contact.lastName }} ({{ contact.email }})
             </mat-option>
-          </mat-select>
+          </mat-autocomplete>
           <mat-icon matPrefix>person</mat-icon>
         </mat-form-field>
         <div class="form-grid">
@@ -80,6 +84,17 @@ import { Lead, Contact, CrmService } from '../crm.service';
             <mat-icon matPrefix>event</mat-icon>
           </mat-form-field>
         </div>
+        <mat-form-field appearance="outline">
+          <mat-label>Assign to</mat-label>
+          <input matInput formControlName="assignedToSearch" [matAutocomplete]="userAuto" placeholder="Search users...">
+          <mat-autocomplete #userAuto="matAutocomplete" [displayWith]="displayUser" (optionSelected)="onUserSelected($event)">
+            <mat-option value="">Unassigned</mat-option>
+            <mat-option *ngFor="let user of filteredUsers | async" [value]="user">
+              {{ user.firstName }} {{ user.lastName }} ({{ user.email }})
+            </mat-option>
+          </mat-autocomplete>
+          <mat-icon matPrefix>person</mat-icon>
+        </mat-form-field>
         <div class="dialog-actions" mat-dialog-actions>
           <button mat-button type="button" (click)="close()" class="cancel-btn">
             <mat-icon>close</mat-icon>
@@ -215,12 +230,15 @@ export class LeadDialogComponent implements OnInit {
   private crmService = inject(CrmService);
   dialogRef = inject(MatDialogRef<LeadDialogComponent>);
   form!: FormGroup;
-  contacts: Contact[] = [];
+  filteredContacts!: Observable<Contact[]>;
+  selectedContact: Contact | null = null;
+  users: CrmUser[] = [];
+  filteredUsers!: Observable<CrmUser[]>;
+  selectedUser: CrmUser | null = null;
 
   constructor(@Inject(MAT_DIALOG_DATA) public data: Lead | null) {}
 
   ngOnInit() {
-    this.loadContacts();
     this.form = this.fb.group({
       title: [this.data?.title || '', Validators.required],
       description: [this.data?.description || ''],
@@ -228,14 +246,101 @@ export class LeadDialogComponent implements OnInit {
       estimatedValue: [this.data?.estimatedValue || null, [Validators.min(0)]],
       source: [this.data?.source || ''],
       expectedCloseDate: [this.data?.expectedCloseDate || null],
-      contactId: [this.data?.contactId || null]
+      contactSearch: [''],
+      contactId: [this.data?.contactId || null],
+      assignedToId: [this.data?.assignedToId || ''],
+      assignedToSearch: ['']
+    });
+    
+    this.filteredContacts = this.form.get('contactSearch')!.valueChanges.pipe(
+      startWith(''),
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(value => {
+        const searchTerm = typeof value === 'string' ? value : '';
+        if (searchTerm.length >= 2) {
+          return this.searchContacts(searchTerm);
+        }
+        return of([]);
+      })
+    );
+    
+    if (this.data?.contactId) {
+      this.loadCurrentContact();
+    }
+    
+    this.loadUsers();
+    
+    this.filteredUsers = this.form.get('assignedToSearch')!.valueChanges.pipe(
+      startWith(''),
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(value => {
+        const searchTerm = typeof value === 'string' ? value : '';
+        if (searchTerm.length >= 2) {
+          return this.searchUsers(searchTerm);
+        }
+        return of([]);
+      })
+    );
+    
+    if (this.data?.assignedTo) {
+      this.selectedUser = this.data.assignedTo;
+      this.form.patchValue({ assignedToSearch: this.data.assignedTo });
+    }
+  }
+
+  loadCurrentContact() {
+    this.crmService.getContacts().subscribe(contacts => {
+      const currentContact = contacts.find(c => c._id === this.data?.contactId);
+      if (currentContact) {
+        this.selectedContact = currentContact;
+        this.form.patchValue({ contactSearch: currentContact });
+      }
     });
   }
 
-  loadContacts() {
-    this.crmService.getContacts().subscribe(contacts => {
-      this.contacts = contacts;
+  searchContacts(query: string): Observable<Contact[]> {
+    return this.crmService.getContacts().pipe(
+      map(contacts => contacts.filter(contact => 
+        contact.firstName.toLowerCase().includes(query.toLowerCase()) ||
+        contact.lastName.toLowerCase().includes(query.toLowerCase()) ||
+        contact.email.toLowerCase().includes(query.toLowerCase())
+      ))
+    );
+  }
+
+  displayContact = (contact: Contact | null): string => {
+    return contact ? `${contact.firstName} ${contact.lastName}` : '';
+  }
+
+  onContactSelected(event: any) {
+    this.selectedContact = event.option.value === '' ? null : event.option.value;
+    this.form.patchValue({ contactId: this.selectedContact?._id || null });
+  }
+
+  loadUsers() {
+    this.crmService.getOrganizationUsers().subscribe({
+      next: (users) => this.users = users,
+      error: () => console.error('Error loading users')
     });
+  }
+
+  searchUsers(query: string): Observable<CrmUser[]> {
+    return of(this.users.filter(user => 
+      user.firstName.toLowerCase().includes(query.toLowerCase()) ||
+      user.lastName.toLowerCase().includes(query.toLowerCase()) ||
+      user.email.toLowerCase().includes(query.toLowerCase())
+    ));
+  }
+
+  displayUser = (user: CrmUser | null): string => {
+    return user ? `${user.firstName} ${user.lastName}` : '';
+  }
+
+  onUserSelected(event: any) {
+    this.selectedUser = event.option.value === '' ? null : event.option.value;
+    this.form.patchValue({ assignedToId: this.selectedUser?._id || '' });
   }
 
   close() { this.dialogRef.close(); }

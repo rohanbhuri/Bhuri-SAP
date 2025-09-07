@@ -8,31 +8,49 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { SelectionModel } from '@angular/cdk/collections';
 import { CrmService, Contact, Lead } from '../crm.service';
 import { ContactDialogComponent } from '../dialogs/contact-dialog.component';
+import { AssignmentDialogComponent } from '../dialogs/assignment-dialog.component';
 
 @Component({
   selector: 'app-contacts-page',
   standalone: true,
   imports: [
     CommonModule, MatCardModule, MatButtonModule, MatIconModule,
-    MatChipsModule, MatMenuModule, MatProgressSpinnerModule
+    MatChipsModule, MatMenuModule, MatProgressSpinnerModule, MatCheckboxModule
   ],
   template: `
     <div class="page-content">
       <div class="page-header">
         <h2>Contacts</h2>
-        <button mat-raised-button color="primary" (click)="openContactDialog()">
-          <mat-icon>person_add</mat-icon>
-          Add Contact
-        </button>
+        <div class="header-actions">
+          <div class="selection-info" *ngIf="selection.hasValue()">
+            <span>{{ selection.selected.length }} selected</span>
+            <button mat-button (click)="openAssignmentDialog()">
+              <mat-icon>person_add</mat-icon>
+              Assign
+            </button>
+          </div>
+          <button mat-raised-button color="primary" (click)="openContactDialog()">
+            <mat-icon>person_add</mat-icon>
+            Add Contact
+          </button>
+        </div>
       </div>
       
       <div class="cards-container">
         <div class="contact-card" *ngFor="let contact of displayedContacts()">
-          <mat-card class="contact-card-content">
+          <mat-card class="contact-card-content" [class.selected]="selection.isSelected(contact)">
             <div class="card-header">
               <div class="contact-info">
+                <mat-checkbox 
+                  (click)="$event.stopPropagation()"
+                  (change)="$event ? selection.toggle(contact) : null"
+                  [checked]="selection.isSelected(contact)"
+                  class="contact-checkbox">
+                </mat-checkbox>
                 <div class="contact-avatar">{{ getInitials(contact.firstName, contact.lastName) }}</div>
                 <div class="contact-details">
                   <div class="contact-name">{{ contact.firstName }} {{ contact.lastName }}</div>
@@ -46,6 +64,10 @@ import { ContactDialogComponent } from '../dialogs/contact-dialog.component';
                 <button mat-menu-item (click)="editContact(contact)">
                   <mat-icon>edit</mat-icon>
                   <span>Edit</span>
+                </button>
+                <button mat-menu-item (click)="openAssignmentDialog([contact])">
+                  <mat-icon>person_add</mat-icon>
+                  <span>Assign</span>
                 </button>
                 <button mat-menu-item (click)="convertToLead(contact)">
                   <mat-icon>trending_up</mat-icon>
@@ -77,6 +99,14 @@ import { ContactDialogComponent } from '../dialogs/contact-dialog.component';
                   <mat-chip [color]="contact.status === 'active' ? 'primary' : 'warn'" class="status-chip">
                     {{ contact.status }}
                   </mat-chip>
+                </div>
+                <div class="info-item" *ngIf="contact.assignedTo">
+                  <mat-icon>person</mat-icon>
+                  <span>{{ contact.assignedTo.firstName }} {{ contact.assignedTo.lastName }}</span>
+                </div>
+                <div class="info-item" *ngIf="!contact.assignedTo">
+                  <mat-icon>person_off</mat-icon>
+                  <span class="unassigned">Unassigned</span>
                 </div>
               </div>
             </div>
@@ -111,6 +141,8 @@ import { ContactDialogComponent } from '../dialogs/contact-dialog.component';
     .page-content { padding: 24px; min-height: 100vh; }
     .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
     .page-header h2 { margin: 0; color: var(--theme-on-surface); }
+    .header-actions { display: flex; align-items: center; gap: 16px; }
+    .selection-info { display: flex; align-items: center; gap: 8px; color: #1976d2; font-weight: 500; }
     
     .cards-container { 
       display: grid; 
@@ -137,6 +169,9 @@ import { ContactDialogComponent } from '../dialogs/contact-dialog.component';
     }
     
     .contact-info { display: flex; align-items: center; gap: 12px; }
+    .contact-checkbox { margin-right: 8px; }
+    .contact-card-content.selected { border-color: #1976d2; background: rgba(25, 118, 210, 0.05); }
+    .unassigned { color: rgba(0,0,0,0.6); font-style: italic; }
     
     .contact-avatar { 
       width: 48px; 
@@ -232,6 +267,14 @@ import { ContactDialogComponent } from '../dialogs/contact-dialog.component';
         gap: 16px; 
         align-items: stretch; 
       }
+      .header-actions { 
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+      }
+      .selection-info {
+        justify-content: center;
+      }
       .info-grid { grid-template-columns: 1fr; }
     }
     
@@ -251,6 +294,7 @@ export class ContactsPageComponent implements OnInit {
   leads = signal<Lead[]>([]);
   displayedContacts = signal<Contact[]>([]);
   loading = signal(false);
+  selection = new SelectionModel<Contact>(true, []);
   
   private pageSize = 12;
   private currentPage = 0;
@@ -263,6 +307,8 @@ export class ContactsPageComponent implements OnInit {
 
   loadContacts() {
     this.loading.set(true);
+    this.currentPage = 0;
+    this.displayedContacts.set([]);
     this.crmService.getContacts().subscribe({
       next: (contacts) => {
         this.contacts.set(contacts);
@@ -325,10 +371,7 @@ export class ContactsPageComponent implements OnInit {
       if (contact) {
         this.crmService.updateContact(contact._id, result).subscribe({
           next: (updated) => {
-            const updatedContacts = this.contacts().map(c => c._id === contact._id ? { ...c, ...updated } : c);
-            const updatedDisplayed = this.displayedContacts().map(c => c._id === contact._id ? { ...c, ...updated } : c);
-            this.contacts.set(updatedContacts);
-            this.displayedContacts.set(updatedDisplayed);
+            this.loadContacts();
             this.snackBar.open('Contact updated successfully', 'Close', { duration: 3000 });
           },
           error: (error: any) => {
@@ -344,12 +387,7 @@ export class ContactsPageComponent implements OnInit {
       } else {
         this.crmService.createContact(result).subscribe({
           next: (created) => {
-            if (created && created._id) {
-              this.contacts.set([created, ...this.contacts()]);
-              this.displayedContacts.set([created, ...this.displayedContacts()]);
-            } else {
-              this.loadContacts();
-            }
+            this.loadContacts();
             this.snackBar.open('Contact created successfully', 'Close', { duration: 3000 });
           },
           error: (error: any) => {
@@ -390,14 +428,33 @@ export class ContactsPageComponent implements OnInit {
     if (confirm('Are you sure you want to delete this contact?')) {
       this.crmService.deleteContact(id).subscribe({
         next: () => {
-          const updatedContacts = this.contacts().filter(c => c._id !== id);
-          const updatedDisplayed = this.displayedContacts().filter(c => c._id !== id);
-          this.contacts.set(updatedContacts);
-          this.displayedContacts.set(updatedDisplayed);
+          this.loadContacts();
+          this.selection.clear();
           this.snackBar.open('Contact deleted successfully', 'Close', { duration: 3000 });
         },
         error: () => this.snackBar.open('Error deleting contact', 'Close', { duration: 3000 })
       });
     }
+  }
+
+  openAssignmentDialog(contacts?: Contact[]) {
+    const selectedContacts = contacts || this.selection.selected;
+    const currentAssignee = selectedContacts.length === 1 ? selectedContacts[0].assignedTo : undefined;
+    
+    const dialogRef = this.dialog.open(AssignmentDialogComponent, {
+      width: '500px',
+      data: {
+        type: 'contact',
+        items: selectedContacts,
+        currentAssignee
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loadContacts();
+        this.selection.clear();
+      }
+    });
   }
 }

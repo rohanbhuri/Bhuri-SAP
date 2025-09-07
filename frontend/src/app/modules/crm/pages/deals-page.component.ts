@@ -86,6 +86,14 @@ import { DealDialogComponent } from '../dialogs/deal-dialog.component';
                   <mat-icon>event</mat-icon>
                   <span>{{ deal.expectedCloseDate | date:'MMM d, y' }}</span>
                 </div>
+                <div class="info-item" *ngIf="deal.assignedTo">
+                  <mat-icon>person</mat-icon>
+                  <span>{{ deal.assignedTo.firstName }} {{ deal.assignedTo.lastName }}</span>
+                </div>
+                <div class="info-item" *ngIf="!deal.assignedTo">
+                  <mat-icon>person_off</mat-icon>
+                  <span class="unassigned">Unassigned</span>
+                </div>
               </div>
             </div>
             
@@ -207,6 +215,7 @@ import { DealDialogComponent } from '../dialogs/deal-dialog.component';
     }
     
     .status-chip { font-size: 11px; height: 22px; }
+    .unassigned { color: rgba(0,0,0,0.6); font-style: italic; }
     
     .card-actions { 
       display: flex; 
@@ -288,6 +297,8 @@ export class DealsPageComponent implements OnInit {
 
   loadDeals() {
     this.loading.set(true);
+    this.currentPage = 0;
+    this.displayedDeals.set([]);
     this.crmService.getDeals().subscribe({
       next: (deals) => {
         this.deals.set(deals);
@@ -369,10 +380,7 @@ export class DealsPageComponent implements OnInit {
         if (deal) {
           this.crmService.updateDeal(deal._id, result).subscribe({
             next: (updated) => {
-              const updatedDeals = this.deals().map(d => d._id === deal._id ? { ...d, ...updated } : d);
-              const updatedDisplayed = this.displayedDeals().map(d => d._id === deal._id ? { ...d, ...updated } : d);
-              this.deals.set(updatedDeals);
-              this.displayedDeals.set(updatedDisplayed);
+              this.loadDeals();
               this.snackBar.open('Deal updated successfully', 'Close', { duration: 3000 });
             },
             error: () => this.snackBar.open('Error updating deal', 'Close', { duration: 3000 })
@@ -380,12 +388,7 @@ export class DealsPageComponent implements OnInit {
         } else {
           this.crmService.createDeal(result).subscribe({
             next: (created) => {
-              if (created && created._id) {
-                this.deals.set([created, ...this.deals()]);
-                this.displayedDeals.set([created, ...this.displayedDeals()]);
-              } else {
-                this.loadDeals();
-              }
+              this.loadDeals();
               this.snackBar.open('Deal created successfully', 'Close', { duration: 3000 });
             },
             error: () => this.snackBar.open('Error creating deal', 'Close', { duration: 3000 })

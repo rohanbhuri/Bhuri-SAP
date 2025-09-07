@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, UseGuards, Request, Param } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, UseGuards, Request, Param, Query } from '@nestjs/common';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { PermissionsGuard } from '../guards/permissions.guard';
 import { RequireRoles } from '../decorators/permissions.decorator';
@@ -161,5 +161,95 @@ export class CrmController {
   @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
   async deleteTask(@Param('id') id: string, @Request() req) {
     return this.crmService.deleteTask(id, req.user.organizationId);
+  }
+
+  // Assignment Management Endpoints
+  @Get('users')
+  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN, RoleType.STAFF)
+  async getOrganizationUsers(@Request() req) {
+    return this.crmService.getOrganizationUsers(req.user.organizationId);
+  }
+
+  @Get('my-assignments')
+  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN, RoleType.STAFF)
+  async getMyAssignments(@Request() req) {
+    return this.crmService.getMyAssignments(req.user.userId, req.user.organizationId);
+  }
+
+  // Contact Assignment
+  @Put('contacts/:id/assign')
+  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
+  async assignContact(@Param('id') id: string, @Body() body: { assignedToId: string }, @Request() req) {
+    return this.crmService.assignContact(id, body.assignedToId, req.user.organizationId);
+  }
+
+  @Put('contacts/:id/unassign')
+  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
+  async unassignContact(@Param('id') id: string, @Request() req) {
+    return this.crmService.unassignContact(id, req.user.organizationId);
+  }
+
+  // Lead Assignment
+  @Put('leads/:id/assign')
+  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
+  async assignLead(@Param('id') id: string, @Body() body: { assignedToId: string }, @Request() req) {
+    return this.crmService.assignLead(id, body.assignedToId, req.user.organizationId);
+  }
+
+  @Put('leads/:id/unassign')
+  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
+  async unassignLead(@Param('id') id: string, @Request() req) {
+    return this.crmService.unassignLead(id, req.user.organizationId);
+  }
+
+  // Deal Assignment
+  @Put('deals/:id/assign')
+  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
+  async assignDeal(@Param('id') id: string, @Body() body: { assignedToId: string }, @Request() req) {
+    return this.crmService.assignDeal(id, body.assignedToId, req.user.organizationId);
+  }
+
+  @Put('deals/:id/unassign')
+  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
+  async unassignDeal(@Param('id') id: string, @Request() req) {
+    return this.crmService.unassignDeal(id, req.user.organizationId);
+  }
+
+  // Task Assignment
+  @Put('tasks/:id/assign')
+  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
+  async assignTask(@Param('id') id: string, @Body() body: { assignedToId: string }, @Request() req) {
+    return this.crmService.assignTask(id, body.assignedToId, req.user.organizationId);
+  }
+
+  @Put('tasks/:id/unassign')
+  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
+  async unassignTask(@Param('id') id: string, @Request() req) {
+    return this.crmService.unassignTask(id, req.user.organizationId);
+  }
+
+  // Bulk Assignment Operations
+  @Put('contacts/bulk-assign')
+  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
+  async bulkAssignContacts(@Body() body: { contactIds: string[], assignedToId: string }, @Request() req) {
+    return this.crmService.bulkAssignContacts(body.contactIds, body.assignedToId, req.user.organizationId);
+  }
+
+  @Put('leads/bulk-assign')
+  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
+  async bulkAssignLeads(@Body() body: { leadIds: string[], assignedToId: string }, @Request() req) {
+    return this.crmService.bulkAssignLeads(body.leadIds, body.assignedToId, req.user.organizationId);
+  }
+
+  @Put('deals/bulk-assign')
+  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
+  async bulkAssignDeals(@Body() body: { dealIds: string[], assignedToId: string }, @Request() req) {
+    return this.crmService.bulkAssignDeals(body.dealIds, body.assignedToId, req.user.organizationId);
+  }
+
+  @Put('tasks/bulk-assign')
+  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
+  async bulkAssignTasks(@Body() body: { taskIds: string[], assignedToId: string }, @Request() req) {
+    return this.crmService.bulkAssignTasks(body.taskIds, body.assignedToId, req.user.organizationId);
   }
 }

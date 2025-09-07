@@ -4,6 +4,14 @@ import { Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { BrandConfigService } from '../../services/brand-config.service';
 
+export interface CrmUser {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role?: string;
+}
+
 export interface Contact {
   _id: string;
   firstName: string;
@@ -17,6 +25,7 @@ export interface Contact {
   customFields?: Record<string, any>;
   organizationId: string;
   assignedToId?: string;
+  assignedTo?: CrmUser;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -33,6 +42,7 @@ export interface Lead {
   contact?: Contact;
   organizationId: string;
   assignedToId?: string;
+  assignedTo?: CrmUser;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -52,6 +62,7 @@ export interface Deal {
   lead?: Lead;
   organizationId: string;
   assignedToId?: string;
+  assignedTo?: CrmUser;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -73,6 +84,7 @@ export interface Task {
   deal?: Deal;
   organizationId: string;
   assignedToId?: string;
+  assignedTo?: CrmUser;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -94,6 +106,21 @@ export interface ConversionReport {
   contactToLeadRate: number;
   leadToDealRate: number;
   dealWinRate: number;
+}
+
+export interface MyAssignments {
+  contacts: Contact[];
+  leads: Lead[];
+  deals: Deal[];
+  tasks: Task[];
+  summary: {
+    totalContacts: number;
+    totalLeads: number;
+    totalDeals: number;
+    totalTasks: number;
+    pendingTasks: number;
+    activePipeline: number;
+  };
 }
 
 @Injectable({ providedIn: 'root' })
@@ -257,5 +284,79 @@ export class CrmService {
         leadToDealRate: 0,
         dealWinRate: 0
       })));
+  }
+
+  // Assignment Management Methods
+  getOrganizationUsers(): Observable<CrmUser[]> {
+    return this.http.get<CrmUser[]>(`${this.apiUrl}/crm/users`)
+      .pipe(catchError(() => of([])));
+  }
+
+  getMyAssignments(): Observable<MyAssignments> {
+    return this.http.get<MyAssignments>(`${this.apiUrl}/crm/my-assignments`)
+      .pipe(catchError(() => of({
+        contacts: [],
+        leads: [],
+        deals: [],
+        tasks: [],
+        summary: {
+          totalContacts: 0,
+          totalLeads: 0,
+          totalDeals: 0,
+          totalTasks: 0,
+          pendingTasks: 0,
+          activePipeline: 0
+        }
+      })));
+  }
+
+  // Assignment methods
+  assignContact(id: string, assignedToId: string): Observable<Contact> {
+    return this.http.put<Contact>(`${this.apiUrl}/crm/contacts/${id}/assign`, { assignedToId });
+  }
+
+  unassignContact(id: string): Observable<Contact> {
+    return this.http.put<Contact>(`${this.apiUrl}/crm/contacts/${id}/unassign`, {});
+  }
+
+  assignLead(id: string, assignedToId: string): Observable<Lead> {
+    return this.http.put<Lead>(`${this.apiUrl}/crm/leads/${id}/assign`, { assignedToId });
+  }
+
+  unassignLead(id: string): Observable<Lead> {
+    return this.http.put<Lead>(`${this.apiUrl}/crm/leads/${id}/unassign`, {});
+  }
+
+  assignDeal(id: string, assignedToId: string): Observable<Deal> {
+    return this.http.put<Deal>(`${this.apiUrl}/crm/deals/${id}/assign`, { assignedToId });
+  }
+
+  unassignDeal(id: string): Observable<Deal> {
+    return this.http.put<Deal>(`${this.apiUrl}/crm/deals/${id}/unassign`, {});
+  }
+
+  assignTask(id: string, assignedToId: string): Observable<Task> {
+    return this.http.put<Task>(`${this.apiUrl}/crm/tasks/${id}/assign`, { assignedToId });
+  }
+
+  unassignTask(id: string): Observable<Task> {
+    return this.http.put<Task>(`${this.apiUrl}/crm/tasks/${id}/unassign`, {});
+  }
+
+  // Bulk assignment methods
+  bulkAssignContacts(contactIds: string[], assignedToId: string): Observable<any> {
+    return this.http.put(`${this.apiUrl}/crm/contacts/bulk-assign`, { contactIds, assignedToId });
+  }
+
+  bulkAssignLeads(leadIds: string[], assignedToId: string): Observable<any> {
+    return this.http.put(`${this.apiUrl}/crm/leads/bulk-assign`, { leadIds, assignedToId });
+  }
+
+  bulkAssignDeals(dealIds: string[], assignedToId: string): Observable<any> {
+    return this.http.put(`${this.apiUrl}/crm/deals/bulk-assign`, { dealIds, assignedToId });
+  }
+
+  bulkAssignTasks(taskIds: string[], assignedToId: string): Observable<any> {
+    return this.http.put(`${this.apiUrl}/crm/tasks/bulk-assign`, { taskIds, assignedToId });
   }
 }

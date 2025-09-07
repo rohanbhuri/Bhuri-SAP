@@ -76,7 +76,14 @@ import { LeadDialogComponent } from '../dialogs/lead-dialog.component';
                   <mat-icon>source</mat-icon>
                   <span>{{ lead.source }}</span>
                 </div>
-
+                <div class="info-item" *ngIf="lead.assignedTo">
+                  <mat-icon>person</mat-icon>
+                  <span>{{ lead.assignedTo.firstName }} {{ lead.assignedTo.lastName }}</span>
+                </div>
+                <div class="info-item" *ngIf="!lead.assignedTo">
+                  <mat-icon>person_off</mat-icon>
+                  <span class="unassigned">Unassigned</span>
+                </div>
               </div>
             </div>
             
@@ -167,6 +174,7 @@ import { LeadDialogComponent } from '../dialogs/lead-dialog.component';
     }
     
     .status-chip { font-size: 11px; height: 22px; }
+    .unassigned { color: rgba(0,0,0,0.6); font-style: italic; }
     
     .card-actions { 
       display: flex; 
@@ -245,6 +253,8 @@ export class LeadsPageComponent implements OnInit {
 
   loadLeads() {
     this.loading.set(true);
+    this.currentPage = 0;
+    this.displayedLeads.set([]);
     this.crmService.getLeads().subscribe({
       next: (leads) => {
         this.leads.set(leads);
@@ -316,10 +326,7 @@ export class LeadsPageComponent implements OnInit {
       if (lead) {
         this.crmService.updateLead(lead._id, result).subscribe({
           next: (updated) => {
-            const updatedLeads = this.leads().map(l => l._id === lead._id ? { ...l, ...updated } : l);
-            const updatedDisplayed = this.displayedLeads().map(l => l._id === lead._id ? { ...l, ...updated } : l);
-            this.leads.set(updatedLeads);
-            this.displayedLeads.set(updatedDisplayed);
+            this.loadLeads();
             this.snackBar.open('Lead updated successfully', 'Close', { duration: 3000 });
           },
           error: (error: any) => {
@@ -335,12 +342,7 @@ export class LeadsPageComponent implements OnInit {
       } else {
         this.crmService.createLead(result).subscribe({
           next: (created) => {
-            if (created && created._id) {
-              this.leads.set([created, ...this.leads()]);
-              this.displayedLeads.set([created, ...this.displayedLeads()]);
-            } else {
-              this.loadLeads();
-            }
+            this.loadLeads();
             this.snackBar.open('Lead created successfully', 'Close', { duration: 3000 });
           },
           error: (error: any) => {

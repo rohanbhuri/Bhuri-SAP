@@ -6,6 +6,7 @@ import { Contact } from '../entities/contact.entity';
 import { Lead } from '../entities/lead.entity';
 import { Deal } from '../entities/deal.entity';
 import { Task } from '../entities/task.entity';
+import { User } from '../entities/user.entity';
 
 @Injectable()
 export class CrmService {
@@ -18,56 +19,121 @@ export class CrmService {
     private dealRepository: MongoRepository<Deal>,
     @InjectRepository(Task)
     private taskRepository: MongoRepository<Task>,
+    @InjectRepository(User)
+    private userRepository: MongoRepository<User>,
   ) {}
 
   // Contact methods
   async getContacts(organizationId: string) {
-    return this.contactRepository.find({
+    const contacts = await this.contactRepository.find({
       where: { organizationId: new ObjectId(organizationId) }
     });
+    
+    // Populate assignedTo user data
+    for (const contact of contacts) {
+      if (contact.assignedToId) {
+        const user = await this.userRepository.findOne({
+          where: { _id: contact.assignedToId },
+          select: ['_id', 'firstName', 'lastName', 'email']
+        });
+        if (user) {
+          contact.assignedTo = user;
+        }
+      }
+    }
+    
+    return contacts;
   }
 
   async createContact(contactData: any, organizationId: string) {
     const contact = this.contactRepository.create({
       ...contactData,
-      organizationId: new ObjectId(organizationId)
+      organizationId: new ObjectId(organizationId),
+      assignedToId: contactData.assignedToId ? new ObjectId(contactData.assignedToId) : null
     });
     return this.contactRepository.save(contact);
   }
 
   // Lead methods
   async getLeads(organizationId: string) {
-    return this.leadRepository.find({
+    const leads = await this.leadRepository.find({
       where: { organizationId: new ObjectId(organizationId) }
     });
+    
+    // Populate assignedTo user data
+    for (const lead of leads) {
+      if (lead.assignedToId) {
+        const user = await this.userRepository.findOne({
+          where: { _id: lead.assignedToId },
+          select: ['_id', 'firstName', 'lastName', 'email']
+        });
+        if (user) {
+          lead.assignedTo = user;
+        }
+      }
+    }
+    
+    return leads;
   }
 
   async createLead(leadData: any, organizationId: string) {
+    // If converting from contact, inherit assignment
+    let assignedToId = leadData.assignedToId ? new ObjectId(leadData.assignedToId) : null;
+    if (leadData.contactId && !assignedToId) {
+      const contact = await this.contactRepository.findOne({
+        where: { _id: new ObjectId(leadData.contactId) }
+      });
+      if (contact?.assignedToId) {
+        assignedToId = contact.assignedToId;
+      }
+    }
+
     const lead = this.leadRepository.create({
       ...leadData,
       organizationId: new ObjectId(organizationId),
-      contactId: leadData.contactId ? new ObjectId(leadData.contactId) : null
+      contactId: leadData.contactId ? new ObjectId(leadData.contactId) : null,
+      assignedToId
     });
     return this.leadRepository.save(lead);
   }
 
   // Deal methods
   async getDeals(organizationId: string) {
-    return this.dealRepository.find({
+    const deals = await this.dealRepository.find({
       where: { organizationId: new ObjectId(organizationId) }
     });
+    
+    // Populate assignedTo user data
+    for (const deal of deals) {
+      if (deal.assignedToId) {
+        const user = await this.userRepository.findOne({
+          where: { _id: deal.assignedToId },
+          select: ['_id', 'firstName', 'lastName', 'email']
+        });
+        if (user) {
+          deal.assignedTo = user;
+        }
+      }
+    }
+    
+    return deals;
   }
 
   async createDeal(dealData: any, organizationId: string) {
     let contactId = null;
+    let assignedToId = dealData.assignedToId ? new ObjectId(dealData.assignedToId) : null;
     
-    // If leadId is provided, get the contactId from the lead
+    // If leadId is provided, get the contactId and assignment from the lead
     if (dealData.leadId) {
       const lead = await this.leadRepository.findOne({
         where: { _id: new ObjectId(dealData.leadId), organizationId: new ObjectId(organizationId) }
       });
       if (lead) {
         contactId = lead.contactId;
+        // Inherit assignment if not explicitly set
+        if (!assignedToId && lead.assignedToId) {
+          assignedToId = lead.assignedToId;
+        }
         // Update lead status to converted
         await this.leadRepository.updateOne(
           { _id: new ObjectId(dealData.leadId) },
@@ -80,7 +146,8 @@ export class CrmService {
       ...dealData,
       organizationId: new ObjectId(organizationId),
       leadId: dealData.leadId ? new ObjectId(dealData.leadId) : null,
-      contactId: contactId
+      contactId: contactId,
+      assignedToId
     });
     return this.dealRepository.save(deal);
   }
@@ -93,9 +160,35 @@ export class CrmService {
   }
 
   async createTask(taskData: any, organizationId: string) {
+    let assignedToId = taskData.assignedToId ? new ObjectId(taskData.assignedToId) : null;
+    
+    // Inherit assignment from related entities if not explicitly set
+    if (!assignedToId) {
+      if (taskData.dealId) {
+        const deal = await this.dealRepository.findOne({
+          where: { _id: new ObjectId(taskData.dealId) }
+        });
+        if (deal?.assignedToId) assignedToId = deal.assignedToId;
+      } else if (taskData.leadId) {
+        const lead = await this.leadRepository.findOne({
+          where: { _id: new ObjectId(taskData.leadId) }
+        });
+        if (lead?.assignedToId) assignedToId = lead.assignedToId;
+      } else if (taskData.contactId) {
+        const contact = await this.contactRepository.findOne({
+          where: { _id: new ObjectId(taskData.contactId) }
+        });
+        if (contact?.assignedToId) assignedToId = contact.assignedToId;
+      }
+    }
+
     const task = this.taskRepository.create({
       ...taskData,
-      organizationId: new ObjectId(organizationId)
+      organizationId: new ObjectId(organizationId),
+      contactId: taskData.contactId ? new ObjectId(taskData.contactId) : null,
+      leadId: taskData.leadId ? new ObjectId(taskData.leadId) : null,
+      dealId: taskData.dealId ? new ObjectId(taskData.dealId) : null,
+      assignedToId
     });
     return this.taskRepository.save(task);
   }
@@ -114,7 +207,9 @@ export class CrmService {
       ...leadData,
       contactId: new ObjectId(contactId),
       organizationId: new ObjectId(organizationId),
-      status: 'new'
+      status: 'new',
+      // Inherit assignment from contact
+      assignedToId: contact.assignedToId
     });
     
     return this.leadRepository.save(lead);
@@ -140,7 +235,9 @@ export class CrmService {
       leadId: new ObjectId(leadId),
       contactId: lead.contactId,
       organizationId: new ObjectId(organizationId),
-      stage: 'prospecting'
+      stage: 'prospecting',
+      // Inherit assignment from lead
+      assignedToId: lead.assignedToId
     });
     
     return this.dealRepository.save(deal);
@@ -161,7 +258,9 @@ export class CrmService {
       leadId: deal.leadId,
       contactId: deal.contactId,
       organizationId: new ObjectId(organizationId),
-      status: 'pending'
+      status: 'pending',
+      // Inherit assignment from deal
+      assignedToId: deal.assignedToId
     });
     
     return this.taskRepository.save(task);
@@ -230,9 +329,13 @@ export class CrmService {
 
   // Update and Delete methods
   async updateContact(id: string, contactData: any, organizationId: string) {
+    const updateData = {
+      ...contactData,
+      assignedToId: contactData.assignedToId ? new ObjectId(contactData.assignedToId) : null
+    };
     await this.contactRepository.updateOne(
       { _id: new ObjectId(id), organizationId: new ObjectId(organizationId) },
-      { $set: contactData }
+      { $set: updateData }
     );
     return this.contactRepository.findOne({
       where: { _id: new ObjectId(id), organizationId: new ObjectId(organizationId) }
@@ -249,7 +352,8 @@ export class CrmService {
   async updateLead(id: string, leadData: any, organizationId: string) {
     const updateData = {
       ...leadData,
-      contactId: leadData.contactId ? new ObjectId(leadData.contactId) : null
+      contactId: leadData.contactId ? new ObjectId(leadData.contactId) : null,
+      assignedToId: leadData.assignedToId ? new ObjectId(leadData.assignedToId) : null
     };
     await this.leadRepository.updateOne(
       { _id: new ObjectId(id), organizationId: new ObjectId(organizationId) },
@@ -283,6 +387,12 @@ export class CrmService {
       updateData.leadId = null;
     }
     
+    if (dealData.assignedToId) {
+      updateData.assignedToId = new ObjectId(dealData.assignedToId);
+    } else if (dealData.assignedToId === null || dealData.assignedToId === '') {
+      updateData.assignedToId = null;
+    }
+    
     await this.dealRepository.updateOne(
       { _id: new ObjectId(id), organizationId: new ObjectId(organizationId) },
       { $set: updateData }
@@ -300,9 +410,16 @@ export class CrmService {
   }
 
   async updateTask(id: string, taskData: any, organizationId: string) {
+    const updateData = {
+      ...taskData,
+      assignedToId: taskData.assignedToId ? new ObjectId(taskData.assignedToId) : null,
+      contactId: taskData.contactId ? new ObjectId(taskData.contactId) : null,
+      leadId: taskData.leadId ? new ObjectId(taskData.leadId) : null,
+      dealId: taskData.dealId ? new ObjectId(taskData.dealId) : null
+    };
     await this.taskRepository.updateOne(
       { _id: new ObjectId(id), organizationId: new ObjectId(organizationId) },
-      { $set: taskData }
+      { $set: updateData }
     );
     return this.taskRepository.findOne({
       where: { _id: new ObjectId(id), organizationId: new ObjectId(organizationId) }
@@ -340,5 +457,183 @@ export class CrmService {
       pendingTasks: tasks.length,
       pipelineValue
     };
+  }
+
+  // Assignment Management Methods
+  async getOrganizationUsers(organizationId: string) {
+    return this.userRepository.find({
+      where: { organizationId: new ObjectId(organizationId), isActive: true },
+      select: ['_id', 'firstName', 'lastName', 'email']
+    });
+  }
+
+  async assignContact(contactId: string, assignedToId: string, organizationId: string) {
+    await this.contactRepository.updateOne(
+      { _id: new ObjectId(contactId), organizationId: new ObjectId(organizationId) },
+      { $set: { assignedToId: new ObjectId(assignedToId) } }
+    );
+    
+    const contact = await this.contactRepository.findOne({
+      where: { _id: new ObjectId(contactId), organizationId: new ObjectId(organizationId) }
+    });
+    
+    // Populate assignedTo user data
+    if (contact && contact.assignedToId) {
+      const user = await this.userRepository.findOne({
+        where: { _id: contact.assignedToId },
+        select: ['_id', 'firstName', 'lastName', 'email']
+      });
+      if (user) {
+        contact.assignedTo = user;
+      }
+    }
+    
+    return contact;
+  }
+
+  async unassignContact(contactId: string, organizationId: string) {
+    await this.contactRepository.updateOne(
+      { _id: new ObjectId(contactId), organizationId: new ObjectId(organizationId) },
+      { $set: { assignedToId: null } }
+    );
+    
+    const contact = await this.contactRepository.findOne({
+      where: { _id: new ObjectId(contactId), organizationId: new ObjectId(organizationId) }
+    });
+    
+    return contact;
+  }
+
+  async assignLead(leadId: string, assignedToId: string, organizationId: string) {
+    await this.leadRepository.updateOne(
+      { _id: new ObjectId(leadId), organizationId: new ObjectId(organizationId) },
+      { $set: { assignedToId: new ObjectId(assignedToId) } }
+    );
+    return this.leadRepository.findOne({
+      where: { _id: new ObjectId(leadId), organizationId: new ObjectId(organizationId) }
+    });
+  }
+
+  async unassignLead(leadId: string, organizationId: string) {
+    await this.leadRepository.updateOne(
+      { _id: new ObjectId(leadId), organizationId: new ObjectId(organizationId) },
+      { $set: { assignedToId: null } }
+    );
+    return this.leadRepository.findOne({
+      where: { _id: new ObjectId(leadId), organizationId: new ObjectId(organizationId) }
+    });
+  }
+
+  async assignDeal(dealId: string, assignedToId: string, organizationId: string) {
+    await this.dealRepository.updateOne(
+      { _id: new ObjectId(dealId), organizationId: new ObjectId(organizationId) },
+      { $set: { assignedToId: new ObjectId(assignedToId) } }
+    );
+    return this.dealRepository.findOne({
+      where: { _id: new ObjectId(dealId), organizationId: new ObjectId(organizationId) }
+    });
+  }
+
+  async unassignDeal(dealId: string, organizationId: string) {
+    await this.dealRepository.updateOne(
+      { _id: new ObjectId(dealId), organizationId: new ObjectId(organizationId) },
+      { $set: { assignedToId: null } }
+    );
+    return this.dealRepository.findOne({
+      where: { _id: new ObjectId(dealId), organizationId: new ObjectId(organizationId) }
+    });
+  }
+
+  async assignTask(taskId: string, assignedToId: string, organizationId: string) {
+    await this.taskRepository.updateOne(
+      { _id: new ObjectId(taskId), organizationId: new ObjectId(organizationId) },
+      { $set: { assignedToId: new ObjectId(assignedToId) } }
+    );
+    return this.taskRepository.findOne({
+      where: { _id: new ObjectId(taskId), organizationId: new ObjectId(organizationId) }
+    });
+  }
+
+  async unassignTask(taskId: string, organizationId: string) {
+    await this.taskRepository.updateOne(
+      { _id: new ObjectId(taskId), organizationId: new ObjectId(organizationId) },
+      { $set: { assignedToId: null } }
+    );
+    return this.taskRepository.findOne({
+      where: { _id: new ObjectId(taskId), organizationId: new ObjectId(organizationId) }
+    });
+  }
+
+  // Get assigned items for a user
+  async getMyAssignments(userId: string, organizationId: string) {
+    const userObjectId = new ObjectId(userId);
+    const orgObjectId = new ObjectId(organizationId);
+
+    const [contacts, leads, deals, tasks] = await Promise.all([
+      this.contactRepository.find({
+        where: { assignedToId: userObjectId, organizationId: orgObjectId }
+      }),
+      this.leadRepository.find({
+        where: { assignedToId: userObjectId, organizationId: orgObjectId }
+      }),
+      this.dealRepository.find({
+        where: { assignedToId: userObjectId, organizationId: orgObjectId }
+      }),
+      this.taskRepository.find({
+        where: { assignedToId: userObjectId, organizationId: orgObjectId }
+      })
+    ]);
+
+    return {
+      contacts,
+      leads,
+      deals,
+      tasks,
+      summary: {
+        totalContacts: contacts.length,
+        totalLeads: leads.length,
+        totalDeals: deals.length,
+        totalTasks: tasks.length,
+        pendingTasks: tasks.filter(t => t.status === 'pending').length,
+        activePipeline: deals.filter(d => !['closed-won', 'closed-lost'].includes(d.stage)).length
+      }
+    };
+  }
+
+  // Bulk assignment operations
+  async bulkAssignContacts(contactIds: string[], assignedToId: string, organizationId: string) {
+    const objectIds = contactIds.map(id => new ObjectId(id));
+    await this.contactRepository.updateMany(
+      { _id: { $in: objectIds }, organizationId: new ObjectId(organizationId) },
+      { $set: { assignedToId: new ObjectId(assignedToId) } }
+    );
+    return { success: true, updated: contactIds.length };
+  }
+
+  async bulkAssignLeads(leadIds: string[], assignedToId: string, organizationId: string) {
+    const objectIds = leadIds.map(id => new ObjectId(id));
+    await this.leadRepository.updateMany(
+      { _id: { $in: objectIds }, organizationId: new ObjectId(organizationId) },
+      { $set: { assignedToId: new ObjectId(assignedToId) } }
+    );
+    return { success: true, updated: leadIds.length };
+  }
+
+  async bulkAssignDeals(dealIds: string[], assignedToId: string, organizationId: string) {
+    const objectIds = dealIds.map(id => new ObjectId(id));
+    await this.dealRepository.updateMany(
+      { _id: { $in: objectIds }, organizationId: new ObjectId(organizationId) },
+      { $set: { assignedToId: new ObjectId(assignedToId) } }
+    );
+    return { success: true, updated: dealIds.length };
+  }
+
+  async bulkAssignTasks(taskIds: string[], assignedToId: string, organizationId: string) {
+    const objectIds = taskIds.map(id => new ObjectId(id));
+    await this.taskRepository.updateMany(
+      { _id: { $in: objectIds }, organizationId: new ObjectId(organizationId) },
+      { $set: { assignedToId: new ObjectId(assignedToId) } }
+    );
+    return { success: true, updated: taskIds.length };
   }
 }

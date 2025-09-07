@@ -6,17 +6,20 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatIconModule } from '@angular/material/icon';
-import { Task } from '../crm.service';
+import { Task, CrmUser, CrmService } from '../crm.service';
+import { Observable, of } from 'rxjs';
+import { startWith, map, debounceTime, switchMap, distinctUntilChanged } from 'rxjs/operators';
 
 @Component({
   selector: 'app-task-dialog',
   standalone: true,
   imports: [
     CommonModule, FormsModule, ReactiveFormsModule, MatDialogModule,
-    MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule,
+    MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatAutocompleteModule,
     MatDatepickerModule, MatNativeDateModule, MatIconModule
   ],
   template: `
@@ -79,6 +82,17 @@ import { Task } from '../crm.service';
             <mat-icon matPrefix>event</mat-icon>
           </mat-form-field>
         </div>
+        <mat-form-field appearance="outline">
+          <mat-label>Assign to</mat-label>
+          <input matInput formControlName="assignedToSearch" [matAutocomplete]="userAuto" placeholder="Search users...">
+          <mat-autocomplete #userAuto="matAutocomplete" [displayWith]="displayUser" (optionSelected)="onUserSelected($event)">
+            <mat-option value="">Unassigned</mat-option>
+            <mat-option *ngFor="let user of filteredUsers | async" [value]="user">
+              {{ user.firstName }} {{ user.lastName }} ({{ user.email }})
+            </mat-option>
+          </mat-autocomplete>
+          <mat-icon matPrefix>person</mat-icon>
+        </mat-form-field>
         <div class="dialog-actions" mat-dialog-actions>
           <button mat-button type="button" (click)="close()" class="cancel-btn">
             <mat-icon>close</mat-icon>
@@ -211,8 +225,12 @@ import { Task } from '../crm.service';
 })
 export class TaskDialogComponent implements OnInit {
   private fb = inject(FormBuilder);
+  private crmService = inject(CrmService);
   dialogRef = inject(MatDialogRef<TaskDialogComponent>);
   form!: FormGroup;
+  users: CrmUser[] = [];
+  filteredUsers!: Observable<CrmUser[]>;
+  selectedUser: CrmUser | null = null;
 
   constructor(@Inject(MAT_DIALOG_DATA) public data: Task | null) {}
 
@@ -223,8 +241,54 @@ export class TaskDialogComponent implements OnInit {
       status: [this.data?.status || 'pending', Validators.required],
       priority: [this.data?.priority || 'medium', Validators.required],
       dueDate: [this.data?.dueDate || null],
-      type: [this.data?.type || 'task', Validators.required]
+      type: [this.data?.type || 'task', Validators.required],
+      assignedToId: [this.data?.assignedToId || ''],
+      assignedToSearch: ['']
     });
+    
+    this.loadUsers();
+    
+    this.filteredUsers = this.form.get('assignedToSearch')!.valueChanges.pipe(
+      startWith(''),
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(value => {
+        const searchTerm = typeof value === 'string' ? value : '';
+        if (searchTerm.length >= 2) {
+          return this.searchUsers(searchTerm);
+        }
+        return of([]);
+      })
+    );
+    
+    if (this.data?.assignedTo) {
+      this.selectedUser = this.data.assignedTo;
+      this.form.patchValue({ assignedToSearch: this.data.assignedTo });
+    }
+  }
+
+  loadUsers() {
+    this.crmService.getOrganizationUsers().subscribe({
+      next: (users) => this.users = users,
+      error: () => console.error('Error loading users')
+    });
+  }
+
+  searchUsers(query: string): Observable<CrmUser[]> {
+    return of(this.users.filter(user => 
+      user.firstName.toLowerCase().includes(query.toLowerCase()) ||
+      user.lastName.toLowerCase().includes(query.toLowerCase()) ||
+      user.email.toLowerCase().includes(query.toLowerCase())
+    ));
+  }
+
+  displayUser = (user: CrmUser | null): string => {
+    return user ? `${user.firstName} ${user.lastName}` : '';
+  }
+
+  onUserSelected(event: any) {
+    this.selectedUser = event.option.value === '' ? null : event.option.value;
+    this.form.patchValue({ assignedToId: this.selectedUser?._id || '' });
   }
 
   close() { this.dialogRef.close(); }
