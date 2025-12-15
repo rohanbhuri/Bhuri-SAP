@@ -68,6 +68,40 @@ const configs = {
       NODE_ENV: 'production',
       PORT: 3001
     }
+  },
+
+  "raccontixrm": {
+    brand: {
+      name: "RaccontiXRM",
+      logo: "/config/assets/raccontixrm/icons/racconti-logo.svg",
+      icon: "/config/assets/raccontixrm/icons/racconti-icon.svg"
+    },
+    
+    colors: {
+      primary: "#050d1aff",
+      accent: "#b69253ff",
+      secondary: "#fff4cbff"
+    },
+    
+    app: {
+      name: "RaccontiXRM",
+      version: "0.0.1",
+      description: "Your Organisation's only dashboard for everything",
+      port: 4202,
+      apiUrl: process.env.NODE_ENV === 'production' ? "http://13.126.228.247:3002/api" : "http://localhost:3002/api"
+    },
+    database: {
+      MONGODB_URI: 'mongodb+srv://rohanbhuri:nokiaset@bhuri-db.zg9undw.mongodb.net/beaxrm?retryWrites=true&w=majority&appName=bhuri-db',
+      JWT_SECRET: 'rohanbhuri'
+    },
+    development: {
+      NODE_ENV: 'development',
+      PORT: 3002
+    },
+    production: {
+      NODE_ENV: 'production',
+      PORT: 3002
+    }
   }
 };
 
