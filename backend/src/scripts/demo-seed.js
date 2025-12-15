@@ -947,6 +947,18 @@ class DemoSeeder {
         { name: 'Team Lead', description: 'Lead process execution teams', type: 'staff' },
         { name: 'Process Executor', description: 'Execute assigned processes', type: 'staff' }
       ];
+    } else if (this.projectName === 'raccontixrm') {
+      return [
+        { name: 'Super Admin', description: 'Full system access', type: 'super_admin' },
+        { name: 'Admin', description: 'Administrative access', type: 'admin' },
+        { name: 'Business Manager', description: 'Manage business operations', type: 'admin' },
+        { name: 'HR Manager', description: 'Manage HR operations', type: 'admin' },
+        { name: 'Staff', description: 'Standard staff access', type: 'staff' },
+        { name: 'Operations Manager', description: 'Manage daily operations', type: 'staff' },
+        { name: 'Team Lead', description: 'Lead operational teams', type: 'staff' },
+        { name: 'Data Analyst', description: 'Analyze business data', type: 'staff' },
+        { name: 'Client', description: 'View dashboard and reports', type: 'custom' }
+      ];
     }
 
     return [
@@ -957,7 +969,40 @@ class DemoSeeder {
   }
 
   getModulesForProject() {
-    if (this.projectName === 'beax-rm') {
+    if (this.projectName === 'raccontixrm') {
+      return [
+        // Core Modules
+        { name: 'User Management', description: 'Manage users, roles, and permissions', isActive: true, icon: 'people', route: '/modules/user-management', category: 'Core', permissionType: 'super_admin' },
+        { name: 'Organization Management', description: 'Manage organizations and membership requests', isActive: true, icon: 'business', route: '/modules/organization-management', category: 'Core', permissionType: 'super_admin' },
+        { name: 'My Organizations', description: 'View and join public organizations', isActive: true, icon: 'groups', route: '/modules/my-organizations', category: 'Core', permissionType: 'public' },
+        { name: 'CRM', description: 'Customer relationship management', isActive: true, icon: 'business_center', route: '/modules/crm', category: 'Sales', permissionType: 'admin' },
+        
+        // HR Modules
+        { name: 'HR Management', description: 'Human resources management', isActive: true, icon: 'people', route: '/modules/hr-management', category: 'HR', permissionType: 'admin' },
+        { name: 'Staff Management', description: 'Manage staff records and information', isActive: true, icon: 'badge', route: '/modules/staff-management', category: 'HR', permissionType: 'admin' },
+        { name: 'Payroll Management', description: 'Manage employee payroll and compensation', isActive: true, icon: 'payments', route: '/modules/payroll-management', category: 'HR', permissionType: 'admin' },
+        
+        // Business Operations
+        { name: 'Dashboard Analytics', description: 'Business intelligence and analytics dashboard', isActive: true, icon: 'analytics', route: '/modules/dashboard-analytics', category: 'Analytics', permissionType: 'admin' },
+        { name: 'Projects Management', description: 'Manage projects and deliverables', isActive: true, icon: 'work', route: '/modules/projects-management', category: 'Project', permissionType: 'admin' },
+        { name: 'Tasks Management', description: 'Manage tasks and assignments', isActive: true, icon: 'task', route: '/modules/tasks-management', category: 'Project', permissionType: 'admin' },
+        { name: 'Order Management', description: 'Manage orders, track status, and monitor fulfillment', isActive: true, icon: 'shopping_cart', route: '/modules/order-management', category: 'Operations', permissionType: 'admin' },
+        { name: 'Finance Management', description: 'Manage invoices, receipts, and payments', isActive: true, icon: 'account_balance_wallet', route: '/modules/finance', category: 'Finance', permissionType: 'admin' },
+        
+        // Sales & Marketing
+        { name: 'Leads Management', description: 'Manage sales leads and prospects', isActive: true, icon: 'person_add', route: '/modules/leads-management', category: 'Sales', permissionType: 'admin' },
+        { name: 'Sales Management', description: 'Manage sales processes and pipeline', isActive: true, icon: 'trending_up', route: '/modules/sales-management', category: 'Sales', permissionType: 'admin' },
+        { name: 'Deal Management', description: 'Manage deals and opportunities', isActive: true, icon: 'handshake', route: '/modules/deal-management', category: 'Sales', permissionType: 'admin' },
+        
+        // Operations
+        { name: 'Inventory Management', description: 'Manage inventory and stock levels', isActive: true, icon: 'inventory', route: '/modules/inventory-management', category: 'Operations', permissionType: 'admin' },
+        { name: 'Asset Management', description: 'Manage company assets and equipment', isActive: true, icon: 'devices', route: '/modules/asset-management', category: 'Operations', permissionType: 'admin' },
+        
+        // Reporting
+        { name: 'Reports & Analytics', description: 'Generate comprehensive business reports', isActive: true, icon: 'assessment', route: '/modules/reports-analytics', category: 'Analytics', permissionType: 'admin' },
+        { name: 'Performance Tracking', description: 'Track KPIs and performance metrics', isActive: true, icon: 'track_changes', route: '/modules/performance-tracking', category: 'Analytics', permissionType: 'admin' }
+      ];
+    } else if (this.projectName === 'beax-rm') {
       return [
         // Core Modules
         { name: 'User Management', description: 'Manage users, roles, and permissions', isActive: true, icon: 'people', route: '/modules/user-management', category: 'Core', permissionType: 'super_admin' },
@@ -1072,6 +1117,33 @@ class DemoSeeder {
           createdAt: new Date()
         }
       ];
+    } else if (this.projectName === 'raccontixrm') {
+      return [
+        {
+          name: 'Racconti Corporation',
+          code: 'RACCONTI',
+          description: 'Your Organisation\'s only dashboard for everything',
+          isPublic: false,
+          memberCount: 35,
+          createdAt: new Date()
+        },
+        {
+          name: 'Digital Solutions Ltd',
+          code: 'DIGITAL',
+          description: 'Comprehensive digital transformation services',
+          isPublic: true,
+          memberCount: 60,
+          createdAt: new Date()
+        },
+        {
+          name: 'Enterprise Hub',
+          code: 'ENTERPRISE',
+          description: 'Enterprise-grade business solutions',
+          isPublic: true,
+          memberCount: 45,
+          createdAt: new Date()
+        }
+      ];
     }
 
     return [
@@ -1140,6 +1212,37 @@ class DemoSeeder {
           users.push({
             _id: new ObjectId(),
             email: template.email.replace('@trueprocess.com', `@${org.code.toLowerCase()}.com`),
+            password: hashedPassword,
+            firstName: template.firstName,
+            lastName: template.lastName,
+            isActive: true,
+            organizationIds: [org._id],
+            organizationId: org._id,
+            roleIds: role ? [role._id] : [],
+            permissionIds: [],
+            activeModuleIds: [],
+            createdAt: new Date()
+          });
+        }
+      }
+    } else if (this.projectName === 'raccontixrm') {
+      const userTemplates = [
+        { email: 'admin@racconti.com', firstName: 'Racconti', lastName: 'Admin', roleName: 'Super Admin' },
+        { email: 'manager@racconti.com', firstName: 'Business', lastName: 'Manager', roleName: 'Admin' },
+        { email: 'hr@racconti.com', firstName: 'HR', lastName: 'Director', roleName: 'HR Manager' },
+        { email: 'operations@racconti.com', firstName: 'Operations', lastName: 'Manager', roleName: 'Staff' },
+        { email: 'lead@racconti.com', firstName: 'Team', lastName: 'Lead', roleName: 'Staff' },
+        { email: 'analyst@racconti.com', firstName: 'Data', lastName: 'Analyst', roleName: 'Staff' },
+        { email: 'coordinator@racconti.com', firstName: 'Project', lastName: 'Coordinator', roleName: 'Staff' },
+        { email: 'client@racconti.com', firstName: 'Client', lastName: 'User', roleName: 'Client' }
+      ];
+      
+      for (const org of organizations) {
+        for (const template of userTemplates) {
+          const role = roles.find(r => r.name === template.roleName);
+          users.push({
+            _id: new ObjectId(),
+            email: template.email.replace('@racconti.com', `@${org.code.toLowerCase()}.com`),
             password: hashedPassword,
             firstName: template.firstName,
             lastName: template.lastName,

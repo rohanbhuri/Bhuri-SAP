@@ -91,7 +91,7 @@ const configs = {
       apiUrl: process.env.NODE_ENV === 'production' ? "http://13.126.228.247:3002/api" : "http://localhost:3002/api"
     },
     database: {
-      MONGODB_URI: 'mongodb+srv://rohanbhuri:nokiaset@bhuri-db.zg9undw.mongodb.net/beaxrm?retryWrites=true&w=majority&appName=bhuri-db',
+      MONGODB_URI: 'mongodb+srv://rohanbhuri:nokiaset@bhuri-db.zg9undw.mongodb.net/raccontixrm?retryWrites=true&w=majority&appName=bhuri-db',
       JWT_SECRET: 'rohanbhuri'
     },
     development: {

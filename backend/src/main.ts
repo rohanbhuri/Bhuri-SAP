@@ -28,8 +28,10 @@ async function bootstrap() {
     origin: [
       'http://localhost:4200', 
       'http://localhost:4201',
+      'http://localhost:4202',
       'http://13.126.228.247:4200',
       'http://13.126.228.247:4201',
+      'http://13.126.228.247:4202',
       'http://3.111.139.181:4200',
       'http://3.111.139.181:4201'
     ],
