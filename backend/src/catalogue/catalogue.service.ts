@@ -27,12 +27,19 @@ export class CatalogueService {
     }
 
     async createProduct(data: Partial<Product>): Promise<Product> {
-        const product = this.productRepository.create(data);
+        const product = this.productRepository.create({
+            ...data,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        });
         return this.productRepository.save(product);
     }
 
     async updateProduct(id: string, data: Partial<Product>): Promise<Product> {
-        await this.productRepository.update(id, data);
+        await this.productRepository.update(id, {
+            ...data,
+            updatedAt: new Date()
+        });
         return this.findOneProduct(id);
     }
 
@@ -45,9 +52,29 @@ export class CatalogueService {
         return this.categoryRepository.find();
     }
 
+    async findOneCategory(id: string): Promise<Category> {
+        return this.categoryRepository.findOneBy({ _id: new ObjectId(id) });
+    }
+
     async createCategory(data: Partial<Category>): Promise<Category> {
-        const category = this.categoryRepository.create(data);
+        const category = this.categoryRepository.create({
+            ...data,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        });
         return this.categoryRepository.save(category);
+    }
+
+    async updateCategory(id: string, data: Partial<Category>): Promise<Category> {
+        await this.categoryRepository.update(id, {
+            ...data,
+            updatedAt: new Date()
+        });
+        return this.findOneCategory(id);
+    }
+
+    async deleteCategory(id: string): Promise<void> {
+        await this.categoryRepository.delete(id);
     }
 
     // Collections
@@ -55,8 +82,28 @@ export class CatalogueService {
         return this.collectionRepository.find();
     }
 
+    async findOneCollection(id: string): Promise<Collection> {
+        return this.collectionRepository.findOneBy({ _id: new ObjectId(id) });
+    }
+
     async createCollection(data: Partial<Collection>): Promise<Collection> {
-        const collection = this.collectionRepository.create(data);
+        const collection = this.collectionRepository.create({
+            ...data,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        });
         return this.collectionRepository.save(collection);
+    }
+
+    async updateCollection(id: string, data: Partial<Collection>): Promise<Collection> {
+        await this.collectionRepository.update(id, {
+            ...data,
+            updatedAt: new Date()
+        });
+        return this.findOneCollection(id);
+    }
+
+    async deleteCollection(id: string): Promise<void> {
+        await this.collectionRepository.delete(id);
     }
 }

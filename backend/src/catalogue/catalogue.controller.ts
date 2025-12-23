@@ -9,6 +9,7 @@ import { Collection } from '../entities/collection.entity';
 export class CatalogueController {
     constructor(private readonly catalogueService: CatalogueService) { }
 
+    // Products
     @Get('products')
     async getAllProducts() {
         return this.catalogueService.findAllProducts();
@@ -40,9 +41,24 @@ export class CatalogueController {
         return this.catalogueService.findAllCategories();
     }
 
+    @Get('categories/:id')
+    async getCategory(@Param('id') id: string) {
+        return this.catalogueService.findOneCategory(id);
+    }
+
     @Post('categories')
     async createCategory(@Body() data: Partial<Category>) {
         return this.catalogueService.createCategory(data);
+    }
+
+    @Put('categories/:id')
+    async updateCategory(@Param('id') id: string, @Body() data: Partial<Category>) {
+        return this.catalogueService.updateCategory(id, data);
+    }
+
+    @Delete('categories/:id')
+    async deleteCategory(@Param('id') id: string) {
+        return this.catalogueService.deleteCategory(id);
     }
 
     // Collections
@@ -51,8 +67,23 @@ export class CatalogueController {
         return this.catalogueService.findAllCollections();
     }
 
+    @Get('collections/:id')
+    async getCollection(@Param('id') id: string) {
+        return this.catalogueService.findOneCollection(id);
+    }
+
     @Post('collections')
     async createCollection(@Body() data: Partial<Collection>) {
         return this.catalogueService.createCollection(data);
+    }
+
+    @Put('collections/:id')
+    async updateCollection(@Param('id') id: string, @Body() data: Partial<Collection>) {
+        return this.catalogueService.updateCollection(id, data);
+    }
+
+    @Delete('collections/:id')
+    async deleteCollection(@Param('id') id: string) {
+        return this.catalogueService.deleteCollection(id);
     }
 }

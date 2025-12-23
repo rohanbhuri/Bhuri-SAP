@@ -21,6 +21,14 @@ export class QuotationsService {
         return this.http.post<any>(`${this.apiUrl}`, quote);
     }
 
+    createFromCart(cartItems: any[], clientData: any): Observable<any> {
+        return this.http.post<any>(`${this.apiUrl}/from-cart`, { cartItems, clientData });
+    }
+
+    sendQuotationEmail(id: string): Observable<any> {
+        return this.http.post<any>(`${this.apiUrl}/${id}/send-email`, {});
+    }
+
     updateQuotation(id: string, quote: any): Observable<any> {
         return this.http.put<any>(`${this.apiUrl}/${id}`, quote);
     }

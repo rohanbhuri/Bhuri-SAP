@@ -23,6 +23,7 @@ import { SearchModule } from './search/search.module';
 import { CatalogueModule } from './catalogue/catalogue.module';
 import { CmsModule } from './cms/cms.module';
 import { QuotationsModule } from './quotations/quotations.module';
+import { EnquiryModule } from './enquiry/enquiry.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { QuotationsModule } from './quotations/quotations.module';
     CatalogueModule,
     CmsModule,
     QuotationsModule,
+    EnquiryModule,
   ],
 })
 export class AppModule { }

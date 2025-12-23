@@ -27,6 +27,16 @@ export class QuotationsController {
         return this.quotationsService.update(id, data);
     }
 
+    @Post('from-cart')
+    async createFromCart(@Body() data: { cartItems: any[], clientData: any }) {
+        return this.quotationsService.createFromCart(data.cartItems, data.clientData);
+    }
+
+    @Post(':id/send-email')
+    async sendEmail(@Param('id') id: string) {
+        return this.quotationsService.sendQuotationEmail(id);
+    }
+
     @Delete(':id')
     async deleteQuotation(@Param('id') id: string) {
         return this.quotationsService.delete(id);
