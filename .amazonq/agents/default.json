@@ -1,6 +1,5 @@
 {
-  "name": "default-agent",
-  "version": "1.0.0",
+  "name": "q_ide_default",
   "description": "Default agent configuration",
   "mcpServers": {
     "trueprocess-frontend": {
@@ -51,7 +50,12 @@
       ]
     }
   },
-  "includedFiles": [],
   "resources": [],
-  "promptHooks": []
+  "prompt": "",
+  "toolAliases": {},
+  "hooks": {
+    "agentSpawn": [],
+    "userPromptSubmit": []
+  },
+  "useLegacyMcpJson": true
 }

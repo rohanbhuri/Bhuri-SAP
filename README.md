@@ -61,6 +61,25 @@ Secondary application for process management.
 - [Dynamic Theme System](./documentation/DYNAMIC_THEME_SYSTEM.md) - Comprehensive theming guide
 - [Theme Implementation Guide](./documentation/THEME_IMPLEMENTATION_GUIDE.md) - Current status and roadmap
 
+- [Complete Widget Implementation Plan](./documentation/COMPLETE_WIDGET_IMPLEMENTATION_PLAN.md)
+- [CRM Logic Improvements](./documentation/CRM_LOGIC_IMPROVEMENTS.md)
+- [Dashboard Persistence Test](./documentation/DASHBOARD_PERSISTENCE_TEST.md)
+- [General Instructions](./documentation/INSTRUCTIONS.md)
+- [MCP Server Readme](./documentation/README-MCP.md)
+- [Widgets Implementation Status](./documentation/WIDGETS_IMPLEMENTATION_STATUS.md)
+- [Messages Module Testing Guide](./documentation/test-messages.md)
+
+## Tests
+
+The following tests can be found in the `tests/` directory:
+
+- `mobile-dashboard-test.html`: HTML file for testing the mobile dashboard.
+- `test-auth.js`: Script to test authentication.
+- `test-deactivate-then-activate.js`: Script to test deactivation and reactivation logic.
+- `test-fixes.js`: Script to test recent fixes.
+- `test-personal-activation.js`: Script to test personal activation.
+- `test-search.js`: Script to test search functionality.
+
 
 ## Brand Configuration System
 
