@@ -20,6 +20,9 @@ import { OrderManagementModule } from './order-management/order-management.modul
 import { FinanceModule } from './finance/finance.module';
 import { HealthModule } from './health/health.module';
 import { SearchModule } from './search/search.module';
+import { CatalogueModule } from './catalogue/catalogue.module';
+import { CmsModule } from './cms/cms.module';
+import { QuotationsModule } from './quotations/quotations.module';
 
 @Module({
   imports: [
@@ -49,6 +52,9 @@ import { SearchModule } from './search/search.module';
     OrderManagementModule,
     FinanceModule,
     SearchModule,
+    CatalogueModule,
+    CmsModule,
+    QuotationsModule,
   ],
 })
-export class AppModule {}
+export class AppModule { }

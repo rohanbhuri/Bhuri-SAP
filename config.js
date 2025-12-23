@@ -76,13 +76,13 @@ const configs = {
       logo: "/config/assets/raccontixrm/icons/racconti-logo.svg",
       icon: "/config/assets/raccontixrm/icons/racconti-icon.svg"
     },
-    
+
     colors: {
       primary: "#050d1aff",
       accent: "#b69253ff",
       secondary: "#fff4cbff"
     },
-    
+
     app: {
       name: "RaccontiXRM",
       version: "0.0.1",
@@ -91,7 +91,7 @@ const configs = {
       apiUrl: process.env.NODE_ENV === 'production' ? "http://13.126.228.247:3002/api" : "http://localhost:3002/api"
     },
     database: {
-      MONGODB_URI: 'mongodb+srv://rohanbhuri:nokiaset@bhuri-db.zg9undw.mongodb.net/raccontixrm?retryWrites=true&w=majority&appName=bhuri-db',
+      MONGODB_URI: 'mongodb+srv://rohanbhuri:nokiaset@bhuri-db.zg9undw.mongodb.net/racconti?retryWrites=true&w=majority&appName=bhuri-db',
       JWT_SECRET: 'rohanbhuri'
     },
     development: {

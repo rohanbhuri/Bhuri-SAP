@@ -147,6 +147,30 @@ export const routes: Routes = [
       ),
     canActivate: [authGuard],
   },
+  {
+    path: 'modules/catalogue',
+    loadChildren: () =>
+      import('./modules/catalogue/catalogue.routes').then(
+        (m) => m.CATALOGUE_ROUTES
+      ),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'modules/cms',
+    loadChildren: () =>
+      import('./modules/cms/cms.routes').then(
+        (m) => m.CMS_ROUTES
+      ),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'modules/quotations',
+    loadChildren: () =>
+      import('./modules/quotations/quotations.routes').then(
+        (m) => m.QUOTATIONS_ROUTES
+      ),
+    canActivate: [authGuard],
+  },
 
   { path: '404', component: NotFoundComponent },
   { path: '**', component: NotFoundComponent },
