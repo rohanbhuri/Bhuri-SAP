@@ -18,6 +18,10 @@ import { FinanceWidgetComponent } from './finance/finance-widget.component';
 import { ReportsManagementWidgetComponent } from './reports-management/reports-management-widget.component';
 import { FormBuilderWidgetComponent } from './form-builder/form-builder-widget.component';
 import { MessagesWidgetComponent } from './messages-module/messages-widget.component';
+// Racconti XRM Widgets
+import { CatalogueWidgetComponent } from './catalogue/catalogue-widget.component';
+import { CmsWidgetComponent } from './cms/cms-widget.component';
+import { QuotationsWidgetComponent } from './quotations/quotations-widget.component';
 
 // Main Components
 import { UserManagementComponent } from './user-management/user-management.component';
@@ -362,6 +366,44 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     route: '/messages',
     isActive: true,
     category: 'core',
+  },
+
+  // Racconti XRM Modules
+  {
+    id: 'catalogue',
+    name: 'catalogue',
+    displayName: 'Catalogue Management',
+    description: 'Manage product catalogue with 3D models',
+    icon: 'view_in_ar',
+    color: '#4CAF50',
+    widgetComponent: CatalogueWidgetComponent,
+    route: '/modules/catalogue',
+    isActive: true,
+    category: 'operations',
+  },
+  {
+    id: 'cms',
+    name: 'cms',
+    displayName: 'CMS Management',
+    description: 'Content management system for pages and blogs',
+    icon: 'article',
+    color: '#2196F3',
+    widgetComponent: CmsWidgetComponent,
+    route: '/modules/cms',
+    isActive: true,
+    category: 'operations',
+  },
+  {
+    id: 'quotations',
+    name: 'quotations',
+    displayName: 'Quotations',
+    description: 'Manage quotations and client proposals',
+    icon: 'request_quote',
+    color: '#FF9800',
+    widgetComponent: QuotationsWidgetComponent,
+    route: '/modules/quotations',
+    isActive: true,
+    category: 'sales',
   },
 ];
 

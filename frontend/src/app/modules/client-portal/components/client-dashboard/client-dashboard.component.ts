@@ -4,10 +4,10 @@ import { RouterModule } from '@angular/router';
 import { ClientPortalService } from '../../client-portal.service';
 
 @Component({
-    selector: 'app-client-dashboard',
-    standalone: true,
-    imports: [CommonModule, RouterModule],
-    template: `
+  selector: 'app-client-dashboard',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
+  template: `
     <div class="container mx-auto p-6">
       <h1 class="text-3xl font-bold text-gray-900 mb-8">Client Dashboard</h1>
 
@@ -72,7 +72,7 @@ import { ClientPortalService } from '../../client-portal.service';
 
       <!-- Recent Quotations -->
       <div class="bg-white rounded-xl shadow-sm p-6">
-        <div class="flex justify-between items-center mb-6  <h2 class="text-xl font-semibold text-gray-900">Recent Quotations</h2>
+        <div class="flex justify-between items-center mb-6">  <h2 class="text-xl font-semibold text-gray-900">Recent Quotations</h2>
           <a routerLink="/client-portal/quotations" class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">
             View All →
           </a>
@@ -110,38 +110,38 @@ import { ClientPortalService } from '../../client-portal.service';
       </div>
     </div>
   `,
-    styles: [`
+  styles: [`
     :host {
       display: block;
     }
   `]
 })
 export class ClientDashboardComponent implements OnInit {
-    stats = {
-        total: 0,
-        pending: 0,
-        accepted: 0,
-        totalValue: 0
-    };
-    recentQuotations: any[] = [];
+  stats = {
+    total: 0,
+    pending: 0,
+    accepted: 0,
+    totalValue: 0
+  };
+  recentQuotations: any[] = [];
 
-    constructor(private clientPortalService: ClientPortalService) { }
+  constructor(private clientPortalService: ClientPortalService) { }
 
-    ngOnInit() {
-        this.loadDashboard();
-    }
+  ngOnInit() {
+    this.loadDashboard();
+  }
 
-    loadDashboard() {
-        // Load quotations and calculate stats
-        this.clientPortalService.getMyQuotations().subscribe({
-            next: (quotations) => {
-                this.recentQuotations = quotations.slice(0, 5);
-                this.stats.total = quotations.length;
-                this.stats.pending = quotations.filter(q => q.status === 'SENT').length;
-                this.stats.accepted = quotations.filter(q => q.status === 'ACCEPTED').length;
-                this.stats.totalValue = quotations.reduce((sum, q) => sum + (q.totalAmount || 0), 0);
-            },
-            error: (err) => console.error('Failed to load quotations', err)
-        });
-    }
+  loadDashboard() {
+    // Load quotations and calculate stats
+    this.clientPortalService.getMyQuotations().subscribe({
+      next: (quotations) => {
+        this.recentQuotations = quotations.slice(0, 5);
+        this.stats.total = quotations.length;
+        this.stats.pending = quotations.filter(q => q.status === 'SENT').length;
+        this.stats.accepted = quotations.filter(q => q.status === 'ACCEPTED').length;
+        this.stats.totalValue = quotations.reduce((sum, q) => sum + (q.totalAmount || 0), 0);
+      },
+      error: (err) => console.error('Failed to load quotations', err)
+    });
+  }
 }

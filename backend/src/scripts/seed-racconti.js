@@ -1,4 +1,5 @@
 const { MongoClient, ObjectId } = require('mongodb');
+const bcrypt = require('bcrypt');
 const path = require('path');
 
 // Load config from root directory
@@ -133,6 +134,123 @@ async function seed() {
 
         await pagesCollection.insertMany(pages);
         console.log(`📄 Seeded ${pages.length} pages`);
+
+        // 4. Seed Organizations
+        const organizationsCollection = db.collection('organizations');
+        await organizationsCollection.deleteMany({});
+
+        const orgId = new ObjectId();
+        const organizations = [
+            {
+                _id: orgId,
+                name: 'Racconti Corporation',
+                code: 'RACCONTI',
+                description: 'Your Organisation\'s only dashboard for everything',
+                isPublic: false,
+                memberCount: 1,
+                createdAt: new Date()
+            }
+        ];
+
+        await organizationsCollection.insertMany(organizations);
+        console.log(`🏢 Seeded ${organizations.length} organizations`);
+
+        // 5. Seed Roles
+        const rolesCollection = db.collection('roles');
+        await rolesCollection.deleteMany({});
+
+        const superAdminRoleId = new ObjectId();
+        const roles = [
+            {
+                _id: superAdminRoleId,
+                name: 'Super Admin',
+                description: 'Full system access',
+                type: 'super_admin',
+                createdAt: new Date()
+            }
+        ];
+
+        await rolesCollection.insertMany(roles);
+        console.log(`👥 Seeded ${roles.length} roles`);
+
+        // 6. Seed Users
+        const usersCollection = db.collection('users');
+        await usersCollection.deleteMany({});
+
+        const hashedPassword = await bcrypt.hash('admin123', 10);
+        const users = [
+            {
+                _id: new ObjectId(),
+                email: 'admin@racconti.com',
+                password: hashedPassword,
+                firstName: 'Racconti',
+                lastName: 'Admin',
+                isActive: true,
+                organizationIds: [orgId],
+                organizationId: orgId,
+                roleIds: [superAdminRoleId],
+                permissionIds: [],
+                activeModuleIds: [],
+                createdAt: new Date()
+            }
+        ];
+
+        await usersCollection.insertMany(users);
+        console.log(`👤 Seeded ${users.length} users`);
+
+        // 7. Seed Permissions
+        const permissionsCollection = db.collection('permissions');
+        await permissionsCollection.deleteMany({});
+
+        const permissions = [
+            { name: 'user:read', description: 'View users' },
+            { name: 'user:create', description: 'Create users' },
+            { name: 'user:update', description: 'Update users' },
+            { name: 'user:delete', description: 'Delete users' },
+            { name: 'organization:read', description: 'View organizations' },
+            { name: 'organization:create', description: 'Create organizations' },
+            { name: 'organization:update', description: 'Update organizations' },
+            { name: 'organization:delete', description: 'Delete organizations' },
+            { name: 'hr:read', description: 'View HR data' },
+            { name: 'hr:create', description: 'Create HR records' },
+            { name: 'hr:update', description: 'Update HR records' },
+            { name: 'hr:delete', description: 'Delete HR records' },
+            { name: 'crm:manage', description: 'Manage CRM' }
+        ];
+
+        await permissionsCollection.insertMany(permissions);
+        console.log(`📋 Seeded ${permissions.length} permissions`);
+
+        // 8. Seed Modules
+        const modulesCollection = db.collection('modules');
+        await modulesCollection.deleteMany({});
+
+        const modules = [
+            // Racconti XRM Core Modules Only
+            { _id: new ObjectId(), name: 'user-management', displayName: 'User Management', description: 'Manage users, roles, and permissions', isActive: true, icon: 'people', route: '/modules/user-management', category: 'Core', permissionType: 'super_admin', createdAt: new Date() },
+            { _id: new ObjectId(), name: 'crm', displayName: 'CRM', description: 'Customer relationship management', isActive: true, icon: 'business_center', route: '/modules/crm', category: 'Sales', permissionType: 'admin', createdAt: new Date() },
+            { _id: new ObjectId(), name: 'catalogue', displayName: 'Catalogue Management', description: 'Manage product catalogue with 3D models', isActive: true, icon: 'view_in_ar', route: '/modules/catalogue', category: 'Catalogue', permissionType: 'admin', createdAt: new Date() },
+            { _id: new ObjectId(), name: 'cms', displayName: 'CMS Management', description: 'Content management system for pages and blogs', isActive: true, icon: 'article', route: '/modules/cms', category: 'Content', permissionType: 'admin', createdAt: new Date() },
+            { _id: new ObjectId(), name: 'quotations', displayName: 'Quotations', description: 'Manage quotations and client proposals', isActive: true, icon: 'request_quote', route: '/modules/quotations', category: 'Sales', permissionType: 'admin', createdAt: new Date() }
+        ];
+
+        await modulesCollection.insertMany(modules);
+        console.log(`🧩 Seeded ${modules.length} modules`);
+
+        // 9. Activate only these 5 modules for super admin user and organization
+        const moduleIds = modules.map(m => m._id || new ObjectId());
+        
+        await usersCollection.updateMany(
+            { roleIds: { $in: [superAdminRoleId] } },
+            { $set: { activeModuleIds: moduleIds } }
+        );
+        
+        await organizationsCollection.updateMany(
+            { _id: orgId },
+            { $set: { activeModuleIds: moduleIds } }
+        );
+        
+        console.log(`🔓 Activated ${modules.length} modules for super admin and organization`);
 
         console.log('🎉 Seeding completed successfully!');
     } catch (err) {

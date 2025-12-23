@@ -51,6 +51,10 @@ import { FinanceWidgetComponent } from '../../modules/finance/finance-widget.com
 import { ReportsManagementWidgetComponent } from '../../modules/reports-management/reports-management-widget.component';
 import { FormBuilderWidgetComponent } from '../../modules/form-builder/form-builder-widget.component';
 import { MessagesWidgetComponent } from '../../modules/messages-module/messages-widget.component';
+// Racconti XRM Widgets
+import { CatalogueWidgetComponent } from '../../modules/catalogue/catalogue-widget.component';
+import { CmsWidgetComponent } from '../../modules/cms/cms-widget.component';
+import { QuotationsWidgetComponent } from '../../modules/quotations/quotations-widget.component';
 import { OrganizationManagementService } from '../../modules/organization-management/organization-management.service';
 import { SeoService } from '../../services/seo.service';
 import { ThemeService } from '../../services/theme.service';
@@ -100,6 +104,10 @@ interface DashboardWidget {
     ReportsManagementWidgetComponent,
     FormBuilderWidgetComponent,
     MessagesWidgetComponent,
+    // Racconti XRM Widgets
+    CatalogueWidgetComponent,
+    CmsWidgetComponent,
+    QuotationsWidgetComponent,
   ],
   template: `
     <app-navbar></app-navbar>
@@ -235,6 +243,12 @@ interface DashboardWidget {
             <app-form-builder-widget></app-form-builder-widget>
             } @case ('messages') {
             <app-messages-widget></app-messages-widget>
+            } @case ('catalogue') {
+            <app-catalogue-widget></app-catalogue-widget>
+            } @case ('cms') {
+            <app-cms-widget></app-cms-widget>
+            } @case ('quotations') {
+            <app-quotations-widget></app-quotations-widget>
             } @case ('pending-work') {
             <app-pending-work-widget></app-pending-work-widget>
             } }
