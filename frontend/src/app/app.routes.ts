@@ -171,6 +171,14 @@ export const routes: Routes = [
       ),
     canActivate: [authGuard],
   },
+  {
+    path: 'modules/client-management',
+    loadChildren: () =>
+      import('./modules/client-management/client-management.routes').then(
+        (m) => m.CLIENT_MANAGEMENT_ROUTES
+      ),
+    canActivate: [authGuard],
+  },
 
   { path: '404', component: NotFoundComponent },
   { path: '**', component: NotFoundComponent },

@@ -72,9 +72,9 @@ import { ErrorHandlerService } from '../../services/error-handler.service';
           </form>
         </mat-card-content>
 
-        <mat-card-actions>
+        <!-- <mat-card-actions>
           <p>Don't have an account? <a routerLink="/signup">Sign up</a></p>
-        </mat-card-actions>
+        </mat-card-actions> -->
       </mat-card>
     </div>
   `,

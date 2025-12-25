@@ -231,13 +231,14 @@ async function seed() {
             { _id: new ObjectId(), name: 'crm', displayName: 'CRM', description: 'Customer relationship management', isActive: true, icon: 'business_center', route: '/modules/crm', category: 'Sales', permissionType: 'admin', createdAt: new Date() },
             { _id: new ObjectId(), name: 'catalogue', displayName: 'Catalogue Management', description: 'Manage product catalogue with 3D models', isActive: true, icon: 'view_in_ar', route: '/modules/catalogue', category: 'Catalogue', permissionType: 'admin', createdAt: new Date() },
             { _id: new ObjectId(), name: 'cms', displayName: 'CMS Management', description: 'Content management system for pages and blogs', isActive: true, icon: 'article', route: '/modules/cms', category: 'Content', permissionType: 'admin', createdAt: new Date() },
-            { _id: new ObjectId(), name: 'quotations', displayName: 'Quotations', description: 'Manage quotations and client proposals', isActive: true, icon: 'request_quote', route: '/modules/quotations', category: 'Sales', permissionType: 'admin', createdAt: new Date() }
+            { _id: new ObjectId(), name: 'quotations', displayName: 'Quotations', description: 'Manage quotations and client proposals', isActive: true, icon: 'request_quote', route: '/modules/quotations', category: 'Sales', permissionType: 'admin', createdAt: new Date() },
+            { _id: new ObjectId(), name: 'client-management', displayName: 'Client Management', description: 'Manage client requests and accounts', isActive: true, icon: 'people_outline', route: '/modules/client-management', category: 'Core', permissionType: 'admin', createdAt: new Date() }
         ];
 
         await modulesCollection.insertMany(modules);
         console.log(`🧩 Seeded ${modules.length} modules`);
 
-        // 9. Activate only these 5 modules for super admin user and organization
+        // 9. Activate all modules for super admin user and organization
         const moduleIds = modules.map(m => m._id || new ObjectId());
         
         await usersCollection.updateMany(

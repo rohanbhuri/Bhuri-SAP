@@ -24,6 +24,7 @@ import { CatalogueModule } from './catalogue/catalogue.module';
 import { CmsModule } from './cms/cms.module';
 import { QuotationsModule } from './quotations/quotations.module';
 import { EnquiryModule } from './enquiry/enquiry.module';
+import { ClientManagementModule } from './client-management/client-management.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { EnquiryModule } from './enquiry/enquiry.module';
     CmsModule,
     QuotationsModule,
     EnquiryModule,
+    ClientManagementModule,
   ],
 })
 export class AppModule { }

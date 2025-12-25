@@ -55,6 +55,7 @@ import { MessagesWidgetComponent } from '../../modules/messages-module/messages-
 import { CatalogueWidgetComponent } from '../../modules/catalogue/catalogue-widget.component';
 import { CmsWidgetComponent } from '../../modules/cms/cms-widget.component';
 import { QuotationsWidgetComponent } from '../../modules/quotations/quotations-widget.component';
+import { ClientManagementWidgetComponent } from '../../modules/client-management/client-management-widget.component';
 import { OrganizationManagementService } from '../../modules/organization-management/organization-management.service';
 import { SeoService } from '../../services/seo.service';
 import { ThemeService } from '../../services/theme.service';
@@ -108,6 +109,7 @@ interface DashboardWidget {
     CatalogueWidgetComponent,
     CmsWidgetComponent,
     QuotationsWidgetComponent,
+    ClientManagementWidgetComponent,
   ],
   template: `
     <app-navbar></app-navbar>
@@ -249,6 +251,8 @@ interface DashboardWidget {
             <app-cms-widget></app-cms-widget>
             } @case ('quotations') {
             <app-quotations-widget></app-quotations-widget>
+            } @case ('client-management') {
+            <app-client-management-widget></app-client-management-widget>
             } @case ('pending-work') {
             <app-pending-work-widget></app-pending-work-widget>
             } }

@@ -22,6 +22,8 @@ import { MessagesWidgetComponent } from './messages-module/messages-widget.compo
 import { CatalogueWidgetComponent } from './catalogue/catalogue-widget.component';
 import { CmsWidgetComponent } from './cms/cms-widget.component';
 import { QuotationsWidgetComponent } from './quotations/quotations-widget.component';
+import { ClientManagementWidgetComponent } from './client-management/client-management-widget.component';
+import { ClientManagementComponent } from './client-management/client-management.component';
 
 // Main Components
 import { UserManagementComponent } from './user-management/user-management.component';
@@ -404,6 +406,19 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     route: '/modules/quotations',
     isActive: true,
     category: 'sales',
+  },
+  {
+    id: 'client-management',
+    name: 'client-management',
+    displayName: 'Client Management',
+    description: 'Manage client requests and accounts',
+    icon: 'people_outline',
+    color: '#00BCD4',
+    widgetComponent: ClientManagementWidgetComponent,
+    mainComponent: ClientManagementComponent,
+    route: '/modules/client-management',
+    isActive: true,
+    category: 'core',
   },
 ];
 

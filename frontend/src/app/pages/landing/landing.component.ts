@@ -56,7 +56,7 @@ import { PwaInstallModalComponent } from '../../components/pwa-install-modal.com
               <mat-icon>login</mat-icon>
               Login
             </button>
-            <button
+            <!-- <button
               mat-raised-button
               color="primary"
               routerLink="/signup"
@@ -64,7 +64,7 @@ import { PwaInstallModalComponent } from '../../components/pwa-install-modal.com
             >
               <mat-icon>person_add</mat-icon>
               Sign Up
-            </button>
+            </button> -->
             @if (showInstallButton) {
               <button 
                 mat-raised-button 
@@ -678,7 +678,7 @@ import { PwaInstallModalComponent } from '../../components/pwa-install-modal.com
           </div>
         </div>
       </section>
-
+      
       <!-- Technology Stack -->
       <section class="tech-section">
         <div class="container">
@@ -718,6 +718,7 @@ import { PwaInstallModalComponent } from '../../components/pwa-install-modal.com
   `,
   styles: [
     `
+      .modules-section{display:none;}
       .landing-container {
         min-height: 100vh;
         background: linear-gradient(
