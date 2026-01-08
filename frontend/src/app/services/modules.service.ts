@@ -9,6 +9,7 @@ export interface AppModuleInfo {
   name: string;
   displayName: string;
   description: string;
+  route?: string;
   isActive?: boolean;
   canActivate?: boolean;
   isPending?: boolean;

@@ -1021,19 +1021,38 @@ export class DashboardComponent implements OnInit {
   }
 
   private getModuleFromRegistry(moduleId: string) {
-    // Try exact match first
-    let module = MODULE_REGISTRY.find(m => m.name === moduleId);
+    if (!moduleId) return undefined;
+
+    const normalize = (s: string) =>
+      (s || '')
+        .toString()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '');
+
+    // 1) Exact id/name match (fast path)
+    let module = MODULE_REGISTRY.find(
+      (m) => m.id === moduleId || m.name === moduleId || m.displayName === moduleId
+    );
     if (module) return module;
-    
-    // Try converting display name to kebab-case
-    const kebabCase = moduleId.toLowerCase().replace(/\s+/g, '-');
-    module = MODULE_REGISTRY.find(m => m.name === kebabCase);
+
+    // 2) Normalized match (case/space/punctuation insensitive)
+    const target = normalize(moduleId);
+    module = MODULE_REGISTRY.find(
+      (m) => normalize(m.id) === target || normalize(m.name) === target || normalize(m.displayName) === target
+    );
     if (module) return module;
-    
-    // Try matching by display name
-    module = MODULE_REGISTRY.find(m => m.displayName === moduleId);
+
+    // 3) Kebab-case common fallback
+    const kebabCase = moduleId.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    module = MODULE_REGISTRY.find((m) => m.name === kebabCase || m.id === kebabCase);
     if (module) return module;
-    
+
+    // 4) Loose contains match as last resort
+    module = MODULE_REGISTRY.find(
+      (m) => target.includes(normalize(m.name)) || normalize(m.name).includes(target) || target.includes(normalize(m.displayName))
+    );
+    if (module) return module;
+
     return undefined;
   }
 

@@ -15,7 +15,17 @@ export class Category {
     description?: string;
 
     @Column({ nullable: true })
+    image?: string;
+
+    @Column({ nullable: true })
     parentId?: string;
+
+    @Column({ type: 'json', default: {} })
+    seo: {
+        title?: string;
+        description?: string;
+        keywords?: string;
+    };
 
     @Column()
     isActive: boolean;

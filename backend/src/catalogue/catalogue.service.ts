@@ -106,4 +106,122 @@ export class CatalogueService {
     async deleteCollection(id: string): Promise<void> {
         await this.collectionRepository.delete(id);
     }
+
+    // Analytics
+    async getAnalytics() {
+        const products = await this.productRepository.find();
+        const categories = await this.categoryRepository.find();
+        const collections = await this.collectionRepository.find();
+
+        const totalVariations = products.reduce((sum, p) => sum + (p.variations?.length || 0), 0);
+        const prices = products.map(p => p.basePrice || 0).filter(p => p > 0);
+        
+        const categoryMap = new Map();
+        categories.forEach(c => categoryMap.set(c._id.toString(), c.name));
+        
+        const collectionMap = new Map();
+        collections.forEach(c => collectionMap.set(c._id.toString(), c.name));
+
+        const productsByCategory = {};
+        const productsByCollection = {};
+        
+        products.forEach(p => {
+            const catId = p.categoryId || 'uncategorized';
+            productsByCategory[catId] = (productsByCategory[catId] || 0) + 1;
+            
+            const colId = p.collectionId || 'none';
+            productsByCollection[colId] = (productsByCollection[colId] || 0) + 1;
+        });
+
+        const mediaAssets = {
+            images: products.reduce((sum, p) => sum + (p.imageGallery?.length || 0) + (p.featuredImage ? 1 : 0), 0),
+            videos: products.reduce((sum, p) => sum + (p.videos?.length || 0), 0),
+            models3d: products.reduce((sum, p) => sum + (p.models3d?.length || 0), 0)
+        };
+
+        return {
+            totalProducts: products.length,
+            publishedProducts: products.filter(p => p.isPublished).length,
+            totalCategories: categories.length,
+            activeCategories: categories.filter(c => c.isActive).length,
+            totalCollections: collections.length,
+            activeCollections: collections.filter(c => c.isActive).length,
+            totalVariations,
+            avgVariationsPerProduct: products.length ? (totalVariations / products.length).toFixed(1) : 0,
+            productsByCategory: Object.entries(productsByCategory).map(([id, count]) => ({
+                id,
+                name: categoryMap.get(id) || 'Uncategorized',
+                count
+            })),
+            productsByCollection: Object.entries(productsByCollection).map(([id, count]) => ({
+                id,
+                name: collectionMap.get(id) || 'No Collection',
+                count
+            })),
+            priceRange: {
+                min: prices.length ? Math.min(...prices) : 0,
+                avg: prices.length ? (prices.reduce((a, b) => a + b, 0) / prices.length).toFixed(2) : 0,
+                max: prices.length ? Math.max(...prices) : 0
+            },
+            mediaAssets
+        };
+    }
+
+    // Export
+    async exportProductsCSV(): Promise<string> {
+        const products = await this.productRepository.find();
+        const headers = ['ID', 'Name', 'Product Code', 'Base Price', 'Currency', 'Category', 'Collection', 'Published', 'Tags', 'Variations'];
+        const rows = products.map(p => [
+            p._id.toString(),
+            p.name,
+            p.productCode,
+            p.basePrice,
+            p.currency,
+            p.categoryId || '',
+            p.collectionId || '',
+            p.isPublished ? 'Yes' : 'No',
+            p.tags?.join('; ') || '',
+            p.variations?.length || 0
+        ]);
+        return [headers, ...rows].map(row => row.join(',')).join('\n');
+    }
+
+    async exportCategoriesCSV(): Promise<string> {
+        const categories = await this.categoryRepository.find();
+        const headers = ['ID', 'Name', 'Slug', 'Description', 'Active', 'Image'];
+        const rows = categories.map(c => [
+            c._id.toString(),
+            c.name,
+            c.slug,
+            c.description || '',
+            c.isActive ? 'Yes' : 'No',
+            c.image || ''
+        ]);
+        return [headers, ...rows].map(row => row.join(',')).join('\n');
+    }
+
+    async exportCollectionsCSV(): Promise<string> {
+        const collections = await this.collectionRepository.find();
+        const headers = ['ID', 'Name', 'Slug', 'Description', 'Active', 'Image'];
+        const rows = collections.map(c => [
+            c._id.toString(),
+            c.name,
+            c.slug,
+            c.description || '',
+            c.isActive ? 'Yes' : 'No',
+            c.image || ''
+        ]);
+        return [headers, ...rows].map(row => row.join(',')).join('\n');
+    }
+
+    async exportAllZIP(): Promise<Buffer> {
+        const AdmZip = require('adm-zip');
+        const zip = new AdmZip();
+        
+        zip.addFile('products.csv', Buffer.from(await this.exportProductsCSV()));
+        zip.addFile('categories.csv', Buffer.from(await this.exportCategoriesCSV()));
+        zip.addFile('collections.csv', Buffer.from(await this.exportCollectionsCSV()));
+        
+        return zip.toBuffer();
+    }
 }

@@ -9,6 +9,8 @@ export interface UserPreferences {
   primaryColor: string;
   accentColor: string;
   secondaryColor: string;
+  currency: string;
+  currencySymbol: string;
   pinnedModules: string[];
   dashboardPreferences: {
     widgets?: {
@@ -41,6 +43,8 @@ export class PreferencesService {
     if (preferences.primaryColor) payload.primaryColor = preferences.primaryColor;
     if (preferences.accentColor) payload.accentColor = preferences.accentColor;
     if (preferences.secondaryColor) payload.secondaryColor = preferences.secondaryColor;
+    if (preferences.currency) payload.currency = preferences.currency;
+    if (preferences.currencySymbol) payload.currencySymbol = preferences.currencySymbol;
     if (preferences.pinnedModules) payload.pinnedModules = preferences.pinnedModules;
     if (preferences.dashboardPreferences) payload.dashboardPreferences = preferences.dashboardPreferences;
     

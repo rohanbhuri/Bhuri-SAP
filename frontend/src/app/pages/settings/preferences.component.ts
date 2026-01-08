@@ -2,6 +2,7 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
@@ -18,6 +19,7 @@ import { AuthService } from '../../services/auth.service';
     ReactiveFormsModule,
     MatCardModule,
     MatFormFieldModule,
+    MatInputModule,
     MatSelectModule,
     MatButtonModule,
     MatSnackBarModule,
@@ -43,6 +45,26 @@ import { AuthService } from '../../services/auth.service';
                 <mat-option value="auto">Auto</mat-option>
               </mat-select>
             </mat-form-field>
+            
+            <div class="currency-section">
+              <h3>Currency Settings</h3>
+              
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Currency</mat-label>
+                <mat-select formControlName="currency">
+                  <mat-option value="USD">USD - US Dollar</mat-option>
+                  <mat-option value="EUR">EUR - Euro</mat-option>
+                  <mat-option value="GBP">GBP - British Pound</mat-option>
+                  <mat-option value="INR">INR - Indian Rupee</mat-option>
+                  <mat-option value="AED">AED - UAE Dirham</mat-option>
+                </mat-select>
+              </mat-form-field>
+              
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Currency Symbol</mat-label>
+                <input matInput formControlName="currencySymbol" placeholder="$">
+              </mat-form-field>
+            </div>
             
             <div class="color-section">
               <h3>Custom Colors</h3>
@@ -92,6 +114,17 @@ import { AuthService } from '../../services/auth.service';
       margin-bottom: 16px;
     }
     
+    .currency-section {
+      margin: 24px 0;
+      padding: 16px;
+      background: rgba(0,0,0,0.02);
+      border-radius: 8px;
+    }
+    
+    .currency-section h3 {
+      margin: 0 0 16px 0;
+    }
+    
     .color-section {
       margin: 24px 0;
     }
@@ -137,7 +170,9 @@ export class PreferencesComponent implements OnInit {
     theme: ['light'],
     primaryColor: ['#1976d2'],
     accentColor: ['#ff4081'],
-    secondaryColor: ['#424242']
+    secondaryColor: ['#424242'],
+    currency: ['USD'],
+    currencySymbol: ['$']
   });
   
   ngOnInit() {
@@ -164,7 +199,9 @@ export class PreferencesComponent implements OnInit {
       theme: 'light',
       primaryColor: brandColors.primary,
       accentColor: brandColors.accent,
-      secondaryColor: brandColors.secondary
+      secondaryColor: brandColors.secondary,
+      currency: 'USD',
+      currencySymbol: '$'
     };
     
     this.preferencesForm.patchValue(defaults);
@@ -200,7 +237,9 @@ export class PreferencesComponent implements OnInit {
       theme: formValues.theme || 'light',
       primaryColor: formValues.primaryColor || '#10B981',
       accentColor: formValues.accentColor || '#EF4444',
-      secondaryColor: formValues.secondaryColor || '#374151'
+      secondaryColor: formValues.secondaryColor || '#374151',
+      currency: formValues.currency || 'USD',
+      currencySymbol: formValues.currencySymbol || '$'
     };
     
     this.preferencesService.saveUserPreferences(preferences).subscribe({
@@ -222,7 +261,9 @@ export class PreferencesComponent implements OnInit {
       theme: 'light',
       primaryColor: brandColors.primary,
       accentColor: brandColors.accent,
-      secondaryColor: brandColors.secondary
+      secondaryColor: brandColors.secondary,
+      currency: 'USD',
+      currencySymbol: '$'
     };
     
     this.preferencesForm.patchValue(defaults);

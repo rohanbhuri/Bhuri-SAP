@@ -42,7 +42,7 @@ import { PwaInstallModalComponent } from './pwa-install-modal.component';
           [alt]="brandConfig.getBrandName()"
           class="logo"
         />
-        <span class="brand-name">{{ brandConfig.getBrandName() }}</span>
+        <span class="brand-name">XRM</span>
       </div>
 
       <div class="nav-actions">
@@ -139,13 +139,13 @@ import { PwaInstallModalComponent } from './pwa-install-modal.component';
       }
 
       .logo {
-        height: 32px;
+        height: 16px;
         width: auto;
       }
 
       .brand-name {
-        font-size: 20px;
-        font-weight: 600;
+        font-size: 16px;
+        font-weight: 100;
         color: var(--theme-primary);
       }
 

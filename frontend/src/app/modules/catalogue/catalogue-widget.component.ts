@@ -11,66 +11,143 @@ import { CatalogueService } from './catalogue.service';
   standalone: true,
   imports: [CommonModule, MatCardModule, MatIconModule, MatButtonModule],
   template: `
-    <mat-card class="widget-card">
+    <mat-card class="widget-card catalogue-widget">
       <mat-card-header>
-        <mat-icon mat-card-avatar>view_in_ar</mat-icon>
+        <div class="widget-icon">
+          <mat-icon>view_in_ar</mat-icon>
+        </div>
         <mat-card-title>Catalogue Management</mat-card-title>
-        <mat-card-subtitle>Manage product catalogue with 3D models</mat-card-subtitle>
+        <mat-card-subtitle>Product catalogue with 3D models & variations</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
         <div class="widget-stats">
-          <div class="stat-item">
-            <span class="stat-number">{{ stats().products }}</span>
-            <span class="stat-label">Products</span>
+          <div class="stat-item primary">
+            <mat-icon>inventory_2</mat-icon>
+            <div class="stat-info">
+              <span class="stat-number">{{ stats().products }}</span>
+              <span class="stat-label">Products</span>
+              <span class="stat-detail">{{ stats().published }} published</span>
+            </div>
           </div>
-          <div class="stat-item">
-            <span class="stat-number">{{ stats().categories }}</span>
-            <span class="stat-label">Categories</span>
+          <div class="stat-item secondary">
+            <mat-icon>category</mat-icon>
+            <div class="stat-info">
+              <span class="stat-number">{{ stats().categories }}</span>
+              <span class="stat-label">Categories</span>
+            </div>
           </div>
-          <div class="stat-item">
-            <span class="stat-number">{{ stats().collections }}</span>
-            <span class="stat-label">Collections</span>
+          <div class="stat-item tertiary">
+            <mat-icon>collections</mat-icon>
+            <div class="stat-info">
+              <span class="stat-number">{{ stats().collections }}</span>
+              <span class="stat-label">Collections</span>
+            </div>
           </div>
-          <div class="stat-item">
-            <span class="stat-number">{{ stats().models3D }}</span>
-            <span class="stat-label">3D Models</span>
+          <div class="stat-item accent">
+            <mat-icon>tune</mat-icon>
+            <div class="stat-info">
+              <span class="stat-number">{{ stats().variations }}</span>
+              <span class="stat-label">Variations</span>
+            </div>
           </div>
         </div>
       </mat-card-content>
       <mat-card-actions>
-        <button mat-button (click)="navigateToModule()">
-          <mat-icon>launch</mat-icon>
-          Open Catalogue
+        <button mat-raised-button color="primary" (click)="navigateToModule()">
+          <mat-icon>dashboard</mat-icon>
+          Manage Catalogue
+        </button>
+        <button mat-button (click)="navigateToAnalytics()">
+          <mat-icon>analytics</mat-icon>
+          View Analytics
         </button>
       </mat-card-actions>
     </mat-card>
   `,
   styles: [`
-    .widget-card {
+    .catalogue-widget {
       height: 100%;
       display: flex;
       flex-direction: column;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .catalogue-widget mat-card-header {
+      padding: 16px;
+    }
+    .widget-icon {
+      width: 48px;
+      height: 48px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+    .widget-icon mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: white;
+    }
+    .catalogue-widget mat-card-title {
+      color: white;
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+    .catalogue-widget mat-card-subtitle {
+      color: rgba(255,255,255,0.8);
     }
     .widget-stats {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-      margin: 1rem 0;
+      gap: 12px;
+      padding: 16px;
     }
     .stat-item {
       display: flex;
-      flex-direction: column;
       align-items: center;
-      text-align: center;
+      gap: 12px;
+      padding: 12px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 8px;
+      backdrop-filter: blur(10px);
+    }
+    .stat-item mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: white;
+    }
+    .stat-info {
+      display: flex;
+      flex-direction: column;
     }
     .stat-number {
-      font-size: 1.5rem;
-      font-weight: bold;
-      color: #4CAF50;
+      font-size: 24px;
+      font-weight: 700;
+      color: white;
+      line-height: 1;
     }
     .stat-label {
-      font-size: 0.8rem;
-      color: #666;
+      font-size: 12px;
+      color: rgba(255,255,255,0.8);
+      margin-top: 2px;
+    }
+    .stat-detail {
+      font-size: 10px;
+      color: rgba(255,255,255,0.6);
+      margin-top: 2px;
+    }
+    .catalogue-widget mat-card-actions {
+      padding: 16px;
+      display: flex;
+      gap: 8px;
+      border-top: 1px solid rgba(255,255,255,0.2);
+    }
+    .catalogue-widget mat-card-actions button {
+      flex: 1;
     }
   `]
 })
@@ -80,9 +157,10 @@ export class CatalogueWidgetComponent implements OnInit {
   
   stats = signal({
     products: 0,
+    published: 0,
     categories: 0,
     collections: 0,
-    models3D: 0
+    variations: 0
   });
 
   ngOnInit() {
@@ -90,34 +168,22 @@ export class CatalogueWidgetComponent implements OnInit {
   }
 
   loadStats() {
-    // Load products
-    this.catalogueService.getProducts().subscribe(products => {
-      const models3D = products.filter(p => p.model3d).length;
-      this.stats.update(current => ({
-        ...current,
-        products: products.length,
-        models3D
-      }));
-    });
-
-    // Load categories
-    this.catalogueService.getCategories().subscribe(categories => {
-      this.stats.update(current => ({
-        ...current,
-        categories: categories.length
-      }));
-    });
-
-    // Load collections
-    this.catalogueService.getCollections().subscribe(collections => {
-      this.stats.update(current => ({
-        ...current,
-        collections: collections.length
-      }));
+    this.catalogueService.getAnalytics().subscribe(analytics => {
+      this.stats.set({
+        products: analytics.totalProducts,
+        published: analytics.publishedProducts,
+        categories: analytics.totalCategories,
+        collections: analytics.totalCollections,
+        variations: analytics.totalVariations
+      });
     });
   }
 
   navigateToModule() {
     this.router.navigate(['/modules/catalogue']);
+  }
+
+  navigateToAnalytics() {
+    this.router.navigate(['/modules/catalogue'], { queryParams: { tab: 'analytics' } });
   }
 }

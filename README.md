@@ -68,6 +68,9 @@ Secondary application for process management.
 - [MCP Server Readme](./documentation/README-MCP.md)
 - [Widgets Implementation Status](./documentation/WIDGETS_IMPLEMENTATION_STATUS.md)
 - [Messages Module Testing Guide](./documentation/test-messages.md)
+- [Catalogue Module - Production Ready](./documentation/CATALOGUE_PRODUCTION_READY.md)
+- [Catalogue Module - Changes Summary](./documentation/CATALOGUE_CHANGES_SUMMARY.md)
+- [Catalogue Module - Quick Reference](./documentation/CATALOGUE_QUICK_REFERENCE.md)
 
 ## Tests
 

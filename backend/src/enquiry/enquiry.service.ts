@@ -55,8 +55,8 @@ export class EnquiryService {
                     productId: item.productId,
                     productName: item.productName,
                     quantity: item.quantity,
-                    unitPrice: product?.price || item.unitPrice,
-                    total: item.quantity * (product?.price || item.unitPrice),
+                    unitPrice: product?.basePrice || item.unitPrice,
+                    total: item.quantity * (product?.basePrice || item.unitPrice),
                     description: item.specifications
                 };
             })

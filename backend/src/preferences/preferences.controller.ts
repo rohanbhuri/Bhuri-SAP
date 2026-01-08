@@ -21,6 +21,14 @@ class UserPreferencesDto {
   secondaryColor?: string;
   
   @IsOptional()
+  @IsString()
+  currency?: string;
+  
+  @IsOptional()
+  @IsString()
+  currencySymbol?: string;
+  
+  @IsOptional()
   @IsArray()
   pinnedModules?: string[];
   

@@ -32,22 +32,24 @@ import { CollectionDialogComponent } from '../dialogs/collection-dialog.componen
       
       <div class="table-container">
         <table mat-table [dataSource]="collections()" class="catalogue-table">
-          <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef>Name</th>
+          <ng-container matColumnDef="image">
+            <th mat-header-cell *matHeaderCellDef>Image</th>
             <td mat-cell *matCellDef="let collection">
-              <div class="collection-info">
-                <mat-icon class="collection-icon">collections</mat-icon>
-                <div>
-                  <div class="collection-name">{{ collection.name }}</div>
-                  <div class="collection-slug">{{ collection.slug }}</div>
-                </div>
+              <div class="collection-image-cell">
+                <img *ngIf="collection.image" [src]="collection.image" [alt]="collection.name">
+                <mat-icon *ngIf="!collection.image">collections</mat-icon>
               </div>
             </td>
           </ng-container>
 
-          <ng-container matColumnDef="description">
-            <th mat-header-cell *matHeaderCellDef>Description</th>
-            <td mat-cell *matCellDef="let collection">{{ collection.description || '-' }}</td>
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Name</th>
+            <td mat-cell *matCellDef="let collection">
+              <div class="collection-info">
+                <div class="collection-name">{{ collection.name }}</div>
+                <div class="collection-slug">{{ collection.slug }}</div>
+              </div>
+            </td>
           </ng-container>
 
           <ng-container matColumnDef="products">
@@ -75,10 +77,6 @@ import { CollectionDialogComponent } from '../dialogs/collection-dialog.componen
                   <mat-icon>edit</mat-icon>
                   <span>Edit</span>
                 </button>
-                <button mat-menu-item (click)="manageProducts(collection)">
-                  <mat-icon>inventory</mat-icon>
-                  <span>Manage Products</span>
-                </button>
                 <button mat-menu-item (click)="toggleActive(collection)">
                   <mat-icon>{{ collection.isActive ? 'visibility_off' : 'visibility' }}</mat-icon>
                   <span>{{ collection.isActive ? 'Deactivate' : 'Activate' }}</span>
@@ -98,13 +96,45 @@ import { CollectionDialogComponent } from '../dialogs/collection-dialog.componen
     </div>
   `,
   styles: [`
-    .collection-info {
+    .tab-content {
+      padding: 1.5rem;
+    }
+    .tab-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    .tab-header h2 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 500;
+    }
+    .table-container {
+      overflow-x: auto;
+    }
+    .collection-image-cell {
+      width: 60px;
+      height: 60px;
       display: flex;
       align-items: center;
-      gap: 1rem;
+      justify-content: center;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #f5f5f5;
     }
-    .collection-icon {
-      color: #FF9800;
+    .collection-image-cell img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .collection-image-cell mat-icon {
+      color: #999;
+    }
+    .collection-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
     }
     .collection-name {
       font-weight: 500;
@@ -122,7 +152,7 @@ export class CollectionsPageComponent implements OnInit {
 
   collections = signal<any[]>([]);
   products = signal<any[]>([]);
-  collectionColumns = ['name', 'description', 'products', 'status', 'actions'];
+  collectionColumns = ['image', 'name', 'products', 'status', 'actions'];
 
   ngOnInit() {
     this.loadCollections();

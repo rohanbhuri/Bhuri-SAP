@@ -15,13 +15,20 @@ export class Collection {
     description?: string;
 
     @Column({ nullable: true })
-    bannerImage?: string;
+    image?: string;
 
     @Column()
     isActive: boolean;
 
     @Column('array')
     productIds: string[];
+
+    @Column({ type: 'json', default: {} })
+    seo: {
+        title?: string;
+        description?: string;
+        keywords?: string;
+    };
 
     @Column()
     createdAt: Date;

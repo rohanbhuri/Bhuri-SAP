@@ -1,9 +1,53 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, UseInterceptors, UploadedFiles, UploadedFile, Res } from '@nestjs/common';
+import { FileInterceptor, FilesInterceptor, FileFieldsInterceptor } from '@nestjs/platform-express';
+import { Response } from 'express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 import { CatalogueService } from './catalogue.service';
 import { Product } from '../entities/product.entity';
 import { Category } from '../entities/category.entity';
 import { Collection } from '../entities/collection.entity';
 // import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'; // Uncomment when Auth is ready or stub
+
+const imageStorage = diskStorage({
+    destination: './uploads/products/images',
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
+    }
+});
+
+const videoStorage = diskStorage({
+    destination: './uploads/products/videos',
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
+    }
+});
+
+const modelStorage = diskStorage({
+    destination: './uploads/products/models',
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
+    }
+});
+
+const categoryImageStorage = diskStorage({
+    destination: './uploads/categories',
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
+    }
+});
+
+const collectionImageStorage = diskStorage({
+    destination: './uploads/collections',
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
+    }
+});
 
 @Controller('catalogue')
 export class CatalogueController {
@@ -23,6 +67,25 @@ export class CatalogueController {
     @Post('products')
     async createProduct(@Body() data: Partial<Product>) {
         return this.catalogueService.createProduct(data);
+    }
+
+    @Post('products/upload-images')
+    @UseInterceptors(FilesInterceptor('images', 10, { storage: imageStorage }))
+    async uploadImages(@UploadedFiles() files: Express.Multer.File[]) {
+        const urls = files.map(file => `/uploads/products/images/${file.filename}`);
+        return { urls };
+    }
+
+    @Post('products/upload-video')
+    @UseInterceptors(FileInterceptor('video', { storage: videoStorage }))
+    async uploadVideo(@UploadedFile() file: Express.Multer.File) {
+        return { url: `/uploads/products/videos/${file.filename}` };
+    }
+
+    @Post('products/upload-model')
+    @UseInterceptors(FileInterceptor('model', { storage: modelStorage }))
+    async uploadModel(@UploadedFile() file: Express.Multer.File) {
+        return { url: `/uploads/products/models/${file.filename}` };
     }
 
     @Put('products/:id')
@@ -51,6 +114,12 @@ export class CatalogueController {
         return this.catalogueService.createCategory(data);
     }
 
+    @Post('categories/upload-image')
+    @UseInterceptors(FileInterceptor('image', { storage: categoryImageStorage }))
+    async uploadCategoryImage(@UploadedFile() file: Express.Multer.File) {
+        return { url: `/uploads/categories/${file.filename}` };
+    }
+
     @Put('categories/:id')
     async updateCategory(@Param('id') id: string, @Body() data: Partial<Category>) {
         return this.catalogueService.updateCategory(id, data);
@@ -77,6 +146,12 @@ export class CatalogueController {
         return this.catalogueService.createCollection(data);
     }
 
+    @Post('collections/upload-image')
+    @UseInterceptors(FileInterceptor('image', { storage: collectionImageStorage }))
+    async uploadCollectionImage(@UploadedFile() file: Express.Multer.File) {
+        return { url: `/uploads/collections/${file.filename}` };
+    }
+
     @Put('collections/:id')
     async updateCollection(@Param('id') id: string, @Body() data: Partial<Collection>) {
         return this.catalogueService.updateCollection(id, data);
@@ -85,5 +160,44 @@ export class CatalogueController {
     @Delete('collections/:id')
     async deleteCollection(@Param('id') id: string) {
         return this.catalogueService.deleteCollection(id);
+    }
+
+    // Analytics
+    @Get('analytics')
+    async getAnalytics() {
+        return this.catalogueService.getAnalytics();
+    }
+
+    // Export
+    @Get('export/products')
+    async exportProducts(@Res() res: Response) {
+        const csv = await this.catalogueService.exportProductsCSV();
+        res.header('Content-Type', 'text/csv');
+        res.header('Content-Disposition', 'attachment; filename=products.csv');
+        res.send(csv);
+    }
+
+    @Get('export/categories')
+    async exportCategories(@Res() res: Response) {
+        const csv = await this.catalogueService.exportCategoriesCSV();
+        res.header('Content-Type', 'text/csv');
+        res.header('Content-Disposition', 'attachment; filename=categories.csv');
+        res.send(csv);
+    }
+
+    @Get('export/collections')
+    async exportCollections(@Res() res: Response) {
+        const csv = await this.catalogueService.exportCollectionsCSV();
+        res.header('Content-Type', 'text/csv');
+        res.header('Content-Disposition', 'attachment; filename=collections.csv');
+        res.send(csv);
+    }
+
+    @Get('export/all')
+    async exportAll(@Res() res: Response) {
+        const zip = await this.catalogueService.exportAllZIP();
+        res.header('Content-Type', 'application/zip');
+        res.header('Content-Disposition', 'attachment; filename=catalogue-export.zip');
+        res.send(zip);
     }
 }

@@ -64,8 +64,8 @@ export class QuotationsService {
                     productId: item.productId,
                     productName: product?.name || item.productName,
                     quantity: item.quantity,
-                    unitPrice: product?.price || item.unitPrice,
-                    total: item.quantity * (product?.price || item.unitPrice),
+                    unitPrice: product?.basePrice || item.unitPrice,
+                    total: item.quantity * (product?.basePrice || item.unitPrice),
                     description: item.specifications
                 };
             })

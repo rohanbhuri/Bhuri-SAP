@@ -272,8 +272,8 @@ export class SettingsComponent implements OnInit {
   appearanceSettings: SettingsSection[] = [
     {
       id: 'theme',
-      title: 'Theme & Colors',
-      description: 'Customize appearance with themes and colors',
+      title: 'Theme, Colors & Currency',
+      description: 'Customize appearance, colors, and currency settings',
       icon: 'palette',
       route: '/settings/preferences'
     },

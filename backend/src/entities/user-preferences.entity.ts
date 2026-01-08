@@ -31,4 +31,10 @@ export class UserPreferences {
       position: number;
     }[];
   };
+
+  @Column({ default: 'USD' })
+  currency: string;
+
+  @Column({ default: '$' })
+  currencySymbol: string;
 }

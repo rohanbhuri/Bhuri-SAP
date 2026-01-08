@@ -13,12 +13,17 @@ import { MessagesComponent } from './pages/messages/messages.component';
 import { SearchComponent } from './pages/search/search.component';
 import { NotificationsComponent } from './pages/notifications/notifications.component';
 import { ModulesComponent } from './pages/modules/modules.component';
-
 import { NotFoundComponent } from './pages/not-found/not-found.component';
 import { authGuard } from './guards/auth.guard';
+import { getBrandConfig } from './brand.config';
+
+// Determine landing component based on brand
+const brandConfig = getBrandConfig();
+const isRaccontiXRM = brandConfig.brand.name === 'RaccontiXRM';
+const LandingRoute = isRaccontiXRM ? LoginComponent : LandingComponent;
 
 export const routes: Routes = [
-  { path: '', component: LandingComponent },
+  { path: '', component: LandingRoute },
   { path: 'login', component: LoginComponent },
   { path: 'signup', component: SignupComponent },
   {

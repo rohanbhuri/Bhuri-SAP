@@ -44,6 +44,8 @@ async function seed() {
                 name: 'Living Room',
                 slug: 'living-room',
                 description: 'Furniture for your living space',
+                image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400',
+                seo: { title: 'Living Room Furniture', description: 'Browse our living room collection', keywords: 'living room, furniture, home' },
                 isActive: true,
                 createdAt: new Date(),
                 updatedAt: new Date()
@@ -53,7 +55,9 @@ async function seed() {
                 name: 'Chairs',
                 slug: 'chairs',
                 description: 'Comfortable seating',
+                image: 'https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=400',
                 parentId: catLivingRoomId,
+                seo: { title: 'Chairs Collection', description: 'Comfortable seating solutions', keywords: 'chairs, seating, furniture' },
                 isActive: true,
                 createdAt: new Date(),
                 updatedAt: new Date()
@@ -69,36 +73,153 @@ async function seed() {
 
         const products = [
             {
-                name: 'Astronaut Figure',
-                sku: 'ASTRO-001',
-                slug: 'astronaut-figure',
-                description: 'A 3D model of an astronaut.',
-                price: 150.00,
+                name: 'Marble Coffee Table',
+                productCode: 'MCT-001',
+                slug: 'marble-coffee-table',
+                description: 'Elegant marble coffee table with brass accents',
+                descriptionHtml: '<p>An <strong>elegant</strong> marble coffee table featuring premium materials and exquisite craftsmanship.</p>',
+                basePrice: 1200.00,
                 currency: 'USD',
-                images: ['https://modelviewer.dev/shared-assets/models/Astronaut.png'],
-                model3d: 'https://modelviewer.dev/shared-assets/models/Astronaut.glb', // Public 3D Model
-                categoryId: catChairsId,
-                collectionId: null,
+                featuredImage: 'https://images.unsplash.com/photo-1565191999001-551c187427bb?w=800',
+                imageGallery: [
+                    'https://images.unsplash.com/photo-1565191999001-551c187427bb?w=800',
+                    'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800'
+                ],
+                videos: [],
+                models3d: [],
+                categoryId: catLivingRoomId,
+                collectionId: summerCollectionId,
+                tags: ['Coffee Table', 'Marble', 'Luxury'],
                 isPublished: true,
-                attributes: { material: 'Plastic' },
-                seo: { title: 'Astronaut 3D', description: 'Cool astronaut model' },
+                dimensionType: { type: 'hwl', unit: 'cm' },
+                variations: [
+                    {
+                        _id: new ObjectId().toString(),
+                        name: 'White Marble with Brass',
+                        sku: 'MCT-001-WMB',
+                        material: 'White Marble',
+                        color: 'White',
+                        finish: 'Brass Lining',
+                        featuredImage: 'https://images.unsplash.com/photo-1565191999001-551c187427bb?w=800',
+                        imageGallery: [
+                            'https://images.unsplash.com/photo-1565191999001-551c187427bb?w=800',
+                            'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800'
+                        ],
+                        dimensions: {
+                            height: 45,
+                            width: 120,
+                            length: 60
+                        },
+                        price: 1200.00,
+                        priceModifier: 0,
+                        stock: 10,
+                        isAvailable: true
+                    },
+                    {
+                        _id: new ObjectId().toString(),
+                        name: 'Green Marble with Gold',
+                        sku: 'MCT-001-GMG',
+                        material: 'Green Marble',
+                        color: 'Green',
+                        finish: 'Gold Lining',
+                        featuredImage: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800',
+                        imageGallery: [
+                            'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800'
+                        ],
+                        dimensions: {
+                            height: 45,
+                            width: 120,
+                            length: 60
+                        },
+                        price: 1500.00,
+                        priceModifier: 300,
+                        stock: 5,
+                        isAvailable: true
+                    },
+                    {
+                        _id: new ObjectId().toString(),
+                        name: 'Black Marble',
+                        sku: 'MCT-001-BM',
+                        material: 'Black Marble',
+                        color: 'Black',
+                        finish: 'None',
+                        featuredImage: 'https://images.unsplash.com/photo-1565191999001-551c187427bb?w=800',
+                        imageGallery: [],
+                        dimensions: {
+                            height: 45,
+                            width: 120,
+                            length: 60
+                        },
+                        price: 1350.00,
+                        priceModifier: 150,
+                        stock: 8,
+                        isAvailable: true
+                    }
+                ],
+                attributes: { style: 'Modern', weight: '50kg' },
+                seo: { title: 'Marble Coffee Table', description: 'Luxury marble coffee table', keywords: 'marble, coffee table, luxury' },
                 createdAt: new Date(),
                 updatedAt: new Date()
             },
             {
-                name: 'Modern Gray Sofa',
-                sku: 'SOFA-GRY-002',
-                slug: 'modern-gray-sofa',
-                description: 'A comfortable modern gray sofa.',
-                price: 899.99,
+                name: 'Cylindrical Side Table',
+                productCode: 'CST-002',
+                slug: 'cylindrical-side-table',
+                description: 'Modern cylindrical side table',
+                descriptionHtml: '<p>A <strong>modern</strong> cylindrical side table perfect for any space.</p>',
+                basePrice: 450.00,
                 currency: 'USD',
-                images: [],
-                model3d: null,
+                featuredImage: 'https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=800',
+                imageGallery: [
+                    'https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=800'
+                ],
+                videos: [],
+                models3d: [],
                 categoryId: catLivingRoomId,
                 collectionId: null,
+                tags: ['Side Table', 'Modern', 'Cylindrical'],
                 isPublished: true,
-                attributes: { color: 'Gray', material: 'Fabric' },
-                seo: { title: 'Modern Sofa', description: 'Best sofa' },
+                dimensionType: { type: 'hd', unit: 'cm' },
+                variations: [
+                    {
+                        _id: new ObjectId().toString(),
+                        name: 'Oak Wood Natural',
+                        sku: 'CST-002-OWN',
+                        material: 'Oak Wood',
+                        color: 'Natural',
+                        finish: 'Matte',
+                        featuredImage: 'https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=800',
+                        imageGallery: [],
+                        dimensions: {
+                            height: 55,
+                            diameter: 40
+                        },
+                        price: 450.00,
+                        priceModifier: 0,
+                        stock: 15,
+                        isAvailable: true
+                    },
+                    {
+                        _id: new ObjectId().toString(),
+                        name: 'Walnut Dark',
+                        sku: 'CST-002-WD',
+                        material: 'Walnut',
+                        color: 'Dark Brown',
+                        finish: 'Glossy',
+                        featuredImage: 'https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=800',
+                        imageGallery: [],
+                        dimensions: {
+                            height: 55,
+                            diameter: 40
+                        },
+                        price: 550.00,
+                        priceModifier: 100,
+                        stock: 12,
+                        isAvailable: true
+                    }
+                ],
+                attributes: { style: 'Contemporary', weight: '15kg' },
+                seo: { title: 'Cylindrical Side Table', description: 'Modern side table', keywords: 'side table, cylindrical, modern' },
                 createdAt: new Date(),
                 updatedAt: new Date()
             }
@@ -107,7 +228,42 @@ async function seed() {
         await productsCollection.insertMany(products);
         console.log(`🛋️ Seeded ${products.length} products`);
 
-        // 3. Seed CMS Pages
+        // 3. Seed Collections
+        const collectionsCollection = db.collection('collections');
+        await collectionsCollection.deleteMany({});
+
+        const summerCollectionId = new ObjectId();
+        const collections = [
+            {
+                _id: summerCollectionId,
+                name: 'Summer Collection 2024',
+                slug: 'summer-2024',
+                description: 'Fresh and vibrant furniture for summer',
+                image: 'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=400',
+                seo: { title: 'Summer Collection 2024', description: 'Fresh summer furniture collection', keywords: 'summer, furniture, collection' },
+                isActive: true,
+                productIds: [],
+                createdAt: new Date(),
+                updatedAt: new Date()
+            },
+            {
+                _id: new ObjectId(),
+                name: 'Modern Classics',
+                slug: 'modern-classics',
+                description: 'Timeless modern furniture pieces',
+                image: 'https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?w=400',
+                seo: { title: 'Modern Classics Collection', description: 'Timeless modern furniture', keywords: 'modern, classics, furniture' },
+                isActive: true,
+                productIds: [],
+                createdAt: new Date(),
+                updatedAt: new Date()
+            }
+        ];
+
+        await collectionsCollection.insertMany(collections);
+        console.log(`🎨 Seeded ${collections.length} collections`);
+
+        // 4. Seed CMS Pages
         const pagesCollection = db.collection('pages');
         await pagesCollection.deleteMany({});
 
@@ -143,7 +299,7 @@ async function seed() {
         const organizations = [
             {
                 _id: orgId,
-                name: 'Racconti Corporation',
+                name: 'Racconti',
                 code: 'RACCONTI',
                 description: 'Your Organisation\'s only dashboard for everything',
                 isPublic: false,
@@ -197,6 +353,27 @@ async function seed() {
 
         await usersCollection.insertMany(users);
         console.log(`👤 Seeded ${users.length} users`);
+
+        // 6.5. Seed User Preferences with Currency
+        const preferencesCollection = db.collection('user-preferences');
+        await preferencesCollection.deleteMany({});
+
+        const preferences = [
+            {
+                userId: users[0]._id.toString(),
+                theme: 'light',
+                primaryColor: '#10B981',
+                accentColor: '#EF4444',
+                secondaryColor: '#374151',
+                currency: 'USD',
+                currencySymbol: '$',
+                pinnedModules: [],
+                dashboardPreferences: {}
+            }
+        ];
+
+        await preferencesCollection.insertMany(preferences);
+        console.log(`⚙️ Seeded ${preferences.length} user preferences`);
 
         // 7. Seed Permissions
         const permissionsCollection = db.collection('permissions');

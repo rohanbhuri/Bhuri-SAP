@@ -1126,7 +1126,7 @@ class DemoSeeder {
     } else if (this.projectName === 'raccontixrm') {
       return [
         {
-          name: 'Racconti Corporation',
+          name: 'Racconti',
           code: 'RACCONTI',
           description: 'Your Organisation\'s only dashboard for everything',
           isPublic: false,

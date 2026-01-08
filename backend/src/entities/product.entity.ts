@@ -9,7 +9,7 @@ export class Product {
     name: string;
 
     @Column()
-    sku: string;
+    productCode: string;
 
     @Column()
     slug: string;
@@ -17,26 +17,27 @@ export class Product {
     @Column({ nullable: true })
     description?: string;
 
-    @Column({ type: 'double', default: 0 })
-    price: number;
-
-    @Column({ type: 'double', nullable: true })
-    compareAtPrice?: number;
-
     @Column({ nullable: true })
-    costPrice?: number;
+    descriptionHtml?: string;
+
+    @Column({ type: 'double', default: 0 })
+    basePrice: number;
 
     @Column()
     currency: string;
 
+    // Product-level media (main product images)
+    @Column({ nullable: true })
+    featuredImage?: string;
+
     @Column('array')
-    images: string[];
+    imageGallery: string[];
 
-    @Column({ nullable: true })
-    video?: string;
+    @Column('array')
+    videos: string[];
 
-    @Column({ nullable: true })
-    model3d?: string; // URL to GLB/GLTF file
+    @Column('array')
+    models3d: string[];
 
     @Column({ nullable: true })
     categoryId?: string;
@@ -44,8 +45,42 @@ export class Product {
     @Column({ nullable: true })
     collectionId?: string;
 
+    @Column('array')
+    tags: string[];
+
     @Column()
     isPublished: boolean;
+
+    // Dimension configuration (flexible for different product types)
+    @Column({ type: 'json', default: {} })
+    dimensionType: {
+        type: 'hwl' | 'hd' | 'custom'; // height-width-length, height-diameter, custom
+        unit: 'cm' | 'inch' | 'mm';
+    };
+
+    // Product variations (material, color, finish, etc.)
+    @Column({ type: 'json', default: [] })
+    variations: Array<{
+        _id?: string;
+        name: string; // e.g., "White Marble with Brass"
+        sku: string;
+        material?: string; // e.g., "White Marble"
+        color?: string; // e.g., "White"
+        finish?: string; // e.g., "Brass Lining"
+        featuredImage?: string;
+        imageGallery: string[];
+        dimensions: {
+            height?: number;
+            width?: number;
+            length?: number;
+            diameter?: number;
+            custom?: Record<string, number>;
+        };
+        price: number;
+        priceModifier: number; // Additional cost from base price
+        stock?: number;
+        isAvailable: boolean;
+    }>;
 
     @Column({ type: 'json', default: {} })
     attributes: Record<string, any>;
@@ -65,7 +100,12 @@ export class Product {
 
     constructor() {
         this.currency = 'USD';
-        this.images = [];
+        this.imageGallery = [];
+        this.videos = [];
+        this.models3d = [];
+        this.tags = [];
+        this.variations = [];
+        this.dimensionType = { type: 'hwl', unit: 'cm' };
         this.attributes = {};
         this.seo = {};
         this.isPublished = false;

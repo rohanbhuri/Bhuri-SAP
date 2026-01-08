@@ -83,4 +83,26 @@ export class CatalogueService {
         const uploadUrl = `${getBrandConfig().app.apiUrl.replace('/catalogue', '')}/cms/media/upload`;
         return this.http.post<any>(uploadUrl, formData);
     }
+
+    // Analytics
+    getAnalytics(): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/analytics`);
+    }
+
+    // Export
+    exportProducts(): Observable<Blob> {
+        return this.http.get(`${this.apiUrl}/export/products`, { responseType: 'blob' });
+    }
+
+    exportCategories(): Observable<Blob> {
+        return this.http.get(`${this.apiUrl}/export/categories`, { responseType: 'blob' });
+    }
+
+    exportCollections(): Observable<Blob> {
+        return this.http.get(`${this.apiUrl}/export/collections`, { responseType: 'blob' });
+    }
+
+    exportAll(): Observable<Blob> {
+        return this.http.get(`${this.apiUrl}/export/all`, { responseType: 'blob' });
+    }
 }

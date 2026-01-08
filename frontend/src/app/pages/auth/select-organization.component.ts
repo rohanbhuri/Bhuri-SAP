@@ -22,7 +22,7 @@ import { AuthService, Organization } from '../../services/auth.service';
   template: `
     <div class="auth-container">
       <mat-card class="auth-card">
-        <mat-card-header>
+        <mat-card-header class="items-left">
           <mat-card-title>Select Organization</mat-card-title>
           <mat-card-subtitle>Choose your organization to continue</mat-card-subtitle>
         </mat-card-header>

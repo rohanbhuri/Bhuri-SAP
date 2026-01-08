@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { MulterModule } from '@nestjs/platform-express';
 import { CatalogueController } from './catalogue.controller';
 import { CatalogueService } from './catalogue.service';
 import { Product } from '../entities/product.entity';
@@ -8,7 +9,10 @@ import { Collection } from '../entities/collection.entity';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([Product, Category, Collection])
+        TypeOrmModule.forFeature([Product, Category, Collection]),
+        MulterModule.register({
+            dest: './uploads/products'
+        })
     ],
     controllers: [CatalogueController],
     providers: [CatalogueService],

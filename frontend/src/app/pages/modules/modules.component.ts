@@ -1225,17 +1225,8 @@ export class ModulesComponent implements OnInit {
   }
 
   openModule(module: AppModuleInfo) {
-    const moduleRoutes: { [key: string]: string } = {
-      crm: '/modules/crm',
-      'user-management': '/modules/user-management',
-      user_management: '/modules/user-management',
-      'my-organizations': '/my-organizations',
-      reports: '/reports',
-      dashboard: '/dashboard',
-      settings: '/settings',
-    };
-
-    const route = moduleRoutes[module.name] || `/modules/${module.name}`;
+    // Use the route from the module data if available
+    const route = module.route || `/modules/${module.name}`;
     this.router.navigate([route]);
   }
 

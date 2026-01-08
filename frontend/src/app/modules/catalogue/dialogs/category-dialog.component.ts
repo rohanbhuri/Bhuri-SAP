@@ -1,13 +1,16 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatIconModule } from '@angular/material/icon';
+import { HttpClient } from '@angular/common/http';
 import { CatalogueService } from '../catalogue.service';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-category-dialog',
@@ -15,12 +18,14 @@ import { CatalogueService } from '../catalogue.service';
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
     MatButtonModule,
-    MatCheckboxModule
+    MatCheckboxModule,
+    MatIconModule
   ],
   template: `
     <h2 mat-dialog-title>{{ getTitle() }}</h2>
@@ -54,6 +59,25 @@ import { CatalogueService } from '../catalogue.service';
           </mat-form-field>
         </div>
 
+        <div class="form-section">
+          <h3>Category Image</h3>
+          <input type="file" #imageInput accept="image/*" (change)="onImageSelect($event)" style="display:none">
+          <button mat-raised-button type="button" (click)="imageInput.click()">
+            <mat-icon>add_photo_alternate</mat-icon>
+            Upload Image
+          </button>
+          <div class="image-preview" *ngIf="uploadedImage()">
+            <img [src]="uploadedImage()" />
+            <button mat-icon-button (click)="removeImage()">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Or paste image URL</mat-label>
+            <input matInput [(ngModel)]="imageUrl" [ngModelOptions]="{standalone: true}" placeholder="https://...">
+          </mat-form-field>
+        </div>
+
         <div class="form-row">
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Parent Category</mat-label>
@@ -69,13 +93,31 @@ import { CatalogueService } from '../catalogue.service';
         <div class="form-row">
           <mat-checkbox formControlName="isActive">Active</mat-checkbox>
         </div>
+
+        <div class="form-section">
+          <h3>SEO Settings</h3>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>SEO Title</mat-label>
+            <input matInput formControlName="seoTitle" placeholder="Category SEO title">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>SEO Description</mat-label>
+            <textarea matInput formControlName="seoDescription" rows="2" placeholder="Category SEO description"></textarea>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>SEO Keywords</mat-label>
+            <input matInput formControlName="seoKeywords" placeholder="keyword1, keyword2">
+          </mat-form-field>
+        </div>
       </form>
     </mat-dialog-content>
 
     <mat-dialog-actions align="end">
       <button mat-button (click)="onCancel()">Cancel</button>
-      <button mat-raised-button color="primary" (click)="onSave()" [disabled]="!categoryForm.valid">
-        {{ data.category ? 'Update' : 'Create' }}
+      <button mat-raised-button color="primary" (click)="onSave()" [disabled]="!categoryForm.valid || saving()">
+        {{ saving() ? 'Saving...' : (data.category ? 'Update' : 'Create') }}
       </button>
     </mat-dialog-actions>
   `,
@@ -91,13 +133,46 @@ import { CatalogueService } from '../catalogue.service';
     .full-width {
       width: 100%;
     }
+    .form-section {
+      margin: 1.5rem 0;
+      padding: 1rem;
+      background: #f5f5f5;
+      border-radius: 4px;
+    }
+    .form-section h3 {
+      margin: 0 0 1rem 0;
+      font-size: 1rem;
+      font-weight: 500;
+    }
+    .image-preview {
+      position: relative;
+      width: 150px;
+      height: 150px;
+      margin: 1rem 0;
+    }
+    .image-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 4px;
+    }
+    .image-preview button {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: white;
+    }
   `]
 })
 export class CategoryDialogComponent implements OnInit {
   categoryForm: FormGroup;
+  uploadedImage = signal<string>('');
+  saving = signal(false);
+  imageUrl = '';
 
   constructor(
     private fb: FormBuilder,
+    private http: HttpClient,
     private catalogueService: CatalogueService,
     private dialogRef: MatDialogRef<CategoryDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any
@@ -107,7 +182,10 @@ export class CategoryDialogComponent implements OnInit {
       slug: ['', Validators.required],
       description: [''],
       parentId: [''],
-      isActive: [true]
+      isActive: [true],
+      seoTitle: [''],
+      seoDescription: [''],
+      seoKeywords: ['']
     });
   }
 
@@ -119,8 +197,14 @@ export class CategoryDialogComponent implements OnInit {
         slug: category.slug,
         description: category.description,
         parentId: category.parentId || '',
-        isActive: category.isActive
+        isActive: category.isActive,
+        seoTitle: category.seo?.title || '',
+        seoDescription: category.seo?.description || '',
+        seoKeywords: category.seo?.keywords || ''
       });
+      if (category.image) {
+        this.uploadedImage.set(category.image);
+      }
     } else if (this.data.parentCategory) {
       // Adding subcategory
       this.categoryForm.patchValue({
@@ -160,9 +244,45 @@ export class CategoryDialogComponent implements OnInit {
     return this.data.categories;
   }
 
+  onImageSelect(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      this.http.post<any>(`${environment.apiUrl}/catalogue/categories/upload-image`, formData)
+        .subscribe(res => {
+          if (res.url) {
+            this.uploadedImage.set(res.url);
+          }
+        });
+    }
+  }
+
+  removeImage() {
+    this.uploadedImage.set('');
+    this.imageUrl = '';
+  }
+
   onSave() {
     if (this.categoryForm.valid) {
-      const categoryData = this.categoryForm.value;
+      this.saving.set(true);
+      
+      const finalImage = this.uploadedImage() || this.imageUrl || null;
+      
+      const categoryData = {
+        ...this.categoryForm.value,
+        image: finalImage,
+        seo: {
+          title: this.categoryForm.value.seoTitle,
+          description: this.categoryForm.value.seoDescription,
+          keywords: this.categoryForm.value.seoKeywords
+        }
+      };
+      
+      delete categoryData.seoTitle;
+      delete categoryData.seoDescription;
+      delete categoryData.seoKeywords;
       
       // Convert empty parentId to null
       if (!categoryData.parentId) {
@@ -173,8 +293,14 @@ export class CategoryDialogComponent implements OnInit {
         ? this.catalogueService.updateCategory(this.data.category._id, categoryData)
         : this.catalogueService.createCategory(categoryData);
 
-      request.subscribe(() => {
-        this.dialogRef.close(true);
+      request.subscribe({
+        next: () => {
+          this.saving.set(false);
+          this.dialogRef.close(true);
+        },
+        error: () => {
+          this.saving.set(false);
+        }
       });
     }
   }

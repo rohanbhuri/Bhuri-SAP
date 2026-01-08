@@ -32,15 +32,22 @@ import { CategoryDialogComponent } from '../dialogs/category-dialog.component';
       
       <div class="table-container">
         <table mat-table [dataSource]="categories()" class="catalogue-table">
+          <ng-container matColumnDef="image">
+            <th mat-header-cell *matHeaderCellDef>Image</th>
+            <td mat-cell *matCellDef="let category">
+              <div class="category-image-cell">
+                <img *ngIf="category.image" [src]="category.image" [alt]="category.name">
+                <mat-icon *ngIf="!category.image">category</mat-icon>
+              </div>
+            </td>
+          </ng-container>
+
           <ng-container matColumnDef="name">
             <th mat-header-cell *matHeaderCellDef>Name</th>
             <td mat-cell *matCellDef="let category">
               <div class="category-info">
-                <mat-icon class="category-icon">category</mat-icon>
-                <div>
-                  <div class="category-name">{{ category.name }}</div>
-                  <div class="category-slug">{{ category.slug }}</div>
-                </div>
+                <div class="category-name">{{ category.name }}</div>
+                <div class="category-slug">{{ category.slug }}</div>
               </div>
             </td>
           </ng-container>
@@ -103,13 +110,45 @@ import { CategoryDialogComponent } from '../dialogs/category-dialog.component';
     </div>
   `,
   styles: [`
-    .category-info {
+    .tab-content {
+      padding: 1.5rem;
+    }
+    .tab-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    .tab-header h2 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 500;
+    }
+    .table-container {
+      overflow-x: auto;
+    }
+    .category-image-cell {
+      width: 60px;
+      height: 60px;
       display: flex;
       align-items: center;
-      gap: 1rem;
+      justify-content: center;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #f5f5f5;
     }
-    .category-icon {
-      color: #4CAF50;
+    .category-image-cell img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .category-image-cell mat-icon {
+      color: #999;
+    }
+    .category-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
     }
     .category-name {
       font-weight: 500;
@@ -127,7 +166,7 @@ export class CategoriesPageComponent implements OnInit {
 
   categories = signal<any[]>([]);
   products = signal<any[]>([]);
-  categoryColumns = ['name', 'description', 'parent', 'products', 'status', 'actions'];
+  categoryColumns = ['image', 'name', 'description', 'parent', 'products', 'status', 'actions'];
 
   ngOnInit() {
     this.loadCategories();
