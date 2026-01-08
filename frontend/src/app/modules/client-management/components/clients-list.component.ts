@@ -4,65 +4,86 @@ import { RouterModule } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDialog } from '@angular/material/dialog';
 import { ClientManagementService } from '../services/client-management.service';
+import { CreateClientLoginDialogComponent } from './create-client-login-dialog.component';
 
 @Component({
   selector: 'app-clients-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, MatTableModule, MatButtonModule, MatIconModule, MatSlideToggleModule],
+  imports: [
+    CommonModule,
+    RouterModule,
+    MatTableModule,
+    MatButtonModule,
+    MatIconModule,
+    MatChipsModule,
+    MatMenuModule
+  ],
   template: `
-    <div class="p-6">
-      <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold">Clients</h1>
+    <div class="clients-container">
+      <div class="header-section">
+        <h2 class="section-title">Clients</h2>
+        <button mat-raised-button color="primary" (click)="addClientManually()">
+          <mat-icon>add</mat-icon>
+          Add Client
+        </button>
       </div>
 
-      <div class="bg-white rounded-lg shadow">
-        <table mat-table [dataSource]="clients" class="w-full">
-          <ng-container matColumnDef="companyName">
-            <th mat-header-cell *matHeaderCellDef>Company</th>
+      <div class="table-container">
+        <table mat-table [dataSource]="clients" class="data-table">
+          <ng-container matColumnDef="company">
+            <th mat-header-cell *matHeaderCellDef>COMPANY</th>
             <td mat-cell *matCellDef="let client">{{ client.companyName }}</td>
           </ng-container>
 
-          <ng-container matColumnDef="contactPerson">
-            <th mat-header-cell *matHeaderCellDef>Contact Person</th>
+          <ng-container matColumnDef="contact">
+            <th mat-header-cell *matHeaderCellDef>CONTACT PERSON</th>
             <td mat-cell *matCellDef="let client">{{ client.contactPerson }}</td>
           </ng-container>
 
           <ng-container matColumnDef="email">
-            <th mat-header-cell *matHeaderCellDef>Email</th>
+            <th mat-header-cell *matHeaderCellDef>EMAIL</th>
             <td mat-cell *matCellDef="let client">{{ client.email }}</td>
           </ng-container>
 
           <ng-container matColumnDef="phone">
-            <th mat-header-cell *matHeaderCellDef>Phone</th>
+            <th mat-header-cell *matHeaderCellDef>PHONE</th>
             <td mat-cell *matCellDef="let client">{{ client.phone }}</td>
           </ng-container>
 
           <ng-container matColumnDef="industry">
-            <th mat-header-cell *matHeaderCellDef>Industry</th>
+            <th mat-header-cell *matHeaderCellDef>INDUSTRY</th>
             <td mat-cell *matCellDef="let client">{{ client.industry || '-' }}</td>
           </ng-container>
 
-          <ng-container matColumnDef="isActive">
-            <th mat-header-cell *matHeaderCellDef>Active</th>
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>STATUS</th>
             <td mat-cell *matCellDef="let client">
-              <mat-slide-toggle 
-                [checked]="client.isActive" 
-                (change)="toggleStatus(client._id, $event.checked)">
-              </mat-slide-toggle>
+              <mat-chip [class]="client.isActive ? 'status-active' : 'status-inactive'">
+                {{ client.isActive ? 'Active' : 'Inactive' }}
+              </mat-chip>
             </td>
           </ng-container>
 
           <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <th mat-header-cell *matHeaderCellDef>ACTIONS</th>
             <td mat-cell *matCellDef="let client">
-              <button mat-icon-button [routerLink]="['/client-management/clients', client._id]">
-                <mat-icon>edit</mat-icon>
+              <button mat-icon-button [matMenuTriggerFor]="menu">
+                <mat-icon>more_vert</mat-icon>
               </button>
-              <button mat-icon-button (click)="deleteClient(client._id)">
-                <mat-icon>delete</mat-icon>
-              </button>
+              <mat-menu #menu="matMenu">
+                <button mat-menu-item (click)="toggleStatus(client._id, !client.isActive)">
+                  <mat-icon>{{ client.isActive ? 'block' : 'check_circle' }}</mat-icon>
+                  <span>{{ client.isActive ? 'Deactivate' : 'Activate' }}</span>
+                </button>
+                <button mat-menu-item (click)="deleteClient(client._id)">
+                  <mat-icon>delete</mat-icon>
+                  <span>Delete</span>
+                </button>
+              </mat-menu>
             </td>
           </ng-container>
 
@@ -71,13 +92,78 @@ import { ClientManagementService } from '../services/client-management.service';
         </table>
       </div>
     </div>
-  `
+  `,
+  styles: [`
+    .clients-container {
+      padding: 0;
+    }
+
+    .header-section {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .table-container {
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .data-table {
+      width: 100%;
+    }
+
+    ::ng-deep .mat-mdc-header-cell {
+      background-color: #f3f4f6;
+      color: #374151;
+      font-weight: 600;
+      font-size: 0.875rem;
+      padding: 16px;
+    }
+
+    ::ng-deep .mat-mdc-cell {
+      padding: 16px;
+      color: #1f2937;
+    }
+
+    ::ng-deep .mat-mdc-row:hover {
+      background-color: #f9fafb;
+    }
+
+    mat-chip {
+      font-size: 0.75rem;
+      min-height: 24px;
+      padding: 4px 12px;
+    }
+
+    mat-chip.status-active {
+      background-color: #d1fae5;
+      color: #065f46;
+    }
+
+    mat-chip.status-inactive {
+      background-color: #fee2e2;
+      color: #991b1b;
+    }
+  `]
 })
 export class ClientsListComponent implements OnInit {
   clients: any[] = [];
-  displayedColumns = ['companyName', 'contactPerson', 'email', 'phone', 'industry', 'isActive', 'actions'];
+  displayedColumns = ['company', 'contact', 'email', 'phone', 'industry', 'status', 'actions'];
 
-  constructor(private clientManagementService: ClientManagementService) {}
+  constructor(
+    private clientManagementService: ClientManagementService,
+    private dialog: MatDialog
+  ) {}
 
   ngOnInit() {
     this.loadClients();
@@ -104,5 +190,19 @@ export class ClientsListComponent implements OnInit {
         error: (err) => console.error('Failed to delete client', err)
       });
     }
+  }
+
+  addClientManually() {
+    const dialogRef = this.dialog.open(CreateClientLoginDialogComponent, {
+      width: '800px',
+      data: null,
+      disableClose: true
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loadClients();
+      }
+    });
   }
 }

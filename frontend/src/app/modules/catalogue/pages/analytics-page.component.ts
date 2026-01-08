@@ -7,6 +7,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { CatalogueService } from '../catalogue.service';
+import { PreferencesService } from '../../../services/preferences.service';
 
 @Component({
   selector: 'app-analytics-page',
@@ -216,15 +217,15 @@ import { CatalogueService } from '../catalogue.service';
             <div class="price-stats">
               <div class="price-stat">
                 <span class="label">Lowest Price</span>
-                <span class="value">{{ analytics().priceRange.min | currency }}</span>
+                <span class="value">{{ formatCurrency(analytics().priceRange.min) }}</span>
               </div>
               <div class="price-stat">
                 <span class="label">Average Price</span>
-                <span class="value">{{ analytics().priceRange.avg | currency }}</span>
+                <span class="value">{{ formatCurrency(analytics().priceRange.avg) }}</span>
               </div>
               <div class="price-stat">
                 <span class="label">Highest Price</span>
-                <span class="value">{{ analytics().priceRange.max | currency }}</span>
+                <span class="value">{{ formatCurrency(analytics().priceRange.max) }}</span>
               </div>
             </div>
           </mat-card-content>
@@ -530,9 +531,11 @@ import { CatalogueService } from '../catalogue.service';
 })
 export class AnalyticsPageComponent implements OnInit {
   private catalogueService = inject(CatalogueService);
+  private preferencesService = inject(PreferencesService);
   
   loading = signal(true);
   exporting = signal(false);
+  currencySymbol = signal('$');
   analytics = signal({
     totalProducts: 0,
     publishedProducts: 0,
@@ -552,7 +555,26 @@ export class AnalyticsPageComponent implements OnInit {
   });
 
   ngOnInit() {
+    this.loadCurrencyPreferences();
     this.loadAnalytics();
+  }
+
+  loadCurrencyPreferences() {
+    this.preferencesService.getUserPreferences().subscribe({
+      next: (prefs) => {
+        if (prefs?.currencySymbol) {
+          this.currencySymbol.set(prefs.currencySymbol);
+        }
+      },
+      error: () => {
+        // Use default currency symbol
+        this.currencySymbol.set('$');
+      }
+    });
+  }
+
+  formatCurrency(value: number): string {
+    return `${this.currencySymbol()}${value.toFixed(2)}`;
   }
 
   loadAnalytics() {

@@ -60,6 +60,31 @@ export class Client {
   @Column({ nullable: true })
   customFields?: Record<string, any>;
 
+  // Security & Access Control
+  @Column({ nullable: true })
+  maxDevices?: number;
+
+  @Column({ nullable: true })
+  sessionTimeout?: number;
+
+  @Column({ nullable: true })
+  expiryDate?: Date;
+
+  @Column({ nullable: true })
+  ipWhitelist?: string;
+
+  @Column({ default: false })
+  requireTwoFactor: boolean;
+
+  @Column({ default: false })
+  forcePasswordChange: boolean;
+
+  @Column({ default: false })
+  restrictToBusinessHours: boolean;
+
+  @Column({ default: false })
+  allowApiAccess: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 

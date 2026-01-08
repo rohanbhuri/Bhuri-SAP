@@ -3,57 +3,82 @@ import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatChipsModule } from '@angular/material/chips';
 import { Router } from '@angular/router';
 import { ClientManagementService } from './services/client-management.service';
 
 @Component({
   selector: 'app-client-management-widget',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatButtonModule, MatIconModule],
+  imports: [CommonModule, MatCardModule, MatButtonModule, MatIconModule, MatChipsModule],
   template: `
     <div class="client-widget">
-      <div class="header">
-        <div class="icon-container">
+      <div class="widget-header">
+        <div class="icon-wrapper">
           <mat-icon>people_outline</mat-icon>
         </div>
-        <div class="title-section">
-          <span class="subtitle">Client accounts & requests</span>
+        <div class="header-content">
+          <h3>Client Management</h3>
+          <p>Manage client accounts & requests</p>
         </div>
       </div>
       
-      <div class="metrics-grid">
-        <div class="metric-card pending">
-          <div class="metric-value">{{ pendingRequests() }}</div>
-          <div class="metric-label">Pending Requests</div>
-          <div class="metric-icon">
+      <div class="metrics-container">
+        <div class="metric-card primary">
+          <div class="metric-header">
             <mat-icon>schedule</mat-icon>
+            <span class="metric-title">Pending Requests</span>
+          </div>
+          <div class="metric-value">{{ pendingRequests() }}</div>
+          <div class="metric-footer">
+            <span class="metric-change">Awaiting review</span>
           </div>
         </div>
         
-        <div class="metric-card active">
-          <div class="metric-value">{{ activeClients() }}</div>
-          <div class="metric-label">Active Clients</div>
-          <div class="metric-icon">
+        <div class="metric-card success">
+          <div class="metric-header">
             <mat-icon>check_circle</mat-icon>
+            <span class="metric-title">Active Clients</span>
+          </div>
+          <div class="metric-value">{{ activeClients() }}</div>
+          <div class="metric-footer">
+            <span class="metric-change">{{ totalClients() }} total</span>
           </div>
         </div>
       </div>
-      
-      <div class="stats-row">
-        <div class="stat-item">
-          <span class="stat-label">Total Clients</span>
-          <span class="stat-value">{{ totalClients() }}</span>
+
+      <div class="quick-stats">
+        <div class="stat-row">
+          <span class="stat-label">
+            <mat-icon>trending_up</mat-icon>
+            New This Month
+          </span>
+          <mat-chip class="stat-chip success">+{{ newThisMonth() }}</mat-chip>
         </div>
-        <div class="stat-item">
-          <span class="stat-label">This Month</span>
-          <span class="stat-value success">+{{ newThisMonth() }}</span>
+        <div class="stat-row">
+          <span class="stat-label">
+            <mat-icon>block</mat-icon>
+            Inactive
+          </span>
+          <mat-chip class="stat-chip warning">{{ inactiveClients() }}</mat-chip>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">
+            <mat-icon>security</mat-icon>
+            With 2FA
+          </span>
+          <mat-chip class="stat-chip info">{{ clientsWith2FA() }}</mat-chip>
         </div>
       </div>
       
-      <div class="action-section">
-        <button mat-flat-button color="primary" (click)="openClientManagement()">
+      <div class="widget-actions">
+        <button mat-stroked-button (click)="openRequests()">
+          <mat-icon>inbox</mat-icon>
+          View Requests
+        </button>
+        <button mat-raised-button color="primary" (click)="openClientManagement()">
           <mat-icon>settings</mat-icon>
-          Manage Clients
+          Manage
         </button>
       </div>
     </div>
@@ -64,33 +89,49 @@ import { ClientManagementService } from './services/client-management.service';
       height: 100%;
       display: flex;
       flex-direction: column;
+      gap: 20px;
+      background: white;
+      border-radius: 12px;
+    }
+    
+    .widget-header {
+      display: flex;
+      align-items: center;
       gap: 16px;
     }
     
-    .header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    
-    .icon-container {
-      width: 48px;
-      height: 48px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, #00BCD4, #00ACC1);
+    .icon-wrapper {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #00BCD4 0%, #0097A7 100%);
       display: flex;
       align-items: center;
       justify-content: center;
+      box-shadow: 0 4px 12px rgba(0, 188, 212, 0.3);
+    }
+    
+    .icon-wrapper mat-icon {
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
       color: white;
     }
     
-    .subtitle {
-      font-size: 0.9rem;
-      color: color-mix(in srgb, var(--theme-on-surface) 70%, transparent);
-      font-weight: 500;
+    .header-content h3 {
+      margin: 0;
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #111827;
     }
     
-    .metrics-grid {
+    .header-content p {
+      margin: 4px 0 0;
+      font-size: 0.8125rem;
+      color: #6b7280;
+    }
+    
+    .metrics-container {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
@@ -98,93 +139,161 @@ import { ClientManagementService } from './services/client-management.service';
     
     .metric-card {
       padding: 16px;
-      border-radius: 12px;
-      position: relative;
-      overflow: hidden;
+      border-radius: 10px;
+      border: 1px solid;
+      transition: transform 0.2s, box-shadow 0.2s;
     }
     
-    .metric-card.pending {
-      background: color-mix(in srgb, #FF9800 10%, transparent);
-      border: 1px solid color-mix(in srgb, #FF9800 20%, transparent);
+    .metric-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
     
-    .metric-card.active {
-      background: color-mix(in srgb, #4CAF50 10%, transparent);
-      border: 1px solid color-mix(in srgb, #4CAF50 20%, transparent);
+    .metric-card.primary {
+      background: #fef3c7;
+      border-color: #fbbf24;
+    }
+    
+    .metric-card.success {
+      background: #d1fae5;
+      border-color: #6ee7b7;
+    }
+    
+    .metric-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    
+    .metric-card.primary .metric-header mat-icon {
+      color: #d97706;
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+    
+    .metric-card.success .metric-header mat-icon {
+      color: #059669;
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+    
+    .metric-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .metric-card.primary .metric-title {
+      color: #92400e;
+    }
+    
+    .metric-card.success .metric-title {
+      color: #065f46;
     }
     
     .metric-value {
-      font-size: 2rem;
+      font-size: 2.25rem;
       font-weight: 700;
       line-height: 1;
+      margin-bottom: 8px;
     }
     
-    .metric-card.pending .metric-value {
-      color: #FF9800;
+    .metric-card.primary .metric-value {
+      color: #d97706;
     }
     
-    .metric-card.active .metric-value {
-      color: #4CAF50;
+    .metric-card.success .metric-value {
+      color: #059669;
     }
     
-    .metric-label {
+    .metric-footer {
       font-size: 0.75rem;
-      color: color-mix(in srgb, var(--theme-on-surface) 70%, transparent);
-      margin-top: 4px;
     }
     
-    .metric-icon {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      opacity: 0.2;
+    .metric-card.primary .metric-footer {
+      color: #92400e;
     }
     
-    .metric-icon mat-icon {
-      font-size: 32px;
-      width: 32px;
-      height: 32px;
+    .metric-card.success .metric-footer {
+      color: #065f46;
     }
     
-    .stats-row {
-      display: flex;
-      gap: 12px;
-      padding: 12px;
-      background: color-mix(in srgb, var(--theme-surface) 95%, var(--theme-primary));
-      border-radius: 8px;
-    }
-    
-    .stat-item {
-      flex: 1;
+    .quick-stats {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 10px;
+      padding: 16px;
+      background: #f9fafb;
+      border-radius: 10px;
+    }
+    
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
     
     .stat-label {
-      font-size: 0.7rem;
-      color: color-mix(in srgb, var(--theme-on-surface) 60%, transparent);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8125rem;
+      color: #374151;
+      font-weight: 500;
     }
     
-    .stat-value {
-      font-size: 1.1rem;
+    .stat-label mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: #6b7280;
+    }
+    
+    .stat-chip {
+      min-height: 24px;
+      font-size: 0.75rem;
       font-weight: 600;
-      color: var(--theme-on-surface);
+      padding: 4px 10px;
     }
     
-    .stat-value.success {
-      color: #4CAF50;
+    .stat-chip.success {
+      background: #d1fae5;
+      color: #065f46;
     }
     
-    .action-section {
+    .stat-chip.warning {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    
+    .stat-chip.info {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+    
+    .widget-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
       margin-top: auto;
     }
     
-    .action-section button {
-      width: 100%;
+    .widget-actions button {
       height: 40px;
       border-radius: 8px;
       font-weight: 500;
+      font-size: 0.875rem;
+    }
+    
+    .widget-actions button mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      margin-right: 4px;
     }
   `]
 })
@@ -195,7 +304,9 @@ export class ClientManagementWidgetComponent implements OnInit {
   pendingRequests = signal(0);
   activeClients = signal(0);
   totalClients = signal(0);
+  inactiveClients = signal(0);
   newThisMonth = signal(0);
+  clientsWith2FA = signal(0);
 
   ngOnInit() {
     this.loadStats();
@@ -213,6 +324,8 @@ export class ClientManagementWidgetComponent implements OnInit {
       next: (clients) => {
         this.totalClients.set(clients.length);
         this.activeClients.set(clients.filter(c => c.isActive).length);
+        this.inactiveClients.set(clients.filter(c => !c.isActive).length);
+        this.clientsWith2FA.set(clients.filter(c => c.requireTwoFactor).length);
         
         const now = new Date();
         const thisMonth = clients.filter(c => {
@@ -225,9 +338,15 @@ export class ClientManagementWidgetComponent implements OnInit {
       error: () => {
         this.totalClients.set(0);
         this.activeClients.set(0);
+        this.inactiveClients.set(0);
         this.newThisMonth.set(0);
+        this.clientsWith2FA.set(0);
       }
     });
+  }
+
+  openRequests() {
+    this.router.navigate(['/modules/client-management'], { queryParams: { tab: 'requests' } });
   }
 
   openClientManagement() {

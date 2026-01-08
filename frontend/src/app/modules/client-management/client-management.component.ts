@@ -4,7 +4,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
 import { NavbarComponent } from '../../components/navbar.component';
 import { BottomNavbarComponent } from '../../components/bottom-navbar.component';
-import { ClientRequestsComponent } from './components/client-requests.component';
+import { RequestLoginListComponent } from './components/request-login-list.component';
 import { ClientsListComponent } from './components/clients-list.component';
 
 @Component({
@@ -15,42 +15,46 @@ import { ClientsListComponent } from './components/clients-list.component';
     MatIconModule,
     NavbarComponent,
     BottomNavbarComponent,
-    ClientRequestsComponent,
+    RequestLoginListComponent,
     ClientsListComponent
   ],
   template: `
     <app-navbar></app-navbar>
-    <div class="page">
+    <div class="page-container">
       <div class="page-header">
-        <nav class="breadcrumb">
+        <div class="breadcrumb">
           <span>Modules</span>
           <mat-icon>chevron_right</mat-icon>
-          <span class="current">Client Management</span>
-        </nav>
-        <h1>Client Management</h1>
-        <p class="subtitle">Manage client requests and accounts</p>
+          <span>Client Management</span>
+        </div>
+        <h1 class="page-title">Client Management</h1>
+        <p class="page-subtitle">Manage client requests and accounts</p>
       </div>
 
-      <mat-tab-group class="client-tabs" [selectedIndex]="selectedTabIndex" (selectedTabChange)="onTabChange($event)">
-        <mat-tab label="Client Requests">
-          <app-client-requests></app-client-requests>
+      <mat-tab-group class="custom-tabs" [selectedIndex]="selectedTabIndex" (selectedTabChange)="onTabChange($event)">
+        <mat-tab label="Request Login Credentials">
+          <div class="tab-content">
+            <app-request-login-list></app-request-login-list>
+          </div>
         </mat-tab>
         <mat-tab label="Clients">
-          <app-clients-list></app-clients-list>
+          <div class="tab-content">
+            <app-clients-list></app-clients-list>
+          </div>
         </mat-tab>
       </mat-tab-group>
     </div>
     <app-bottom-navbar></app-bottom-navbar>
   `,
   styles: [`
-    .page {
-      padding: 20px;
+    .page-container {
+      padding: 24px;
       max-width: 1400px;
       margin: 0 auto;
     }
 
     .page-header {
-      margin-bottom: 24px;
+      margin-bottom: 32px;
     }
 
     .breadcrumb {
@@ -58,13 +62,8 @@ import { ClientsListComponent } from './components/clients-list.component';
       align-items: center;
       gap: 8px;
       font-size: 0.875rem;
-      color: color-mix(in srgb, var(--theme-on-surface) 70%, transparent);
+      color: #6b7280;
       margin-bottom: 12px;
-    }
-
-    .breadcrumb .current {
-      color: var(--theme-primary);
-      font-weight: 500;
     }
 
     .breadcrumb mat-icon {
@@ -73,21 +72,37 @@ import { ClientsListComponent } from './components/clients-list.component';
       height: 18px;
     }
 
-    h1 {
+    .page-title {
       font-size: 2rem;
       font-weight: 600;
       margin: 0 0 8px 0;
-      color: var(--theme-on-surface);
+      color: #111827;
     }
 
-    .subtitle {
+    .page-subtitle {
       font-size: 1rem;
-      color: color-mix(in srgb, var(--theme-on-surface) 70%, transparent);
+      color: #6b7280;
       margin: 0;
     }
 
-    .client-tabs {
-      margin-top: 20px;
+    .custom-tabs {
+      background: transparent;
+    }
+
+    .tab-content {
+      padding: 24px 0;
+    }
+
+    ::ng-deep .custom-tabs .mat-mdc-tab-labels {
+      background: white;
+      border-radius: 8px 8px 0 0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    ::ng-deep .custom-tabs .mat-mdc-tab-label {
+      font-size: 1rem;
+      font-weight: 500;
+      min-width: 200px;
     }
   `]
 })

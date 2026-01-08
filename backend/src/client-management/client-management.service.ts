@@ -105,9 +105,9 @@ export class ClientManagementService {
     }
 
     const organization = this.organizationRepository.create({
-      name: request.companyName,
-      code: request.companyName.toLowerCase().replace(/\s+/g, '-'),
-      description: request.industry || '',
+      name: conversionData.companyName || request.companyName,
+      code: (conversionData.companyName || request.companyName).toLowerCase().replace(/\s+/g, '-'),
+      description: conversionData.industry || request.industry || '',
       isPublic: false,
       memberCount: 1,
       activeModuleIds: []
@@ -133,7 +133,7 @@ export class ClientManagementService {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = this.userRepository.create({
-      email: request.email,
+      email: conversionData.email || request.email,
       password: hashedPassword,
       firstName: conversionData.firstName || request.contactPerson.split(' ')[0],
       lastName: conversionData.lastName || request.contactPerson.split(' ').slice(1).join(' '),
@@ -148,18 +148,28 @@ export class ClientManagementService {
     const client = this.clientRepository.create({
       userId: savedUser._id,
       organizationId: savedOrg._id,
-      companyName: request.companyName,
-      contactPerson: request.contactPerson,
-      email: request.email,
-      phone: request.phone,
-      website: request.website,
-      industry: request.industry,
-      companySize: request.companySize,
-      address: request.address,
-      city: request.city,
-      country: request.country,
+      companyName: conversionData.companyName || request.companyName,
+      contactPerson: `${conversionData.firstName} ${conversionData.lastName}`,
+      email: conversionData.email || request.email,
+      phone: conversionData.phone || request.phone,
+      website: conversionData.website || request.website,
+      industry: conversionData.industry || request.industry,
+      companySize: conversionData.companySize || request.companySize,
+      address: conversionData.address || request.address,
+      city: conversionData.city || request.city,
+      country: conversionData.country || request.country,
+      taxId: conversionData.taxId,
+      billingAddress: conversionData.billingAddress,
       isActive: true,
-      notes: conversionData.notes
+      notes: conversionData.notes,
+      maxDevices: conversionData.maxDevices,
+      sessionTimeout: conversionData.sessionTimeout,
+      expiryDate: conversionData.expiryDate,
+      ipWhitelist: conversionData.ipWhitelist,
+      requireTwoFactor: conversionData.requireTwoFactor || false,
+      forcePasswordChange: conversionData.forcePasswordChange || false,
+      restrictToBusinessHours: conversionData.restrictToBusinessHours || false,
+      allowApiAccess: conversionData.allowApiAccess || false
     });
     const savedClient = await this.clientRepository.save(client);
 
