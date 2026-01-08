@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, UseInterceptors, UploadedFiles, UploadedFile, Res } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, UseInterceptors, UploadedFiles, UploadedFile, Res } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor, FileFieldsInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 import { diskStorage } from 'multer';
@@ -7,6 +7,7 @@ import { CatalogueService } from './catalogue.service';
 import { Product } from '../entities/product.entity';
 import { Category } from '../entities/category.entity';
 import { Collection } from '../entities/collection.entity';
+import { Designer } from '../entities/designer.entity';
 // import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'; // Uncomment when Auth is ready or stub
 
 const imageStorage = diskStorage({
@@ -49,6 +50,14 @@ const collectionImageStorage = diskStorage({
     }
 });
 
+const designerImageStorage = diskStorage({
+    destination: './uploads/designers',
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
+    }
+});
+
 @Controller('catalogue')
 export class CatalogueController {
     constructor(private readonly catalogueService: CatalogueService) { }
@@ -57,6 +66,12 @@ export class CatalogueController {
     @Get('products')
     async getAllProducts() {
         return this.catalogueService.findAllProducts();
+    }
+
+    @Get('products/check-code/:code')
+    async checkProductCode(@Param('code') code: string, @Query('excludeId') excludeId?: string) {
+        const exists = await this.catalogueService.checkProductCodeExists(code, excludeId);
+        return { exists };
     }
 
     @Get('products/:id')
@@ -160,6 +175,45 @@ export class CatalogueController {
     @Delete('collections/:id')
     async deleteCollection(@Param('id') id: string) {
         return this.catalogueService.deleteCollection(id);
+    }
+
+    // Designers
+    @Get('designers')
+    async getAllDesigners() {
+        return this.catalogueService.findAllDesigners();
+    }
+
+    @Get('designers/:id')
+    async getDesigner(@Param('id') id: string) {
+        return this.catalogueService.findOneDesigner(id);
+    }
+
+    @Post('designers')
+    async createDesigner(@Body() data: Partial<Designer>) {
+        return this.catalogueService.createDesigner(data);
+    }
+
+    @Post('designers/upload-profile')
+    @UseInterceptors(FileInterceptor('image', { storage: designerImageStorage }))
+    async uploadDesignerProfile(@UploadedFile() file: Express.Multer.File) {
+        return { url: `/uploads/designers/${file.filename}` };
+    }
+
+    @Post('designers/upload-portfolio')
+    @UseInterceptors(FilesInterceptor('images', 10, { storage: designerImageStorage }))
+    async uploadDesignerPortfolio(@UploadedFiles() files: Express.Multer.File[]) {
+        const urls = files.map(file => `/uploads/designers/${file.filename}`);
+        return { urls };
+    }
+
+    @Put('designers/:id')
+    async updateDesigner(@Param('id') id: string, @Body() data: Partial<Designer>) {
+        return this.catalogueService.updateDesigner(id, data);
+    }
+
+    @Delete('designers/:id')
+    async deleteDesigner(@Param('id') id: string) {
+        return this.catalogueService.deleteDesigner(id);
     }
 
     // Analytics

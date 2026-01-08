@@ -8,6 +8,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatDialog } from '@angular/material/dialog';
 import { CatalogueService } from '../catalogue.service';
 import { ProductDialogComponent } from '../dialogs/product-dialog.component';
+import { UploadUrlPipe } from '../../../pipes/upload-url.pipe';
 
 @Component({
   selector: 'app-products-page',
@@ -18,7 +19,8 @@ import { ProductDialogComponent } from '../dialogs/product-dialog.component';
     MatButtonModule,
     MatIconModule,
     MatMenuModule,
-    MatChipsModule
+    MatChipsModule,
+    UploadUrlPipe
   ],
   template: `
     <div class="tab-content">
@@ -36,8 +38,8 @@ import { ProductDialogComponent } from '../dialogs/product-dialog.component';
             <th mat-header-cell *matHeaderCellDef>Image</th>
             <td mat-cell *matCellDef="let product">
               <div class="product-image-cell">
-                <img *ngIf="product.images?.length" [src]="product.images[0]" [alt]="product.name">
-                <mat-icon *ngIf="!product.images?.length">image</mat-icon>
+                <img *ngIf="product.imageGallery?.length" [src]="product.imageGallery[0] | uploadUrl" [alt]="product.name">
+                <mat-icon *ngIf="!product.imageGallery?.length">image</mat-icon>
               </div>
             </td>
           </ng-container>
@@ -195,12 +197,14 @@ export class ProductsPageComponent implements OnInit {
   products = signal<any[]>([]);
   categories = signal<any[]>([]);
   collections = signal<any[]>([]);
+  designers = signal<any[]>([]);
   productColumns = ['image', 'product', 'collection', 'category', 'tags', 'status', 'actions'];
 
   ngOnInit() {
     this.loadProducts();
     this.loadCategories();
     this.loadCollections();
+    this.loadDesigners();
   }
 
   loadProducts() {
@@ -221,6 +225,12 @@ export class ProductsPageComponent implements OnInit {
     });
   }
 
+  loadDesigners() {
+    this.catalogueService.getDesigners().subscribe(designers => {
+      this.designers.set(designers);
+    });
+  }
+
   getCategoryName(categoryId: string): string {
     const category = this.categories().find(c => c._id === categoryId);
     return category?.name || '';
@@ -235,7 +245,7 @@ export class ProductsPageComponent implements OnInit {
     const dialogRef = this.dialog.open(ProductDialogComponent, {
       width: '1000px',
       maxHeight: '90vh',
-      data: { categories: this.categories(), collections: this.collections() }
+      data: { categories: this.categories(), collections: this.collections(), designers: this.designers() }
     });
 
     dialogRef.afterClosed().subscribe(result => {
@@ -249,7 +259,7 @@ export class ProductsPageComponent implements OnInit {
     const dialogRef = this.dialog.open(ProductDialogComponent, {
       width: '1000px',
       maxHeight: '90vh',
-      data: { product, categories: this.categories(), collections: this.collections() }
+      data: { product, categories: this.categories(), collections: this.collections(), designers: this.designers() }
     });
 
     dialogRef.afterClosed().subscribe(result => {
@@ -272,7 +282,7 @@ export class ProductsPageComponent implements OnInit {
     const dialogRef = this.dialog.open(ProductDialogComponent, {
       width: '1000px',
       maxHeight: '90vh',
-      data: { product: duplicatedProduct, categories: this.categories(), collections: this.collections() }
+      data: { product: duplicatedProduct, categories: this.categories(), collections: this.collections(), designers: this.designers() }
     });
 
     dialogRef.afterClosed().subscribe(result => {

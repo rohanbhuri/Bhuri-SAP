@@ -1,4 +1,4 @@
-const CACHE_NAME = 'Beax RM-v1.0.1';
+const CACHE_NAME = 'RaccontiXRM-v0.0.1';
 const urlsToCache = [
   '/',
   '/login',
@@ -6,8 +6,8 @@ const urlsToCache = [
   '/modules',
   '/dashboard',
   '/manifest.json',
-  '/config/assets/beaxrm/icons/BEAX-icon.png',
-  '/config/assets/beaxrm/icons/BEAX.png'
+  '/config/assets/raccontixrm/icons/racconti-icon.svg',
+  '/config/assets/raccontixrm/icons/racconti-logo.svg'
 ];
 
 self.addEventListener('install', event => {

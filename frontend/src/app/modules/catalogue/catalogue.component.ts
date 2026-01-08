@@ -7,6 +7,7 @@ import { BottomNavbarComponent } from '../../components/bottom-navbar.component'
 import { ProductsPageComponent } from './pages/products-page.component';
 import { CategoriesPageComponent } from './pages/categories-page.component';
 import { CollectionsPageComponent } from './pages/collections-page.component';
+import { DesignersPageComponent } from './pages/designers-page.component';
 import { AnalyticsPageComponent } from './pages/analytics-page.component';
 
 @Component({
@@ -20,6 +21,7 @@ import { AnalyticsPageComponent } from './pages/analytics-page.component';
     ProductsPageComponent,
     CategoriesPageComponent,
     CollectionsPageComponent,
+    DesignersPageComponent,
     AnalyticsPageComponent
   ],
   template: `
@@ -45,6 +47,9 @@ import { AnalyticsPageComponent } from './pages/analytics-page.component';
         <mat-tab label="Collections">
           <app-collections-page></app-collections-page>
         </mat-tab>
+        <mat-tab label="Designers">
+          <app-designers-page></app-designers-page>
+        </mat-tab>
         <mat-tab label="Analytics">
           <app-analytics-page></app-analytics-page>
         </mat-tab>
@@ -59,7 +64,7 @@ export class CatalogueComponent implements OnInit {
   private router = inject(Router);
   
   selectedTabIndex = 0;
-  private tabs = ['products', 'categories', 'collections', 'analytics'];
+  private tabs = ['products', 'categories', 'collections', 'designers', 'analytics'];
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {

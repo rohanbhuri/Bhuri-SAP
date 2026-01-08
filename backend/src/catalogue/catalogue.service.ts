@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, MongoRepository } from 'typeorm';
 import { Product } from '../entities/product.entity';
 import { Category } from '../entities/category.entity';
 import { Collection } from '../entities/collection.entity';
+import { Designer } from '../entities/designer.entity';
 import { ObjectId } from 'mongodb';
 
 @Injectable()
@@ -15,6 +16,8 @@ export class CatalogueService {
         private categoryRepository: MongoRepository<Category>,
         @InjectRepository(Collection)
         private collectionRepository: MongoRepository<Collection>,
+        @InjectRepository(Designer)
+        private designerRepository: MongoRepository<Designer>,
     ) { }
 
     // Products
@@ -22,11 +25,28 @@ export class CatalogueService {
         return this.productRepository.find();
     }
 
+    async checkProductCodeExists(productCode: string, excludeId?: string): Promise<boolean> {
+        const query: any = { productCode };
+        if (excludeId) {
+            query._id = { $ne: new ObjectId(excludeId) };
+        }
+        const product = await this.productRepository.findOne({ where: query });
+        return !!product;
+    }
+
     async findOneProduct(id: string): Promise<Product> {
         return this.productRepository.findOneBy({ _id: new ObjectId(id) });
     }
 
     async createProduct(data: Partial<Product>): Promise<Product> {
+        // Check if product code already exists
+        if (data.productCode) {
+            const exists = await this.checkProductCodeExists(data.productCode);
+            if (exists) {
+                throw new ConflictException('Product code already exists');
+            }
+        }
+        
         const product = this.productRepository.create({
             ...data,
             createdAt: new Date(),
@@ -36,6 +56,14 @@ export class CatalogueService {
     }
 
     async updateProduct(id: string, data: Partial<Product>): Promise<Product> {
+        // Check if product code already exists (excluding current product)
+        if (data.productCode) {
+            const exists = await this.checkProductCodeExists(data.productCode, id);
+            if (exists) {
+                throw new ConflictException('Product code already exists');
+            }
+        }
+        
         await this.productRepository.update(id, {
             ...data,
             updatedAt: new Date()
@@ -107,11 +135,42 @@ export class CatalogueService {
         await this.collectionRepository.delete(id);
     }
 
+    // Designers
+    async findAllDesigners(): Promise<Designer[]> {
+        return this.designerRepository.find();
+    }
+
+    async findOneDesigner(id: string): Promise<Designer> {
+        return this.designerRepository.findOneBy({ _id: new ObjectId(id) });
+    }
+
+    async createDesigner(data: Partial<Designer>): Promise<Designer> {
+        const designer = this.designerRepository.create({
+            ...data,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        });
+        return this.designerRepository.save(designer);
+    }
+
+    async updateDesigner(id: string, data: Partial<Designer>): Promise<Designer> {
+        await this.designerRepository.update(id, {
+            ...data,
+            updatedAt: new Date()
+        });
+        return this.findOneDesigner(id);
+    }
+
+    async deleteDesigner(id: string): Promise<void> {
+        await this.designerRepository.delete(id);
+    }
+
     // Analytics
     async getAnalytics() {
         const products = await this.productRepository.find();
         const categories = await this.categoryRepository.find();
         const collections = await this.collectionRepository.find();
+        const designers = await this.designerRepository.find();
 
         const totalVariations = products.reduce((sum, p) => sum + (p.variations?.length || 0), 0);
         const prices = products.map(p => p.basePrice || 0).filter(p => p > 0);
@@ -139,6 +198,17 @@ export class CatalogueService {
             models3d: products.reduce((sum, p) => sum + (p.models3d?.length || 0), 0)
         };
 
+        // Calculate recent changes (last 7 days)
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        
+        const recentChanges = {
+            products: products.filter(p => p.updatedAt && new Date(p.updatedAt) >= sevenDaysAgo).length,
+            categories: categories.filter(c => c.updatedAt && new Date(c.updatedAt) >= sevenDaysAgo).length,
+            collections: collections.filter(c => c.updatedAt && new Date(c.updatedAt) >= sevenDaysAgo).length,
+            designers: designers.filter(d => d.updatedAt && new Date(d.updatedAt) >= sevenDaysAgo).length
+        };
+
         return {
             totalProducts: products.length,
             publishedProducts: products.filter(p => p.isPublished).length,
@@ -146,6 +216,8 @@ export class CatalogueService {
             activeCategories: categories.filter(c => c.isActive).length,
             totalCollections: collections.length,
             activeCollections: collections.filter(c => c.isActive).length,
+            totalDesigners: designers.length,
+            activeDesigners: designers.filter(d => d.isActive).length,
             totalVariations,
             avgVariationsPerProduct: products.length ? (totalVariations / products.length).toFixed(1) : 0,
             productsByCategory: Object.entries(productsByCategory).map(([id, count]) => ({
@@ -163,7 +235,8 @@ export class CatalogueService {
                 avg: prices.length ? (prices.reduce((a, b) => a + b, 0) / prices.length).toFixed(2) : 0,
                 max: prices.length ? Math.max(...prices) : 0
             },
-            mediaAssets
+            mediaAssets,
+            recentChanges
         };
     }
 

@@ -43,11 +43,17 @@ export class PreferencesController {
 
   @Get()
   async getUserPreferences(@Request() req) {
+    if (!req.user?.userId) {
+      return null;
+    }
     return this.preferencesService.getUserPreferences(req.user.userId);
   }
 
   @Post()
   async saveUserPreferences(@Request() req, @Body(ValidationPipe) preferencesDto: UserPreferencesDto) {
+    if (!req.user?.userId) {
+      throw new Error('User not authenticated');
+    }
     console.log('Saving preferences for user:', req.user.userId, 'Data:', preferencesDto);
     return this.preferencesService.saveUserPreferences(req.user.userId, preferencesDto);
   }

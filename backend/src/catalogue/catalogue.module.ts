@@ -6,10 +6,11 @@ import { CatalogueService } from './catalogue.service';
 import { Product } from '../entities/product.entity';
 import { Category } from '../entities/category.entity';
 import { Collection } from '../entities/collection.entity';
+import { Designer } from '../entities/designer.entity';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([Product, Category, Collection]),
+        TypeOrmModule.forFeature([Product, Category, Collection, Designer]),
         MulterModule.register({
             dest: './uploads/products'
         })

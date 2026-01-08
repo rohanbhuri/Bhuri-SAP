@@ -142,6 +142,14 @@ interface DashboardWidget {
           <div class="dashboard-menu">
             <button
               mat-icon-button
+              (click)="resetWidgetArrangement()"
+              matTooltip="Reset to Default Layout"
+              aria-label="Reset widget arrangement"
+            >
+              <mat-icon>refresh</mat-icon>
+            </button>
+            <button
+              mat-icon-button
               (click)="toggleCompactView()"
               [attr.aria-label]="isCompactView() ? 'Switch to Normal View' : 'Switch to Compact View'"
               [matTooltip]="isCompactView() ? 'Normal View' : 'Compact View'"
@@ -724,6 +732,7 @@ export class DashboardComponent implements OnInit {
     const copy = [...this.widgets()];
     moveItemInArray(copy, event.previousIndex, event.currentIndex);
     this.widgets.set(copy);
+    this.saveWidgetOrder(copy);
   }
 
   resize(w: DashboardWidget, size: 's' | 'm' | 'l') {
@@ -986,20 +995,21 @@ export class DashboardComponent implements OnInit {
               description: 'Review pending organization requests',
               size: 's'
             };
-            this.widgets.set([pendingWidget, ...mapped]);
+            const finalWidgets = [pendingWidget, ...mapped];
+            this.widgets.set(this.applySavedOrder(finalWidgets));
           } else {
-            this.widgets.set(mapped);
+            this.widgets.set(this.applySavedOrder(mapped));
           }
           this.isLoadingWidgets.set(false);
         },
         error: () => {
-          this.widgets.set(mapped);
+          this.widgets.set(this.applySavedOrder(mapped));
           this.isLoadingWidgets.set(false);
         }
       });
     } else {
       console.log('Setting widgets:', mapped.length);
-      this.widgets.set(mapped);
+      this.widgets.set(this.applySavedOrder(mapped));
       this.isLoadingWidgets.set(false);
     }
   }
@@ -1120,6 +1130,63 @@ export class DashboardComponent implements OnInit {
     } catch (error) {
       console.warn('Failed to load widget sizes:', error);
       return {};
+    }
+  }
+
+  private saveWidgetOrder(widgets: DashboardWidget[]) {
+    try {
+      const order = widgets.map(w => w.id);
+      localStorage.setItem('dashboard-widget-order', JSON.stringify(order));
+    } catch (error) {
+      console.warn('Failed to save widget order:', error);
+    }
+  }
+
+  private loadWidgetOrder(): string[] {
+    try {
+      const saved = localStorage.getItem('dashboard-widget-order');
+      return saved ? JSON.parse(saved) : [];
+    } catch (error) {
+      console.warn('Failed to load widget order:', error);
+      return [];
+    }
+  }
+
+  private applySavedOrder(widgets: DashboardWidget[]): DashboardWidget[] {
+    const savedOrder = this.loadWidgetOrder();
+    if (savedOrder.length === 0) return widgets;
+
+    const ordered: DashboardWidget[] = [];
+    const widgetMap = new Map(widgets.map(w => [w.id, w]));
+
+    // Add widgets in saved order
+    savedOrder.forEach(id => {
+      const widget = widgetMap.get(id);
+      if (widget) {
+        ordered.push(widget);
+        widgetMap.delete(id);
+      }
+    });
+
+    // Add any new widgets that weren't in saved order
+    widgetMap.forEach(widget => ordered.push(widget));
+
+    return ordered;
+  }
+
+  resetWidgetArrangement() {
+    try {
+      localStorage.removeItem('dashboard-widget-order');
+      localStorage.removeItem('dashboard-widget-sizes');
+      this.loadModulesForContext(this.selectedContext());
+      this.snackBar.open('Widget arrangement reset to default', 'Close', {
+        duration: 2000,
+      });
+    } catch (error) {
+      console.warn('Failed to reset widget arrangement:', error);
+      this.snackBar.open('Failed to reset arrangement', 'Close', {
+        duration: 2000,
+      });
     }
   }
 

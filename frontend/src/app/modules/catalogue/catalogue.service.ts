@@ -105,4 +105,71 @@ export class CatalogueService {
     exportAll(): Observable<Blob> {
         return this.http.get(`${this.apiUrl}/export/all`, { responseType: 'blob' });
     }
+
+    // Designers
+    getDesigners(): Observable<any[]> {
+        return this.http.get<any[]>(`${this.apiUrl}/designers`);
+    }
+
+    getDesigner(id: string): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/designers/${id}`);
+    }
+
+    createDesigner(designer: any): Observable<any> {
+        return this.http.post<any>(`${this.apiUrl}/designers`, designer);
+    }
+
+    updateDesigner(id: string, designer: any): Observable<any> {
+        return this.http.put<any>(`${this.apiUrl}/designers/${id}`, designer);
+    }
+
+    deleteDesigner(id: string): Observable<void> {
+        return this.http.delete<void>(`${this.apiUrl}/designers/${id}`);
+    }
+
+    uploadDesignerProfile(file: File): Observable<any> {
+        const formData = new FormData();
+        formData.append('image', file);
+        return this.http.post<any>(`${this.apiUrl}/designers/upload-profile`, formData);
+    }
+
+    uploadDesignerPortfolio(files: File[]): Observable<any> {
+        const formData = new FormData();
+        files.forEach(file => formData.append('images', file));
+        return this.http.post<any>(`${this.apiUrl}/designers/upload-portfolio`, formData);
+    }
+
+    // Product Media Upload
+    uploadProductImages(files: File[]): Observable<any> {
+        const formData = new FormData();
+        files.forEach(file => formData.append('images', file));
+        const url = `${this.apiUrl}/products/upload-images`;
+        console.log('Uploading images to:', url);
+        console.log('Files:', files.map(f => f.name));
+        return this.http.post<any>(url, formData);
+    }
+
+    uploadProductVideo(file: File): Observable<any> {
+        const formData = new FormData();
+        formData.append('video', file);
+        const url = `${this.apiUrl}/products/upload-video`;
+        console.log('Uploading video to:', url);
+        return this.http.post<any>(url, formData);
+    }
+
+    uploadProduct3DModel(file: File): Observable<any> {
+        const formData = new FormData();
+        formData.append('model', file);
+        const url = `${this.apiUrl}/products/upload-model`;
+        console.log('Uploading 3D model to:', url);
+        return this.http.post<any>(url, formData);
+    }
+
+    checkProductCodeExists(productCode: string, excludeId?: string): Observable<{ exists: boolean }> {
+        let url = `${this.apiUrl}/products/check-code/${productCode}`;
+        if (excludeId) {
+            url += `?excludeId=${excludeId}`;
+        }
+        return this.http.get<{ exists: boolean }>(url);
+    }
 }

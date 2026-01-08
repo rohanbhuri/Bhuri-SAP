@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Product Image Upload</title>
+</head>
+<body>
+    <h1>Test Product Image Upload - RaccontiXRM</h1>
+    <input type="file" id="fileInput" multiple accept="image/*">
+    <button onclick="uploadImages()">Upload</button>
+    <div id="result"></div>
+    <div id="preview"></div>
+
+    <script>
+        async function uploadImages() {
+            const fileInput = document.getElementById('fileInput');
+            const files = fileInput.files;
+            
+            if (files.length === 0) {
+                alert('Please select files');
+                return;
+            }
+
+            const formData = new FormData();
+            for (let file of files) {
+                formData.append('images', file);
+            }
+
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('http://localhost:3002/api/catalogue/products/upload-images', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+                document.getElementById('result').innerHTML = `
+                    <h3>Upload Result:</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+
+                if (data.urls) {
+                    const preview = document.getElementById('preview');
+                    preview.innerHTML = '<h3>Uploaded Images:</h3>';
+                    data.urls.forEach(url => {
+                        const img = document.createElement('img');
+                        img.src = `http://localhost:3002${url}`;
+                        img.style.width = '200px';
+                        img.style.margin = '10px';
+                        preview.appendChild(img);
+                    });
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = `
+                    <h3>Error:</h3>
+                    <pre>${error.message}</pre>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

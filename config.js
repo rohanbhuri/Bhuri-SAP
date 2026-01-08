@@ -74,6 +74,7 @@ const configs = {
     brand: {
       name: "RaccontiXRM",
       logo: "/config/assets/raccontixrm/icons/racconti-logo.svg",
+      logoDark: "/config/assets/raccontixrm/icons/racconti-logo.svg",
       icon: "/config/assets/raccontixrm/icons/racconti-icon.svg"
     },
 

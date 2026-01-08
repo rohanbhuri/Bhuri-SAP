@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit, signal } from '@angular/core';
+import { Component, Inject, OnInit, signal, inject, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
@@ -11,11 +11,12 @@ import { MatChipsModule, MatChipInputEvent } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
-import { HttpClient } from '@angular/common/http';
 import { CatalogueService } from '../catalogue.service';
 import { PreferencesService } from '../../../services/preferences.service';
-import { environment } from '../../../../environments/environment';
+import { UploadUrlPipe } from '../../../pipes/upload-url.pipe';
+import Quill from 'quill';
 
 @Component({
   selector: 'app-product-dialog',
@@ -33,7 +34,9 @@ import { environment } from '../../../../environments/environment';
     MatChipsModule,
     MatIconModule,
     MatTabsModule,
-    MatExpansionModule
+    MatExpansionModule,
+    MatSnackBarModule,
+    UploadUrlPipe
   ],
   template: `
     <h2 mat-dialog-title>{{ data.product ? 'Edit Product' : 'Add Product' }}</h2>
@@ -55,8 +58,10 @@ import { environment } from '../../../../environments/environment';
               <div class="form-row">
                 <mat-form-field appearance="outline" class="half-width">
                   <mat-label>Product Code</mat-label>
-                  <input matInput formControlName="productCode" placeholder="PRD-001">
-                  <mat-error>Product code is required</mat-error>
+                  <input matInput formControlName="productCode" placeholder="PRD-001" (blur)="checkProductCode()">
+                  <mat-error *ngIf="productForm.get('productCode')?.hasError('required')">Product code is required</mat-error>
+                  <mat-error *ngIf="productForm.get('productCode')?.hasError('duplicate')">Product code already exists</mat-error>
+                  <mat-hint *ngIf="productCodeChecking()">Checking...</mat-hint>
                 </mat-form-field>
                 
                 <mat-form-field appearance="outline" class="half-width">
@@ -72,12 +77,9 @@ import { environment } from '../../../../environments/environment';
                 </mat-form-field>
               </div>
 
-              <div class="form-row">
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Full Description (HTML)</mat-label>
-                  <textarea matInput formControlName="descriptionHtml" rows="6"></textarea>
-                  <mat-hint>Use HTML for rich formatting</mat-hint>
-                </mat-form-field>
+              <div class="editor-field">
+                <label>Full Description (Rich Text)</label>
+                <div #descriptionEditor class="quill-editor"></div>
               </div>
 
               <div class="form-row">
@@ -117,6 +119,18 @@ import { environment } from '../../../../environments/environment';
 
               <div class="form-row">
                 <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Designer</mat-label>
+                  <mat-select formControlName="designerId">
+                    <mat-option value="">None</mat-option>
+                    <mat-option *ngFor="let designer of data.designers" [value]="designer._id">
+                      {{ designer.name }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="full-width">
                   <mat-label>Tags</mat-label>
                   <mat-chip-grid #chipGrid>
                     <mat-chip-row *ngFor="let tag of tags()" (removed)="removeTag(tag)">
@@ -141,20 +155,26 @@ import { environment } from '../../../../environments/environment';
         <mat-tab label="Media">
           <div class="tab-content">
             <div class="media-section">
-              <h3>Images</h3>
+              <h3>Product Images</h3>
               <input type="file" #imageInput multiple accept="image/*" (change)="onImageSelect($event)" style="display:none">
               <button mat-raised-button (click)="imageInput.click()">
                 <mat-icon>add_photo_alternate</mat-icon>
                 Upload Images
               </button>
               <div class="image-preview" *ngIf="uploadedImages().length">
-                <div *ngFor="let img of uploadedImages(); let i = index" class="image-item">
-                  <img [src]="img" />
-                  <button mat-icon-button (click)="removeImage(i)">
+                <div *ngFor="let img of uploadedImages(); let i = index" class="image-item" [class.featured]="featuredImageIndex() === i">
+                  <img [src]="img | uploadUrl" />
+                  <button mat-icon-button class="set-featured" (click)="setFeaturedImage(i)" [class.active]="featuredImageIndex() === i">
+                    <mat-icon>{{ featuredImageIndex() === i ? 'star' : 'star_border' }}</mat-icon>
+                  </button>
+                  <button mat-icon-button class="remove-btn" (click)="removeImage(i)">
                     <mat-icon>close</mat-icon>
                   </button>
                 </div>
               </div>
+              <p *ngIf="uploadedImages().length" class="hint-text">
+                <mat-icon>info</mat-icon> Click star to set featured image
+              </p>
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Or paste image URLs (comma separated)</mat-label>
                 <input matInput [(ngModel)]="imageUrls" placeholder="https://...">
@@ -244,6 +264,10 @@ import { environment } from '../../../../environments/environment';
                             <mat-label>Option Name</mat-label>
                             <input matInput formControlName="value" placeholder="e.g., White Marble, Brass Finish">
                           </mat-form-field>
+                          <mat-form-field appearance="outline" class="option-code">
+                            <mat-label>Product Code</mat-label>
+                            <input matInput [value]="getVariationProductCode(i, j)" (input)="setVariationProductCode(i, j, $event)" placeholder="PRD-001-V1">
+                          </mat-form-field>
                           <mat-form-field appearance="outline" class="option-price">
                             <mat-label>Price Modifier</mat-label>
                             <input matInput type="number" formControlName="priceModifier">
@@ -253,6 +277,26 @@ import { environment } from '../../../../environments/environment';
                           <button mat-icon-button color="warn" type="button" (click)="removeMeasurementOption(i, j)">
                             <mat-icon>delete</mat-icon>
                           </button>
+                        </div>
+                      </div>
+
+                      <div class="variation-images-section">
+                        <h4>Variation Images (Optional)</h4>
+                        <input type="file" #varImageInput multiple accept="image/*" (change)="onVariationImageSelect($event, i)" style="display:none">
+                        <button mat-raised-button type="button" (click)="varImageInput.click()">
+                          <mat-icon>add_photo_alternate</mat-icon>
+                          Upload Images for {{ measurement.get('name')?.value }}
+                        </button>
+                        <div class="image-preview" *ngIf="getVariationImages(i).length">
+                          <div *ngFor="let img of getVariationImages(i); let j = index" class="image-item" [class.featured]="getVariationFeaturedIndex(i) === j">
+                            <img [src]="img | uploadUrl" />
+                            <button mat-icon-button class="set-featured" (click)="setVariationFeaturedImage(i, j)" [class.active]="getVariationFeaturedIndex(i) === j">
+                              <mat-icon>{{ getVariationFeaturedIndex(i) === j ? 'star' : 'star_border' }}</mat-icon>
+                            </button>
+                            <button mat-icon-button class="remove-btn" (click)="removeVariationImage(i, j)">
+                              <mat-icon>close</mat-icon>
+                            </button>
+                          </div>
                         </div>
                       </div>
 
@@ -389,6 +433,9 @@ import { environment } from '../../../../environments/environment';
     .option-value {
       flex: 2;
     }
+    .option-code {
+      flex: 1.5;
+    }
     .option-price {
       flex: 1;
     }
@@ -454,37 +501,105 @@ import { environment } from '../../../../environments/environment';
       width: 100px;
       height: 100px;
     }
+    .image-item.featured {
+      border: 3px solid #ffd700;
+      border-radius: 4px;
+    }
     .image-item img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       border-radius: 4px;
     }
-    .image-item button {
+    .image-item .remove-btn {
       position: absolute;
       top: -8px;
       right: -8px;
       background: white;
     }
+    .image-item .set-featured {
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: white;
+    }
+    .image-item .set-featured.active {
+      color: #ffd700;
+    }
+    .hint-text {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      color: #666;
+      margin-top: 8px;
+    }
+    .hint-text mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+    .variation-images-section {
+      margin-top: 16px;
+      padding: 16px;
+      background: #f9f9f9;
+      border-radius: 8px;
+    }
+    .variation-images-section h4 {
+      margin: 0 0 12px 0;
+      font-size: 14px;
+      color: #666;
+    }
+    .editor-field {
+      margin: 1rem 0;
+    }
+    .editor-field label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
+      color: #666;
+    }
+    .quill-editor {
+      min-height: 200px;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    ::ng-deep .ql-toolbar {
+      border-top-left-radius: 4px;
+      border-top-right-radius: 4px;
+    }
+    ::ng-deep .ql-container {
+      border-bottom-left-radius: 4px;
+      border-bottom-right-radius: 4px;
+    }
   `]
 })
-export class ProductDialogComponent implements OnInit {
+export class ProductDialogComponent implements OnInit, AfterViewInit {
+  @ViewChild('descriptionEditor') descriptionEditorElement!: ElementRef;
   productForm: FormGroup;
   tags = signal<string[]>([]);
   uploadedImages = signal<string[]>([]);
+  featuredImageIndex = signal<number>(-1);
+  variationImages = signal<Map<number, string[]>>(new Map());
+  variationFeaturedImages = signal<Map<number, number>>(new Map());
+  variationProductCodes = signal<Map<number, Map<number, string>>>(new Map());
   saving = signal(false);
+  productCodeChecking = signal(false);
   currency = signal('USD');
   currencySymbol = signal('$');
   separatorKeysCodes: number[] = [ENTER, COMMA];
   imageUrls = '';
   videoUrls = '';
   modelUrls = '';
+  quillEditor: any;
 
   constructor(
     private fb: FormBuilder,
-    private http: HttpClient,
     private catalogueService: CatalogueService,
     private preferencesService: PreferencesService,
+    private snackBar: MatSnackBar,
     private dialogRef: MatDialogRef<ProductDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
@@ -498,6 +613,7 @@ export class ProductDialogComponent implements OnInit {
       currency: ['USD'],
       categoryId: [''],
       collectionId: [''],
+      designerId: [''],
       isPublished: [false],
       dimensionType: ['hwl'],
       dimensionUnit: ['cm'],
@@ -533,6 +649,7 @@ export class ProductDialogComponent implements OnInit {
         currency: p.currency,
         categoryId: p.categoryId,
         collectionId: p.collectionId,
+        designerId: p.designerId,
         isPublished: p.isPublished,
         seoTitle: p.seo?.title,
         seoDescription: p.seo?.description,
@@ -540,20 +657,61 @@ export class ProductDialogComponent implements OnInit {
       });
       
       if (p.tags) this.tags.set(p.tags);
-      if (p.images) this.uploadedImages.set(p.images);
+      if (p.imageGallery) this.uploadedImages.set(p.imageGallery);
+      if (p.featuredImage && p.imageGallery) {
+        const index = p.imageGallery.indexOf(p.featuredImage);
+        if (index !== -1) this.featuredImageIndex.set(index);
+      }
       if (p.videos) this.videoUrls = p.videos.join(', ');
       if (p.models3d) this.modelUrls = p.models3d.join(', ');
       
-      if (p.measurements) {
-        p.measurements.forEach((m: any) => {
+      // Transform variations back to measurements for editing
+      if (p.variations && p.variations.length > 0) {
+        const measurementsMap = this.transformVariationsToMeasurements(p.variations);
+        let measurementIndex = 0;
+        measurementsMap.forEach((options, name) => {
           const measurementGroup = this.fb.group({
-            name: [m.name],
-            options: this.fb.array(m.options.map((o: any) => this.fb.group({
+            name: [name],
+            options: this.fb.array(options.map((o: any) => this.fb.group({
               value: [o.value],
               priceModifier: [o.priceModifier]
             })))
           });
           this.measurements.push(measurementGroup);
+          
+          // Restore variation images and product codes
+          const variation = p.variations.find((v: any) => v[name]);
+          if (variation) {
+            if (variation.imageGallery && variation.imageGallery.length > 0) {
+              const varImagesMap = new Map(this.variationImages());
+              varImagesMap.set(measurementIndex, variation.imageGallery);
+              this.variationImages.set(varImagesMap);
+              
+              if (variation.featuredImage) {
+                const featuredIdx = variation.imageGallery.indexOf(variation.featuredImage);
+                if (featuredIdx !== -1) {
+                  const featuredMap = new Map(this.variationFeaturedImages());
+                  featuredMap.set(measurementIndex, featuredIdx);
+                  this.variationFeaturedImages.set(featuredMap);
+                }
+              }
+            }
+            
+            // Restore product codes for each option
+            const productCodesMap = new Map<number, string>();
+            options.forEach((opt: any, optIdx: number) => {
+              const varWithCode = p.variations.find((v: any) => v[name] === opt.value);
+              if (varWithCode && varWithCode.sku) {
+                productCodesMap.set(optIdx, varWithCode.sku);
+              }
+            });
+            if (productCodesMap.size > 0) {
+              const codesMap = new Map(this.variationProductCodes());
+              codesMap.set(measurementIndex, productCodesMap);
+              this.variationProductCodes.set(codesMap);
+            }
+          }
+          measurementIndex++;
         });
       }
     }
@@ -562,6 +720,57 @@ export class ProductDialogComponent implements OnInit {
       if (name && !this.data.product) {
         const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
         this.productForm.patchValue({ slug }, { emitEvent: false });
+      }
+    });
+  }
+
+  ngAfterViewInit() {
+    this.quillEditor = new Quill(this.descriptionEditorElement.nativeElement, {
+      theme: 'snow',
+      modules: {
+        toolbar: [
+          ['bold', 'italic', 'underline', 'strike'],
+          ['blockquote', 'code-block'],
+          [{ 'header': 1 }, { 'header': 2 }],
+          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+          [{ 'indent': '-1'}, { 'indent': '+1' }],
+          ['link', 'image'],
+          ['clean']
+        ]
+      }
+    });
+
+    if (this.data?.product?.descriptionHtml) {
+      this.quillEditor.root.innerHTML = this.data.product.descriptionHtml;
+    }
+
+    this.quillEditor.on('text-change', () => {
+      this.productForm.patchValue({ descriptionHtml: this.quillEditor.root.innerHTML });
+    });
+  }
+
+  checkProductCode() {
+    const productCode = this.productForm.get('productCode')?.value;
+    if (!productCode) return;
+
+    this.productCodeChecking.set(true);
+    const excludeId = this.data.product?._id;
+    
+    this.catalogueService.checkProductCodeExists(productCode, excludeId).subscribe({
+      next: (result) => {
+        this.productCodeChecking.set(false);
+        if (result.exists) {
+          this.productForm.get('productCode')?.setErrors({ duplicate: true });
+        } else {
+          const errors = this.productForm.get('productCode')?.errors;
+          if (errors) {
+            delete errors['duplicate'];
+            this.productForm.get('productCode')?.setErrors(Object.keys(errors).length ? errors : null);
+          }
+        }
+      },
+      error: () => {
+        this.productCodeChecking.set(false);
       }
     });
   }
@@ -608,54 +817,149 @@ export class ProductDialogComponent implements OnInit {
   }
 
   onImageSelect(event: any) {
-    const files = event.target.files;
-    if (files) {
-      for (let file of files) {
-        const formData = new FormData();
-        formData.append('images', file);
-        
-        this.http.post<any>(`${environment.apiUrl}/catalogue/products/upload-images`, formData)
-          .subscribe(res => {
-            if (res.urls) {
-              this.uploadedImages.update((imgs: string[]) => [...imgs, ...res.urls]);
-            }
-          });
-      }
+    const files = Array.from(event.target.files) as File[];
+    if (files.length) {
+      console.log('Uploading', files.length, 'images...');
+      this.catalogueService.uploadProductImages(files).subscribe({
+        next: (res) => {
+          console.log('Upload response:', res);
+          if (res.urls) {
+            this.uploadedImages.update((imgs: string[]) => [...imgs, ...res.urls]);
+            console.log('Images added:', res.urls);
+            this.snackBar.open(`${res.urls.length} image(s) uploaded successfully`, 'Close', { duration: 2000 });
+          }
+        },
+        error: (err) => {
+          console.error('Image upload failed:', err);
+          const message = err.error?.message || 'Failed to upload images';
+          this.snackBar.open(message, 'Close', { duration: 5000, panelClass: ['error-snackbar'] });
+        }
+      });
     }
   }
 
   onVideoSelect(event: any) {
     const file = event.target.files[0];
     if (file) {
-      const formData = new FormData();
-      formData.append('video', file);
-      
-      this.http.post<any>(`${environment.apiUrl}/catalogue/products/upload-video`, formData)
-        .subscribe(res => {
+      console.log('Uploading video:', file.name);
+      this.catalogueService.uploadProductVideo(file).subscribe({
+        next: (res) => {
+          console.log('Video upload response:', res);
           if (res.url) {
             this.videoUrls = this.videoUrls ? `${this.videoUrls}, ${res.url}` : res.url;
+            this.snackBar.open('Video uploaded successfully', 'Close', { duration: 2000 });
           }
-        });
+        },
+        error: (err) => {
+          console.error('Video upload failed:', err);
+          const message = err.error?.message || 'Failed to upload video';
+          this.snackBar.open(message, 'Close', { duration: 5000, panelClass: ['error-snackbar'] });
+        }
+      });
     }
   }
 
   onModelSelect(event: any) {
     const file = event.target.files[0];
     if (file) {
-      const formData = new FormData();
-      formData.append('model', file);
-      
-      this.http.post<any>(`${environment.apiUrl}/catalogue/products/upload-model`, formData)
-        .subscribe(res => {
+      console.log('Uploading 3D model:', file.name);
+      this.catalogueService.uploadProduct3DModel(file).subscribe({
+        next: (res) => {
+          console.log('Model upload response:', res);
           if (res.url) {
             this.modelUrls = this.modelUrls ? `${this.modelUrls}, ${res.url}` : res.url;
+            this.snackBar.open('3D model uploaded successfully', 'Close', { duration: 2000 });
           }
-        });
+        },
+        error: (err) => {
+          console.error('Model upload failed:', err);
+          const message = err.error?.message || 'Failed to upload 3D model';
+          this.snackBar.open(message, 'Close', { duration: 5000, panelClass: ['error-snackbar'] });
+        }
+      });
     }
   }
 
   removeImage(index: number) {
     this.uploadedImages.update((imgs: string[]) => imgs.filter((_: string, i: number) => i !== index));
+    if (this.featuredImageIndex() === index) {
+      this.featuredImageIndex.set(-1);
+    } else if (this.featuredImageIndex() > index) {
+      this.featuredImageIndex.update(idx => idx - 1);
+    }
+  }
+
+  setFeaturedImage(index: number) {
+    this.featuredImageIndex.set(index);
+  }
+
+  onVariationImageSelect(event: any, measurementIndex: number) {
+    const files = Array.from(event.target.files) as File[];
+    if (files.length) {
+      this.catalogueService.uploadProductImages(files).subscribe({
+        next: (res) => {
+          if (res.urls) {
+            const currentImages = this.variationImages().get(measurementIndex) || [];
+            const newMap = new Map(this.variationImages());
+            newMap.set(measurementIndex, [...currentImages, ...res.urls]);
+            this.variationImages.set(newMap);
+            this.snackBar.open(`${res.urls.length} variation image(s) uploaded`, 'Close', { duration: 2000 });
+          }
+        },
+        error: (err) => {
+          console.error('Image upload failed:', err);
+          const message = err.error?.message || 'Failed to upload images';
+          this.snackBar.open(message, 'Close', { duration: 5000, panelClass: ['error-snackbar'] });
+        }
+      });
+    }
+  }
+
+  getVariationImages(measurementIndex: number): string[] {
+    return this.variationImages().get(measurementIndex) || [];
+  }
+
+  getVariationFeaturedIndex(measurementIndex: number): number {
+    return this.variationFeaturedImages().get(measurementIndex) ?? -1;
+  }
+
+  setVariationFeaturedImage(measurementIndex: number, imageIndex: number) {
+    const newMap = new Map(this.variationFeaturedImages());
+    newMap.set(measurementIndex, imageIndex);
+    this.variationFeaturedImages.set(newMap);
+  }
+
+  removeVariationImage(measurementIndex: number, imageIndex: number) {
+    const currentImages = this.variationImages().get(measurementIndex) || [];
+    const newMap = new Map(this.variationImages());
+    newMap.set(measurementIndex, currentImages.filter((_, i) => i !== imageIndex));
+    this.variationImages.set(newMap);
+    
+    const featuredIdx = this.variationFeaturedImages().get(measurementIndex);
+    if (featuredIdx === imageIndex) {
+      const featuredMap = new Map(this.variationFeaturedImages());
+      featuredMap.set(measurementIndex, -1);
+      this.variationFeaturedImages.set(featuredMap);
+    } else if (featuredIdx !== undefined && featuredIdx > imageIndex) {
+      const featuredMap = new Map(this.variationFeaturedImages());
+      featuredMap.set(measurementIndex, featuredIdx - 1);
+      this.variationFeaturedImages.set(featuredMap);
+    }
+  }
+
+  getVariationProductCode(measurementIndex: number, optionIndex: number): string {
+    return this.variationProductCodes().get(measurementIndex)?.get(optionIndex) || '';
+  }
+
+  setVariationProductCode(measurementIndex: number, optionIndex: number, event: any) {
+    const code = event.target.value;
+    const measurementMap = this.variationProductCodes().get(measurementIndex) || new Map();
+    const newMeasurementMap = new Map(measurementMap);
+    newMeasurementMap.set(optionIndex, code);
+    
+    const newMap = new Map(this.variationProductCodes());
+    newMap.set(measurementIndex, newMeasurementMap);
+    this.variationProductCodes.set(newMap);
   }
 
   onSave() {
@@ -667,15 +971,25 @@ export class ProductDialogComponent implements OnInit {
         ...(this.imageUrls ? this.imageUrls.split(',').map(u => u.trim()) : [])
       ];
       
+      const featuredImage = this.featuredImageIndex() >= 0 ? allImages[this.featuredImageIndex()] : (allImages[0] || '');
+      
       const allVideos = this.videoUrls ? this.videoUrls.split(',').map(u => u.trim()) : [];
       const allModels = this.modelUrls ? this.modelUrls.split(',').map(u => u.trim()) : [];
+
+      // Transform measurements to variations format
+      const variations = this.transformMeasurementsToVariations(
+        this.productForm.value.measurements || [],
+        this.productForm.value.basePrice || 0
+      );
 
       const productData = {
         ...this.productForm.value,
         tags: this.tags(),
-        images: allImages,
+        featuredImage: featuredImage,
+        imageGallery: allImages,
         videos: allVideos,
         models3d: allModels,
+        variations: variations,
         seo: {
           title: this.productForm.value.seoTitle,
           description: this.productForm.value.seoDescription,
@@ -683,6 +997,7 @@ export class ProductDialogComponent implements OnInit {
         }
       };
 
+      delete productData.measurements;
       delete productData.seoTitle;
       delete productData.seoDescription;
       delete productData.seoKeywords;
@@ -694,16 +1009,101 @@ export class ProductDialogComponent implements OnInit {
       request.subscribe({
         next: () => {
           this.saving.set(false);
+          this.snackBar.open('Product saved successfully', 'Close', { duration: 3000 });
           this.dialogRef.close(true);
         },
-        error: () => {
+        error: (err) => {
           this.saving.set(false);
+          const message = err.error?.message || err.message || 'Failed to save product';
+          this.snackBar.open(message, 'Close', { duration: 5000, panelClass: ['error-snackbar'] });
         }
       });
     }
   }
 
+  private transformMeasurementsToVariations(measurements: any[], basePrice: number): any[] {
+    if (!measurements || measurements.length === 0) return [];
+
+    const variations: any[] = [];
+    let variationCounter = 1;
+    
+    // Generate all combinations of measurement options
+    const generateCombinations = (index: number, current: any, optionIndices: number[]) => {
+      if (index === measurements.length) {
+        const variationName = Object.values(current).join(' - ');
+        const totalModifier = Object.keys(current).reduce((sum, key) => {
+          const measurement = measurements.find(m => m.name === key);
+          const option = measurement?.options?.find((o: any) => o.value === current[key]);
+          return sum + (option?.priceModifier || 0);
+        }, 0);
+
+        // Get images and product code for this variation
+        const measurementIndex = optionIndices[0];
+        const optionIndex = optionIndices[optionIndices.length - 1];
+        const varImages = this.variationImages().get(measurementIndex) || [];
+        const varFeaturedIdx = this.variationFeaturedImages().get(measurementIndex) ?? -1;
+        const varFeaturedImage = varFeaturedIdx >= 0 ? varImages[varFeaturedIdx] : (varImages[0] || '');
+        const varProductCode = this.variationProductCodes().get(measurementIndex)?.get(optionIndex) || 
+                               `${this.productForm.value.productCode}-V${variationCounter}`;
+
+        variations.push({
+          name: variationName,
+          sku: varProductCode,
+          featuredImage: varFeaturedImage,
+          imageGallery: varImages,
+          dimensions: {},
+          price: basePrice + totalModifier,
+          priceModifier: totalModifier,
+          isAvailable: true,
+          ...current
+        });
+        variationCounter++;
+        return;
+      }
+
+      const measurement = measurements[index];
+      if (measurement.options && measurement.options.length > 0) {
+        measurement.options.forEach((option: any, optIdx: number) => {
+          generateCombinations(index + 1, {
+            ...current,
+            [measurement.name]: option.value
+          }, [...optionIndices, optIdx]);
+        });
+      } else {
+        generateCombinations(index + 1, current, optionIndices);
+      }
+    };
+
+    generateCombinations(0, {}, []);
+    return variations;
+  }
+
   onCancel() {
     this.dialogRef.close();
+  }
+
+  private transformVariationsToMeasurements(variations: any[]): Map<string, any[]> {
+    const measurementsMap = new Map<string, any[]>();
+    const excludeKeys = ['name', 'sku', 'imageGallery', 'dimensions', 'price', 'priceModifier', 'isAvailable', '_id', 'featuredImage'];
+    
+    variations.forEach(variation => {
+      Object.keys(variation).forEach(key => {
+        if (!excludeKeys.includes(key)) {
+          if (!measurementsMap.has(key)) {
+            measurementsMap.set(key, []);
+          }
+          const options = measurementsMap.get(key)!;
+          const existingOption = options.find(o => o.value === variation[key]);
+          if (!existingOption) {
+            options.push({
+              value: variation[key],
+              priceModifier: variation.priceModifier || 0
+            });
+          }
+        }
+      });
+    });
+    
+    return measurementsMap;
   }
 }

@@ -1,6 +1,7 @@
-import { Entity, ObjectIdColumn, ObjectId, Column } from 'typeorm';
+import { Entity, ObjectIdColumn, ObjectId, Column, Index } from 'typeorm';
 
 @Entity('products')
+@Index('idx_product_code', ['productCode'], { unique: true })
 export class Product {
     @ObjectIdColumn()
     _id: ObjectId;
@@ -44,6 +45,9 @@ export class Product {
 
     @Column({ nullable: true })
     collectionId?: string;
+
+    @Column({ nullable: true })
+    designerId?: string;
 
     @Column('array')
     tags: string[];

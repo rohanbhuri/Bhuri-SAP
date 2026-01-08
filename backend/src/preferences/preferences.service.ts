@@ -11,15 +11,19 @@ export class PreferencesService {
   ) {}
 
   async getUserPreferences(userId: string) {
-    return this.userPreferencesRepository.findOne({ where: { userId } });
+    if (!userId) return null;
+    const prefs = await this.userPreferencesRepository.findOne({ where: { userId } as any });
+    return prefs || null;
   }
 
   async saveUserPreferences(userId: string, preferences: any) {
-    const existing = await this.userPreferencesRepository.findOne({ where: { userId } });
+    if (!userId) throw new Error('User ID is required');
+    
+    const existing = await this.userPreferencesRepository.findOne({ where: { userId } as any });
     
     if (existing) {
-      await this.userPreferencesRepository.update({ userId }, preferences);
-      return this.userPreferencesRepository.findOne({ where: { userId } });
+      await this.userPreferencesRepository.update({ userId } as any, preferences);
+      return this.userPreferencesRepository.findOne({ where: { userId } as any });
     } else {
       const newPreferences = this.userPreferencesRepository.create({ userId, ...preferences });
       return this.userPreferencesRepository.save(newPreferences);

@@ -13,10 +13,6 @@ import { CatalogueService } from './catalogue.service';
   template: `
     <mat-card class="widget-card catalogue-widget">
       <mat-card-header>
-        <div class="widget-icon">
-          <mat-icon>view_in_ar</mat-icon>
-        </div>
-        <mat-card-title>Catalogue Management</mat-card-title>
         <mat-card-subtitle>Product catalogue with 3D models & variations</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
@@ -57,7 +53,7 @@ import { CatalogueService } from './catalogue.service';
           <mat-icon>dashboard</mat-icon>
           Manage Catalogue
         </button>
-        <button mat-button (click)="navigateToAnalytics()">
+        <button  mat-raised-button color="primary" (click)="navigateToAnalytics()">
           <mat-icon>analytics</mat-icon>
           View Analytics
         </button>
