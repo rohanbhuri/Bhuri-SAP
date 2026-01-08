@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
@@ -7,25 +7,27 @@ import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { QuotationsService } from '../../quotations.service';
-import { Observable } from 'rxjs';
+import { QuotationDialogComponent } from '../../dialogs/quotation-dialog.component';
 
 @Component({
   selector: 'app-quotation-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, MatButtonModule, MatIconModule, MatCardModule, MatTableModule, MatChipsModule, MatMenuModule],
+  imports: [CommonModule, RouterModule, MatButtonModule, MatIconModule, MatCardModule, MatTableModule, MatChipsModule, MatMenuModule, MatDialogModule],
   template: `
     <div class="tab-content">
       <div class="tab-header">
         <h2>Quotations</h2>
-        <button mat-raised-button color="primary" [routerLink]="['../new']">
+        <button mat-raised-button color="primary" (click)="openDialog()">
           <mat-icon>add</mat-icon>
           New Quotation
         </button>
       </div>
       
       <div class="table-container">
-        <table mat-table [dataSource]="quotes" class="crm-table">
+        <table mat-table [dataSource]="quotes()" class="crm-table">
           <ng-container matColumnDef="quotationNumber">
             <th mat-header-cell *matHeaderCellDef>Quote #</th>
             <td mat-cell *matCellDef="let quote">{{ quote.quotationNumber }}</td>
@@ -49,7 +51,7 @@ import { Observable } from 'rxjs';
           <ng-container matColumnDef="status">
             <th mat-header-cell *matHeaderCellDef>Status</th>
             <td mat-cell *matCellDef="let quote">
-              <mat-chip [color]="getStatusColor(quote.status)">{{ quote.status }}</mat-chip>
+              <mat-chip [class]="'status-' + quote.status">{{ quote.status }}</mat-chip>
             </td>
           </ng-container>
 
@@ -65,17 +67,25 @@ import { Observable } from 'rxjs';
                 <mat-icon>more_vert</mat-icon>
               </button>
               <mat-menu #quoteMenu="matMenu">
-                <button mat-menu-item [routerLink]="[quote._id]">
-                  <mat-icon>visibility</mat-icon>
-                  <span>View</span>
+                <button mat-menu-item (click)="submitForApproval(quote._id)" 
+                        [disabled]="quote.status !== 'draft'">
+                  <mat-icon>send</mat-icon>
+                  Submit for Approval
                 </button>
-                <button mat-menu-item [routerLink]="[quote._id, 'edit']">
-                  <mat-icon>edit</mat-icon>
-                  <span>Edit</span>
+                <button mat-menu-item (click)="approve(quote._id)" 
+                        [disabled]="quote.status !== 'pending_approval'">
+                  <mat-icon>check_circle</mat-icon>
+                  Approve
                 </button>
-                <button mat-menu-item (click)="sendEmail(quote._id)">
+                <button mat-menu-item (click)="sendQuotation(quote._id, 'email')" 
+                        [disabled]="quote.status !== 'approved'">
                   <mat-icon>email</mat-icon>
-                  <span>Send Email</span>
+                  Send via Email
+                </button>
+                <button mat-menu-item (click)="sendQuotation(quote._id, 'whatsapp')" 
+                        [disabled]="quote.status !== 'approved'">
+                  <mat-icon>chat</mat-icon>
+                  Send via WhatsApp
                 </button>
               </mat-menu>
             </td>
@@ -86,29 +96,84 @@ import { Observable } from 'rxjs';
         </table>
       </div>
     </div>
-  `
+  `,
+  styles: [`
+    .tab-content {
+      padding: 24px;
+    }
+    .tab-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .tab-header h2 {
+      margin: 0;
+    }
+    .table-container {
+      margin-top: 16px;
+    }
+    .status-draft { background: #e0e0e0; color: #424242; }
+    .status-pending_approval { background: #fff3e0; color: #f57c00; }
+    .status-approved { background: #e8f5e9; color: #388e3c; }
+    .status-sent { background: #e3f2fd; color: #1976d2; }
+    .status-accepted { background: #f3e5f5; color: #7b1fa2; }
+    .status-declined { background: #ffebee; color: #c62828; }
+    .status-expired { background: #fafafa; color: #616161; }
+  `]
 })
-export class QuotationListComponent {
-  quotes: any[] = [];
+export class QuotationListComponent implements OnInit {
+  private quotationsService = inject(QuotationsService);
+  private snackBar = inject(MatSnackBar);
+  private dialog = inject(MatDialog);
+
+  quotes = signal<any[]>([]);
   displayedColumns = ['quotationNumber', 'client', 'total', 'status', 'date', 'actions'];
 
-  constructor(private quotationsService: QuotationsService) {
+  ngOnInit() {
+    this.loadQuotations();
+  }
+
+  openDialog() {
+    this.dialog.open(QuotationDialogComponent, { width: '600px' })
+      .afterClosed().subscribe(result => {
+        if (result) {
+          this.snackBar.open('Quotation created successfully', 'Close', { duration: 3000 });
+          this.loadQuotations();
+        }
+      });
+  }
+
+  loadQuotations() {
     this.quotationsService.getQuotations().subscribe(quotes => {
-      this.quotes = quotes || [];
+      this.quotes.set(quotes || []);
     });
   }
 
-  getStatusColor(status: string): string {
-    switch (status) {
-      case 'DRAFT': return 'accent';
-      case 'SENT': return 'primary';
-      case 'ACCEPTED': return '';
-      case 'DECLINED': return 'warn';
-      default: return '';
-    }
+  submitForApproval(id: string) {
+    this.quotationsService.submitForApproval(id).subscribe({
+      next: () => {
+        this.snackBar.open('Quotation submitted for approval', 'Close', { duration: 3000 });
+        this.loadQuotations();
+      }
+    });
   }
 
-  sendEmail(id: string) {
-    this.quotationsService.sendQuotationEmail(id).subscribe();
+  approve(id: string) {
+    this.quotationsService.approveQuotation(id).subscribe({
+      next: () => {
+        this.snackBar.open('Quotation approved', 'Close', { duration: 3000 });
+        this.loadQuotations();
+      }
+    });
+  }
+
+  sendQuotation(id: string, via: 'email' | 'whatsapp') {
+    this.quotationsService.sendQuotation(id, via).subscribe({
+      next: () => {
+        this.snackBar.open(`Quotation sent via ${via}`, 'Close', { duration: 3000 });
+        this.loadQuotations();
+      }
+    });
   }
 }

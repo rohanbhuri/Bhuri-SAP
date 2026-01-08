@@ -33,6 +33,9 @@ export class Enquiry {
     enquiryNumber: string;
 
     @Column()
+    clientId: string;
+
+    @Column()
     customerName: string;
 
     @Column()
@@ -61,6 +64,9 @@ export class Enquiry {
 
     @Column({ nullable: true })
     leadId?: string;
+
+    @Column()
+    organizationId: string;
 
     @Column()
     createdAt: Date;

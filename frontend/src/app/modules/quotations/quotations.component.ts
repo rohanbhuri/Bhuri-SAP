@@ -5,7 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { NavbarComponent } from '../../components/navbar.component';
 import { BottomNavbarComponent } from '../../components/bottom-navbar.component';
 import { QuotationListComponent } from './components/quotation-list/quotation-list.component';
-import { EnquiryManagementComponent } from '../enquiry/enquiry-management.component';
+import { EnquiryListComponent } from './components/enquiry-list/enquiry-list.component';
 
 @Component({
   selector: 'app-quotations',
@@ -16,7 +16,7 @@ import { EnquiryManagementComponent } from '../enquiry/enquiry-management.compon
     NavbarComponent,
     BottomNavbarComponent,
     QuotationListComponent,
-    EnquiryManagementComponent
+    EnquiryListComponent
   ],
   template: `
     <app-navbar></app-navbar>
@@ -28,15 +28,15 @@ import { EnquiryManagementComponent } from '../enquiry/enquiry-management.compon
           <span class="current">Quotations</span>
         </nav>
         <h1>Quotation Management</h1>
-        <p class="subtitle">Cart-based enquiry system with automated quotation generation</p>
+        <p class="subtitle">Client enquiries to quotation workflow with approval system</p>
       </div>
 
       <mat-tab-group class="quotations-tabs" [selectedIndex]="selectedTabIndex" (selectedTabChange)="onTabChange($event)">
+        <mat-tab label="Enquiries">
+          <app-enquiry-list></app-enquiry-list>
+        </mat-tab>
         <mat-tab label="Quotations">
           <app-quotation-list></app-quotation-list>
-        </mat-tab>
-        <mat-tab label="Enquiries">
-          <app-enquiry-management></app-enquiry-management>
         </mat-tab>
       </mat-tab-group>
     </div>
@@ -49,7 +49,7 @@ export class QuotationsComponent implements OnInit {
   private router = inject(Router);
   
   selectedTabIndex = 0;
-  private tabs = ['quotations', 'enquiries'];
+  private tabs = ['enquiries', 'quotations'];
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {

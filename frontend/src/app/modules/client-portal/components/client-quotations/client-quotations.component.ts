@@ -104,9 +104,10 @@ export class ClientQuotationsComponent implements OnInit {
     }
 
     loadQuotations() {
-        this.clientPortalService.getMyQuotations().subscribe({
+        const clientId = localStorage.getItem('clientId') || '';
+        this.clientPortalService.getMyQuotations(clientId).subscribe({
             next: (data) => this.quotations = data,
-            error: (err) => console.error('Failed to load quotations', err)
+            error: (err: any) => console.error('Failed to load quotations', err)
         });
     }
 
@@ -117,7 +118,7 @@ export class ClientQuotationsComponent implements OnInit {
                     alert('Quotation accepted successfully!');
                     this.loadQuotations();
                 },
-                error: (err) => {
+                error: (err: any) => {
                     console.error('Failed to accept quotation', err);
                     alert('Failed to accept quotation');
                 }

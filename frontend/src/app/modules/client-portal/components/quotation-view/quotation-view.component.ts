@@ -182,7 +182,7 @@ export class QuotationViewComponent implements OnInit {
     loadQuotation(id: string) {
         this.clientPortalService.getQuotation(id).subscribe({
             next: (data) => this.quotation = data,
-            error: (err) => console.error('Failed to load quotation', err)
+            error: (err: any) => console.error('Failed to load quotation', err)
         });
     }
 
@@ -194,7 +194,7 @@ export class QuotationViewComponent implements OnInit {
                 alert('Quotation accepted successfully!');
                 this.loadQuotation(this.quotation._id);
             },
-            error: (err) => {
+            error: (err: any) => {
                 console.error('Failed to accept quotation', err);
                 alert('Failed to accept quotation. Please try again.');
             }
@@ -211,7 +211,7 @@ export class QuotationViewComponent implements OnInit {
                 this.showRejectForm = false;
                 this.rejectReason = '';
             },
-            error: (err) => {
+            error: (err: any) => {
                 console.error('Failed to decline quotation', err);
                 alert('Failed to decline quotation. Please try again.');
             }

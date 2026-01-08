@@ -298,7 +298,7 @@ export class EnhancedQuotationFormComponent implements OnInit {
 
             this.quotationsService.createQuotation(payload).subscribe({
                 next: (quotation) => {
-                    this.quotationsService.sendQuotationEmail(quotation._id).subscribe({
+                    this.quotationsService.sendQuotation(quotation._id, 'email').subscribe({
                         next: () => {
                             this.snackBar.open('Quotation sent successfully!', 'Close', { duration: 5000 });
                             this.router.navigate(['../../'], { relativeTo: this.route });

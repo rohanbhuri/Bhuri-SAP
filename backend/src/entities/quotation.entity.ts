@@ -11,6 +11,8 @@ export interface QuotationItem {
 
 export enum QuotationStatus {
     DRAFT = 'draft',
+    PENDING_APPROVAL = 'pending_approval',
+    APPROVED = 'approved',
     SENT = 'sent',
     ACCEPTED = 'accepted',
     DECLINED = 'declined',
@@ -26,7 +28,10 @@ export class Quotation {
     quotationNumber: string;
 
     @Column()
-    clientId?: string;
+    clientId: string;
+
+    @Column({ nullable: true })
+    enquiryId?: string;
 
     @Column({ nullable: true })
     clientName?: string; // Snapshot or ad-hoc client name
@@ -55,6 +60,21 @@ export class Quotation {
 
     @Column({ type: 'enum', enum: QuotationStatus, default: QuotationStatus.DRAFT })
     status: QuotationStatus;
+
+    @Column({ nullable: true })
+    approvedBy?: string;
+
+    @Column({ nullable: true })
+    approvedAt?: Date;
+
+    @Column({ nullable: true })
+    sentAt?: Date;
+
+    @Column({ nullable: true })
+    sentVia?: 'email' | 'whatsapp';
+
+    @Column()
+    organizationId: string;
 
     @Column({ nullable: true })
     notes?: string;

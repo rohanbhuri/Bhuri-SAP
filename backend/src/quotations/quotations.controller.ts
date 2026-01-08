@@ -1,15 +1,24 @@
-import { Controller, Get, Post, Put, Delete, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Request, UseGuards } from '@nestjs/common';
 import { QuotationsService } from './quotations.service';
 import { Quotation } from '../entities/quotation.entity';
+import { Enquiry } from '../entities/enquiry.entity';
 import { EmailTemplate } from '../entities/email-template.entity';
+import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 
 @Controller('quotations')
+@UseGuards(JwtAuthGuard)
 export class QuotationsController {
     constructor(private readonly quotationsService: QuotationsService) { }
 
+    // Quotations
     @Get()
-    async getAllQuotations() {
-        return this.quotationsService.findAll();
+    async getAllQuotations(@Request() req) {
+        return this.quotationsService.findAll(req.user.organizationId);
+    }
+
+    @Get('client/:clientId')
+    async getQuotationsByClient(@Param('clientId') clientId: string) {
+        return this.quotationsService.findByClient(clientId);
     }
 
     @Get(':id')
@@ -18,8 +27,13 @@ export class QuotationsController {
     }
 
     @Post()
-    async createQuotation(@Body() data: Partial<Quotation>) {
-        return this.quotationsService.create(data);
+    async createQuotation(@Body() data: Partial<Quotation>, @Request() req) {
+        return this.quotationsService.create(data, req.user.organizationId);
+    }
+
+    @Post('from-enquiry/:enquiryId')
+    async createFromEnquiry(@Param('enquiryId') enquiryId: string, @Request() req) {
+        return this.quotationsService.createFromEnquiry(enquiryId, req.user.userId);
     }
 
     @Put(':id')
@@ -27,14 +41,19 @@ export class QuotationsController {
         return this.quotationsService.update(id, data);
     }
 
-    @Post('from-cart')
-    async createFromCart(@Body() data: { cartItems: any[], clientData: any }) {
-        return this.quotationsService.createFromCart(data.cartItems, data.clientData);
+    @Post(':id/submit-approval')
+    async submitForApproval(@Param('id') id: string) {
+        return this.quotationsService.submitForApproval(id);
     }
 
-    @Post(':id/send-email')
-    async sendEmail(@Param('id') id: string) {
-        return this.quotationsService.sendQuotationEmail(id);
+    @Post(':id/approve')
+    async approveQuotation(@Param('id') id: string, @Request() req) {
+        return this.quotationsService.approve(id, req.user.userId);
+    }
+
+    @Post(':id/send')
+    async sendQuotation(@Param('id') id: string, @Body() body: { via: 'email' | 'whatsapp' }) {
+        return this.quotationsService.sendQuotation(id, body.via);
     }
 
     @Delete(':id')
@@ -42,24 +61,34 @@ export class QuotationsController {
         return this.quotationsService.delete(id);
     }
 
-    // // Client Portal Endpoints
-    // @Get('client/:email')
-    // async getQuotationsByClient(@Param('email') email: string) {
-    //     return this.quotationsService.findByClientEmail(email);
-    // }
+    // Enquiries
+    @Get('enquiries/all')
+    async getAllEnquiries(@Request() req) {
+        return this.quotationsService.findAllEnquiries(req.user.organizationId);
+    }
 
-    // @Put(':id/accept')
-    // async acceptQuotation(@Param('id') id: string) {
-    //     return this.quotationsService.updateStatus(id, 'ACCEPTED');
-    // }
+    @Get('enquiries/:id')
+    async getEnquiry(@Param('id') id: string) {
+        return this.quotationsService.findEnquiry(id);
+    }
 
-    // @Put(':id/reject')
-    // async rejectQuotation(@Param('id') id: string, @Body() body: { reason?: string }) {
-    //     return this.quotationsService.updateStatus(id, 'DECLINED', body.reason);
-    // }
+    @Post('enquiries')
+    async createEnquiry(@Body() data: Partial<Enquiry>, @Request() req) {
+        return this.quotationsService.createEnquiry(data, req.user.organizationId);
+    }
+
+    @Put('enquiries/:id')
+    async updateEnquiry(@Param('id') id: string, @Body() data: Partial<Enquiry>) {
+        return this.quotationsService.updateEnquiry(id, data);
+    }
+
+    @Delete('enquiries/:id')
+    async deleteEnquiry(@Param('id') id: string) {
+        return this.quotationsService.deleteEnquiry(id);
+    }
 
     // Email Templates
-    @Get('templates')
+    @Get('templates/all')
     async getAllTemplates() {
         return this.quotationsService.findAllTemplates();
     }

@@ -132,8 +132,8 @@ export class ClientDashboardComponent implements OnInit {
   }
 
   loadDashboard() {
-    // Load quotations and calculate stats
-    this.clientPortalService.getMyQuotations().subscribe({
+    const clientId = localStorage.getItem('clientId') || '';
+    this.clientPortalService.getMyQuotations(clientId).subscribe({
       next: (quotations) => {
         this.recentQuotations = quotations.slice(0, 5);
         this.stats.total = quotations.length;
@@ -141,7 +141,7 @@ export class ClientDashboardComponent implements OnInit {
         this.stats.accepted = quotations.filter(q => q.status === 'ACCEPTED').length;
         this.stats.totalValue = quotations.reduce((sum, q) => sum + (q.totalAmount || 0), 0);
       },
-      error: (err) => console.error('Failed to load quotations', err)
+      error: (err: any) => console.error('Failed to load quotations', err)
     });
   }
 }

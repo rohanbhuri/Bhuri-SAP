@@ -3,12 +3,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { QuotationsController } from './quotations.controller';
 import { QuotationsService } from './quotations.service';
 import { Quotation } from '../entities/quotation.entity';
+import { Enquiry } from '../entities/enquiry.entity';
 import { EmailTemplate } from '../entities/email-template.entity';
 import { Product } from '../entities/product.entity';
+import { Client } from '../entities/client.entity';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([Quotation, EmailTemplate, Product])
+        TypeOrmModule.forFeature([Quotation, Enquiry, EmailTemplate, Product, Client])
     ],
     controllers: [QuotationsController],
     providers: [QuotationsService],
