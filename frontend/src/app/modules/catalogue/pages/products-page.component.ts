@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { CatalogueService } from '../catalogue.service';
 import { ProductDialogComponent } from '../dialogs/product-dialog.component';
 import { UploadUrlPipe } from '../../../pipes/upload-url.pipe';
@@ -26,10 +27,31 @@ import { UploadUrlPipe } from '../../../pipes/upload-url.pipe';
     <div class="tab-content">
       <div class="tab-header">
         <h2>Products</h2>
-        <button mat-raised-button color="primary" (click)="openProductDialog()">
-          <mat-icon>add</mat-icon>
-          Add Product
-        </button>
+        <div class="header-actions">
+          <button mat-button [matMenuTriggerFor]="importMenu">
+            <mat-icon>upload</mat-icon>
+            Import/Export
+          </button>
+          <mat-menu #importMenu="matMenu">
+            <button mat-menu-item (click)="downloadTemplate()">
+              <mat-icon>download</mat-icon>
+              <span>Download CSV Template</span>
+            </button>
+            <button mat-menu-item (click)="fileInput.click()">
+              <mat-icon>upload_file</mat-icon>
+              <span>Import Products</span>
+            </button>
+            <button mat-menu-item (click)="exportProducts()">
+              <mat-icon>file_download</mat-icon>
+              <span>Export Products</span>
+            </button>
+          </mat-menu>
+          <input #fileInput type="file" accept=".csv" (change)="onFileSelected($event)" style="display:none">
+          <button mat-raised-button color="primary" (click)="openProductDialog()">
+            <mat-icon>add</mat-icon>
+            Add Product
+          </button>
+        </div>
       </div>
       
       <div class="table-container">
@@ -134,6 +156,10 @@ import { UploadUrlPipe } from '../../../pipes/upload-url.pipe';
       font-size: 1.5rem;
       font-weight: 500;
     }
+    .header-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
     .table-container {
       overflow-x: auto;
     }
@@ -193,6 +219,7 @@ import { UploadUrlPipe } from '../../../pipes/upload-url.pipe';
 export class ProductsPageComponent implements OnInit {
   private dialog = inject(MatDialog);
   private catalogueService = inject(CatalogueService);
+  private snackBar = inject(MatSnackBar);
 
   products = signal<any[]>([]);
   categories = signal<any[]>([]);
@@ -306,5 +333,46 @@ export class ProductsPageComponent implements OnInit {
         this.loadProducts();
       });
     }
+  }
+
+  downloadTemplate() {
+    this.catalogueService.downloadProductTemplate().subscribe(blob => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'product-import-template.csv';
+      a.click();
+      window.URL.revokeObjectURL(url);
+    });
+  }
+
+  onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      this.catalogueService.importProducts(file).subscribe({
+        next: (result) => {
+          this.snackBar.open(`Import complete: ${result.success} succeeded, ${result.failed} failed`, 'Close', { duration: 5000 });
+          if (result.errors.length > 0) {
+            console.error('Import errors:', result.errors);
+          }
+          this.loadProducts();
+        },
+        error: (err) => {
+          this.snackBar.open('Import failed: ' + err.message, 'Close', { duration: 5000 });
+        }
+      });
+    }
+    event.target.value = '';
+  }
+
+  exportProducts() {
+    this.catalogueService.exportProducts().subscribe(blob => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'products.csv';
+      a.click();
+      window.URL.revokeObjectURL(url);
+    });
   }
 }

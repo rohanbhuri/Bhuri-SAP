@@ -574,7 +574,8 @@ export class AnalyticsPageComponent implements OnInit {
   }
 
   formatCurrency(value: number): string {
-    return `${this.currencySymbol()}${value.toFixed(2)}`;
+    const numValue = Number(value) || 0;
+    return `${this.currencySymbol()}${numValue.toFixed(2)}`;
   }
 
   loadAnalytics() {

@@ -350,6 +350,6 @@ export class ClientManagementWidgetComponent implements OnInit {
   }
 
   openClientManagement() {
-    this.router.navigate(['/modules/client-management']);
+    this.router.navigate(['/modules/client-management'], { queryParams: { tab: 'clients' } });
   }
 }

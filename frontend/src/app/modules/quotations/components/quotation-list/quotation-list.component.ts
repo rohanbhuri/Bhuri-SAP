@@ -67,6 +67,11 @@ import { QuotationDialogComponent } from '../../dialogs/quotation-dialog.compone
                 <mat-icon>more_vert</mat-icon>
               </button>
               <mat-menu #quoteMenu="matMenu">
+                <button mat-menu-item (click)="editQuotation(quote)" 
+                        [disabled]="quote.status !== 'draft'">
+                  <mat-icon>edit</mat-icon>
+                  Edit
+                </button>
                 <button mat-menu-item (click)="submitForApproval(quote._id)" 
                         [disabled]="quote.status !== 'draft'">
                   <mat-icon>send</mat-icon>
@@ -86,6 +91,11 @@ import { QuotationDialogComponent } from '../../dialogs/quotation-dialog.compone
                         [disabled]="quote.status !== 'approved'">
                   <mat-icon>chat</mat-icon>
                   Send via WhatsApp
+                </button>
+                <button mat-menu-item (click)="deleteQuotation(quote._id)" 
+                        [disabled]="quote.status !== 'draft'">
+                  <mat-icon>delete</mat-icon>
+                  Delete
                 </button>
               </mat-menu>
             </td>
@@ -144,6 +154,18 @@ export class QuotationListComponent implements OnInit {
       });
   }
 
+  editQuotation(quote: any) {
+    this.dialog.open(QuotationDialogComponent, { 
+      width: '600px',
+      data: { quotation: quote, mode: 'edit' }
+    }).afterClosed().subscribe(result => {
+      if (result) {
+        this.snackBar.open('Quotation updated successfully', 'Close', { duration: 3000 });
+        this.loadQuotations();
+      }
+    });
+  }
+
   loadQuotations() {
     this.quotationsService.getQuotations().subscribe(quotes => {
       this.quotes.set(quotes || []);
@@ -175,5 +197,16 @@ export class QuotationListComponent implements OnInit {
         this.loadQuotations();
       }
     });
+  }
+
+  deleteQuotation(id: string) {
+    if (confirm('Are you sure you want to delete this quotation?')) {
+      this.quotationsService.deleteQuotation(id).subscribe({
+        next: () => {
+          this.snackBar.open('Quotation deleted', 'Close', { duration: 3000 });
+          this.loadQuotations();
+        }
+      });
+    }
   }
 }

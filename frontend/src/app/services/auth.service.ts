@@ -11,6 +11,8 @@ export interface User {
   firstName: string;
   lastName: string;
   avatar?: string;
+  currency?: string;
+  currencySymbol?: string;
   isActive: boolean;
   createdAt: Date;
   roles: UserRole[];

@@ -5,12 +5,13 @@ import { QuotationsService } from './quotations.service';
 import { Quotation } from '../entities/quotation.entity';
 import { Enquiry } from '../entities/enquiry.entity';
 import { EmailTemplate } from '../entities/email-template.entity';
+import { Presentation } from '../entities/presentation.entity';
 import { Product } from '../entities/product.entity';
 import { Client } from '../entities/client.entity';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([Quotation, Enquiry, EmailTemplate, Product, Client])
+        TypeOrmModule.forFeature([Quotation, Enquiry, EmailTemplate, Presentation, Product, Client])
     ],
     controllers: [QuotationsController],
     providers: [QuotationsService],

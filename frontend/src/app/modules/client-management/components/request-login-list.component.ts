@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
@@ -206,7 +206,8 @@ export class RequestLoginListComponent implements OnInit {
 
   constructor(
     private clientService: ClientManagementService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -218,6 +219,7 @@ export class RequestLoginListComponent implements OnInit {
       next: (data) => {
         this.requests = data;
         this.filteredRequests = data;
+        this.cdr.detectChanges();
       },
       error: (err) => console.error('Failed to load requests', err)
     });

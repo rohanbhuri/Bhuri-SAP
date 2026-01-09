@@ -59,6 +59,10 @@ export class QuotationsService {
         return this.http.get<any[]>(`${this.apiUrl}/enquiries/all`);
     }
 
+    getAllEnquiries(): Observable<any[]> {
+        return this.http.get<any[]>(`${this.apiUrl}/enquiries/all`);
+    }
+
     getEnquiry(id: string): Observable<any> {
         return this.http.get<any>(`${this.apiUrl}/enquiries/${id}`);
     }
@@ -73,5 +77,39 @@ export class QuotationsService {
 
     deleteEnquiry(id: string): Observable<any> {
         return this.http.delete<any>(`${this.apiUrl}/enquiries/${id}`);
+    }
+
+    // Products
+    getProducts(): Observable<any[]> {
+        return this.http.get<any[]>(`${getBrandConfig().app.apiUrl}/products`);
+    }
+
+    // Presentations
+    getAllPresentations(): Observable<any[]> {
+        return this.http.get<any[]>(`${this.apiUrl}/presentations/all`);
+    }
+
+    getPresentation(id: string): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/presentations/${id}`);
+    }
+
+    createPresentation(presentation: any): Observable<any> {
+        return this.http.post<any>(`${this.apiUrl}/presentations`, presentation);
+    }
+
+    updatePresentation(id: string, presentation: any): Observable<any> {
+        return this.http.put<any>(`${this.apiUrl}/presentations/${id}`, presentation);
+    }
+
+    deletePresentation(id: string): Observable<any> {
+        return this.http.delete<any>(`${this.apiUrl}/presentations/${id}`);
+    }
+
+    downloadPresentation(id: string): Observable<Blob> {
+        return this.http.post(`${this.apiUrl}/presentations/${id}/generate`, {}, { responseType: 'blob' });
+    }
+
+    convertPresentationToQuotation(id: string): Observable<any> {
+        return this.http.post<any>(`${this.apiUrl}/presentations/${id}/convert-to-quotation`, {});
     }
 }

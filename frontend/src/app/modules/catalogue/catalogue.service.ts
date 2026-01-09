@@ -172,4 +172,15 @@ export class CatalogueService {
         }
         return this.http.get<{ exists: boolean }>(url);
     }
+
+    // Import/Export
+    downloadProductTemplate(): Observable<Blob> {
+        return this.http.get(`${this.apiUrl}/template/products`, { responseType: 'blob' });
+    }
+
+    importProducts(file: File): Observable<{ success: number; failed: number; errors: string[] }> {
+        const formData = new FormData();
+        formData.append('file', file);
+        return this.http.post<{ success: number; failed: number; errors: string[] }>(`${this.apiUrl}/import/products`, formData);
+    }
 }

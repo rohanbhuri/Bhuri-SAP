@@ -55,11 +55,18 @@ export class Product {
     @Column()
     isPublished: boolean;
 
+    @Column({ default: false })
+    isExclusive: boolean;
+
     // Dimension configuration (flexible for different product types)
     @Column({ type: 'json', default: {} })
-    dimensionType: {
-        type: 'hwl' | 'hd' | 'custom'; // height-width-length, height-diameter, custom
+    dimensionConfig: {
+        shape: 'rectangle' | 'round';
         unit: 'cm' | 'inch' | 'mm';
+        width?: { min: number; max: number; default: number };
+        height?: number;
+        depth?: number;
+        diameter?: { min: number; max: number; default: number };
     };
 
     // Product variations (material, color, finish, etc.)
@@ -109,10 +116,11 @@ export class Product {
         this.models3d = [];
         this.tags = [];
         this.variations = [];
-        this.dimensionType = { type: 'hwl', unit: 'cm' };
+        this.dimensionConfig = { shape: 'rectangle', unit: 'cm' };
         this.attributes = {};
         this.seo = {};
         this.isPublished = false;
+        this.isExclusive = false;
         this.createdAt = new Date();
     }
 }

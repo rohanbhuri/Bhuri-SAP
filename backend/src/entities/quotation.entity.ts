@@ -3,8 +3,11 @@ import { Entity, ObjectIdColumn, ObjectId, Column } from 'typeorm';
 export interface QuotationItem {
     productId?: string; // Optional if ad-hoc item
     productName: string;
+    variationId?: string; // Product variation ID
+    variationName?: string; // Variation name (e.g., "White Marble with Brass")
     quantity: number;
-    unitPrice: number;
+    originalPrice: number; // Original product/variation price
+    unitPrice: number; // Custom/revised price
     total: number;
     description?: string;
 }
@@ -51,6 +54,12 @@ export class Quotation {
 
     @Column({ type: 'double', default: 0 })
     discountTotal: number;
+
+    @Column({ type: 'json', nullable: true })
+    discount?: {
+        type: 'fixed' | 'percentage';
+        value: number;
+    };
 
     @Column({ type: 'double' })
     grandTotal: number;

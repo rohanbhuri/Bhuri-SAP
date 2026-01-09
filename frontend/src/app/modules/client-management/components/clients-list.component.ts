@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
@@ -162,7 +162,8 @@ export class ClientsListComponent implements OnInit {
 
   constructor(
     private clientManagementService: ClientManagementService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -171,7 +172,10 @@ export class ClientsListComponent implements OnInit {
 
   loadClients() {
     this.clientManagementService.getAllClients().subscribe({
-      next: (data) => this.clients = data,
+      next: (data) => {
+        this.clients = data;
+        this.cdr.detectChanges();
+      },
       error: (err) => console.error('Failed to load clients', err)
     });
   }

@@ -6,6 +6,7 @@ import { NavbarComponent } from '../../components/navbar.component';
 import { BottomNavbarComponent } from '../../components/bottom-navbar.component';
 import { QuotationListComponent } from './components/quotation-list/quotation-list.component';
 import { EnquiryListComponent } from './components/enquiry-list/enquiry-list.component';
+import { PresentationListComponent } from './components/presentation-list/presentation-list.component';
 
 @Component({
   selector: 'app-quotations',
@@ -16,7 +17,8 @@ import { EnquiryListComponent } from './components/enquiry-list/enquiry-list.com
     NavbarComponent,
     BottomNavbarComponent,
     QuotationListComponent,
-    EnquiryListComponent
+    EnquiryListComponent,
+    PresentationListComponent
   ],
   template: `
     <app-navbar></app-navbar>
@@ -38,6 +40,9 @@ import { EnquiryListComponent } from './components/enquiry-list/enquiry-list.com
         <mat-tab label="Quotations">
           <app-quotation-list></app-quotation-list>
         </mat-tab>
+        <mat-tab label="Presentations">
+          <app-presentation-list></app-presentation-list>
+        </mat-tab>
       </mat-tab-group>
     </div>
     <app-bottom-navbar></app-bottom-navbar>
@@ -49,7 +54,7 @@ export class QuotationsComponent implements OnInit {
   private router = inject(Router);
   
   selectedTabIndex = 0;
-  private tabs = ['enquiries', 'quotations'];
+  private tabs = ['enquiries', 'quotations', 'presentations'];
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {

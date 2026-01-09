@@ -58,6 +58,14 @@ const designerImageStorage = diskStorage({
     }
 });
 
+const presentationStorage = diskStorage({
+    destination: './uploads/presentations',
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
+    }
+});
+
 @Controller('catalogue')
 export class CatalogueController {
     constructor(private readonly catalogueService: CatalogueService) { }
@@ -89,6 +97,12 @@ export class CatalogueController {
     async uploadImages(@UploadedFiles() files: Express.Multer.File[]) {
         const urls = files.map(file => `/uploads/products/images/${file.filename}`);
         return { urls };
+    }
+
+    @Post('upload')
+    @UseInterceptors(FileInterceptor('file', { storage: presentationStorage }))
+    async uploadFile(@UploadedFile() file: Express.Multer.File) {
+        return { url: `/uploads/presentations/${file.filename}` };
     }
 
     @Post('products/upload-video')
@@ -253,5 +267,19 @@ export class CatalogueController {
         res.header('Content-Type', 'application/zip');
         res.header('Content-Disposition', 'attachment; filename=catalogue-export.zip');
         res.send(zip);
+    }
+
+    @Get('template/products')
+    async downloadProductTemplate(@Res() res: Response) {
+        const csv = await this.catalogueService.getProductTemplate();
+        res.header('Content-Type', 'text/csv');
+        res.header('Content-Disposition', 'attachment; filename=product-import-template.csv');
+        res.send(csv);
+    }
+
+    @Post('import/products')
+    @UseInterceptors(FileInterceptor('file'))
+    async importProducts(@UploadedFile() file: Express.Multer.File) {
+        return this.catalogueService.importProductsFromCSV(file.buffer.toString());
     }
 }

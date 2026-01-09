@@ -10,6 +10,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { QuotationsService } from '../../quotations.service';
+import { PreferencesService } from '../../../../services/preferences.service';
 
 @Component({
     selector: 'app-enhanced-quotation-form',
@@ -95,7 +96,7 @@ import { QuotationsService } from '../../quotations.service';
                   </mat-form-field>
                   
                   <div class="item-total">
-                    \${{getItemTotal(i)}}
+                    {{currencySymbol}}{{getItemTotal(i)}}
                   </div>
                   
                   <button type="button" mat-icon-button color="warn" (click)="removeItem(i)">
@@ -108,15 +109,15 @@ import { QuotationsService } from '../../quotations.service';
             <div class="totals">
               <div class="total-row">
                 <span>Subtotal:</span>
-                <span class="amount">\${{calculateSubtotal()}}</span>
+                <span class="amount">{{currencySymbol}}{{calculateSubtotal()}}</span>
               </div>
               <div class="total-row">
                 <span>Tax (18%):</span>
-                <span class="amount">\${{calculateTax()}}</span>
+                <span class="amount">{{currencySymbol}}{{calculateTax()}}</span>
               </div>
               <div class="total-row grand-total">
                 <span>Grand Total:</span>
-                <span class="amount">\${{calculateGrandTotal()}}</span>
+                <span class="amount">{{currencySymbol}}{{calculateGrandTotal()}}</span>
               </div>
             </div>
           </mat-card-content>
@@ -197,24 +198,43 @@ import { QuotationsService } from '../../quotations.service';
 })
 export class EnhancedQuotationFormComponent implements OnInit {
     quoteForm: FormGroup;
+    currencySymbol = '$';
+    currency = 'USD';
 
     constructor(
         private fb: FormBuilder,
         private quotationsService: QuotationsService,
         private router: Router,
         private route: ActivatedRoute,
-        private snackBar: MatSnackBar
+        private snackBar: MatSnackBar,
+        private preferencesService: PreferencesService
     ) {
         this.quoteForm = this.fb.group({
             clientName: ['', Validators.required],
             clientEmail: ['', [Validators.required, Validators.email]],
-            currency: ['USD'],
+            currency: [this.currency],
             items: this.fb.array([])
         });
     }
 
     ngOnInit() {
+        this.loadCurrencyPreferences();
         this.addCustomItem();
+    }
+
+    loadCurrencyPreferences() {
+        this.preferencesService.getUserPreferences().subscribe({
+            next: (prefs) => {
+                if (prefs) {
+                    this.currency = prefs.currency || 'USD';
+                    this.currencySymbol = prefs.currencySymbol || '$';
+                    this.quoteForm.patchValue({ currency: this.currency });
+                }
+            },
+            error: () => {
+                console.log('Using default currency');
+            }
+        });
     }
 
     get items() {

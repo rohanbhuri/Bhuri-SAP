@@ -1,9 +1,11 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Request, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Request, UseGuards, Res } from '@nestjs/common';
 import { QuotationsService } from './quotations.service';
 import { Quotation } from '../entities/quotation.entity';
 import { Enquiry } from '../entities/enquiry.entity';
 import { EmailTemplate } from '../entities/email-template.entity';
+import { Presentation } from '../entities/presentation.entity';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { Response } from 'express';
 
 @Controller('quotations')
 @UseGuards(JwtAuthGuard)
@@ -96,5 +98,44 @@ export class QuotationsController {
     @Post('templates')
     async createTemplate(@Body() data: Partial<EmailTemplate>) {
         return this.quotationsService.createTemplate(data);
+    }
+
+    // Presentations
+    @Get('presentations/all')
+    async getAllPresentations(@Request() req) {
+        return this.quotationsService.findAllPresentations(req.user.organizationId);
+    }
+
+    @Get('presentations/:id')
+    async getPresentation(@Param('id') id: string) {
+        return this.quotationsService.findPresentation(id);
+    }
+
+    @Post('presentations')
+    async createPresentation(@Body() data: Partial<Presentation>, @Request() req) {
+        return this.quotationsService.createPresentation(data, req.user.organizationId, req.user.userId);
+    }
+
+    @Put('presentations/:id')
+    async updatePresentation(@Param('id') id: string, @Body() data: Partial<Presentation>) {
+        return this.quotationsService.updatePresentation(id, data);
+    }
+
+    @Delete('presentations/:id')
+    async deletePresentation(@Param('id') id: string) {
+        return this.quotationsService.deletePresentation(id);
+    }
+
+    @Post('presentations/:id/generate')
+    async generatePresentation(@Param('id') id: string, @Res() res: Response) {
+        const buffer = await this.quotationsService.generatePPTX(id);
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.presentationml.presentation');
+        res.setHeader('Content-Disposition', `attachment; filename=presentation-${id}.pptx`);
+        res.send(buffer);
+    }
+
+    @Post('presentations/:id/convert-to-quotation')
+    async convertPresentationToQuotation(@Param('id') id: string) {
+        return this.quotationsService.convertPresentationToQuotation(id);
     }
 }

@@ -1225,8 +1225,14 @@ export class ModulesComponent implements OnInit {
   }
 
   openModule(module: AppModuleInfo) {
-    // Use the route from the module data if available
-    const route = module.route || `/modules/${module.name}`;
+    // Get the module config from registry to find the correct route
+    let registryModule = getModuleById(module.id);
+    if (!registryModule) registryModule = getModuleById(module.name);
+    
+    // Use the route from registry, fallback to module data, or construct from name
+    const route = registryModule?.route || module.route || `/modules/${module.id || module.name}`;
+    
+    console.log('Opening module:', module.id, 'with route:', route);
     this.router.navigate([route]);
   }
 

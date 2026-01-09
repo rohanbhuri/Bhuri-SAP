@@ -40,6 +40,16 @@ import { getBrandConfig } from '../../../../brand.config';
                 <label class="block text-sm font-medium text-gray-700">Description</label>
                 <textarea formControlName="description" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2"></textarea>
             </div>
+            <div class="mt-4 flex items-center space-x-6">
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <input formControlName="isPublished" type="checkbox" class="rounded border-gray-300">
+                    <span class="text-sm font-medium text-gray-700">Published</span>
+                </label>
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <input formControlName="isExclusive" type="checkbox" class="rounded border-gray-300">
+                    <span class="text-sm font-medium text-gray-700">Exclusive (Login Required)</span>
+                </label>
+            </div>
         </div>
 
         <!-- Media -->
@@ -118,7 +128,8 @@ export class ProductFormComponent implements OnInit {
             description: [''],
             images: [[]],
             model3d: [''],
-            isPublished: [true]
+            isPublished: [true],
+            isExclusive: [false]
         });
     }
 
@@ -141,7 +152,8 @@ export class ProductFormComponent implements OnInit {
                     description: product.description,
                     images: product.images || [],
                     model3d: product.model3d || '',
-                    isPublished: product.isPublished !== false
+                    isPublished: product.isPublished !== false,
+                    isExclusive: product.isExclusive || false
                 });
             },
             error: (err) => {

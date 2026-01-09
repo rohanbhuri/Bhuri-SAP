@@ -63,6 +63,8 @@ export interface UserSettings {
   timezone: string;
   dateFormat: string;
   timeFormat: '12h' | '24h';
+  currency: string;
+  currencySymbol: string;
   notifications: NotificationSettings;
   privacy: PrivacySettings;
   organizationPrivacy: OrganizationPrivacy[];
@@ -159,6 +161,8 @@ export class SettingsService {
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       dateFormat: 'MM/dd/yyyy',
       timeFormat: '12h',
+      currency: 'USD',
+      currencySymbol: '$',
       notifications: {
         email: true,
         push: true,

@@ -594,3 +594,20 @@ body.dark-theme {
 .items-left * {
     text-align: left !important;
 }
+
+/* Dialog Box Global Styles */
+.mat-mdc-dialog-container {
+  max-width: 95vw !important;
+  width: auto !important;
+}
+
+.mat-mdc-dialog-container .mdc-dialog__surface {
+  max-width: 95vw !important;
+  width: auto !important;
+}
+
+.cdk-global-overlay-wrapper {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}

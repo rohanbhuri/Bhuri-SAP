@@ -297,4 +297,85 @@ export class CatalogueService {
         
         return zip.toBuffer();
     }
+
+    async getProductTemplate(): Promise<string> {
+        const headers = [
+            'name', 'productCode', 'slug', 'description', 'basePrice', 'currency',
+            'categoryId', 'collectionId', 'designerId', 'tags', 'isPublished',
+            'dimensionShape', 'dimensionUnit', 'widthMin', 'widthMax', 'widthDefault',
+            'height', 'depth', 'diameterMin', 'diameterMax', 'diameterDefault',
+            'featuredImage', 'imageGallery', 'seoTitle', 'seoDescription', 'seoKeywords'
+        ];
+        return headers.join(',');
+    }
+
+    async importProductsFromCSV(csvContent: string): Promise<{ success: number; failed: number; errors: string[] }> {
+        const lines = csvContent.split('\n').filter(line => line.trim());
+        const headers = lines[0].split(',').map(h => h.trim());
+        let success = 0;
+        let failed = 0;
+        const errors: string[] = [];
+
+        for (let i = 1; i < lines.length; i++) {
+            try {
+                const values = lines[i].split(',').map(v => v.trim());
+                const product: any = {};
+
+                headers.forEach((header, index) => {
+                    const value = values[index];
+                    if (value) {
+                        if (header === 'tags' || header === 'imageGallery') {
+                            product[header] = value.split(';').map(v => v.trim());
+                        } else if (header === 'basePrice' || header.includes('Min') || header.includes('Max') || header.includes('Default') || header === 'height' || header === 'depth') {
+                            product[header] = parseFloat(value) || 0;
+                        } else if (header === 'isPublished') {
+                            product[header] = value.toLowerCase() === 'true' || value === '1';
+                        } else {
+                            product[header] = value;
+                        }
+                    }
+                });
+
+                // Build dimensionConfig
+                product.dimensionConfig = {
+                    shape: product.dimensionShape || 'rectangle',
+                    unit: product.dimensionUnit || 'cm',
+                    width: { min: product.widthMin || 0, max: product.widthMax || 0, default: product.widthDefault || 0 },
+                    height: product.height || 0,
+                    depth: product.depth || 0,
+                    diameter: { min: product.diameterMin || 0, max: product.diameterMax || 0, default: product.diameterDefault || 0 }
+                };
+
+                // Build SEO
+                product.seo = {
+                    title: product.seoTitle,
+                    description: product.seoDescription,
+                    keywords: product.seoKeywords
+                };
+
+                // Clean up temporary fields
+                delete product.dimensionShape;
+                delete product.dimensionUnit;
+                delete product.widthMin;
+                delete product.widthMax;
+                delete product.widthDefault;
+                delete product.height;
+                delete product.depth;
+                delete product.diameterMin;
+                delete product.diameterMax;
+                delete product.diameterDefault;
+                delete product.seoTitle;
+                delete product.seoDescription;
+                delete product.seoKeywords;
+
+                await this.createProduct(product);
+                success++;
+            } catch (error) {
+                failed++;
+                errors.push(`Row ${i + 1}: ${error.message}`);
+            }
+        }
+
+        return { success, failed, errors };
+    }
 }

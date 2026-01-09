@@ -1,16 +1,18 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
-import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatRadioModule } from '@angular/material/radio';
 import { QuotationsService } from '../quotations.service';
 import { ClientManagementService } from '../../client-management/services/client-management.service';
 import { CatalogueService } from '../../catalogue/catalogue.service';
+import { PreferencesService } from '../../../services/preferences.service';
 import { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 
@@ -26,10 +28,11 @@ import { map, startWith } from 'rxjs/operators';
     MatButtonModule,
     MatSelectModule,
     MatIconModule,
-    MatAutocompleteModule
+    MatAutocompleteModule,
+    MatRadioModule
   ],
   template: `
-    <h2 mat-dialog-title>Create Manual Quotation</h2>
+    <h2 mat-dialog-title>{{ isEditMode ? 'Edit Quotation' : 'Create Manual Quotation' }}</h2>
     <mat-dialog-content>
       <form [formGroup]="form">
         <mat-form-field appearance="outline" class="full-width">
@@ -37,32 +40,61 @@ import { map, startWith } from 'rxjs/operators';
           <input matInput formControlName="clientSearch" [matAutocomplete]="autoClient" placeholder="Type to search...">
           <mat-autocomplete #autoClient="matAutocomplete" (optionSelected)="onClientSelected($event)" [displayWith]="displayClient">
             <mat-option *ngFor="let client of filteredClients | async" [value]="client">
-              {{ client.companyName }} - {{ client.email }}
+              {{ client.companyName }} - {{ client.contactPerson }}
             </mat-option>
           </mat-autocomplete>
         </mat-form-field>
 
         <h3>Items</h3>
         <div formArrayName="items">
-          <div *ngFor="let item of items.controls; let i=index" [formGroupName]="i" class="item-row">
-            <mat-form-field appearance="outline">
-              <mat-label>Search Product</mat-label>
-              <input matInput formControlName="productSearch" [matAutocomplete]="autoProduct" placeholder="Type to search...">
-              <mat-autocomplete #autoProduct="matAutocomplete" (optionSelected)="onProductSelected(i, $event)" [displayWith]="displayProduct">
-                <mat-option *ngFor="let product of getFilteredProducts(i) | async" [value]="product">
-                  {{ product.name }} - {{ product.basePrice | currency }}
-                </mat-option>
-              </mat-autocomplete>
-            </mat-form-field>
+          <div *ngFor="let item of items.controls; let i=index" [formGroupName]="i" class="item-card">
+            <div class="item-row">
+              <mat-form-field appearance="outline" class="product-field">
+                <mat-label>Search Product</mat-label>
+                <input matInput formControlName="productSearch" [matAutocomplete]="autoProduct" placeholder="Type to search...">
+                <mat-autocomplete #autoProduct="matAutocomplete" (optionSelected)="onProductSelected(i, $event)" [displayWith]="displayProduct">
+                  <mat-option *ngFor="let product of getFilteredProducts(i) | async" [value]="product">
+                    {{ product.name }} - {{currencySymbol}}{{ product.basePrice }}
+                  </mat-option>
+                </mat-autocomplete>
+              </mat-form-field>
 
-            <mat-form-field appearance="outline">
-              <mat-label>Quantity</mat-label>
-              <input matInput type="number" formControlName="quantity" min="1" required>
-            </mat-form-field>
+              <mat-form-field appearance="outline" class="variation-field" *ngIf="getProductVariations(i).length > 0">
+                <mat-label>Variation</mat-label>
+                <mat-select formControlName="variationId" (selectionChange)="onVariationChange(i, $event)">
+                  <mat-option value="">Base Product</mat-option>
+                  <mat-option *ngFor="let variation of getProductVariations(i); let vi = index" [value]="variation.sku || vi">
+                    {{variation.name}} (+{{currencySymbol}}{{variation.priceModifier}})
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
 
-            <button mat-icon-button color="warn" type="button" (click)="removeItem(i)">
-              <mat-icon>delete</mat-icon>
-            </button>
+              <mat-form-field appearance="outline" class="qty-field">
+                <mat-label>Qty</mat-label>
+                <input matInput type="number" formControlName="quantity" min="1" required>
+              </mat-form-field>
+
+              <button mat-icon-button color="warn" type="button" (click)="removeItem(i)" class="delete-btn">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+
+            <div class="price-row" *ngIf="item.get('productId')?.value">
+              <mat-form-field appearance="outline" class="price-field">
+                <mat-label>Original Price</mat-label>
+                <input matInput type="number" formControlName="originalPrice" readonly>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="price-field">
+                <mat-label>Custom Price</mat-label>
+                <input matInput type="number" formControlName="unitPrice" step="0.01" min="0" required>
+              </mat-form-field>
+
+              <div class="item-total">
+                <span class="label">Total:</span>
+                <span class="value">{{currencySymbol}}{{ getItemTotal(i).toFixed(2) }}</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -72,26 +104,72 @@ import { map, startWith } from 'rxjs/operators';
         </button>
 
         <div class="totals" *ngIf="items.length > 0">
-          <p>Subtotal: {{ calculateSubtotal() | currency }}</p>
-          <p>Tax (18%): {{ calculateTax() | currency }}</p>
-          <p><strong>Total: {{ calculateTotal() | currency }}</strong></p>
+          <div class="total-row">
+            <span>Subtotal:</span>
+            <span>{{currencySymbol}}{{ calculateSubtotal().toFixed(2) }}</span>
+          </div>
+
+          <div class="discount-section">
+            <div class="discount-header">
+              <span>Discount:</span>
+              <mat-radio-group formControlName="discountType" class="discount-radio">
+                <mat-radio-button value="none">None</mat-radio-button>
+                <mat-radio-button value="fixed">Fixed</mat-radio-button>
+                <mat-radio-button value="percentage">%</mat-radio-button>
+              </mat-radio-group>
+            </div>
+            
+            <div class="discount-input" *ngIf="form.get('discountType')?.value !== 'none'">
+              <mat-form-field appearance="outline">
+                <mat-label>{{ form.get('discountType')?.value === 'percentage' ? 'Percentage' : 'Amount' }}</mat-label>
+                <input matInput type="number" formControlName="discountValue" step="0.01" min="0" 
+                  [max]="form.get('discountType')?.value === 'percentage' ? 100 : calculateSubtotal()">
+                <span matSuffix>{{ form.get('discountType')?.value === 'percentage' ? '%' : currencySymbol }}</span>
+              </mat-form-field>
+              <span class="discount-amount">-{{currencySymbol}}{{ calculateDiscountAmount().toFixed(2) }}</span>
+            </div>
+          </div>
+
+          <div class="total-row grand-total">
+            <span><strong>Grand Total:</strong></span>
+            <span><strong>{{currencySymbol}}{{ calculateGrandTotal().toFixed(2) }}</strong></span>
+          </div>
         </div>
       </form>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
       <button mat-button (click)="dialogRef.close()">Cancel</button>
       <button mat-raised-button color="primary" (click)="save()" [disabled]="!selectedClient || items.length === 0">
-        Create Quotation
+        {{ isEditMode ? 'Update Quotation' : 'Create Quotation' }}
       </button>
     </mat-dialog-actions>
   `,
   styles: [`
-    mat-dialog-content { min-width: 500px; }
+    mat-dialog-content { width: 95vw; max-width: 1100px; max-height: 80vh; overflow-x: hidden; overflow-y: auto; padding: 20px; }
     .full-width { width: 100%; margin-bottom: 16px; }
-    .item-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
-    .item-row mat-form-field { flex: 1; }
-    .totals { margin-top: 16px; padding: 16px; background: #f5f5f5; border-radius: 4px; }
-    h3 { margin: 16px 0 8px; }
+    .item-card { border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px; margin-bottom: 16px; background: #fafafa; }
+    .item-row { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px; }
+    .item-row mat-form-field { margin-bottom: 0; }
+    .product-field { flex: 2; min-width: 250px; }
+    .variation-field { flex: 1.5; min-width: 200px; }
+    .qty-field { width: 100px; flex-shrink: 0; }
+    .delete-btn { flex-shrink: 0; margin-top: 8px; }
+    .price-row { display: flex; gap: 12px; align-items: flex-start; }
+    .price-row mat-form-field { margin-bottom: 0; }
+    .price-field { flex: 1; min-width: 150px; }
+    .item-total { display: flex; flex-direction: column; align-items: flex-end; min-width: 140px; padding: 12px; background: #e3f2fd; border-radius: 4px; margin-top: 8px; }
+    .item-total .label { font-size: 11px; color: #666; }
+    .item-total .value { font-size: 18px; font-weight: 600; font-family: monospace; color: #1976d2; }
+    .totals { margin-top: 20px; padding: 20px; background: #f5f5f5; border-radius: 8px; }
+    .total-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px; }
+    .grand-total { font-size: 20px; padding-top: 16px; border-top: 2px solid #ddd; margin-top: 12px; }
+    .discount-section { margin: 16px 0; padding: 16px; background: white; border-radius: 4px; }
+    .discount-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 12px; }
+    .discount-radio { display: flex; gap: 16px; }
+    .discount-input { display: flex; gap: 12px; align-items: center; margin-top: 8px; }
+    .discount-input mat-form-field { width: 200px; margin-bottom: 0; }
+    .discount-amount { font-weight: 600; color: #d32f2f; font-family: monospace; font-size: 16px; min-width: 120px; text-align: right; }
+    h3 { margin: 20px 0 12px; font-size: 17px; font-weight: 500; }
   `]
 })
 export class QuotationDialogComponent implements OnInit {
@@ -100,16 +178,24 @@ export class QuotationDialogComponent implements OnInit {
   private quotationsService = inject(QuotationsService);
   private clientService = inject(ClientManagementService);
   private catalogueService = inject(CatalogueService);
+  private preferencesService = inject(PreferencesService);
 
   form: FormGroup;
   clients: any[] = [];
   products: any[] = [];
   filteredClients!: Observable<any[]>;
   selectedClient: any = null;
+  selectedProducts: Map<number, any> = new Map();
+  currencySymbol = '$';
+  currency = 'USD';
+  isEditMode = false;
+  quotationId?: string;
 
-  constructor() {
+  constructor(@Inject(MAT_DIALOG_DATA) public data: any) {
     this.form = this.fb.group({
       clientSearch: [''],
+      discountType: ['none'],
+      discountValue: [0],
       items: this.fb.array([])
     });
   }
@@ -117,7 +203,108 @@ export class QuotationDialogComponent implements OnInit {
   ngOnInit() {
     this.loadClients();
     this.loadProducts();
-    this.addItem();
+    this.loadCurrencyPreferences();
+    
+    if (this.data?.quotation) {
+      if (this.data.mode === 'create-from-presentation') {
+        this.isEditMode = false;
+        this.loadQuotationDataFromPresentation(this.data.quotation);
+      } else {
+        this.isEditMode = true;
+        this.quotationId = this.data.quotation._id;
+        this.loadQuotationData(this.data.quotation);
+      }
+    } else {
+      this.addItem();
+    }
+  }
+
+  loadCurrencyPreferences() {
+    this.preferencesService.getUserPreferences().subscribe({
+      next: (prefs) => {
+        if (prefs) {
+          this.currency = prefs.currency || 'USD';
+          this.currencySymbol = prefs.currencySymbol || '$';
+        }
+      },
+      error: () => console.log('Using default currency')
+    });
+  }
+
+  loadQuotationData(quotation: any) {
+    // Find and set client
+    const client = this.clients.find(c => c._id === quotation.clientId);
+    if (client) {
+      this.selectedClient = client;
+      this.form.patchValue({ clientSearch: client });
+    }
+
+    // Set discount
+    if (quotation.discount) {
+      this.form.patchValue({
+        discountType: quotation.discount.type,
+        discountValue: quotation.discount.value
+      });
+    }
+
+    // Load items
+    quotation.items.forEach((item: any) => {
+      const itemGroup = this.fb.group({
+        productSearch: [''],
+        productId: [item.productId || ''],
+        variationId: [item.variationId || ''],
+        variationName: [item.variationName || ''],
+        quantity: [item.quantity, [Validators.required, Validators.min(1)]],
+        originalPrice: [item.originalPrice || item.unitPrice],
+        unitPrice: [item.unitPrice, [Validators.required, Validators.min(0)]]
+      });
+
+      // Find and set product
+      if (item.productId) {
+        const product = this.products.find(p => p._id === item.productId);
+        if (product) {
+          const index = this.items.length;
+          this.selectedProducts.set(index, product);
+          itemGroup.patchValue({ productSearch: product });
+        }
+      }
+
+      this.items.push(itemGroup);
+    });
+  }
+
+  loadQuotationDataFromPresentation(quotationData: any) {
+    // Find and set client
+    const client = this.clients.find(c => c._id === quotationData.clientId);
+    if (client) {
+      this.selectedClient = client;
+      this.form.patchValue({ clientSearch: client });
+    }
+
+    // Load items from presentation
+    quotationData.items.forEach((item: any) => {
+      const itemGroup = this.fb.group({
+        productSearch: [''],
+        productId: [item.productId || ''],
+        variationId: [''],
+        variationName: [''],
+        quantity: [item.quantity, [Validators.required, Validators.min(1)]],
+        originalPrice: [item.originalPrice || item.unitPrice],
+        unitPrice: [item.unitPrice, [Validators.required, Validators.min(0)]]
+      });
+
+      // Find and set product
+      if (item.productId) {
+        const product = this.products.find(p => p._id === item.productId);
+        if (product) {
+          const index = this.items.length;
+          this.selectedProducts.set(index, product);
+          itemGroup.patchValue({ productSearch: product });
+        }
+      }
+
+      this.items.push(itemGroup);
+    });
   }
 
   get items() {
@@ -128,12 +315,17 @@ export class QuotationDialogComponent implements OnInit {
     this.items.push(this.fb.group({
       productSearch: [''],
       productId: [''],
-      quantity: [1, [Validators.required, Validators.min(1)]]
+      variationId: [''],
+      variationName: [''],
+      quantity: [1, [Validators.required, Validators.min(1)]],
+      originalPrice: [0],
+      unitPrice: [0, [Validators.required, Validators.min(0)]]
     }));
   }
 
   removeItem(index: number) {
     this.items.removeAt(index);
+    this.selectedProducts.delete(index);
   }
 
   loadClients() {
@@ -156,6 +348,7 @@ export class QuotationDialogComponent implements OnInit {
     const filterValue = value.toLowerCase();
     return this.clients.filter(client => 
       client.companyName?.toLowerCase().includes(filterValue) || 
+      client.contactPerson?.toLowerCase().includes(filterValue) ||
       client.email?.toLowerCase().includes(filterValue)
     ).slice(0, 50);
   }
@@ -164,7 +357,7 @@ export class QuotationDialogComponent implements OnInit {
     const filterValue = value.toLowerCase();
     return this.products.filter(product => 
       product.name?.toLowerCase().includes(filterValue) ||
-      product.sku?.toLowerCase().includes(filterValue)
+      product.productCode?.toLowerCase().includes(filterValue)
     ).slice(0, 50);
   }
 
@@ -177,7 +370,7 @@ export class QuotationDialogComponent implements OnInit {
   }
 
   displayClient(client: any): string {
-    return client ? `${client.companyName} - ${client.email}` : '';
+    return client ? `${client.companyName} - ${client.contactPerson}` : '';
   }
 
   displayProduct(product: any): string {
@@ -190,28 +383,86 @@ export class QuotationDialogComponent implements OnInit {
 
   onProductSelected(index: number, event: any) {
     const product = event.option.value;
-    this.items.at(index).patchValue({ productId: product._id });
+    this.selectedProducts.set(index, product);
+    this.items.at(index).patchValue({ 
+      productId: product._id,
+      variationId: '',
+      variationName: '',
+      originalPrice: product.basePrice,
+      unitPrice: product.basePrice
+    });
+  }
+
+  onVariationChange(index: number, event?: any) {
+    const item = this.items.at(index);
+    const variationId = item.get('variationId')?.value;
+    const product = this.selectedProducts.get(index);
+    
+    console.log('Variation changed:', { index, variationId, product: product?.name });
+    
+    if (!product) return;
+    
+    if (!variationId || variationId === '') {
+      item.patchValue({
+        variationName: '',
+        originalPrice: product.basePrice,
+        unitPrice: product.basePrice
+      });
+    } else {
+      // Find variation by SKU or index
+      const variation = product.variations?.find((v: any) => 
+        (v.sku && v.sku === variationId) || 
+        (v._id && v._id === variationId)
+      ) || product.variations?.[parseInt(variationId)];
+      
+      console.log('Found variation:', variation);
+      
+      if (variation) {
+        const variationPrice = product.basePrice + (variation.priceModifier || 0);
+        console.log('Setting price:', { basePrice: product.basePrice, priceModifier: variation.priceModifier, variationPrice });
+        
+        item.patchValue({
+          variationName: variation.name,
+          originalPrice: variationPrice,
+          unitPrice: variationPrice
+        });
+      }
+    }
+  }
+
+  getProductVariations(index: number): any[] {
+    const product = this.selectedProducts.get(index);
+    return product?.variations || [];
+  }
+
+  getItemTotal(index: number): number {
+    const item = this.items.at(index);
+    const quantity = item.get('quantity')?.value || 0;
+    const unitPrice = item.get('unitPrice')?.value || 0;
+    return quantity * unitPrice;
   }
 
   calculateSubtotal(): number {
-    let total = 0;
-    this.items.controls.forEach(item => {
-      const productId = item.get('productId')?.value;
-      const quantity = item.get('quantity')?.value || 0;
-      const product = this.products.find(p => p._id === productId);
-      if (product) {
-        total += product.basePrice * quantity;
-      }
-    });
-    return total;
+    return this.items.controls.reduce((total, item, index) => {
+      return total + this.getItemTotal(index);
+    }, 0);
   }
 
-  calculateTax(): number {
-    return this.calculateSubtotal() * 0.18;
+  calculateDiscountAmount(): number {
+    const subtotal = this.calculateSubtotal();
+    const discountType = this.form.get('discountType')?.value;
+    const discountValue = this.form.get('discountValue')?.value || 0;
+    
+    if (discountType === 'fixed') {
+      return Math.min(discountValue, subtotal);
+    } else if (discountType === 'percentage') {
+      return (subtotal * discountValue) / 100;
+    }
+    return 0;
   }
 
-  calculateTotal(): number {
-    return this.calculateSubtotal() + this.calculateTax();
+  calculateGrandTotal(): number {
+    return Math.max(0, this.calculateSubtotal() - this.calculateDiscountAmount());
   }
 
   save() {
@@ -220,33 +471,52 @@ export class QuotationDialogComponent implements OnInit {
         .filter(item => item.get('productId')?.value)
         .map(item => {
           const productId = item.get('productId')?.value;
+          const variationId = item.get('variationId')?.value;
+          const variationName = item.get('variationName')?.value;
           const quantity = item.get('quantity')?.value;
+          const originalPrice = item.get('originalPrice')?.value;
+          const unitPrice = item.get('unitPrice')?.value;
           const product = this.products.find(p => p._id === productId);
+          
           return {
             productId,
             productName: product?.name || '',
+            variationId: variationId || undefined,
+            variationName: variationName || undefined,
             quantity,
-            unitPrice: product?.basePrice || 0,
-            total: (product?.basePrice || 0) * quantity
+            originalPrice,
+            unitPrice,
+            total: unitPrice * quantity
           };
         });
+
+      const subtotal = this.calculateSubtotal();
+      const discountAmount = this.calculateDiscountAmount();
+      const grandTotal = this.calculateGrandTotal();
 
       const quotation = {
         clientId: this.selectedClient._id,
         clientName: this.selectedClient.companyName,
         clientEmail: this.selectedClient.email,
         items: quotationItems,
-        subtotal: this.calculateSubtotal(),
-        taxTotal: this.calculateTax(),
-        discountTotal: 0,
-        grandTotal: this.calculateTotal(),
-        currency: 'USD',
+        subtotal,
+        discountTotal: discountAmount,
+        discount: this.form.get('discountType')?.value !== 'none' ? {
+          type: this.form.get('discountType')?.value,
+          value: this.form.get('discountValue')?.value
+        } : null,
+        grandTotal,
+        currency: this.currency,
         validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
       };
 
-      this.quotationsService.createQuotation(quotation).subscribe({
+      const request = this.isEditMode 
+        ? this.quotationsService.updateQuotation(this.quotationId!, quotation)
+        : this.quotationsService.createQuotation(quotation);
+
+      request.subscribe({
         next: (result) => this.dialogRef.close(result),
-        error: (err: any) => console.error('Failed to create quotation', err)
+        error: (err: any) => console.error('Failed to save quotation', err)
       });
     }
   }

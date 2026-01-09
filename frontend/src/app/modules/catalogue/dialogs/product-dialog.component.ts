@@ -146,6 +146,7 @@ import Quill from 'quill';
 
               <div class="form-row">
                 <mat-checkbox formControlName="isPublished">Published</mat-checkbox>
+                <mat-checkbox formControlName="isExclusive">Exclusive (Login Required)</mat-checkbox>
               </div>
             </form>
           </div>
@@ -323,6 +324,98 @@ import Quill from 'quill';
           </div>
         </mat-tab>
 
+        <!-- Dimensions Tab -->
+        <mat-tab label="Dimensions">
+          <div class="tab-content">
+            <form [formGroup]="productForm">
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>Product Shape</mat-label>
+                  <mat-select formControlName="dimensionShape">
+                    <mat-option value="rectangle">Rectangle</mat-option>
+                    <mat-option value="round">Round</mat-option>
+                  </mat-select>
+                </mat-form-field>
+                
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>Unit</mat-label>
+                  <mat-select formControlName="dimensionUnit">
+                    <mat-option value="cm">Centimeters (cm)</mat-option>
+                    <mat-option value="inch">Inches (in)</mat-option>
+                    <mat-option value="mm">Millimeters (mm)</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <div *ngIf="productForm.get('dimensionShape')?.value === 'rectangle'">
+                <h3>Rectangle Dimensions</h3>
+                <div class="dimension-group">
+                  <h4>Width (Customizable)</h4>
+                  <div class="form-row">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Min</mat-label>
+                      <input matInput type="number" formControlName="widthMin" min="0">
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>Max</mat-label>
+                      <input matInput type="number" formControlName="widthMax" min="0">
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>Default</mat-label>
+                      <input matInput type="number" formControlName="widthDefault" min="0">
+                    </mat-form-field>
+                  </div>
+                </div>
+
+                <div class="dimension-group">
+                  <h4>Height (Fixed)</h4>
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Height</mat-label>
+                    <input matInput type="number" formControlName="height" min="0">
+                  </mat-form-field>
+                </div>
+
+                <div class="dimension-group">
+                  <h4>Depth (Fixed)</h4>
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Depth</mat-label>
+                    <input matInput type="number" formControlName="depth" min="0">
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <div *ngIf="productForm.get('dimensionShape')?.value === 'round'">
+                <h3>Round Dimensions</h3>
+                <div class="dimension-group">
+                  <h4>Diameter (Customizable)</h4>
+                  <div class="form-row">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Min</mat-label>
+                      <input matInput type="number" formControlName="diameterMin" min="0">
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>Max</mat-label>
+                      <input matInput type="number" formControlName="diameterMax" min="0">
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>Default</mat-label>
+                      <input matInput type="number" formControlName="diameterDefault" min="0">
+                    </mat-form-field>
+                  </div>
+                </div>
+
+                <div class="dimension-group">
+                  <h4>Height (Fixed)</h4>
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Height</mat-label>
+                    <input matInput type="number" formControlName="height" min="0">
+                  </mat-form-field>
+                </div>
+              </div>
+            </form>
+          </div>
+        </mat-tab>
+
         <!-- SEO Tab -->
         <mat-tab label="SEO">
           <div class="tab-content">
@@ -476,6 +569,7 @@ import Quill from 'quill';
       display: flex;
       gap: 1rem;
       margin-bottom: 1rem;
+      align-items: center;
     }
     .full-width {
       width: 100%;
@@ -551,6 +645,17 @@ import Quill from 'quill';
       font-size: 14px;
       color: #666;
     }
+    .dimension-group {
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      background: #f9f9f9;
+      border-radius: 8px;
+    }
+    .dimension-group h4 {
+      margin: 0 0 0.5rem 0;
+      font-size: 0.9rem;
+      color: #666;
+    }
     .editor-field {
       margin: 1rem 0;
     }
@@ -615,8 +720,17 @@ export class ProductDialogComponent implements OnInit, AfterViewInit {
       collectionId: [''],
       designerId: [''],
       isPublished: [false],
-      dimensionType: ['hwl'],
+      isExclusive: [false],
+      dimensionShape: ['rectangle'],
       dimensionUnit: ['cm'],
+      widthMin: [0],
+      widthMax: [0],
+      widthDefault: [0],
+      height: [0],
+      depth: [0],
+      diameterMin: [0],
+      diameterMax: [0],
+      diameterDefault: [0],
       measurements: this.fb.array([]),
       seoTitle: [''],
       seoDescription: [''],
@@ -651,6 +765,17 @@ export class ProductDialogComponent implements OnInit, AfterViewInit {
         collectionId: p.collectionId,
         designerId: p.designerId,
         isPublished: p.isPublished,
+        isExclusive: p.isExclusive || false,
+        dimensionShape: p.dimensionConfig?.shape || 'rectangle',
+        dimensionUnit: p.dimensionConfig?.unit || 'cm',
+        widthMin: p.dimensionConfig?.width?.min || 0,
+        widthMax: p.dimensionConfig?.width?.max || 0,
+        widthDefault: p.dimensionConfig?.width?.default || 0,
+        height: p.dimensionConfig?.height || 0,
+        depth: p.dimensionConfig?.depth || 0,
+        diameterMin: p.dimensionConfig?.diameter?.min || 0,
+        diameterMax: p.dimensionConfig?.diameter?.max || 0,
+        diameterDefault: p.dimensionConfig?.diameter?.default || 0,
         seoTitle: p.seo?.title,
         seoDescription: p.seo?.description,
         seoKeywords: p.seo?.keywords
@@ -990,6 +1115,14 @@ export class ProductDialogComponent implements OnInit, AfterViewInit {
         videos: allVideos,
         models3d: allModels,
         variations: variations,
+        dimensionConfig: {
+          shape: this.productForm.value.dimensionShape,
+          unit: this.productForm.value.dimensionUnit,
+          width: { min: this.productForm.value.widthMin, max: this.productForm.value.widthMax, default: this.productForm.value.widthDefault },
+          height: this.productForm.value.height,
+          depth: this.productForm.value.depth,
+          diameter: { min: this.productForm.value.diameterMin, max: this.productForm.value.diameterMax, default: this.productForm.value.diameterDefault }
+        },
         seo: {
           title: this.productForm.value.seoTitle,
           description: this.productForm.value.seoDescription,
@@ -998,6 +1131,16 @@ export class ProductDialogComponent implements OnInit, AfterViewInit {
       };
 
       delete productData.measurements;
+      delete productData.dimensionShape;
+      delete productData.dimensionUnit;
+      delete productData.widthMin;
+      delete productData.widthMax;
+      delete productData.widthDefault;
+      delete productData.height;
+      delete productData.depth;
+      delete productData.diameterMin;
+      delete productData.diameterMax;
+      delete productData.diameterDefault;
       delete productData.seoTitle;
       delete productData.seoDescription;
       delete productData.seoKeywords;

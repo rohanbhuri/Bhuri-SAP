@@ -20,6 +20,12 @@ export class User {
   @Column({ nullable: true })
   avatar?: string;
 
+  @Column({ default: 'USD' })
+  currency: string;
+
+  @Column({ default: '$' })
+  currencySymbol: string;
+
   @Column()
   isActive: boolean;
 
