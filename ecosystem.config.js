@@ -99,8 +99,7 @@ module.exports = {
     },
     {
       name: 'raccontixrm-frontend',
-      script: 'node',
-      args: './dist/raccontixrm/browser/server.js',
+      script: './dist/raccontixrm/server/main.server.mjs',
       cwd: './frontend',
       instances: 1,
       exec_mode: 'fork',
