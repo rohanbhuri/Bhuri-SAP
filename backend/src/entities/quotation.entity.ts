@@ -37,10 +37,19 @@ export class Quotation {
     enquiryId?: string;
 
     @Column({ nullable: true })
+    presentationId?: string;
+
+    @Column({ nullable: true })
+    contactId?: string;
+
+    @Column({ nullable: true })
     clientName?: string; // Snapshot or ad-hoc client name
 
     @Column({ nullable: true })
     clientEmail?: string;
+
+    @Column({ nullable: true })
+    declineReason?: string;
 
     @Column('array')
     items: QuotationItem[];

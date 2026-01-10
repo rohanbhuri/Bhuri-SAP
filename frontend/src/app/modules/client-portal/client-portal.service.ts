@@ -84,10 +84,10 @@ export class ClientPortalService {
     }
 
     acceptQuotation(id: string): Observable<any> {
-        return this.http.put<any>(`${this.apiUrl}/quotations/${id}/accept`, {});
+        return this.http.post<any>(`${this.apiUrl}/crm/funnel/quotations/${id}/accept`, {});
     }
 
     rejectQuotation(id: string, reason?: string): Observable<any> {
-        return this.http.put<any>(`${this.apiUrl}/quotations/${id}/reject`, { reason });
+        return this.http.post<any>(`${this.apiUrl}/crm/funnel/quotations/${id}/decline`, { reason });
     }
 }

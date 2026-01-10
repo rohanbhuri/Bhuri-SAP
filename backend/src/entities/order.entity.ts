@@ -1,12 +1,37 @@
 import { Entity, ObjectIdColumn, ObjectId, Column } from 'typeorm';
 
+export interface OrderItem {
+  productId: string | ObjectId;
+  productName: string;
+  variationId?: string;
+  variationName?: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+  totalPrice?: number;
+  description?: string;
+  specifications?: any;
+}
+
 export enum OrderStatus {
   PENDING = 'pending',
-  CONFIRMED = 'confirmed',
   PROCESSING = 'processing',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled',
   SHIPPED = 'shipped',
-  DELIVERED = 'delivered',
-  CANCELLED = 'cancelled'
+  DELIVERED = 'delivered'
+}
+
+export enum PaymentStatus {
+  PENDING = 'pending',
+  PARTIAL = 'partial',
+  PAID = 'paid'
+}
+
+export enum DeliveryStatus {
+  PENDING = 'pending',
+  SHIPPED = 'shipped',
+  DELIVERED = 'delivered'
 }
 
 export enum OrderPriority {
@@ -16,23 +41,29 @@ export enum OrderPriority {
   URGENT = 'urgent'
 }
 
-export interface OrderItem {
-  _id?: ObjectId;
-  productId: ObjectId;
-  productName: string;
-  quantity: number;
-  unitPrice: number;
-  totalPrice: number;
-  specifications?: any;
-}
+@Entity('order_status_history')
+export class OrderStatusHistory {
+  @ObjectIdColumn()
+  _id: ObjectId;
 
-export interface Address {
-  street: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  country: string;
-  phone?: string;
+  @ObjectIdColumn()
+  orderId: ObjectId;
+
+  @Column({ type: 'enum', enum: OrderStatus })
+  status: OrderStatus;
+
+  @ObjectIdColumn()
+  updatedBy: ObjectId;
+
+  @Column({ nullable: true })
+  notes?: string;
+
+  @Column()
+  timestamp: Date;
+
+  constructor() {
+    this.timestamp = new Date();
+  }
 }
 
 @Entity('orders')
@@ -43,96 +74,110 @@ export class Order {
   @Column()
   orderNumber: string;
 
-  @Column({ type: String })
-  organizationId: ObjectId;
+  @ObjectIdColumn()
+  quotationId?: ObjectId;
 
-  @Column({ type: String })
-  customerId: ObjectId;
+  @ObjectIdColumn()
+  contactId?: ObjectId;
+
+  @ObjectIdColumn()
+  customerId?: ObjectId;
+
+  @ObjectIdColumn()
+  enquiryId?: ObjectId;
 
   @Column()
-  status: OrderStatus;
+  clientName?: string;
 
   @Column()
-  priority: OrderPriority;
-
-  @Column()
-  orderDate: Date;
+  clientEmail?: string;
 
   @Column({ nullable: true })
-  expectedDeliveryDate: Date;
-
-  @Column({ nullable: true })
-  actualDeliveryDate: Date;
-
-  @Column()
-  totalAmount: number;
-
-  @Column({ default: 'USD' })
-  currency: string;
+  clientPhone?: string;
 
   @Column('array')
   items: OrderItem[];
 
-  @Column('simple-json')
-  shippingAddress: Address;
+  @Column({ type: 'double' })
+  subtotal?: number;
 
-  @Column('simple-json')
-  billingAddress: Address;
+  @Column({ type: 'double', default: 0 })
+  taxTotal?: number;
+
+  @Column({ type: 'double', default: 0 })
+  discountTotal?: number;
+
+  @Column({ type: 'double' })
+  totalAmount: number;
+
+  @Column({ default: 'USD' })
+  currency?: string;
+
+  @Column({ type: 'enum', enum: OrderStatus, default: OrderStatus.PENDING })
+  status: OrderStatus;
+
+  @Column({ type: 'enum', enum: PaymentStatus, default: PaymentStatus.PENDING })
+  paymentStatus?: PaymentStatus;
+
+  @Column({ type: 'enum', enum: DeliveryStatus, default: DeliveryStatus.PENDING })
+  deliveryStatus?: DeliveryStatus;
+
+  @Column({ type: 'enum', enum: OrderPriority, default: OrderPriority.MEDIUM })
+  priority?: OrderPriority;
+
+  @Column()
+  organizationId: string;
 
   @Column({ nullable: true })
-  notes: string;
+  notes?: string;
 
-  @Column({ type: String })
-  createdBy: ObjectId;
+  @Column({ nullable: true })
+  shippingAddress?: string | any;
 
-  @Column({ type: String, nullable: true })
-  assignedTo: ObjectId;
+  @Column({ nullable: true })
+  billingAddress?: string | any;
+
+  @Column({ nullable: true })
+  orderDate?: Date;
+
+  @Column({ nullable: true })
+  expectedDeliveryDate?: Date;
+
+  @Column({ nullable: true })
+  actualDeliveryDate?: Date;
+
+  @Column({ nullable: true })
+  deliveredAt?: Date;
+
+  @ObjectIdColumn()
+  assignedToId?: ObjectId;
+
+  @ObjectIdColumn()
+  assignedTo?: ObjectId;
+
+  @ObjectIdColumn()
+  createdBy?: ObjectId;
 
   @Column('array')
-  tags: string[];
+  tags?: string[];
 
-  @Column('simple-json')
-  customFields: any;
+  @Column({ nullable: true })
+  customFields?: any;
 
   @Column()
   createdAt: Date;
 
-  @Column()
-  updatedAt: Date;
+  @Column({ nullable: true })
+  updatedAt?: Date;
 
   constructor() {
+    this.items = [];
     this.status = OrderStatus.PENDING;
+    this.paymentStatus = PaymentStatus.PENDING;
+    this.deliveryStatus = DeliveryStatus.PENDING;
     this.priority = OrderPriority.MEDIUM;
     this.currency = 'USD';
-    this.items = [];
     this.tags = [];
-    this.customFields = {};
     this.createdAt = new Date();
-    this.updatedAt = new Date();
-  }
-}
-
-@Entity('order-status-history')
-export class OrderStatusHistory {
-  @ObjectIdColumn()
-  _id: ObjectId;
-
-  @Column({ type: String })
-  orderId: ObjectId;
-
-  @Column()
-  status: OrderStatus;
-
-  @Column()
-  timestamp: Date;
-
-  @Column({ nullable: true })
-  notes: string;
-
-  @Column({ type: String })
-  updatedBy: ObjectId;
-
-  constructor() {
-    this.timestamp = new Date();
   }
 }

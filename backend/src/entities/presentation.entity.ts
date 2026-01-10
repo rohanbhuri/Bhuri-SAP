@@ -3,6 +3,8 @@ import { ObjectId } from 'mongodb';
 
 export enum PresentationStatus {
     DRAFT = 'draft',
+    SENT = 'sent',
+    VIEWED = 'viewed',
     COMPLETED = 'completed'
 }
 
@@ -10,6 +12,7 @@ export interface PresentationSlide {
     slideNumber: number;
     productIds: string[];
     layout: 'single' | 'multiple';
+    slideTitle?: string;
 }
 
 @Entity('presentations')
@@ -29,8 +32,17 @@ export class Presentation {
     @Column({ nullable: true })
     enquiryId?: string;
 
+    @Column({ nullable: true })
+    contactId?: string;
+
     @Column()
     title: string;
+
+    @Column({ nullable: true })
+    sentAt?: Date;
+
+    @Column({ nullable: true })
+    viewedAt?: Date;
 
     @Column({ nullable: true })
     coverBackground?: string;
@@ -43,6 +55,9 @@ export class Presentation {
 
     @Column({ nullable: true })
     textColor?: string;
+
+    @Column({ nullable: true })
+    layoutImage?: string;
 
     @Column()
     organizationId: string;

@@ -11,8 +11,11 @@ export interface EnquiryItem {
 export enum EnquiryStatus {
     NEW = 'new',
     PROCESSING = 'processing',
+    PRESENTATION_SENT = 'presentation_sent',
     QUOTED = 'quoted',
     CONVERTED = 'converted',
+    LOST = 'lost',
+    ON_HOLD = 'on_hold',
     CLOSED = 'closed'
 }
 
@@ -61,6 +64,21 @@ export class Enquiry {
 
     @Column({ nullable: true })
     quotationId?: string;
+
+    @Column({ nullable: true })
+    presentationId?: string;
+
+    @Column({ nullable: true })
+    clientRequestId?: string;
+
+    @Column({ nullable: true })
+    assignedToId?: string;
+
+    @Column({ nullable: true })
+    lostReason?: string;
+
+    @Column({ nullable: true })
+    followUpDate?: Date;
 
     @Column({ nullable: true })
     leadId?: string;

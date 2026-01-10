@@ -167,7 +167,7 @@ export class OrderManagementService {
 
     const order = new Order();
     order.orderNumber = orderNumber;
-    order.organizationId = new ObjectId(organizationId);
+    order.organizationId = organizationId;
     order.customerId = new ObjectId(createOrderDto.customerId);
     order.status = createOrderDto.status || OrderStatus.PENDING;
     order.priority = createOrderDto.priority || OrderPriority.MEDIUM;
@@ -179,6 +179,7 @@ export class OrderManagementService {
       productName: item.productName,
       quantity: item.quantity,
       unitPrice: item.unitPrice,
+      total: item.quantity * item.unitPrice,
       totalPrice: item.quantity * item.unitPrice,
       specifications: item.specifications
     }));
@@ -217,11 +218,12 @@ export class OrderManagementService {
         productName: item.productName,
         quantity: item.quantity,
         unitPrice: item.unitPrice,
+        total: item.quantity * item.unitPrice,
         totalPrice: item.quantity * item.unitPrice,
         specifications: item.specifications
       }));
       // Recalculate total amount
-      order.totalAmount = order.items.reduce((sum, item) => sum + item.totalPrice, 0);
+      order.totalAmount = order.items.reduce((sum, item) => sum + (item.total || item.totalPrice || 0), 0);
     }
     if (updateOrderDto.shippingAddress !== undefined) order.shippingAddress = updateOrderDto.shippingAddress;
     if (updateOrderDto.billingAddress !== undefined) order.billingAddress = updateOrderDto.billingAddress;
@@ -243,11 +245,11 @@ export class OrderManagementService {
   }
 
   async deleteOrder(id: string, organizationId: string): Promise<boolean> {
-    const result = await this.orderRepository.delete({
+    const result = await this.orderRepository.deleteOne({
       _id: new ObjectId(id),
-      organizationId: new ObjectId(organizationId)
+      organizationId: organizationId
     });
-    return result.affected > 0;
+    return result.deletedCount > 0;
   }
 
   async getOrderStatusHistory(orderId: string, organizationId: string): Promise<OrderStatusHistory[]> {

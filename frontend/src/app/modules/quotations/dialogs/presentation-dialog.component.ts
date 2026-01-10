@@ -75,10 +75,29 @@ import { getBrandConfig } from '../../../brand.config';
           </div>
         </div>
 
-        <h3>Slides</h3>
+        <h3>Layout Slide (Slide 2)</h3>
+        <div class="slide-item">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Layout Image</mat-label>
+            <input matInput formControlName="layoutImage" readonly>
+          </mat-form-field>
+          <input type="file" #layoutFile (change)="onLayoutImageSelect($event)" accept="image/*" style="display:none">
+          <button mat-button type="button" (click)="layoutFile.click()">
+            <mat-icon>upload</mat-icon> Upload Layout
+          </button>
+          <img *ngIf="layoutImagePreview" [src]="layoutImagePreview" style="max-width:200px;margin-top:10px">
+        </div>
+
+        <h3>Product Slides</h3>
         <div formArrayName="slides">
           <div *ngFor="let slide of slides.controls; let i = index" [formGroupName]="i" class="slide-item">
-            <h4>Slide {{i + 2}}</h4>
+            <h4>Slide {{i + 3}}</h4>
+            
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Slide Title (Optional)</mat-label>
+              <input matInput formControlName="slideTitle">
+            </mat-form-field>
+
             <mat-radio-group formControlName="layout">
               <mat-radio-button value="single">Single Product</mat-radio-button>
               <mat-radio-button value="multiple">Multiple Products</mat-radio-button>
@@ -133,6 +152,8 @@ export class PresentationDialogComponent implements OnInit {
   products: any[] = [];
   coverImagePreview: string | null = null;
   coverImageFile: File | null = null;
+  layoutImagePreview: string | null = null;
+  layoutImageFile: File | null = null;
 
   constructor(@Inject(MAT_DIALOG_DATA) public data: any) {
     this.form = this.fb.group({
@@ -144,6 +165,7 @@ export class PresentationDialogComponent implements OnInit {
       overlayColor: ['#000000'],
       overlayTransparency: [50],
       textColor: ['#FFFFFF'],
+      layoutImage: [''],
       slides: this.fb.array([])
     });
   }
@@ -161,11 +183,18 @@ export class PresentationDialogComponent implements OnInit {
           ? this.data.coverBackground 
           : `${apiUrl}${this.data.coverBackground}`;
       }
+      if (this.data.layoutImage) {
+        const apiUrl = getBrandConfig().app.apiUrl.replace('/api', '');
+        this.layoutImagePreview = this.data.layoutImage.startsWith('http') 
+          ? this.data.layoutImage 
+          : `${apiUrl}${this.data.layoutImage}`;
+      }
       this.data.slides?.forEach((slide: any) => {
         this.slides.push(this.fb.group({
           slideNumber: [slide.slideNumber],
           layout: [slide.layout],
-          productIds: [slide.productIds]
+          productIds: [slide.productIds],
+          slideTitle: [slide.slideTitle || '']
         }));
       });
     }
@@ -207,9 +236,10 @@ export class PresentationDialogComponent implements OnInit {
 
   addSlide() {
     this.slides.push(this.fb.group({
-      slideNumber: [this.slides.length + 2],
+      slideNumber: [this.slides.length + 3],
       layout: ['single'],
-      productIds: [[], Validators.required]
+      productIds: [[], Validators.required],
+      slideTitle: ['']
     }));
   }
 
@@ -224,6 +254,18 @@ export class PresentationDialogComponent implements OnInit {
       const reader = new FileReader();
       reader.onload = (e: any) => {
         this.coverImagePreview = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  onLayoutImageSelect(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      this.layoutImageFile = file;
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.layoutImagePreview = e.target.result;
       };
       reader.readAsDataURL(file);
     }
@@ -244,6 +286,21 @@ export class PresentationDialogComponent implements OnInit {
     }
   }
 
+  async uploadLayoutImage(): Promise<string | null> {
+    if (!this.layoutImageFile) return null;
+    
+    const formData = new FormData();
+    formData.append('file', this.layoutImageFile);
+    
+    try {
+      const response: any = await this.http.post(`${getBrandConfig().app.apiUrl}/catalogue/upload`, formData).toPromise();
+      return response.url;
+    } catch (error) {
+      console.error('Upload failed:', error);
+      return null;
+    }
+  }
+
   async save() {
     if (this.form.valid) {
       let formData = this.form.value;
@@ -252,6 +309,13 @@ export class PresentationDialogComponent implements OnInit {
         const uploadedUrl = await this.uploadCoverImage();
         if (uploadedUrl) {
           formData.coverBackground = uploadedUrl;
+        }
+      }
+      
+      if (this.layoutImageFile) {
+        const uploadedUrl = await this.uploadLayoutImage();
+        if (uploadedUrl) {
+          formData.layoutImage = uploadedUrl;
         }
       }
       

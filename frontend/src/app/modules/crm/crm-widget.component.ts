@@ -5,15 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { Router } from '@angular/router';
-import {
-  CrmService,
-  CrmStats,
-  ConversionReport,
-  Contact,
-  Lead,
-  Deal,
-  Task,
-} from './crm.service';
+import { CrmFunnelService } from './crm-funnel.service';
 
 @Component({
   selector: 'app-crm-widget',
@@ -47,13 +39,13 @@ import {
               <div class="pipeline-overview">
                 <div class="pipeline-value">
                   <div class="value">
-                    \${{ formatCurrency(stats().pipelineValue) }}
+                    \${{ formatCurrency(dashboard()?.revenue?.pipeline || 0) }}
                   </div>
                   <div class="label">Pipeline</div>
                 </div>
                 <div class="conversion-rate">
                   <div class="rate">
-                    {{ conversionReport()?.dealWinRate || 0 }}%
+                    {{ dashboard()?.conversion?.quotationToOrder || 0 }}%
                   </div>
                   <div class="label">Win Rate</div>
                 </div>
@@ -61,23 +53,23 @@ import {
               <div class="metrics-grid">
                 <div class="metric">
                   <div class="metric-number contacts">
-                    {{ stats().contacts }}
+                    {{ dashboard()?.funnel?.contacts || 0 }}
                   </div>
                   <div class="metric-label">Contacts</div>
                 </div>
                 <div class="metric">
-                  <div class="metric-number leads">{{ stats().leads }}</div>
-                  <div class="metric-label">Leads</div>
+                  <div class="metric-number leads">{{ dashboard()?.funnel?.enquiries || 0 }}</div>
+                  <div class="metric-label">Enquiries</div>
                 </div>
                 <div class="metric">
-                  <div class="metric-number deals">{{ stats().deals }}</div>
-                  <div class="metric-label">Deals</div>
+                  <div class="metric-number deals">{{ dashboard()?.funnel?.quotations || 0 }}</div>
+                  <div class="metric-label">Quotations</div>
                 </div>
                 <div class="metric">
                   <div class="metric-number tasks">
-                    {{ stats().pendingTasks }}
+                    {{ dashboard()?.funnel?.orders || 0 }}
                   </div>
-                  <div class="metric-label">Tasks</div>
+                  <div class="metric-label">Orders</div>
                 </div>
               </div>
             </div>
@@ -90,28 +82,28 @@ import {
               <div class="funnel-stages">
                 <div class="stage">
                   <div class="stage-value">
-                    {{ conversionReport()?.totalContacts || 0 }}
+                    {{ dashboard()?.funnel?.contacts || 0 }}
                   </div>
                   <div class="stage-label">Contacts</div>
                 </div>
                 <div class="stage-arrow">→</div>
                 <div class="stage">
                   <div class="stage-value">
-                    {{ conversionReport()?.totalLeads || 0 }}
+                    {{ dashboard()?.funnel?.enquiries || 0 }}
                   </div>
-                  <div class="stage-label">Leads</div>
+                  <div class="stage-label">Enquiries</div>
                   <div class="stage-rate">
-                    {{ conversionReport()?.contactToLeadRate || 0 }}%
+                    {{ dashboard()?.conversion?.contactToEnquiry || 0 }}%
                   </div>
                 </div>
                 <div class="stage-arrow">→</div>
                 <div class="stage">
                   <div class="stage-value">
-                    {{ conversionReport()?.wonDeals || 0 }}
+                    {{ dashboard()?.funnel?.orders || 0 }}
                   </div>
-                  <div class="stage-label">Won</div>
+                  <div class="stage-label">Orders</div>
                   <div class="stage-rate">
-                    {{ conversionReport()?.dealWinRate || 0 }}%
+                    {{ dashboard()?.conversion?.quotationToOrder || 0 }}%
                   </div>
                 </div>
               </div>
@@ -121,20 +113,35 @@ import {
           <!-- Pipeline Card -->
           <div class="slide">
             <div class="card-content">
-              <div class="card-title">Deal Pipeline</div>
-              <div class="pipeline-stages" *ngIf="getDealStages().length > 0">
-                <div
-                  class="stage-item"
-                  *ngFor="let stage of getDealStages().slice(0, 4)"
-                >
+              <div class="card-title">Enquiry Pipeline</div>
+              <div class="pipeline-stages" *ngIf="pipeline()">
+                <div class="stage-item">
                   <div class="stage-header">
-                    <span class="stage-name">{{ stage.name }}</span>
-                    <span class="stage-count">{{ stage.count }}</span>
+                    <span class="stage-name">New</span>
+                    <span class="stage-count">{{ pipeline()?.new?.length || 0 }}</span>
                   </div>
-                  <mat-progress-bar
-                    [value]="stage.percentage"
-                    mode="determinate"
-                  ></mat-progress-bar>
+                  <mat-progress-bar [value]="getPercentage(pipeline()?.new?.length)" mode="determinate"></mat-progress-bar>
+                </div>
+                <div class="stage-item">
+                  <div class="stage-header">
+                    <span class="stage-name">Processing</span>
+                    <span class="stage-count">{{ pipeline()?.processing?.length || 0 }}</span>
+                  </div>
+                  <mat-progress-bar [value]="getPercentage(pipeline()?.processing?.length)" mode="determinate"></mat-progress-bar>
+                </div>
+                <div class="stage-item">
+                  <div class="stage-header">
+                    <span class="stage-name">Quoted</span>
+                    <span class="stage-count">{{ pipeline()?.quoted?.length || 0 }}</span>
+                  </div>
+                  <mat-progress-bar [value]="getPercentage(pipeline()?.quoted?.length)" mode="determinate"></mat-progress-bar>
+                </div>
+                <div class="stage-item">
+                  <div class="stage-header">
+                    <span class="stage-name">Won</span>
+                    <span class="stage-count">{{ pipeline()?.converted?.length || 0 }}</span>
+                  </div>
+                  <mat-progress-bar [value]="getPercentage(pipeline()?.converted?.length)" mode="determinate"></mat-progress-bar>
                 </div>
               </div>
             </div>
@@ -441,18 +448,10 @@ import {
 })
 export class CrmWidgetComponent implements OnInit, OnDestroy {
   private router = inject(Router);
-  private crmService = inject(CrmService);
+  private funnelService = inject(CrmFunnelService);
 
-  stats = signal<CrmStats>({
-    contacts: 0,
-    leads: 0,
-    deals: 0,
-    pendingTasks: 0,
-    pipelineValue: 0,
-  });
-
-  conversionReport = signal<ConversionReport | null>(null);
-  deals = signal<Deal[]>([]);
+  dashboard = signal<any>(null);
+  pipeline = signal<any>(null);
   currentSlide = signal(0);
   private slideInterval: any;
 
@@ -485,38 +484,8 @@ export class CrmWidgetComponent implements OnInit, OnDestroy {
   }
 
   loadAllData() {
-    this.loadStats();
-    this.loadConversionReport();
-    this.loadDeals();
-  }
-
-  loadStats() {
-    this.crmService.getDashboardStats().subscribe({
-      next: (stats) => this.stats.set(stats),
-      error: () => {
-        this.stats.set({
-          contacts: 0,
-          leads: 0,
-          deals: 0,
-          pendingTasks: 0,
-          pipelineValue: 0,
-        });
-      },
-    });
-  }
-
-  loadConversionReport() {
-    this.crmService.getConversionReport().subscribe({
-      next: (report) => this.conversionReport.set(report),
-      error: () => this.conversionReport.set(null),
-    });
-  }
-
-  loadDeals() {
-    this.crmService.getDeals().subscribe({
-      next: (deals) => this.deals.set(deals),
-      error: () => this.deals.set([]),
-    });
+    this.funnelService.getDashboard().subscribe(data => this.dashboard.set(data));
+    this.funnelService.getPipeline().subscribe(data => this.pipeline.set(data));
   }
 
   formatCurrency(value: number): string {
@@ -528,36 +497,16 @@ export class CrmWidgetComponent implements OnInit, OnDestroy {
     return value.toString();
   }
 
-  getDealStages() {
-    const stages = [
-      'prospecting',
-      'qualification',
-      'proposal',
-      'negotiation',
-      'closed-won',
-      'closed-lost',
-    ];
-    const totalDeals = this.deals().length;
-
-    return stages
-      .map((stage) => {
-        const stageDeals = this.deals().filter((deal) => deal.stage === stage);
-        const count = stageDeals.length;
-        const percentage = totalDeals > 0 ? (count / totalDeals) * 100 : 0;
-
-        return {
-          name:
-            stage.charAt(0).toUpperCase() + stage.slice(1).replace('-', ' '),
-          count,
-          percentage,
-        };
-      })
-      .filter((stage) => stage.count > 0);
+  getPercentage(count: number): number {
+    const total = (this.pipeline()?.new?.length || 0) + 
+                  (this.pipeline()?.processing?.length || 0) + 
+                  (this.pipeline()?.quoted?.length || 0) + 
+                  (this.pipeline()?.converted?.length || 0);
+    return total > 0 ? (count / total) * 100 : 0;
   }
 
   goToSlide(index: number) {
     this.currentSlide.set(index);
-    // Reset auto-slide timer when user manually navigates
     if (this.slideInterval) {
       clearInterval(this.slideInterval);
       this.startAutoSlide();
@@ -565,8 +514,6 @@ export class CrmWidgetComponent implements OnInit, OnDestroy {
   }
 
   openCrm() {
-    this.router.navigate(['/modules/crm'], {
-      queryParams: { tab: 'contacts' },
-    });
+    this.router.navigate(['/modules/crm/funnel']);
   }
 }

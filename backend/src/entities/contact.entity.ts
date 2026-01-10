@@ -38,6 +38,12 @@ export class Contact {
   @Column({ type: 'json', nullable: true })
   customFields: Record<string, any>;
 
+  @Column({ nullable: true })
+  clientRequestId?: ObjectId;
+
+  @Column({ nullable: true })
+  source?: string; // 'website_request', 'manual', 'referral'
+
   @ManyToOne(() => Organization)
   organization: Organization;
 

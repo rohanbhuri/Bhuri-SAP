@@ -228,7 +228,7 @@ export class QuotationsService {
                 ? `.${presentation.coverBackground}` 
                 : presentation.coverBackground;
             try {
-                coverSlide.background = { path: imagePath, sizing: 'cover' };
+                coverSlide.addImage({ path: imagePath, x: 0, y: 0, w: '100%', h: '100%', sizing: { type: 'cover', w: '100%', h: '100%' } });
             } catch (error) {
                 coverSlide.background = { color: 'FFFFFF' };
             }
@@ -246,9 +246,9 @@ export class QuotationsService {
             });
         }
 
-        // Add brand logo
+        // Add brand logo (centered, larger)
         try {
-            coverSlide.addImage({ path: '../configs/assets/raccontixrm/icons/racconti-logo.svg', x: 9, y: 0.2, w: 0.8, h: 0.4 });
+            coverSlide.addImage({ path: '../configs/assets/raccontixrm/icons/racconti-logo.svg', x: 3.5, y: 1.5, w: 3, h: 0.8 });
         } catch (error) {
             console.error('Failed to load brand logo');
         }
@@ -256,6 +256,32 @@ export class QuotationsService {
         const textColor = presentation.textColor?.replace('#', '') || 'FFFFFF';
         coverSlide.addText('Design Concept For', { x: 3.5, y: 2.5, w: 3, h: 0.3, fontSize: 18, align: 'center', color: textColor });
         coverSlide.addText(presentation.clientName || 'Client', { x: 3.5, y: 2.9, w: 3, h: 0.4, fontSize: 24, bold: true, align: 'center', color: textColor });
+
+        // Layout slide (Slide 2)
+        if (presentation.layoutImage) {
+            const layoutSlide = pptx.addSlide();
+            layoutSlide.background = { color: 'FFFFFF' };
+            
+            // Add brand logo
+            try {
+                layoutSlide.addImage({ path: '../configs/assets/raccontixrm/icons/racconti-logo.svg', x: 9, y: 0.2, w: 0.8, h: 0.4 });
+            } catch (error) {
+                console.error('Failed to load brand logo');
+            }
+            
+            // Add "Layout" title at top left
+            layoutSlide.addText('Layout', { x: 0.2, y: 0.2, w: 2, h: 0.3, fontSize: 14, bold: true, color: '000000' });
+            
+            // Add layout image
+            const layoutImagePath = presentation.layoutImage.startsWith('/') 
+                ? `.${presentation.layoutImage}` 
+                : presentation.layoutImage;
+            try {
+                layoutSlide.addImage({ path: layoutImagePath, x: 1, y: 0.8, w: 8, h: 4, sizing: { type: 'crop', w: 8, h: 4 } });
+            } catch (error) {
+                console.error('Failed to load layout image:', error);
+            }
+        }
 
         // Product slides
         for (const slide of presentation.slides) {
@@ -266,6 +292,11 @@ export class QuotationsService {
                 productSlide.addImage({ path: '../configs/assets/raccontixrm/icons/racconti-logo.svg', x: 9, y: 0.2, w: 0.8, h: 0.4 });
             } catch (error) {
                 console.error('Failed to load brand logo');
+            }
+
+            // Add slide title if provided
+            if (slide.slideTitle) {
+                productSlide.addText(slide.slideTitle, { x: 0.2, y: 0.2, w: 3, h: 0.3, fontSize: 14, bold: true, color: '000000' });
             }
 
             const products = await Promise.all(
@@ -279,7 +310,7 @@ export class QuotationsService {
                 if (productImage) {
                     const imgPath = productImage.startsWith('/') ? `.${productImage}` : productImage;
                     try {
-                        productSlide.addImage({ path: imgPath, x: 1, y: 1, w: 8, h: 3.5, sizing: { type: 'cover' } });
+                        productSlide.addImage({ path: imgPath, x: 1, y: 1, w: 8, h: 3.5, sizing: { type: 'crop', w: 8, h: 3.5 } });
                     } catch (error) {
                         console.error('Failed to load image:', imgPath);
                     }
@@ -296,7 +327,7 @@ export class QuotationsService {
                         if (productImage) {
                             const imgPath = productImage.startsWith('/') ? `.${productImage}` : productImage;
                             try {
-                                productSlide.addImage({ path: imgPath, x: 1, y: yPos, w: 3, h: 2, sizing: { type: 'cover' } });
+                                productSlide.addImage({ path: imgPath, x: 1, y: yPos, w: 3, h: 2, sizing: { type: 'crop', w: 3, h: 2 } });
                             } catch (error) {
                                 console.error('Failed to load image:', imgPath);
                             }
@@ -314,15 +345,15 @@ export class QuotationsService {
         const thankYouSlide = pptx.addSlide();
         thankYouSlide.background = { color: 'FFFFFF' };
         
-        // Add brand logo
+        // Add brand logo (centered, larger)
         try {
-            thankYouSlide.addImage({ path: '../configs/assets/raccontixrm/icons/racconti-logo.svg', x: 9, y: 0.2, w: 0.8, h: 0.4 });
+            thankYouSlide.addImage({ path: '../configs/assets/raccontixrm/icons/racconti-logo.svg', x: 3.5, y: 1.5, w: 3, h: 0.8 });
         } catch (error) {
             console.error('Failed to load brand logo');
         }
         
-        thankYouSlide.addText('Thank You', { x: 3, y: 2, w: 4, h: 0.6, fontSize: 36, bold: true, align: 'center', color: '000000' });
-        thankYouSlide.addText('We look forward to working with you', { x: 2.5, y: 2.8, w: 5, h: 0.3, fontSize: 18, align: 'center', color: '666666' });
+        thankYouSlide.addText('Thank You', { x: 3, y: 2.5, w: 4, h: 0.6, fontSize: 36, bold: true, align: 'center', color: '000000' });
+        thankYouSlide.addText('We look forward to working with you', { x: 2.5, y: 3.3, w: 5, h: 0.3, fontSize: 18, align: 'center', color: '666666' });
 
         return pptx.write({ outputType: 'nodebuffer' }) as Promise<Buffer>;
     }
