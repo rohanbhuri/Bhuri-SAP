@@ -1140,11 +1140,11 @@ export class ModulesComponent implements OnInit {
         if (result.success) {
           // Immediately update the UI optimistically
           this.updateModuleStatus(module.id, { isActive: true, isPending: false, canActivate: false });
-          
+
           this.snackBar.open('Module activated successfully', 'Close', {
             duration: 3000,
           });
-          
+
           // Don't refresh immediately to avoid overriding the optimistic update
           // The activation was successful, so trust the optimistic update
         }
@@ -1167,11 +1167,11 @@ export class ModulesComponent implements OnInit {
         if (result.success) {
           // Immediately update the UI optimistically
           this.updateModuleStatus(module.id, { isActive: false, isPending: false, canActivate: true });
-          
+
           this.snackBar.open('Module deactivated successfully', 'Close', {
             duration: 3000,
           });
-          
+
           // Don't refresh immediately to avoid overriding the optimistic update
         }
         this.moduleLoading.set(null);
@@ -1228,12 +1228,22 @@ export class ModulesComponent implements OnInit {
     // Get the module config from registry to find the correct route
     let registryModule = getModuleById(module.id);
     if (!registryModule) registryModule = getModuleById(module.name);
-    
+    // Try to find by display name match as a fallback (matches other get methods in this component)
+    if (!registryModule && module.displayName) {
+      registryModule = getModuleById(module.displayName.trim().toLowerCase().replace(/\s+/g, '-'));
+    }
+    // Try to find by name match as a fallback if name is human readable
+    if (!registryModule && module.name) {
+      registryModule = getModuleById(module.name.trim().toLowerCase().replace(/\s+/g, '-'));
+    }
+
     // Use the route from registry, fallback to module data, or construct from name
-    const route = registryModule?.route || module.route || `/modules/${module.id || module.name}`;
-    
-    console.log('Opening module:', module.id, 'with route:', route);
-    this.router.navigate([route]);
+    // Prefer registry route > module.route > name > id
+    const route = registryModule?.route || module.route || `/modules/${module.name || module.id}`;
+    const queryParams = registryModule?.queryParams || {};
+
+    console.log('Opening module:', module.id, 'resolved to registry:', registryModule?.id, 'route:', route, 'params:', queryParams);
+    this.router.navigate([route], { queryParams });
   }
 
   approveRequest(request: ModuleRequest) {
@@ -1242,12 +1252,12 @@ export class ModulesComponent implements OnInit {
       next: () => {
         // Immediately update the UI optimistically
         this.updateModuleStatus(request.moduleId, { isActive: true, isPending: false, canActivate: false });
-        
+
         // Remove from pending requests
         const currentRequests = this.pendingRequests();
         const updatedRequests = currentRequests.filter(r => r._id !== request._id);
         this.pendingRequests.set(updatedRequests);
-        
+
         this.snackBar.open('Request approved', 'Close', { duration: 3000 });
         this.loading.set(false);
       },
@@ -1266,12 +1276,12 @@ export class ModulesComponent implements OnInit {
       next: () => {
         // Immediately update the UI optimistically
         this.updateModuleStatus(request.moduleId, { isActive: false, isPending: false, canActivate: true });
-        
+
         // Remove from pending requests
         const currentRequests = this.pendingRequests();
         const updatedRequests = currentRequests.filter(r => r._id !== request._id);
         this.pendingRequests.set(updatedRequests);
-        
+
         this.snackBar.open('Request rejected', 'Close', { duration: 3000 });
         this.loading.set(false);
       },
@@ -1291,18 +1301,18 @@ export class ModulesComponent implements OnInit {
   private updateModuleStatus(moduleId: string, updates: Partial<AppModuleInfo>) {
     // Update the modules signal
     const currentModules = this.modules();
-    const updatedModules = currentModules.map(module => 
+    const updatedModules = currentModules.map(module =>
       module.id === moduleId ? { ...module, ...updates } : module
     );
     this.modules.set(updatedModules);
-    
+
     // Update the filtered modules signal
     const currentFiltered = this.filteredModules();
-    const updatedFiltered = currentFiltered.map(module => 
+    const updatedFiltered = currentFiltered.map(module =>
       module.id === moduleId ? { ...module, ...updates } : module
     );
     this.filteredModules.set(updatedFiltered);
-    
+
     // Trigger change detection for immediate UI update
     console.log(`Updated module ${moduleId} with:`, updates);
   }
@@ -1350,7 +1360,7 @@ export class ModulesComponent implements OnInit {
       // Try to find by display name match
       registryModule = getModuleById(module.displayName.toLowerCase().replace(/\s+/g, '-'));
     }
-    
+
     return registryModule?.icon || module?.icon || 'extension';
   }
 
@@ -1411,9 +1421,9 @@ export class ModulesComponent implements OnInit {
   togglePin(module: AppModuleInfo) {
     const wasAlreadyPinned = this.isPinned(module.id);
     const action = wasAlreadyPinned ? 'unpinned from' : 'pinned to';
-    
+
     this.pinLoading.set(module.id);
-    
+
     this.preferencesService.togglePinnedModule(module.id).subscribe({
       next: (prefs) => {
         this.pinnedModules.set(prefs.pinnedModules || []);
