@@ -150,12 +150,26 @@ interface DashboardWidget {
             </button>
             <button
               mat-icon-button
-              (click)="toggleCompactView()"
-              [attr.aria-label]="isCompactView() ? 'Switch to Normal View' : 'Switch to Compact View'"
-              [matTooltip]="isCompactView() ? 'Normal View' : 'Compact View'"
+              [matMenuTriggerFor]="viewMenu"
+              matTooltip="Change View"
+              aria-label="Change dashboard view"
             >
-              <mat-icon>{{ isCompactView() ? 'view_module' : 'view_compact' }}</mat-icon>
+              <mat-icon>{{ getViewIcon() }}</mat-icon>
             </button>
+            <mat-menu #viewMenu="matMenu">
+              <button mat-menu-item (click)="setViewMode('compact')">
+                <mat-icon>view_compact</mat-icon>
+                <span>Compact View</span>
+              </button>
+              <button mat-menu-item (click)="setViewMode('normal')">
+                <mat-icon>view_module</mat-icon>
+                <span>Normal View</span>
+              </button>
+              <button mat-menu-item (click)="setViewMode('expanded')">
+                <mat-icon>view_comfy</mat-icon>
+                <span>Expanded View</span>
+              </button>
+            </mat-menu>
           </div>
         </div>
         <p class="subtitle">
@@ -165,7 +179,8 @@ interface DashboardWidget {
 
       <section
         class="widgets"
-        [class.compact]="isCompactView()"
+        [class.compact]="viewMode() === 'compact'"
+        [class.expanded]="viewMode() === 'expanded'"
         cdkDropList
         (cdkDropListDropped)="drop($event)"
         role="list"
@@ -181,7 +196,8 @@ interface DashboardWidget {
           <mat-card
           class="widget"
           color="primary"
-          [attr.data-size]="isCompactView() ? 's' : w.size"
+          [attr.data-size]="getWidgetSize(w)"
+          [attr.data-view]="viewMode()"
           [style.border-color]="getModuleColor(w.id)"
           [style.background]="getModuleColor(w.id) + '33'"
           cdkDrag
@@ -387,7 +403,12 @@ interface DashboardWidget {
       }
 
       .widgets.compact {
-        gap: 12px;
+        gap: 8px;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+      }
+
+      .widgets.expanded {
+        gap: 20px;
         grid-template-columns: repeat(12, minmax(0, 1fr));
       }
 
@@ -407,8 +428,20 @@ interface DashboardWidget {
       }
 
       .widgets.compact .widget {
-        grid-column: span 4;
-        border-radius: 8px;
+        grid-column: span 3;
+        border-radius: 6px;
+        min-height: 180px;
+      }
+
+      .widgets.expanded .widget {
+        grid-column: span 12;
+        min-height: 400px;
+        border-radius: 16px;
+      }
+
+      .widget[data-size='xl'] {
+        grid-column: span 12;
+        min-height: 400px;
       }
 
       .widget-header {
@@ -438,10 +471,17 @@ interface DashboardWidget {
       }
 
       .widgets.compact .widget-header {
-        padding: 6px 10px 0 10px;
+        padding: 4px 8px 0 8px;
       }
       .widgets.compact .widget-title {
-        font-size: 0.85rem;
+        font-size: 0.75rem;
+      }
+
+      .widgets.expanded .widget-header {
+        padding: 20px 24px 0 24px;
+      }
+      .widgets.expanded .widget-title {
+        font-size: 1.2rem;
       }
       .widget-actions {
         display: inline-flex;
@@ -453,7 +493,12 @@ interface DashboardWidget {
       }
 
       .widgets.compact .widget-body {
-        padding: 4px 12px 12px 12px;
+        padding: 2px 8px 8px 8px;
+      }
+
+      .widgets.expanded .widget-body {
+        padding: 8px 24px 24px 24px;
+        flex: 1;
       }
       .metric {
         font-size: 1.8rem;
@@ -518,9 +563,16 @@ interface DashboardWidget {
           font-size: 0.8rem;
         }
         
-        /* Compact mode: single column on mobile */
+        /* Compact mode: 2 columns on mobile */
         .widgets.compact .widget {
+          grid-column: span 6;
+          min-height: 160px;
+        }
+
+        /* Expanded mode: single column on mobile */
+        .widgets.expanded .widget {
           grid-column: span 12;
+          min-height: 300px;
         }
       }
       
@@ -539,9 +591,16 @@ interface DashboardWidget {
           grid-column: span 12;
         }
         
-        /* Compact mode: up to 3 columns on medium screens */
+        /* Compact mode: 3 columns on medium screens */
         .widgets.compact .widget {
           grid-column: span 4;
+          min-height: 170px;
+        }
+
+        /* Expanded mode: single column on medium screens */
+        .widgets.expanded .widget {
+          grid-column: span 12;
+          min-height: 350px;
         }
       }
 
@@ -560,9 +619,16 @@ interface DashboardWidget {
           grid-column: span 12;
         }
 
-        /* Compact mode: up to 4 columns on large screens */
+        /* Compact mode: 4 columns on large screens */
         .widgets.compact .widget {
           grid-column: span 3;
+          min-height: 180px;
+        }
+
+        /* Expanded mode: single column on large screens */
+        .widgets.expanded .widget {
+          grid-column: span 12;
+          min-height: 400px;
         }
       }
 
@@ -581,13 +647,20 @@ interface DashboardWidget {
           grid-column: span 12;
         }
 
-        /* Compact mode: 5 columns on xl screens */
+        /* Compact mode: 3 columns on xl screens */
         .widgets.compact {
-          grid-template-columns: repeat(5, minmax(0, 1fr));
+          grid-template-columns: repeat(3, minmax(0, 1fr));
         }
         
         .widgets.compact .widget {
           grid-column: span 1;
+          min-height: 200px;
+        }
+
+        /* Expanded mode: single column on xl screens */
+        .widgets.expanded .widget {
+          grid-column: span 12;
+          min-height: 450px;
         }
       }
 
@@ -658,6 +731,143 @@ interface DashboardWidget {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
       }
+
+      /* Compact Mode Responsive Styles */
+      .widgets.compact .widget {
+        ::ng-deep {
+          .header,
+          .widget-header {
+            gap: 6px;
+            margin-bottom: 4px;
+          }
+
+          .icon-container {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            
+            mat-icon {
+              font-size: 12px;
+              width: 12px;
+              height: 12px;
+            }
+          }
+
+          .subtitle {
+            font-size: 0.7rem;
+            line-height: 1.1;
+          }
+
+          .metric-value,
+          .stat-number,
+          .summary-value,
+          .employee-count .value,
+          .salary-avg .rate {
+            font-size: 1rem;
+          }
+
+          .metric-label,
+          .stat-label,
+          .summary-label {
+            font-size: 0.55rem;
+            margin: 1px 0;
+          }
+
+          .metric-card,
+          .stat-item,
+          .summary-item,
+          .metric {
+            padding: 4px;
+            border-radius: 3px;
+          }
+
+          .metrics-grid,
+          .stats-grid {
+            gap: 3px;
+          }
+
+          button {
+            height: 20px;
+            font-size: 0.6rem;
+            border-radius: 3px;
+            padding: 0 4px;
+            
+            mat-icon {
+              font-size: 10px;
+              width: 10px;
+              height: 10px;
+              margin-right: 2px;
+            }
+          }
+
+          .navigation {
+            margin-top: 4px;
+            gap: 4px;
+          }
+
+          .dot {
+            width: 4px;
+            height: 4px;
+          }
+
+          .card-content {
+            gap: 4px;
+          }
+
+          .pipeline-overview,
+          .workforce-overview,
+          .financial-summary {
+            padding: 4px;
+            border-radius: 3px;
+            gap: 4px;
+          }
+
+          .progress-bar,
+          .status-progress {
+            height: 2px;
+          }
+
+          .circular-chart {
+            width: 40px;
+            height: 40px;
+          }
+
+          .completion-label,
+          .card-title {
+            font-size: 0.6rem;
+          }
+
+          .stat-text {
+            font-size: 0.65rem;
+          }
+
+          .stat-dot {
+            width: 4px;
+            height: 4px;
+          }
+
+          mat-card-header {
+            padding: 4px;
+          }
+          
+          mat-card-title {
+            font-size: 0.7rem;
+          }
+          
+          mat-card-subtitle {
+            font-size: 0.6rem;
+          }
+          
+          mat-card-content {
+            padding: 4px;
+          }
+          
+          mat-card-actions {
+            padding: 4px;
+            gap: 2px;
+          }
+        }
+      }
     `,
   ],
 })
@@ -676,12 +886,12 @@ export class DashboardComponent implements OnInit {
   activeModules = signal<AppModuleInfo[]>([]);
   widgets = signal<DashboardWidget[]>([]);
   selectedContext = signal<string>('personal');
-  isCompactView = signal<boolean>(false);
+  viewMode = signal<'compact' | 'normal' | 'expanded'>('normal');
   isLoadingWidgets = signal<boolean>(true);
 
   ngOnInit() {
     this.setupSEO();
-    this.loadCompactViewPreference();
+    this.loadViewModePreference();
     
     console.log('=== DASHBOARD INIT ===');
     console.log('Is authenticated:', this.authService.isAuthenticated());
@@ -736,10 +946,9 @@ export class DashboardComponent implements OnInit {
   }
 
   resize(w: DashboardWidget, size: 's' | 'm' | 'l') {
-    // Auto-switch to normal mode if in compact mode
-    if (this.isCompactView()) {
-      this.isCompactView.set(false);
-      this.saveCompactViewPreference();
+    // Auto-switch to normal mode if not in normal mode
+    if (this.viewMode() !== 'normal') {
+      this.setViewMode('normal');
       this.snackBar.open('Switched to Normal view for resizing', 'Close', {
         duration: 2000,
       });
@@ -1066,13 +1275,25 @@ export class DashboardComponent implements OnInit {
     return undefined;
   }
 
-  toggleCompactView() {
-    this.isCompactView.set(!this.isCompactView());
-    this.saveCompactViewPreference();
-    const viewType = this.isCompactView() ? 'Compact' : 'Normal';
-    this.snackBar.open(`Switched to ${viewType} view`, 'Close', {
+  setViewMode(mode: 'compact' | 'normal' | 'expanded') {
+    this.viewMode.set(mode);
+    this.saveViewModePreference();
+    const viewNames = { compact: 'Compact', normal: 'Normal', expanded: 'Expanded' };
+    this.snackBar.open(`Switched to ${viewNames[mode]} view`, 'Close', {
       duration: 2000,
     });
+  }
+
+  getViewIcon(): string {
+    const icons = { compact: 'view_compact', normal: 'view_module', expanded: 'view_comfy' };
+    return icons[this.viewMode()];
+  }
+
+  getWidgetSize(widget: DashboardWidget): string {
+    const mode = this.viewMode();
+    if (mode === 'compact') return 's';
+    if (mode === 'expanded') return 'xl';
+    return widget.size;
   }
 
   private saveContext(context: string) {
@@ -1092,22 +1313,22 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  private saveCompactViewPreference() {
+  private saveViewModePreference() {
     try {
-      localStorage.setItem('dashboard-compact-view', this.isCompactView().toString());
+      localStorage.setItem('dashboard-view-mode', this.viewMode());
     } catch (error) {
-      console.warn('Failed to save compact view preference:', error);
+      console.warn('Failed to save view mode preference:', error);
     }
   }
 
-  private loadCompactViewPreference() {
+  private loadViewModePreference() {
     try {
-      const saved = localStorage.getItem('dashboard-compact-view');
-      if (saved !== null) {
-        this.isCompactView.set(saved === 'true');
+      const saved = localStorage.getItem('dashboard-view-mode') as 'compact' | 'normal' | 'expanded';
+      if (saved && ['compact', 'normal', 'expanded'].includes(saved)) {
+        this.viewMode.set(saved);
       }
     } catch (error) {
-      console.warn('Failed to load compact view preference:', error);
+      console.warn('Failed to load view mode preference:', error);
     }
   }
 

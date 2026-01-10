@@ -83,12 +83,48 @@ import { CmsService } from './cms.service';
       flex-direction: column;
     }
 
+    /* Compact view styles */
+    :host-context([data-view="compact"]) .cms-widget {
+      mat-card-header {
+        padding: 8px;
+      }
+      
+      mat-card-title {
+        font-size: 0.8rem;
+      }
+      
+      mat-card-subtitle {
+        font-size: 0.7rem;
+        display: none;
+      }
+      
+      mat-card-content {
+        padding: 8px;
+      }
+      
+      mat-card-actions {
+        padding: 6px;
+        gap: 4px;
+      }
+    }
+
     .widget-avatar {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
       display: flex;
       align-items: center;
       justify-content: center;
+    }
+
+    :host-context([data-view="compact"]) .widget-avatar {
+      width: 24px;
+      height: 24px;
+      
+      mat-icon {
+        font-size: 14px;
+        width: 14px;
+        height: 14px;
+      }
     }
 
     .widget-stats {
@@ -99,6 +135,13 @@ import { CmsService } from './cms.service';
       padding: 1rem;
       background: #f5f5f5;
       border-radius: 8px;
+    }
+
+    :host-context([data-view="compact"]) .widget-stats {
+      gap: 4px;
+      margin-bottom: 8px;
+      padding: 6px;
+      border-radius: 4px;
     }
 
     .stat-item {
@@ -112,9 +155,18 @@ import { CmsService } from './cms.service';
       margin-bottom: 0.25rem;
     }
 
+    :host-context([data-view="compact"]) .stat-value {
+      font-size: 1rem;
+      margin-bottom: 2px;
+    }
+
     .stat-label {
       font-size: 0.875rem;
       color: #666;
+    }
+
+    :host-context([data-view="compact"]) .stat-label {
+      font-size: 0.6rem;
     }
 
     .recent-content h4 {
@@ -123,10 +175,19 @@ import { CmsService } from './cms.service';
       font-size: 1rem;
     }
 
+    :host-context([data-view="compact"]) .recent-content h4 {
+      font-size: 0.7rem;
+      margin: 0 0 6px 0;
+    }
+
     .content-list {
       display: flex;
       flex-direction: column;
       gap: 0.75rem;
+    }
+
+    :host-context([data-view="compact"]) .content-list {
+      gap: 4px;
     }
 
     .content-item {
@@ -136,6 +197,12 @@ import { CmsService } from './cms.service';
       padding: 0.5rem;
       border-radius: 6px;
       background: #fafafa;
+    }
+
+    :host-context([data-view="compact"]) .content-item {
+      gap: 4px;
+      padding: 3px;
+      border-radius: 3px;
     }
 
     .content-icon {
@@ -169,14 +236,29 @@ import { CmsService } from './cms.service';
       margin-bottom: 0.125rem;
     }
 
+    :host-context([data-view="compact"]) .content-title {
+      font-size: 0.6rem;
+      margin-bottom: 1px;
+    }
+
     .content-meta {
       font-size: 0.75rem;
       color: #666;
     }
 
+    :host-context([data-view="compact"]) .content-meta {
+      font-size: 0.55rem;
+    }
+
     .status-chip {
       font-size: 0.75rem;
       height: 20px;
+    }
+
+    :host-context([data-view="compact"]) .status-chip {
+      font-size: 0.55rem;
+      height: 16px;
+      display: none;
     }
 
     mat-card-actions {
@@ -192,6 +274,20 @@ import { CmsService } from './cms.service';
       min-width: 120px;
     }
 
+    :host-context([data-view="compact"]) mat-card-actions button {
+      min-width: auto;
+      font-size: 0.6rem;
+      height: 24px;
+      padding: 0 6px;
+      
+      mat-icon {
+        font-size: 12px;
+        width: 12px;
+        height: 12px;
+        margin-right: 2px;
+      }
+    }
+
     @media (max-width: 768px) {
       .widget-stats {
         grid-template-columns: repeat(2, 1fr);
@@ -203,6 +299,29 @@ import { CmsService } from './cms.service';
       
       mat-card-actions button {
         width: 100%;
+      }
+    }
+
+    /* Compact mode mobile adjustments */
+    :host-context([data-view="compact"]) {
+      @media (max-width: 768px) {
+        .widget-stats {
+          grid-template-columns: 1fr;
+        }
+        
+        .recent-content {
+          display: none;
+        }
+        
+        mat-card-actions {
+          flex-direction: row;
+          justify-content: center;
+        }
+        
+        mat-card-actions button {
+          width: auto;
+          flex: 1;
+        }
       }
     }
   `]

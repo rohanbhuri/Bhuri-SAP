@@ -48,6 +48,8 @@ export interface ModuleConfig {
   route?: string;
   isActive: boolean;
   category: 'core' | 'hr' | 'project' | 'sales' | 'finance' | 'operations';
+  queryParams?: Record<string, any>;
+  aliases?: string[];
 }
 
 export const MODULE_REGISTRY: ModuleConfig[] = [
@@ -61,7 +63,7 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     color: '#2196F3',
     widgetComponent: UserManagementWidgetComponent,
     mainComponent: UserManagementComponent,
-    route: '/modules/user-management',
+    route: '/modules/user-management/users',
     isActive: true,
     category: 'core',
   },
@@ -99,7 +101,7 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     color: '#4CAF50',
     widgetComponent: CrmWidgetComponent,
     mainComponent: CrmComponent,
-    route: '/modules/crm',
+    route: '/modules/crm/funnel',
     isActive: true,
     category: 'sales',
   },
@@ -117,6 +119,7 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     route: '/modules/hr-management',
     isActive: true,
     category: 'hr',
+    queryParams: { tab: 'employees' },
   },
   {
     id: 'staff-management',
@@ -150,6 +153,7 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     widgetComponent: UserManagementWidgetComponent,
     isActive: false,
     category: 'hr',
+    aliases: ['role-assignment'],
   },
 
   // Project Management
@@ -296,6 +300,7 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     widgetComponent: PayrollManagementWidgetComponent,
     isActive: false,
     category: 'finance',
+    aliases: ['contract-management'],
   },
 
   // Order Management Module
@@ -326,6 +331,7 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     route: '/modules/finance',
     isActive: true,
     category: 'finance',
+    aliases: ['finance-management'],
   },
 
   // Reports Management Module
@@ -380,8 +386,10 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     color: '#4CAF50',
     widgetComponent: CatalogueWidgetComponent,
     route: '/modules/catalogue',
+    queryParams: { tab: 'analytics' },
     isActive: true,
     category: 'operations',
+    aliases: ['catalogue-management'],
   },
   {
     id: 'cms',
@@ -394,6 +402,7 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     route: '/modules/cms',
     isActive: true,
     category: 'operations',
+    aliases: ['cms-management'],
   },
   {
     id: 'quotations',
@@ -417,13 +426,17 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     widgetComponent: ClientManagementWidgetComponent,
     mainComponent: ClientManagementComponent,
     route: '/modules/client-management',
+    queryParams: { tab: 'requests' },
     isActive: true,
     category: 'core',
   },
 ];
 
 export function getModuleById(id: string): ModuleConfig | undefined {
-  return MODULE_REGISTRY.find((module) => module.id === id);
+  if (!id) return undefined;
+  return MODULE_REGISTRY.find((module) =>
+    module.id === id || module.aliases?.includes(id)
+  );
 }
 
 export function getModulesByCategory(category: string): ModuleConfig[] {

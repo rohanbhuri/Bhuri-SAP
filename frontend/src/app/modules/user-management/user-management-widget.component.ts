@@ -53,10 +53,20 @@ import { UserManagementService } from './user-management.service';
       gap: 16px;
     }
     
+    /* Expanded view styles */
+    :host-context([data-view="expanded"]) .user-widget {
+      padding: 32px;
+      gap: 24px;
+    }
+    
     .header {
       display: flex;
       align-items: center;
       gap: 12px;
+    }
+    
+    :host-context([data-view="expanded"]) .header {
+      gap: 20px;
     }
     
     .icon-container {
@@ -70,10 +80,26 @@ import { UserManagementService } from './user-management.service';
       color: white;
     }
     
+    :host-context([data-view="expanded"]) .icon-container {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+    }
+    
+    :host-context([data-view="expanded"]) .icon-container mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+    }
+    
     .subtitle {
       font-size: 0.9rem;
       color: color-mix(in srgb, var(--theme-on-surface) 70%, transparent);
       font-weight: 500;
+    }
+    
+    :host-context([data-view="expanded"]) .subtitle {
+      font-size: 1.2rem;
     }
     
     .metrics-grid {
@@ -83,11 +109,21 @@ import { UserManagementService } from './user-management.service';
       flex: 1;
     }
     
+    :host-context([data-view="expanded"]) .metrics-grid {
+      gap: 20px;
+      grid-template-columns: 1fr 1fr;
+    }
+    
     .metric-card {
       padding: 16px;
       border-radius: 12px;
       background: color-mix(in srgb, var(--theme-surface) 95%, var(--theme-primary));
       border: 1px solid color-mix(in srgb, var(--theme-primary) 15%, transparent);
+    }
+    
+    :host-context([data-view="expanded"]) .metric-card {
+      padding: 24px;
+      border-radius: 16px;
     }
     
     .metric-value {
@@ -97,16 +133,29 @@ import { UserManagementService } from './user-management.service';
       line-height: 1;
     }
     
+    :host-context([data-view="expanded"]) .metric-value {
+      font-size: 3rem;
+    }
+    
     .metric-label {
       font-size: 0.8rem;
       color: color-mix(in srgb, var(--theme-on-surface) 70%, transparent);
       margin: 4px 0;
     }
     
+    :host-context([data-view="expanded"]) .metric-label {
+      font-size: 1rem;
+      margin: 8px 0;
+    }
+    
     .metric-trend {
       font-size: 0.75rem;
       color: var(--theme-success);
       font-weight: 500;
+    }
+    
+    :host-context([data-view="expanded"]) .metric-trend {
+      font-size: 0.9rem;
     }
     
     .progress-bar {
@@ -132,6 +181,18 @@ import { UserManagementService } from './user-management.service';
       height: 40px;
       border-radius: 8px;
       font-weight: 500;
+    }
+    
+    :host-context([data-view="expanded"]) .action-section button {
+      height: 56px;
+      font-size: 1.1rem;
+      border-radius: 12px;
+    }
+    
+    :host-context([data-view="expanded"]) .action-section button mat-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
     }
   `],
 })

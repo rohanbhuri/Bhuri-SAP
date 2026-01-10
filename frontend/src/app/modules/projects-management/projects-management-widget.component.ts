@@ -63,10 +63,19 @@ import { ProjectsManagementService, ProjectStats } from './projects-management.s
       gap: 16px;
     }
     
+    :host-context([data-view="expanded"]) .projects-widget {
+      padding: 32px;
+      gap: 24px;
+    }
+    
     .header {
       display: flex;
       align-items: center;
       gap: 12px;
+    }
+    
+    :host-context([data-view="expanded"]) .header {
+      gap: 20px;
     }
     
     .icon-container {
@@ -80,10 +89,26 @@ import { ProjectsManagementService, ProjectStats } from './projects-management.s
       color: white;
     }
     
+    :host-context([data-view="expanded"]) .icon-container {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+    }
+    
+    :host-context([data-view="expanded"]) .icon-container mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+    }
+    
     .subtitle {
       font-size: 0.9rem;
       color: color-mix(in srgb, var(--theme-on-surface) 70%, transparent);
       font-weight: 500;
+    }
+    
+    :host-context([data-view="expanded"]) .subtitle {
+      font-size: 1.2rem;
     }
     
     .progress-section {
@@ -94,6 +119,10 @@ import { ProjectsManagementService, ProjectStats } from './projects-management.s
       flex: 1;
     }
     
+    :host-context([data-view="expanded"]) .progress-section {
+      gap: 40px;
+    }
+    
     .completion-circle {
       text-align: center;
     }
@@ -101,6 +130,11 @@ import { ProjectsManagementService, ProjectStats } from './projects-management.s
     .circular-chart {
       width: 80px;
       height: 80px;
+    }
+    
+    :host-context([data-view="expanded"]) .circular-chart {
+      width: 120px;
+      height: 120px;
     }
     
     .circle-bg {
@@ -131,10 +165,19 @@ import { ProjectsManagementService, ProjectStats } from './projects-management.s
       margin-top: 8px;
     }
     
+    :host-context([data-view="expanded"]) .completion-label {
+      font-size: 1rem;
+      margin-top: 12px;
+    }
+    
     .project-stats {
       display: flex;
       flex-direction: column;
       gap: 12px;
+    }
+    
+    :host-context([data-view="expanded"]) .project-stats {
+      gap: 20px;
     }
     
     .stat-row {
@@ -147,6 +190,11 @@ import { ProjectsManagementService, ProjectStats } from './projects-management.s
       width: 8px;
       height: 8px;
       border-radius: 50%;
+    }
+    
+    :host-context([data-view="expanded"]) .stat-dot {
+      width: 12px;
+      height: 12px;
     }
     
     .stat-dot.active {
@@ -167,6 +215,10 @@ import { ProjectsManagementService, ProjectStats } from './projects-management.s
       font-weight: 500;
     }
     
+    :host-context([data-view="expanded"]) .stat-text {
+      font-size: 1.1rem;
+    }
+    
     .action-section {
       margin-top: auto;
     }
@@ -176,6 +228,18 @@ import { ProjectsManagementService, ProjectStats } from './projects-management.s
       height: 40px;
       border-radius: 8px;
       font-weight: 500;
+    }
+    
+    :host-context([data-view="expanded"]) .action-section button {
+      height: 56px;
+      font-size: 1.1rem;
+      border-radius: 12px;
+    }
+    
+    :host-context([data-view="expanded"]) .action-section button mat-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
     }
     
     @keyframes progress {

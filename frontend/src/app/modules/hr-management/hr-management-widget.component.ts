@@ -190,6 +190,33 @@ import { HrManagementService, HrStats, Employee, LeaveRequestDto } from './hr-ma
         gap: 8px;
       }
 
+      /* Expanded view styles */
+      :host-context([data-view="expanded"]) .hr-widget {
+        padding: 20px;
+        gap: 16px;
+      }
+
+      :host-context([data-view="expanded"]) .header {
+        margin-bottom: 12px;
+        gap: 20px;
+      }
+
+      :host-context([data-view="expanded"]) .icon-container {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+      }
+
+      :host-context([data-view="expanded"]) .icon-container mat-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+
+      :host-context([data-view="expanded"]) .subtitle {
+        font-size: 1.1rem;
+      }
+
       .header {
         display: flex;
         align-items: center;
@@ -265,6 +292,12 @@ import { HrManagementService, HrStats, Employee, LeaveRequestDto } from './hr-ma
         border: 1px solid color-mix(in srgb, #ff9800 20%, transparent);
       }
 
+      :host-context([data-view="expanded"]) .workforce-overview {
+        padding: 20px;
+        border-radius: 12px;
+        gap: 16px;
+      }
+
       .employee-count .value {
         font-size: 1.4rem;
         font-weight: 700;
@@ -272,11 +305,19 @@ import { HrManagementService, HrStats, Employee, LeaveRequestDto } from './hr-ma
         line-height: 1;
       }
 
+      :host-context([data-view="expanded"]) .employee-count .value {
+        font-size: 2.2rem;
+      }
+
       .salary-avg .rate {
         font-size: 1.2rem;
         font-weight: 700;
         color: #4caf50;
         line-height: 1;
+      }
+
+      :host-context([data-view="expanded"]) .salary-avg .rate {
+        font-size: 1.8rem;
       }
 
       .employee-count .label,
@@ -292,6 +333,11 @@ import { HrManagementService, HrStats, Employee, LeaveRequestDto } from './hr-ma
         gap: 6px;
       }
 
+      :host-context([data-view="expanded"]) .metrics-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+      }
+
       .metric {
         text-align: center;
         padding: 6px;
@@ -303,10 +349,19 @@ import { HrManagementService, HrStats, Employee, LeaveRequestDto } from './hr-ma
         );
       }
 
+      :host-context([data-view="expanded"]) .metric {
+        padding: 16px;
+        border-radius: 8px;
+      }
+
       .metric-number {
         font-size: 1.1rem;
         font-weight: 600;
         line-height: 1;
+      }
+
+      :host-context([data-view="expanded"]) .metric-number {
+        font-size: 1.6rem;
       }
 
       .metric-number.active {
@@ -532,11 +587,24 @@ import { HrManagementService, HrStats, Employee, LeaveRequestDto } from './hr-ma
         font-weight: 500;
       }
 
+      :host-context([data-view="expanded"]) .hr-button {
+        height: 48px;
+        font-size: 1rem;
+        border-radius: 8px;
+      }
+
       .hr-button mat-icon {
         font-size: 16px;
         width: 16px;
         height: 16px;
         margin-right: 4px;
+      }
+
+      :host-context([data-view="expanded"]) .hr-button mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+        margin-right: 8px;
       }
     `,
   ],
