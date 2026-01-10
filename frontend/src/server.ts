@@ -112,7 +112,7 @@ if (isMainModule(import.meta.url)) {
   const host = process.env['HOST'] || '0.0.0.0';
   
   // Auto-detect environment and use appropriate binding
-  const isProduction = process.env.NODE_ENV === 'production';
+  const isProduction = process.env['NODE_ENV'] === 'production';
   const bindHost = isProduction ? '0.0.0.0' : 'localhost';
   
   app.listen(port, bindHost, (error) => {
