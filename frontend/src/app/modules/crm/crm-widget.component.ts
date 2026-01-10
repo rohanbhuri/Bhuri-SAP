@@ -189,6 +189,31 @@ import { CrmFunnelService } from './crm-funnel.service';
         gap: 8px;
       }
 
+      /* Expanded view styles */
+      :host-context([data-view="expanded"]) .crm-widget {
+        padding: 20px;
+        gap: 16px;
+      }
+
+      :host-context([data-view="expanded"]) .header {
+        margin-bottom: 12px;
+      }
+
+      :host-context([data-view="expanded"]) .icon-container {
+        width: 48px;
+        height: 48px;
+      }
+
+      :host-context([data-view="expanded"]) .icon-container mat-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+
+      :host-context([data-view="expanded"]) .subtitle {
+        font-size: 1.1rem;
+      }
+
       .header {
         display: flex;
         align-items: center;
@@ -264,6 +289,12 @@ import { CrmFunnelService } from './crm-funnel.service';
         border: 1px solid color-mix(in srgb, #4caf50 20%, transparent);
       }
 
+      :host-context([data-view="expanded"]) .pipeline-overview {
+        padding: 20px;
+        border-radius: 12px;
+        gap: 16px;
+      }
+
       .pipeline-value .value {
         font-size: 1.4rem;
         font-weight: 700;
@@ -271,11 +302,19 @@ import { CrmFunnelService } from './crm-funnel.service';
         line-height: 1;
       }
 
+      :host-context([data-view="expanded"]) .pipeline-value .value {
+        font-size: 2.2rem;
+      }
+
       .conversion-rate .rate {
         font-size: 1.2rem;
         font-weight: 700;
         color: #ff9800;
         line-height: 1;
+      }
+
+      :host-context([data-view="expanded"]) .conversion-rate .rate {
+        font-size: 1.8rem;
       }
 
       .pipeline-value .label,
@@ -291,6 +330,11 @@ import { CrmFunnelService } from './crm-funnel.service';
         gap: 6px;
       }
 
+      :host-context([data-view="expanded"]) .metrics-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+      }
+
       .metric {
         text-align: center;
         padding: 6px;
@@ -302,10 +346,19 @@ import { CrmFunnelService } from './crm-funnel.service';
         );
       }
 
+      :host-context([data-view="expanded"]) .metric {
+        padding: 16px;
+        border-radius: 8px;
+      }
+
       .metric-number {
         font-size: 1.1rem;
         font-weight: 600;
         line-height: 1;
+      }
+
+      :host-context([data-view="expanded"]) .metric-number {
+        font-size: 1.6rem;
       }
 
       .metric-number.contacts {
@@ -437,11 +490,24 @@ import { CrmFunnelService } from './crm-funnel.service';
         font-weight: 500;
       }
 
+      :host-context([data-view="expanded"]) .crm-button {
+        height: 48px;
+        font-size: 1rem;
+        border-radius: 8px;
+      }
+
       .crm-button mat-icon {
         font-size: 16px;
         width: 16px;
         height: 16px;
         margin-right: 4px;
+      }
+
+      :host-context([data-view="expanded"]) .crm-button mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+        margin-right: 8px;
       }
     `,
   ],

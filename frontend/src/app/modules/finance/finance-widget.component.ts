@@ -88,10 +88,20 @@ import { FinanceService } from './finance.service';
       gap: 16px;
     }
     
+    /* Expanded view styles */
+    :host-context([data-view="expanded"]) .finance-widget {
+      padding: 32px;
+      gap: 24px;
+    }
+    
     .header {
       display: flex;
       align-items: center;
       gap: 12px;
+    }
+    
+    :host-context([data-view="expanded"]) .header {
+      gap: 20px;
     }
     
     .icon-container {
@@ -105,10 +115,26 @@ import { FinanceService } from './finance.service';
       color: white;
     }
     
+    :host-context([data-view="expanded"]) .icon-container {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+    }
+    
+    :host-context([data-view="expanded"]) .icon-container mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+    }
+    
     .subtitle {
       font-size: 0.9rem;
       color: color-mix(in srgb, var(--theme-on-surface) 70%, transparent);
       font-weight: 500;
+    }
+    
+    :host-context([data-view="expanded"]) .subtitle {
+      font-size: 1.2rem;
     }
     
     .financial-summary {
@@ -117,12 +143,22 @@ import { FinanceService } from './finance.service';
       gap: 12px;
     }
     
+    :host-context([data-view="expanded"]) .financial-summary {
+      gap: 20px;
+    }
+    
     .summary-item {
       padding: 12px;
       border-radius: 10px;
       display: flex;
       align-items: center;
       gap: 10px;
+    }
+    
+    :host-context([data-view="expanded"]) .summary-item {
+      padding: 20px;
+      border-radius: 16px;
+      gap: 16px;
     }
     
     .summary-item.revenue {
@@ -144,6 +180,12 @@ import { FinanceService } from './finance.service';
       justify-content: center;
     }
     
+    :host-context([data-view="expanded"]) .summary-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+    }
+    
     .revenue .summary-icon {
       background: #4CAF50;
       color: white;
@@ -160,10 +202,20 @@ import { FinanceService } from './finance.service';
       height: 18px;
     }
     
+    :host-context([data-view="expanded"]) .summary-icon mat-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+    }
+    
     .summary-value {
       font-size: 1.3rem;
       font-weight: 700;
       line-height: 1;
+    }
+    
+    :host-context([data-view="expanded"]) .summary-value {
+      font-size: 2rem;
     }
     
     .revenue .summary-value {
@@ -178,6 +230,11 @@ import { FinanceService } from './finance.service';
       font-size: 0.75rem;
       color: color-mix(in srgb, var(--theme-on-surface) 60%, transparent);
       margin-top: 2px;
+    }
+    
+    :host-context([data-view="expanded"]) .summary-label {
+      font-size: 1rem;
+      margin-top: 4px;
     }
     
     .invoice-status {
@@ -238,6 +295,11 @@ import { FinanceService } from './finance.service';
       overflow: hidden;
     }
     
+    :host-context([data-view="expanded"]) .status-progress {
+      height: 8px;
+      border-radius: 4px;
+    }
+    
     .status-fill {
       height: 100%;
       border-radius: 2px;
@@ -261,6 +323,18 @@ import { FinanceService } from './finance.service';
       height: 40px;
       border-radius: 8px;
       font-weight: 500;
+    }
+    
+    :host-context([data-view="expanded"]) .action-section button {
+      height: 56px;
+      font-size: 1.1rem;
+      border-radius: 12px;
+    }
+    
+    :host-context([data-view="expanded"]) .action-section button mat-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
     }
   `],
 })

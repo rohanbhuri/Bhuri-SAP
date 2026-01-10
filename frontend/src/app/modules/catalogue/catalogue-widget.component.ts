@@ -68,8 +68,16 @@ import { CatalogueService } from './catalogue.service';
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
     }
+    
+    :host-context([data-view="expanded"]) .catalogue-widget {
+      border-radius: 16px;
+    }
     .catalogue-widget mat-card-header {
       padding: 16px;
+    }
+    
+    :host-context([data-view="expanded"]) .catalogue-widget mat-card-header {
+      padding: 24px;
     }
     .widget-icon {
       width: 48px;
@@ -95,11 +103,21 @@ import { CatalogueService } from './catalogue.service';
     .catalogue-widget mat-card-subtitle {
       color: rgba(255,255,255,0.8);
     }
+    
+    :host-context([data-view="expanded"]) .catalogue-widget mat-card-subtitle {
+      font-size: 1.1rem;
+    }
     .widget-stats {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
       padding: 16px;
+    }
+    
+    :host-context([data-view="expanded"]) .widget-stats {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      padding: 24px;
     }
     .stat-item {
       display: flex;
@@ -110,11 +128,25 @@ import { CatalogueService } from './catalogue.service';
       border-radius: 8px;
       backdrop-filter: blur(10px);
     }
+    
+    :host-context([data-view="expanded"]) .stat-item {
+      padding: 20px;
+      border-radius: 12px;
+      flex-direction: column;
+      text-align: center;
+      gap: 8px;
+    }
     .stat-item mat-icon {
       font-size: 32px;
       width: 32px;
       height: 32px;
       color: white;
+    }
+    
+    :host-context([data-view="expanded"]) .stat-item mat-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
     }
     .stat-info {
       display: flex;
@@ -126,10 +158,18 @@ import { CatalogueService } from './catalogue.service';
       color: white;
       line-height: 1;
     }
+    
+    :host-context([data-view="expanded"]) .stat-number {
+      font-size: 36px;
+    }
     .stat-label {
       font-size: 12px;
       color: rgba(255,255,255,0.8);
       margin-top: 2px;
+    }
+    
+    :host-context([data-view="expanded"]) .stat-label {
+      font-size: 14px;
     }
     .stat-detail {
       font-size: 10px;
@@ -141,6 +181,17 @@ import { CatalogueService } from './catalogue.service';
       display: flex;
       gap: 8px;
       border-top: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    :host-context([data-view="expanded"]) .catalogue-widget mat-card-actions {
+      padding: 24px;
+      gap: 16px;
+    }
+    
+    :host-context([data-view="expanded"]) .catalogue-widget mat-card-actions button {
+      height: 48px;
+      font-size: 1rem;
+      border-radius: 12px;
     }
     .catalogue-widget mat-card-actions button {
       flex: 1;
