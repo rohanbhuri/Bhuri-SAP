@@ -37,11 +37,11 @@ import { PresentationListComponent } from './components/presentation-list/presen
         <mat-tab label="Enquiries">
           <app-enquiry-list></app-enquiry-list>
         </mat-tab>
-        <mat-tab label="Quotations">
-          <app-quotation-list></app-quotation-list>
-        </mat-tab>
         <mat-tab label="Presentations">
           <app-presentation-list></app-presentation-list>
+        </mat-tab>
+        <mat-tab label="Quotations">
+          <app-quotation-list></app-quotation-list>
         </mat-tab>
       </mat-tab-group>
     </div>
@@ -54,7 +54,7 @@ export class QuotationsComponent implements OnInit {
   private router = inject(Router);
   
   selectedTabIndex = 0;
-  private tabs = ['enquiries', 'quotations', 'presentations'];
+  private tabs = ['enquiries', 'presentations', 'quotations'];
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {

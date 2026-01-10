@@ -8,6 +8,10 @@ import { Presentation, PresentationStatus } from '../entities/presentation.entit
 import { Product } from '../entities/product.entity';
 import { Client } from '../entities/client.entity';
 import { ObjectId } from 'mongodb';
+import * as PDFDocument from 'pdfkit';
+import * as https from 'https';
+import * as http from 'http';
+import * as ExcelJS from 'exceljs';
 const PptxGenJS = require('pptxgenjs');
 
 @Injectable()
@@ -356,5 +360,357 @@ export class QuotationsService {
             grandTotal: subtotal,
             currency: 'USD'
         };
+    }
+
+    async generateQuotationPDF(id: string): Promise<Buffer> {
+        const quotation = await this.findOne(id);
+        if (!quotation) throw new NotFoundException('Quotation not found');
+
+        const client = await this.clientRepository.findOneBy({ _id: new ObjectId(quotation.clientId) });
+        const clientName = client ? `${client.companyName} - ${client.contactPerson}` : quotation.clientName;
+
+        // Helper function to download image from URL
+        const downloadImage = (url: string): Promise<Buffer> => {
+            return new Promise((resolve, reject) => {
+                const protocol = url.startsWith('https') ? https : http;
+                protocol.get(url, (response) => {
+                    const chunks: Buffer[] = [];
+                    response.on('data', (chunk) => chunks.push(chunk));
+                    response.on('end', () => resolve(Buffer.concat(chunks)));
+                    response.on('error', reject);
+                }).on('error', reject);
+            });
+        };
+
+        return new Promise(async (resolve, reject) => {
+            const doc = new PDFDocument({ size: 'A4', margin: 30, layout: 'landscape' });
+            const chunks: Buffer[] = [];
+
+            doc.on('data', (chunk) => chunks.push(chunk));
+            doc.on('end', () => resolve(Buffer.concat(chunks)));
+            doc.on('error', reject);
+
+            const pageWidth = doc.page.width - 60;
+            const startY = 100;
+
+            // Header with dark background
+            doc.rect(30, 30, pageWidth, 40).fill('#2c3e50');
+            doc.fontSize(18).fillColor('#f1c40f').text(`BOQ-${clientName?.toUpperCase() || 'CLIENT'}`, 40, 45, { width: pageWidth - 20, align: 'center' });
+
+            // Build dynamic columns based on available data
+            const columns: any[] = [
+                { header: 'S.NO', width: 35, field: 'sno' },
+                { header: 'PRODUCT CODE', width: 80, field: 'productCode' },
+                { header: 'PRODUCT NAME', width: 100, field: 'productName' },
+                { header: 'REF. IMAGE', width: 80, field: 'image' },
+                { header: 'QTY', width: 40, field: 'quantity' },
+                { header: 'SEATER', width: 50, field: 'seater' },
+                { header: 'MEASUREMENTS', width: 90, field: 'measurements' },
+                { header: 'PRICE PER PIECE', width: 80, field: 'unitPrice' }
+            ];
+
+            // Check if discount exists and add discount columns
+            if (quotation.discount || quotation.discountTotal > 0) {
+                const discountLabel = quotation.discount?.type === 'percentage' 
+                    ? `DISCOUNTED PRICE PER PIECE @ ${quotation.discount.value}%`
+                    : 'DISCOUNTED PRICE PER PIECE';
+                columns.push({ header: discountLabel, width: 100, field: 'discountedUnitPrice' });
+            }
+
+            columns.push({ header: 'PRICE', width: 70, field: 'total' });
+
+            if (quotation.discount || quotation.discountTotal > 0) {
+                const discountLabel = quotation.discount?.type === 'percentage' 
+                    ? `DISCOUNTED PRICE @ ${quotation.discount.value}%`
+                    : 'DISCOUNTED PRICE';
+                columns.push({ header: discountLabel, width: 90, field: 'discountedTotal' });
+            }
+
+            columns.push({ header: 'SPECIFICATION', width: 120, field: 'specification' });
+
+            const colWidths = columns.map(c => c.width);
+            let xPos = 30;
+            let yPos = startY;
+
+            // Draw header row
+            doc.rect(30, yPos, pageWidth, 30).fill('#2c3e50');
+            xPos = 30;
+            columns.forEach((col, i) => {
+                doc.fontSize(7).fillColor('#f1c40f').text(col.header, xPos + 2, yPos + 10, { width: colWidths[i] - 4, align: 'center' });
+                xPos += colWidths[i];
+            });
+
+            yPos += 30;
+
+            // Group items by tags (area) if tags exist
+            const groupedItems: any = {};
+            for (const item of quotation.items) {
+                const product = await this.productRepository.findOneBy({ _id: new ObjectId(item.productId) });
+                const area = product?.tags?.[0] || 'ITEMS';
+                if (!groupedItems[area]) groupedItems[area] = [];
+                groupedItems[area].push({ ...item, product });
+            }
+
+            let sno = 1;
+            for (const [area, items] of Object.entries(groupedItems)) {
+                // Area header
+                doc.rect(30, yPos, pageWidth, 20).fill('#34495e');
+                doc.fontSize(9).fillColor('#f1c40f').text(area.toUpperCase(), 35, yPos + 5);
+                yPos += 20;
+
+                // Items
+                for (const item of items as any[]) {
+                    const rowHeight = 80;
+                    
+                    if (yPos + rowHeight > doc.page.height - 50) {
+                        doc.addPage({ size: 'A4', margin: 30, layout: 'landscape' });
+                        yPos = 30;
+                    }
+
+                    doc.rect(30, yPos, pageWidth, rowHeight).stroke('#ddd');
+
+                    xPos = 30;
+                    const product = item.product;
+
+                    // Render each column
+                    for (const col of columns) {
+                        if (col.field === 'sno') {
+                            doc.fontSize(8).fillColor('#000').text(sno.toString(), xPos + 2, yPos + 35, { width: col.width - 4, align: 'center' });
+                        } else if (col.field === 'productCode') {
+                            doc.fontSize(7).text(item.productCode || product?.productCode || '', xPos + 2, yPos + 35, { width: col.width - 4, align: 'center' });
+                        } else if (col.field === 'productName') {
+                            doc.fontSize(7).text(item.productName || '', xPos + 2, yPos + 30, { width: col.width - 4, align: 'center' });
+                        } else if (col.field === 'image') {
+                            if (product?.featuredImage || product?.imageGallery?.[0]) {
+                                try {
+                                    const imgUrl = product.featuredImage || product.imageGallery[0];
+                                    if (imgUrl.startsWith('http://') || imgUrl.startsWith('https://')) {
+                                        const imageBuffer = await downloadImage(imgUrl);
+                                        doc.image(imageBuffer, xPos + 10, yPos + 10, { width: 60, height: 60, fit: [60, 60] });
+                                    } else {
+                                        const imgPath = imgUrl.startsWith('/') ? `.${imgUrl}` : imgUrl;
+                                        doc.image(imgPath, xPos + 10, yPos + 10, { width: 60, height: 60, fit: [60, 60] });
+                                    }
+                                } catch (e) {}
+                            }
+                        } else if (col.field === 'quantity') {
+                            doc.fontSize(8).text(item.quantity.toString(), xPos + 2, yPos + 35, { width: col.width - 4, align: 'center' });
+                        } else if (col.field === 'seater') {
+                            doc.fontSize(7).text(product?.attributes?.seater || '', xPos + 2, yPos + 35, { width: col.width - 4, align: 'center' });
+                        } else if (col.field === 'measurements') {
+                            const shape = product?.dimensionConfig?.shape || 'rectangle';
+                            const unit = product?.dimensionConfig?.unit || 'cm';
+                            const width = shape === 'rectangle' 
+                                ? (item.customDimensions?.width || product?.dimensionConfig?.width?.default || '')
+                                : (item.customDimensions?.diameter || product?.dimensionConfig?.diameter?.default || '');
+                            const depth = item.customDimensions?.depth || product?.dimensionConfig?.depth || '';
+                            const height = item.customDimensions?.height || product?.dimensionConfig?.height || '';
+                            const label = shape === 'rectangle' ? 'W' : 'D';
+                            const measureText = `${label}:${width} D:${depth}\nH:${height} (${unit})`;
+                            doc.fontSize(6).text(measureText, xPos + 2, yPos + 28, { width: col.width - 4, align: 'center' });
+                        } else if (col.field === 'unitPrice') {
+                            doc.fontSize(8).text(item.unitPrice.toFixed(0), xPos + 2, yPos + 35, { width: col.width - 4, align: 'center' });
+                        } else if (col.field === 'discountedUnitPrice') {
+                            const discountedPrice = quotation.discount?.type === 'percentage'
+                                ? item.unitPrice * (1 - quotation.discount.value / 100)
+                                : item.unitPrice;
+                            doc.fontSize(8).text(discountedPrice.toFixed(0), xPos + 2, yPos + 35, { width: col.width - 4, align: 'center' });
+                        } else if (col.field === 'total') {
+                            doc.fontSize(8).text(item.total.toFixed(0), xPos + 2, yPos + 35, { width: col.width - 4, align: 'center' });
+                        } else if (col.field === 'discountedTotal') {
+                            const discountedPrice = item.discountedPrice || (item.total * (1 - (quotation.discount?.value || 0) / 100));
+                            doc.fontSize(8).text(discountedPrice.toFixed(0), xPos + 2, yPos + 35, { width: col.width - 4, align: 'center' });
+                        } else if (col.field === 'specification') {
+                            doc.fontSize(6).text(item.description || item.specifications || '', xPos + 2, yPos + 30, { width: col.width - 4, align: 'center' });
+                        }
+                        xPos += col.width;
+                    }
+
+                    yPos += rowHeight;
+                    sno++;
+                }
+            }
+
+            doc.end();
+        });
+    }
+
+    async generateQuotationExcel(id: string): Promise<Buffer> {
+        const quotation = await this.findOne(id);
+        if (!quotation) throw new NotFoundException('Quotation not found');
+
+        const client = await this.clientRepository.findOneBy({ _id: new ObjectId(quotation.clientId) });
+        const clientName = client ? `${client.companyName} - ${client.contactPerson}` : quotation.clientName;
+
+        // Helper function to download image from URL
+        const downloadImage = (url: string): Promise<Buffer> => {
+            return new Promise((resolve, reject) => {
+                const protocol = url.startsWith('https') ? https : http;
+                protocol.get(url, (response) => {
+                    const chunks: Buffer[] = [];
+                    response.on('data', (chunk) => chunks.push(chunk));
+                    response.on('end', () => resolve(Buffer.concat(chunks)));
+                    response.on('error', reject);
+                }).on('error', reject);
+            });
+        };
+
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Quotation');
+
+        // Title row
+        worksheet.mergeCells('A1:L1');
+        const titleCell = worksheet.getCell('A1');
+        titleCell.value = `BOQ-${clientName?.toUpperCase() || 'CLIENT'}`;
+        titleCell.font = { size: 18, bold: true, color: { argb: 'FFF1C40F' } };
+        titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2C3E50' } };
+        titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+        worksheet.getRow(1).height = 40;
+
+        // Build dynamic columns
+        const columns: any[] = [
+            { header: 'S.NO', key: 'sno', width: 8 },
+            { header: 'PRODUCT CODE', key: 'productCode', width: 15 },
+            { header: 'PRODUCT NAME', key: 'productName', width: 20 },
+            { header: 'REF. IMAGE', key: 'image', width: 15 },
+            { header: 'QTY', key: 'quantity', width: 8 },
+            { header: 'SEATER', key: 'seater', width: 10 },
+            { header: 'MEASUREMENTS', key: 'measurements', width: 18 },
+            { header: 'PRICE PER PIECE', key: 'unitPrice', width: 15 }
+        ];
+
+        if (quotation.discount || quotation.discountTotal > 0) {
+            const discountLabel = quotation.discount?.type === 'percentage' 
+                ? `DISCOUNTED PRICE PER PIECE @ ${quotation.discount.value}%`
+                : 'DISCOUNTED PRICE PER PIECE';
+            columns.push({ header: discountLabel, key: 'discountedUnitPrice', width: 20 });
+        }
+
+        columns.push({ header: 'PRICE', key: 'total', width: 12 });
+
+        if (quotation.discount || quotation.discountTotal > 0) {
+            const discountLabel = quotation.discount?.type === 'percentage' 
+                ? `DISCOUNTED PRICE @ ${quotation.discount.value}%`
+                : 'DISCOUNTED PRICE';
+            columns.push({ header: discountLabel, key: 'discountedTotal', width: 18 });
+        }
+
+        columns.push({ header: 'SPECIFICATION', key: 'specification', width: 30 });
+
+        worksheet.columns = columns;
+
+        // Header row styling
+        const headerRow = worksheet.getRow(2);
+        headerRow.values = columns.map(c => c.header);
+        headerRow.font = { bold: true, color: { argb: 'FFF1C40F' } };
+        headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2C3E50' } };
+        headerRow.alignment = { horizontal: 'center', vertical: 'middle' };
+        headerRow.height = 30;
+
+        // Group items by tags
+        const groupedItems: any = {};
+        for (const item of quotation.items) {
+            const product = await this.productRepository.findOneBy({ _id: new ObjectId(item.productId) });
+            const area = product?.tags?.[0] || 'ITEMS';
+            if (!groupedItems[area]) groupedItems[area] = [];
+            groupedItems[area].push({ ...item, product });
+        }
+
+        let sno = 1;
+        let currentRow = 3;
+
+        for (const [area, items] of Object.entries(groupedItems)) {
+            // Area header
+            worksheet.mergeCells(`A${currentRow}:${String.fromCharCode(64 + columns.length)}${currentRow}`);
+            const areaCell = worksheet.getCell(`A${currentRow}`);
+            areaCell.value = area.toUpperCase();
+            areaCell.font = { bold: true, color: { argb: 'FFF1C40F' } };
+            areaCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF34495E' } };
+            areaCell.alignment = { horizontal: 'left', vertical: 'middle' };
+            worksheet.getRow(currentRow).height = 20;
+            currentRow++;
+
+            // Items
+            for (const item of items as any[]) {
+                const product = item.product;
+                const shape = product?.dimensionConfig?.shape || 'rectangle';
+                const unit = product?.dimensionConfig?.unit || 'cm';
+                const width = shape === 'rectangle'
+                    ? (item.customDimensions?.width || product?.dimensionConfig?.width?.default || '')
+                    : (item.customDimensions?.diameter || product?.dimensionConfig?.diameter?.default || '');
+                const depth = item.customDimensions?.depth || product?.dimensionConfig?.depth || '';
+                const height = item.customDimensions?.height || product?.dimensionConfig?.height || '';
+                const label = shape === 'rectangle' ? 'W' : 'D';
+                const measurements = `${label}:${width} D:${depth} H:${height} (${unit})`;
+
+                const rowData: any = {
+                    sno: sno++,
+                    productCode: item.productCode || product?.productCode || '',
+                    productName: item.productName || '',
+                    image: '',
+                    quantity: item.quantity,
+                    seater: product?.attributes?.seater || '',
+                    measurements: measurements
+                };
+
+                rowData.unitPrice = item.unitPrice;
+                
+                if (quotation.discount || quotation.discountTotal > 0) {
+                    rowData.discountedUnitPrice = quotation.discount?.type === 'percentage'
+                        ? item.unitPrice * (1 - quotation.discount.value / 100)
+                        : item.unitPrice;
+                }
+
+                rowData.total = item.total;
+
+                if (quotation.discount || quotation.discountTotal > 0) {
+                    rowData.discountedTotal = item.discountedPrice || (item.total * (1 - (quotation.discount?.value || 0) / 100));
+                }
+
+                rowData.specification = item.description || item.specifications || '';
+
+                const row = worksheet.addRow(rowData);
+                row.alignment = { horizontal: 'center', vertical: 'middle' };
+                row.height = 60;
+                row.border = {
+                    top: { style: 'thin' },
+                    left: { style: 'thin' },
+                    bottom: { style: 'thin' },
+                    right: { style: 'thin' }
+                };
+
+                // Add image
+                if (product?.featuredImage || product?.imageGallery?.[0]) {
+                    try {
+                        const imgUrl = product.featuredImage || product.imageGallery[0];
+                        let imageBuffer: Buffer;
+                        
+                        if (imgUrl.startsWith('http://') || imgUrl.startsWith('https://')) {
+                            imageBuffer = await downloadImage(imgUrl);
+                        } else {
+                            const fs = require('fs');
+                            const imgPath = imgUrl.startsWith('/') ? `.${imgUrl}` : imgUrl;
+                            imageBuffer = fs.readFileSync(imgPath);
+                        }
+
+                        const imageId = workbook.addImage({
+                            buffer: imageBuffer as any,
+                            extension: 'jpeg',
+                        });
+
+                        worksheet.addImage(imageId, {
+                            tl: { col: 3, row: currentRow - 1 },
+                            ext: { width: 80, height: 60 }
+                        });
+                    } catch (e) {
+                        console.error('Failed to add image:', e);
+                    }
+                }
+
+                currentRow++;
+            }
+        }
+
+        return workbook.xlsx.writeBuffer() as any;
     }
 }

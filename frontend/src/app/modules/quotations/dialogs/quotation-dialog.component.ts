@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, Inject } from '@angular/core';
+import { Component, OnInit, inject, Inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -80,6 +80,34 @@ import { map, startWith } from 'rxjs/operators';
             </div>
 
             <div class="price-row" *ngIf="item.get('productId')?.value">
+              <mat-form-field appearance="outline" class="dimension-field" *ngIf="getProductShape(i) === 'rectangle'">
+                <mat-label>Width</mat-label>
+                <input matInput type="number" formControlName="customWidth" 
+                  [min]="getProductDimensionMin(i, 'width')" 
+                  [max]="getProductDimensionMax(i, 'width')"
+                  (input)="onDimensionChange(i)">
+                <mat-hint>Range: {{getProductDimensionMin(i, 'width')}} - {{getProductDimensionMax(i, 'width')}}</mat-hint>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="dimension-field" *ngIf="getProductShape(i) === 'round'">
+                <mat-label>Diameter</mat-label>
+                <input matInput type="number" formControlName="customDiameter" 
+                  [min]="getProductDimensionMin(i, 'diameter')" 
+                  [max]="getProductDimensionMax(i, 'diameter')"
+                  (input)="onDimensionChange(i)">
+                <mat-hint>Range: {{getProductDimensionMin(i, 'diameter')}} - {{getProductDimensionMax(i, 'diameter')}}</mat-hint>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="dimension-field">
+                <mat-label>Depth (Fixed)</mat-label>
+                <input matInput type="number" formControlName="customDepth" readonly>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="dimension-field">
+                <mat-label>Height (Fixed)</mat-label>
+                <input matInput type="number" formControlName="customHeight" readonly>
+              </mat-form-field>
+
               <mat-form-field appearance="outline" class="price-field">
                 <mat-label>Original Price</mat-label>
                 <input matInput type="number" formControlName="originalPrice" readonly>
@@ -145,7 +173,6 @@ import { map, startWith } from 'rxjs/operators';
     </mat-dialog-actions>
   `,
   styles: [`
-    mat-dialog-content { width: 95vw; max-width: 1100px; max-height: 80vh; overflow-x: hidden; overflow-y: auto; padding: 20px; }
     .full-width { width: 100%; margin-bottom: 16px; }
     .item-card { border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px; margin-bottom: 16px; background: #fafafa; }
     .item-row { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px; }
@@ -157,6 +184,7 @@ import { map, startWith } from 'rxjs/operators';
     .price-row { display: flex; gap: 12px; align-items: flex-start; }
     .price-row mat-form-field { margin-bottom: 0; }
     .price-field { flex: 1; min-width: 150px; }
+    .dimension-field { flex: 1; min-width: 120px; }
     .item-total { display: flex; flex-direction: column; align-items: flex-end; min-width: 140px; padding: 12px; background: #e3f2fd; border-radius: 4px; margin-top: 8px; }
     .item-total .label { font-size: 11px; color: #666; }
     .item-total .value { font-size: 18px; font-weight: 600; font-family: monospace; color: #1976d2; }
@@ -179,11 +207,12 @@ export class QuotationDialogComponent implements OnInit {
   private clientService = inject(ClientManagementService);
   private catalogueService = inject(CatalogueService);
   private preferencesService = inject(PreferencesService);
+  private cdr = inject(ChangeDetectorRef);
 
   form: FormGroup;
   clients: any[] = [];
   products: any[] = [];
-  filteredClients!: Observable<any[]>;
+  filteredClients: Observable<any[]>;
   selectedClient: any = null;
   selectedProducts: Map<number, any> = new Map();
   currencySymbol = '$';
@@ -198,6 +227,12 @@ export class QuotationDialogComponent implements OnInit {
       discountValue: [0],
       items: this.fb.array([])
     });
+    
+    // Initialize filteredClients immediately to prevent template errors
+    this.filteredClients = this.form.get('clientSearch')!.valueChanges.pipe(
+      startWith(''),
+      map(value => this._filterClients(typeof value === 'string' ? value : value?.companyName || ''))
+    );
   }
 
   ngOnInit() {
@@ -208,14 +243,14 @@ export class QuotationDialogComponent implements OnInit {
     if (this.data?.quotation) {
       if (this.data.mode === 'create-from-presentation') {
         this.isEditMode = false;
-        this.loadQuotationDataFromPresentation(this.data.quotation);
+        setTimeout(() => this.loadQuotationDataFromPresentation(this.data.quotation));
       } else {
         this.isEditMode = true;
         this.quotationId = this.data.quotation._id;
-        this.loadQuotationData(this.data.quotation);
+        setTimeout(() => this.loadQuotationData(this.data.quotation));
       }
     } else {
-      this.addItem();
+      setTimeout(() => this.addItem());
     }
   }
 
@@ -225,6 +260,7 @@ export class QuotationDialogComponent implements OnInit {
         if (prefs) {
           this.currency = prefs.currency || 'USD';
           this.currencySymbol = prefs.currencySymbol || '$';
+          this.cdr.detectChanges();
         }
       },
       error: () => console.log('Using default currency')
@@ -232,79 +268,125 @@ export class QuotationDialogComponent implements OnInit {
   }
 
   loadQuotationData(quotation: any) {
-    // Find and set client
-    const client = this.clients.find(c => c._id === quotation.clientId);
-    if (client) {
-      this.selectedClient = client;
-      this.form.patchValue({ clientSearch: client });
-    }
-
-    // Set discount
-    if (quotation.discount) {
-      this.form.patchValue({
-        discountType: quotation.discount.type,
-        discountValue: quotation.discount.value
-      });
-    }
-
-    // Load items
-    quotation.items.forEach((item: any) => {
-      const itemGroup = this.fb.group({
-        productSearch: [''],
-        productId: [item.productId || ''],
-        variationId: [item.variationId || ''],
-        variationName: [item.variationName || ''],
-        quantity: [item.quantity, [Validators.required, Validators.min(1)]],
-        originalPrice: [item.originalPrice || item.unitPrice],
-        unitPrice: [item.unitPrice, [Validators.required, Validators.min(0)]]
-      });
-
-      // Find and set product
-      if (item.productId) {
-        const product = this.products.find(p => p._id === item.productId);
-        if (product) {
-          const index = this.items.length;
-          this.selectedProducts.set(index, product);
-          itemGroup.patchValue({ productSearch: product });
+    // Wait for clients and products to load first
+    const checkDataLoaded = setInterval(() => {
+      if (this.clients.length > 0 && this.products.length > 0) {
+        clearInterval(checkDataLoaded);
+        
+        // Find and set client
+        const client = this.clients.find(c => c._id === quotation.clientId);
+        if (client) {
+          this.selectedClient = client;
+          this.form.patchValue({ clientSearch: client });
         }
-      }
 
-      this.items.push(itemGroup);
-    });
+        // Set discount
+        if (quotation.discount) {
+          this.form.patchValue({
+            discountType: quotation.discount.type,
+            discountValue: quotation.discount.value
+          });
+        }
+
+        // Load items
+        quotation.items.forEach((item: any) => {
+          const itemGroup = this.fb.group({
+            productSearch: [''],
+            productId: [item.productId || ''],
+            variationId: [item.variationId || ''],
+            variationName: [item.variationName || ''],
+            quantity: [item.quantity, [Validators.required, Validators.min(1)]],
+            customWidth: [item.customDimensions?.width || 0],
+            customDiameter: [item.customDimensions?.diameter || 0],
+            customDepth: [item.customDimensions?.depth || 0],
+            customHeight: [item.customDimensions?.height || 0],
+            originalPrice: [item.originalPrice || item.unitPrice],
+            unitPrice: [item.unitPrice, [Validators.required, Validators.min(0)]]
+          });
+
+          // Find and set product
+          if (item.productId) {
+            const product = this.products.find(p => p._id === item.productId);
+            if (product) {
+              const index = this.items.length;
+              this.selectedProducts.set(index, product);
+              itemGroup.patchValue({ productSearch: product });
+              
+              // Prefetch dimensions from product if not in item
+              if (!item.customDimensions?.width && !item.customDimensions?.diameter && product.dimensionConfig) {
+                itemGroup.patchValue({
+                  customWidth: product.dimensionConfig.width?.default || 0,
+                  customDiameter: product.dimensionConfig.diameter?.default || 0,
+                  customDepth: product.dimensionConfig.depth || 0,
+                  customHeight: product.dimensionConfig.height || 0
+                });
+              }
+            }
+          }
+
+          this.items.push(itemGroup);
+        });
+        
+        this.cdr.detectChanges();
+      }
+    }, 100);
   }
 
   loadQuotationDataFromPresentation(quotationData: any) {
-    // Find and set client
-    const client = this.clients.find(c => c._id === quotationData.clientId);
-    if (client) {
-      this.selectedClient = client;
-      this.form.patchValue({ clientSearch: client });
-    }
-
-    // Load items from presentation
-    quotationData.items.forEach((item: any) => {
-      const itemGroup = this.fb.group({
-        productSearch: [''],
-        productId: [item.productId || ''],
-        variationId: [''],
-        variationName: [''],
-        quantity: [item.quantity, [Validators.required, Validators.min(1)]],
-        originalPrice: [item.originalPrice || item.unitPrice],
-        unitPrice: [item.unitPrice, [Validators.required, Validators.min(0)]]
-      });
-
-      // Find and set product
-      if (item.productId) {
-        const product = this.products.find(p => p._id === item.productId);
-        if (product) {
-          const index = this.items.length;
-          this.selectedProducts.set(index, product);
-          itemGroup.patchValue({ productSearch: product });
+    // Wait for clients and products to load first
+    const checkDataLoaded = setInterval(() => {
+      if (this.clients.length > 0 && this.products.length > 0) {
+        clearInterval(checkDataLoaded);
+        
+        // Find and set client
+        const client = this.clients.find(c => c._id === quotationData.clientId);
+        if (client) {
+          this.selectedClient = client;
+          this.form.patchValue({ clientSearch: client });
         }
-      }
 
-      this.items.push(itemGroup);
-    });
+        // Load items from presentation
+        quotationData.items.forEach((item: any) => {
+          const itemGroup = this.fb.group({
+            productSearch: [''],
+            productId: [item.productId || ''],
+            variationId: [''],
+            variationName: [''],
+            quantity: [item.quantity, [Validators.required, Validators.min(1)]],
+            customWidth: [item.customDimensions?.width || 0],
+            customDiameter: [item.customDimensions?.diameter || 0],
+            customDepth: [item.customDimensions?.depth || 0],
+            customHeight: [item.customDimensions?.height || 0],
+            originalPrice: [item.originalPrice || item.unitPrice],
+            unitPrice: [item.unitPrice, [Validators.required, Validators.min(0)]]
+          });
+
+          // Find and set product
+          if (item.productId) {
+            const product = this.products.find(p => p._id === item.productId);
+            if (product) {
+              const index = this.items.length;
+              this.selectedProducts.set(index, product);
+              itemGroup.patchValue({ productSearch: product });
+              
+              // Prefetch dimensions from product if not in item
+              if (!item.customDimensions?.width && !item.customDimensions?.diameter && product.dimensionConfig) {
+                itemGroup.patchValue({
+                  customWidth: product.dimensionConfig.width?.default || 0,
+                  customDiameter: product.dimensionConfig.diameter?.default || 0,
+                  customDepth: product.dimensionConfig.depth || 0,
+                  customHeight: product.dimensionConfig.height || 0
+                });
+              }
+            }
+          }
+
+          this.items.push(itemGroup);
+        });
+        
+        this.cdr.detectChanges();
+      }
+    }, 100);
   }
 
   get items() {
@@ -318,6 +400,10 @@ export class QuotationDialogComponent implements OnInit {
       variationId: [''],
       variationName: [''],
       quantity: [1, [Validators.required, Validators.min(1)]],
+      customWidth: [0],
+      customDiameter: [0],
+      customDepth: [0],
+      customHeight: [0],
       originalPrice: [0],
       unitPrice: [0, [Validators.required, Validators.min(0)]]
     }));
@@ -335,12 +421,14 @@ export class QuotationDialogComponent implements OnInit {
         startWith(''),
         map(value => this._filterClients(typeof value === 'string' ? value : value?.companyName || ''))
       );
+      this.cdr.detectChanges();
     });
   }
 
   loadProducts() {
     this.catalogueService.getProducts().subscribe((products: any) => {
       this.products = products;
+      this.cdr.detectChanges();
     });
   }
 
@@ -384,13 +472,20 @@ export class QuotationDialogComponent implements OnInit {
   onProductSelected(index: number, event: any) {
     const product = event.option.value;
     this.selectedProducts.set(index, product);
+    const config = product.dimensionConfig || {};
+    
     this.items.at(index).patchValue({ 
       productId: product._id,
       variationId: '',
       variationName: '',
+      customWidth: config.width?.default || 0,
+      customDiameter: config.diameter?.default || 0,
+      customDepth: config.depth || 0,
+      customHeight: config.height || 0,
       originalPrice: product.basePrice,
       unitPrice: product.basePrice
     });
+    this.cdr.detectChanges();
   }
 
   onVariationChange(index: number, event?: any) {
@@ -465,6 +560,50 @@ export class QuotationDialogComponent implements OnInit {
     return Math.max(0, this.calculateSubtotal() - this.calculateDiscountAmount());
   }
 
+  getProductDimensionMin(index: number, dimension: 'width' | 'diameter'): number {
+    const product = this.selectedProducts.get(index);
+    return product?.dimensionConfig?.[dimension]?.min || 0;
+  }
+
+  getProductDimensionMax(index: number, dimension: 'width' | 'diameter'): number {
+    const product = this.selectedProducts.get(index);
+    return product?.dimensionConfig?.[dimension]?.max || 9999;
+  }
+
+  getProductShape(index: number): 'rectangle' | 'round' {
+    const product = this.selectedProducts.get(index);
+    return product?.dimensionConfig?.shape || 'rectangle';
+  }
+
+  onDimensionChange(index: number) {
+    const item = this.items.at(index);
+    const product = this.selectedProducts.get(index);
+    if (!product) return;
+
+    const config = product.dimensionConfig || {};
+    const shape = config.shape || 'rectangle';
+    
+    let dimensionRatio = 1;
+    
+    if (shape === 'rectangle') {
+      const customWidth = item.get('customWidth')?.value || config.width?.default || 0;
+      const defaultWidth = config.width?.default || 0;
+      dimensionRatio = defaultWidth > 0 ? customWidth / defaultWidth : 1;
+    } else if (shape === 'round') {
+      const customDiameter = item.get('customDiameter')?.value || config.diameter?.default || 0;
+      const defaultDiameter = config.diameter?.default || 0;
+      dimensionRatio = defaultDiameter > 0 ? customDiameter / defaultDiameter : 1;
+    }
+
+    const basePrice = product.basePrice || 0;
+    const adjustedPrice = basePrice * dimensionRatio;
+
+    item.patchValue({
+      originalPrice: adjustedPrice,
+      unitPrice: adjustedPrice
+    });
+  }
+
   save() {
     if (this.selectedClient && this.items.length > 0) {
       const quotationItems = this.items.controls
@@ -476,16 +615,26 @@ export class QuotationDialogComponent implements OnInit {
           const quantity = item.get('quantity')?.value;
           const originalPrice = item.get('originalPrice')?.value;
           const unitPrice = item.get('unitPrice')?.value;
+          const customWidth = item.get('customWidth')?.value;
+          const customDepth = item.get('customDepth')?.value;
+          const customHeight = item.get('customHeight')?.value;
           const product = this.products.find(p => p._id === productId);
           
           return {
             productId,
             productName: product?.name || '',
+            productCode: product?.productCode || '',
             variationId: variationId || undefined,
             variationName: variationName || undefined,
             quantity,
             originalPrice,
             unitPrice,
+            customDimensions: {
+              width: customWidth,
+              diameter: item.get('customDiameter')?.value,
+              depth: customDepth,
+              height: customHeight
+            },
             total: unitPrice * quantity
           };
         });

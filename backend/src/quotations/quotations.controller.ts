@@ -138,4 +138,20 @@ export class QuotationsController {
     async convertPresentationToQuotation(@Param('id') id: string) {
         return this.quotationsService.convertPresentationToQuotation(id);
     }
+
+    @Get(':id/download-pdf')
+    async downloadQuotationPDF(@Param('id') id: string, @Res() res: Response) {
+        const buffer = await this.quotationsService.generateQuotationPDF(id);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=quotation-${id}.pdf`);
+        res.send(buffer);
+    }
+
+    @Get(':id/download-excel')
+    async downloadQuotationExcel(@Param('id') id: string, @Res() res: Response) {
+        const buffer = await this.quotationsService.generateQuotationExcel(id);
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename=quotation-${id}.xlsx`);
+        res.send(buffer);
+    }
 }

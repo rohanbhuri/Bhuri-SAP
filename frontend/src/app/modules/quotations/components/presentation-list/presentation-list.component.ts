@@ -125,8 +125,6 @@ export class PresentationListComponent implements OnInit {
     this.quotationsService.convertPresentationToQuotation(presentation._id).subscribe({
       next: (quotationData) => {
         this.dialog.open(QuotationDialogComponent, {
-          width: '95vw',
-          maxWidth: '1100px',
           data: { quotation: quotationData, mode: 'create-from-presentation' }
         }).afterClosed().subscribe(result => {
           if (result) {

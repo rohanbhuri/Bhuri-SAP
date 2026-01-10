@@ -72,6 +72,14 @@ import { QuotationDialogComponent } from '../../dialogs/quotation-dialog.compone
                   <mat-icon>edit</mat-icon>
                   Edit
                 </button>
+                <button mat-menu-item (click)="downloadPDF(quote._id)">
+                  <mat-icon>picture_as_pdf</mat-icon>
+                  Download PDF
+                </button>
+                <button mat-menu-item (click)="downloadExcel(quote._id)">
+                  <mat-icon>table_chart</mat-icon>
+                  Download Excel
+                </button>
                 <button mat-menu-item (click)="submitForApproval(quote._id)" 
                         [disabled]="quote.status !== 'draft'">
                   <mat-icon>send</mat-icon>
@@ -145,7 +153,7 @@ export class QuotationListComponent implements OnInit {
   }
 
   openDialog() {
-    this.dialog.open(QuotationDialogComponent, { width: '600px' })
+    this.dialog.open(QuotationDialogComponent)
       .afterClosed().subscribe(result => {
         if (result) {
           this.snackBar.open('Quotation created successfully', 'Close', { duration: 3000 });
@@ -156,7 +164,6 @@ export class QuotationListComponent implements OnInit {
 
   editQuotation(quote: any) {
     this.dialog.open(QuotationDialogComponent, { 
-      width: '600px',
       data: { quotation: quote, mode: 'edit' }
     }).afterClosed().subscribe(result => {
       if (result) {
@@ -208,5 +215,35 @@ export class QuotationListComponent implements OnInit {
         }
       });
     }
+  }
+
+  downloadPDF(id: string) {
+    this.quotationsService.downloadQuotationPDF(id).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `quotation-${id}.pdf`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        this.snackBar.open('PDF downloaded', 'Close', { duration: 3000 });
+      },
+      error: () => this.snackBar.open('Failed to download PDF', 'Close', { duration: 3000 })
+    });
+  }
+
+  downloadExcel(id: string) {
+    this.quotationsService.downloadQuotationExcel(id).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `quotation-${id}.xlsx`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        this.snackBar.open('Excel downloaded', 'Close', { duration: 3000 });
+      },
+      error: () => this.snackBar.open('Failed to download Excel', 'Close', { duration: 3000 })
+    });
   }
 }
