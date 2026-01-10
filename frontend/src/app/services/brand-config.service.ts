@@ -12,6 +12,9 @@ export interface BrandConfig {
     accent: string;
     secondary: string;
   };
+  modules?: {
+    allowed: string[];
+  };
   app: {
     name: string;
     version: string;
@@ -100,5 +103,22 @@ export class BrandConfigService {
 
   getPrimaryColor(): string {
     return this.config.colors.primary;
+  }
+
+  getAllowedModules(): string[] {
+    return this.config.modules?.allowed || [];
+  }
+
+  isModuleAllowed(moduleId: string): boolean {
+    const allowedModules = this.getAllowedModules();
+    return allowedModules.length === 0 || allowedModules.includes(moduleId);
+  }
+
+  getBrandKey(): string {
+    // Extract brand key from API URL or use default
+    const apiUrl = this.config.app.apiUrl;
+    if (apiUrl.includes(':3002')) return 'raccontixrm';
+    if (apiUrl.includes(':3001')) return 'true-process';
+    return 'beax-rm';
   }
 }

@@ -99,6 +99,11 @@ import { PwaInstallModalComponent } from './pwa-install-modal.component';
             <span>Logout</span>
           </button>
         </mat-menu>
+        } @else {
+        <button mat-raised-button color="primary" (click)="goToLogin()" class="relogin-button">
+          <mat-icon>login</mat-icon>
+          <span>Login</span>
+        </button>
         }
       </div>
     </mat-toolbar>
@@ -224,6 +229,22 @@ import { PwaInstallModalComponent } from './pwa-install-modal.component';
         font-size: 14px;
       }
 
+      .relogin-button {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 14px;
+      }
+
+      .relogin-button mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+
       @media (max-width: 768px) {
         .navbar {
           padding: 0 16px;
@@ -244,8 +265,15 @@ import { PwaInstallModalComponent } from './pwa-install-modal.component';
           border-radius: 50%;
         }
 
-        .nav-actions {
-          gap: 4px;
+        .relogin-button {
+          padding: 8px 12px;
+          font-size: 12px;
+        }
+
+        .relogin-button mat-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
         }
       }
 
@@ -327,6 +355,10 @@ export class NavbarComponent implements OnInit {
 
   goToDashboard() {
     this.router.navigate(['/dashboard']);
+  }
+
+  goToLogin() {
+    this.router.navigate(['/auth/login']);
   }
 
   logout() {

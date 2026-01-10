@@ -50,6 +50,7 @@ export interface ModuleConfig {
   category: 'core' | 'hr' | 'project' | 'sales' | 'finance' | 'operations';
   queryParams?: Record<string, any>;
   aliases?: string[];
+  brands?: string[];
 }
 
 export const MODULE_REGISTRY: ModuleConfig[] = [
@@ -66,6 +67,7 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     route: '/modules/user-management/users',
     isActive: true,
     category: 'core',
+    brands: ['beax-rm', 'true-process', 'raccontixrm'],
   },
   {
     id: 'organization-management',
@@ -104,6 +106,7 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     route: '/modules/crm/funnel',
     isActive: true,
     category: 'sales',
+    brands: ['beax-rm', 'true-process', 'raccontixrm'],
   },
 
   // HR Modules
@@ -338,14 +341,15 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
   {
     id: 'reports-management',
     name: 'reports-management',
-    displayName: 'Reports Management',
+    displayName: 'Reports & Analytics',
     description: 'Generate and manage business reports',
     icon: 'assessment',
     color: '#7B1FA2',
     widgetComponent: ReportsManagementWidgetComponent,
     route: '/modules/reports-management',
-    isActive: false,
+    isActive: true,
     category: 'operations',
+    brands: ['raccontixrm'],
   },
 
   // Form Builder Module
@@ -390,6 +394,7 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     isActive: true,
     category: 'operations',
     aliases: ['catalogue-management'],
+    brands: ['raccontixrm'],
   },
   {
     id: 'cms',
@@ -403,6 +408,7 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     isActive: true,
     category: 'operations',
     aliases: ['cms-management'],
+    brands: ['raccontixrm'],
   },
   {
     id: 'quotations',
@@ -415,6 +421,7 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     route: '/modules/quotations',
     isActive: true,
     category: 'sales',
+    brands: ['raccontixrm'],
   },
   {
     id: 'client-management',
@@ -429,6 +436,7 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     queryParams: { tab: 'requests' },
     isActive: true,
     category: 'core',
+    brands: ['raccontixrm'],
   },
 ];
 
@@ -443,6 +451,8 @@ export function getModulesByCategory(category: string): ModuleConfig[] {
   return MODULE_REGISTRY.filter((module) => module.category === category);
 }
 
-export function getActiveModules(): ModuleConfig[] {
-  return MODULE_REGISTRY.filter((module) => module.isActive);
+export function getModulesByBrand(brandName: string): ModuleConfig[] {
+  return MODULE_REGISTRY.filter((module) => 
+    !module.brands || module.brands.includes(brandName)
+  );
 }

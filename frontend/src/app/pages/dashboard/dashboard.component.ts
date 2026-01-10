@@ -59,7 +59,7 @@ import { ClientManagementWidgetComponent } from '../../modules/client-management
 import { OrganizationManagementService } from '../../modules/organization-management/organization-management.service';
 import { SeoService } from '../../services/seo.service';
 import { ThemeService } from '../../services/theme.service';
-import { MODULE_REGISTRY } from '../../modules/module-registry';
+import { MODULE_REGISTRY, getModulesByBrand } from '../../modules/module-registry';
 
 interface DashboardWidget {
   id: string;
@@ -1169,10 +1169,20 @@ export class DashboardComponent implements OnInit {
       const registryModule = this.getModuleFromRegistry(m.name || m.id);
       return registryModule && registryModule.widgetComponent;
     });
+    
+    // Filter modules based on brand configuration from module registry
+    const brandKey = this.brandConfig.getBrandKey();
+    const allowedModules = getModulesByBrand(brandKey);
+    const brandFiltered = filtered.filter(m => {
+      const moduleId = m.name || m.id;
+      return allowedModules.some(am => am.id === moduleId || am.name === moduleId);
+    });
+    
     console.log('Filtered supported modules:', filtered.length);
+    console.log('Brand filtered modules:', brandFiltered.length);
     
     const savedSizes = this.loadWidgetSizes();
-    const mapped: DashboardWidget[] = filtered.map((m, idx) => {
+    const mapped: DashboardWidget[] = brandFiltered.map((m, idx) => {
       const registryModule = this.getModuleFromRegistry(m.name || m.id);
       const widgetId = registryModule?.name || m.name || m.id || 'unknown';
       return {
