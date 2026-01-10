@@ -108,13 +108,18 @@ app.use((req, res, next) => {
  * The server listens on the port defined by the `PORT` environment variable, or defaults to 4000.
  */
 if (isMainModule(import.meta.url)) {
-  const port = process.env['PORT'] || 4000;
-  app.listen(port, (error) => {
+  const port = Number(process.env['PORT']) || 4000;
+  const host = process.env['HOST'] || '0.0.0.0'; // Bind to all interfaces for external access
+  
+  app.listen(port, host, (error) => {
     if (error) {
       throw error;
     }
 
-    console.log(`Node Express server listening on http://localhost:${port}`);
+    console.log(`🚀 Server running on http://${host === '0.0.0.0' ? 'localhost' : host}:${port}`);
+    console.log(`📁 Browser dir: ${browserDistFolder}`);
+    console.log(`⚡ Prerender dir: ${browserDistFolder}`);
+    console.log(`🔄 SSR fallback: http://localhost:${port}`);
   });
 }
 
