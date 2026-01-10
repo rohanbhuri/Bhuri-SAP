@@ -6,6 +6,7 @@ import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './filters/global-exception.filter';
 import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { Response } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -46,6 +47,17 @@ async function bootstrap() {
   // Serve static files for uploaded avatars
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
     prefix: '/uploads/',
+  });
+
+  // Handle root route before setting global prefix
+  app.getHttpAdapter().get('/', (req, res: Response) => {
+    res.status(200).json({
+      message: 'Bhuri SAP Server',
+      status: 'Running',
+      brand: process.env.BRAND || 'beax-rm',
+      api: '/api',
+      health: '/api/health'
+    });
   });
 
   app.setGlobalPrefix('api');

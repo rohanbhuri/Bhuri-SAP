@@ -3,7 +3,7 @@ import { Controller, Get } from '@nestjs/common';
 @Controller()
 export class AppController {
   @Get()
-  getRoot() {
+  getApiRoot() {
     return {
       message: 'Bhuri SAP API Server',
       status: 'Running',
@@ -18,10 +18,5 @@ export class AppController {
         modules: '/api/modules'
       }
     };
-  }
-
-  @Get('api')
-  getApiRoot() {
-    return this.getRoot();
   }
 }
