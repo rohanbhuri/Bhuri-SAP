@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
+import { AppController } from './app.controller';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { OrganizationsModule } from './organizations/organizations.module';
@@ -60,5 +61,6 @@ import { ClientManagementModule } from './client-management/client-management.mo
     EnquiryModule,
     ClientManagementModule,
   ],
+  controllers: [AppController],
 })
 export class AppModule { }

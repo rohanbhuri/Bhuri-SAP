@@ -9,8 +9,8 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
         PORT: 3000,
-        MONGODB_URI: process.env.MONGODB_URI,
-        JWT_SECRET: process.env.JWT_SECRET,
+        MONGODB_URI: 'mongodb+srv://rohanbhuri:nokiaset@bhuri-db.zg9undw.mongodb.net/beaxrm?retryWrites=true&w=majority&appName=bhuri-db',
+        JWT_SECRET: 'rohanbhuri',
         BRAND: 'beax-rm'
       },
       max_memory_restart: '200M',
@@ -28,8 +28,8 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
         PORT: 3001,
-        MONGODB_URI: process.env.MONGODB_URI,
-        JWT_SECRET: process.env.JWT_SECRET,
+        MONGODB_URI: 'mongodb+srv://rohanbhuri:nokiaset@bhuri-db.zg9undw.mongodb.net/trueprocess?retryWrites=true&w=majority&appName=bhuri-db',
+        JWT_SECRET: 'rohanbhuri',
         BRAND: 'true-process'
       },
       max_memory_restart: '200M',
@@ -87,8 +87,8 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
         PORT: 3002,
-        MONGODB_URI: process.env.MONGODB_URI,
-        JWT_SECRET: process.env.JWT_SECRET,
+        MONGODB_URI: 'mongodb+srv://rohanbhuri:nokiaset@bhuri-db.zg9undw.mongodb.net/racconti?retryWrites=true&w=majority&appName=bhuri-db',
+        JWT_SECRET: 'rohanbhuri',
         BRAND: 'raccontixrm'
       },
       max_memory_restart: '200M',
