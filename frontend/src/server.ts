@@ -109,17 +109,26 @@ app.use((req, res, next) => {
  */
 if (isMainModule(import.meta.url)) {
   const port = Number(process.env['PORT']) || 4000;
-  const host = process.env['HOST'] || '0.0.0.0'; // Bind to all interfaces for external access
+  const host = process.env['HOST'] || '0.0.0.0';
   
-  app.listen(port, host, (error) => {
+  // Auto-detect environment and use appropriate binding
+  const isProduction = process.env.NODE_ENV === 'production';
+  const bindHost = isProduction ? '0.0.0.0' : 'localhost';
+  
+  app.listen(port, bindHost, (error) => {
     if (error) {
       throw error;
     }
 
-    console.log(`🚀 Server running on http://${host === '0.0.0.0' ? 'localhost' : host}:${port}`);
+    const displayHost = bindHost === '0.0.0.0' ? 'localhost' : bindHost;
+    console.log(`🚀 Server running on http://${displayHost}:${port}`);
     console.log(`📁 Browser dir: ${browserDistFolder}`);
     console.log(`⚡ Prerender dir: ${browserDistFolder}`);
-    console.log(`🔄 SSR fallback: http://localhost:${port}`);
+    console.log(`🔄 SSR fallback: http://${displayHost}:${port}`);
+    
+    if (isProduction) {
+      console.log(`🌐 External access: Available on all network interfaces`);
+    }
   });
 }
 

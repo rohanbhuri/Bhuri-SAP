@@ -2,6 +2,7 @@ const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const { getConfig } = require('./config.js');
+const { getBrandIPConfig } = require('./utils/ip-detector.js');
 
 const brand = process.argv[2] || 'beax-rm';
 const buildOnly = process.argv.includes('--build-only');
@@ -13,6 +14,15 @@ if (!brandConfig) {
 }
 
 console.log(`${buildOnly ? 'Configuring' : 'Starting'} ${brandConfig.brand.name} (${brand})...`);
+
+// Get dynamic IP configuration
+const ipConfig = getBrandIPConfig(brand);
+console.log(`Environment: ${ipConfig.isProduction ? 'Production' : 'Development'}`);
+console.log(`Using IP: ${ipConfig.ip}`);
+
+// Update brand config with dynamic IP
+brandConfig.app.dynamicApiUrl = ipConfig.getURL(brandConfig.development.PORT || brandConfig.production.PORT);
+brandConfig.app.dynamicFrontendUrl = ipConfig.getURL(brandConfig.app.port);
 
 // Replace environment variables in frontend files using templates
 const templatePath = path.join(__dirname, 'frontend/src/index.template.html');
@@ -40,8 +50,8 @@ const replacements = {
   '{{VERSION}}': brandConfig.app.version,
   '{{DESCRIPTION}}': brandConfig.app.description,
   '{{APP_PORT}}': brandConfig.app.port.toString(),
-  '{{API_URL}}': brandConfig.app.apiUrl,
-  '{{CANONICAL_URL}}': `http://localhost:${brandConfig.app.port}`
+  '{{API_URL}}': brandConfig.app.dynamicApiUrl || brandConfig.app.apiUrl,
+  '{{CANONICAL_URL}}': brandConfig.app.dynamicFrontendUrl || `http://localhost:${brandConfig.app.port}`
 };
 
 Object.keys(replacements).forEach(placeholder => {
@@ -82,14 +92,14 @@ process.env.APP_NAME = brandConfig.app.name;
 process.env.VERSION = brandConfig.app.version;
 process.env.DESCRIPTION = brandConfig.app.description;
 process.env.APP_PORT = brandConfig.app.port;
-process.env.API_URL = brandConfig.app.apiUrl;
+process.env.API_URL = brandConfig.app.dynamicApiUrl || brandConfig.app.apiUrl;
 process.env.PRIMARY_COLOR = brandConfig.colors.primary;
 process.env.ACCENT_COLOR = brandConfig.colors.accent;
 process.env.SECONDARY_COLOR = brandConfig.colors.secondary;
 process.env.BRAND_LOGO = brandConfig.brand.logo;
 process.env.BRAND_LOGO_DARK = brandConfig.brand.logoDark;
 process.env.BRAND_ICON = brandConfig.brand.icon;
-process.env.CANONICAL_URL = `http://localhost:${brandConfig.app.port}`;
+process.env.CANONICAL_URL = brandConfig.app.dynamicFrontendUrl || `http://localhost:${brandConfig.app.port}`;
 
 if (buildOnly) {
   console.log(`Configuration complete for ${brand}`);
