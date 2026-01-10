@@ -1,7 +1,7 @@
 # Beax RM Backend Setup Guide
 
 ## Prerequisites
-- Node.js 18+
+- Node.js 22+
 - MongoDB database
 - npm or yarn
 

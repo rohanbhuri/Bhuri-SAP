@@ -1,11 +1,14 @@
 {
-  "name": "beax-rm",
+  "name": "bhuri-sap-frontend",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
     "build": "node replace-env.js && ng build --project=${BRAND:-beax-rm} --configuration=production",
+    "build:beax-rm": "BRAND=beax-rm node replace-env.js && ng build --project=beax-rm --configuration=production --ssr",
+    "build:true-process": "BRAND=true-process node replace-env.js && ng build --project=true-process --configuration=production --ssr",
+    "build:raccontixrm": "BRAND=raccontixrm node replace-env.js && ng build --project=raccontixrm --configuration=production --ssr",
     "build:prerender:ssr": "node replace-env.js && ng build --project=${BRAND:-beax-rm} --configuration=production --ssr",
     "build:analyze": "node replace-env.js && ng build --configuration=production --stats-json",
     "watch": "ng build --watch --configuration development",

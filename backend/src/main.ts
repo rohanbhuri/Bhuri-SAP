@@ -9,12 +9,12 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
-  
+
   // Global exception filter for better error handling
   app.useGlobalFilters(new GlobalExceptionFilter());
-  
+
   // Global validation pipe with better error messages
-  app.useGlobalPipes(new ValidationPipe({ 
+  app.useGlobalPipes(new ValidationPipe({
     transform: true,
     whitelist: true,
     forbidNonWhitelisted: true,
@@ -22,31 +22,34 @@ async function bootstrap() {
       enableImplicitConversion: true,
     },
   }));
-  
+
   // Enable CORS for frontend communication
   app.enableCors({
     origin: [
-      'http://localhost:4200', 
+      'http://localhost:4200',
       'http://localhost:4201',
       'http://localhost:4202',
       'http://13.126.228.247:4200',
       'http://13.126.228.247:4201',
       'http://13.126.228.247:4202',
+      'http://13.126.228.247:4202',
       'http://3.111.139.181:4200',
-      'http://3.111.139.181:4201'
+      'http://3.111.139.181:4201',
+      'http://68.178.171.103:4202',
+      'http://68.178.171.103:3002'
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
   });
-  
+
   // Serve static files for uploaded avatars
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
     prefix: '/uploads/',
   });
-  
+
   app.setGlobalPrefix('api');
-  
+
   const port = process.env.PORT || 3000;
   await app.listen(port);
   console.log(`Backend running on port ${port}`);

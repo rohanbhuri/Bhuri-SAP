@@ -34,7 +34,9 @@ const replacements = {
   '{{DESCRIPTION}}': brandConfig.app.description,
   '{{APP_PORT}}': brandConfig.app.port.toString(),
   '{{API_URL}}': brandConfig.app.apiUrl,
-  '{{CANONICAL_URL}}': process.env.NODE_ENV === 'production' ? `http://13.126.228.247:${brandConfig.app.port}` : `http://localhost:${brandConfig.app.port}`
+  '{{CANONICAL_URL}}': process.env.NODE_ENV === 'production'
+    ? `http://${brand === 'raccontixrm' ? '68.178.171.103' : '13.126.228.247'}:${brandConfig.app.port}`
+    : `http://localhost:${brandConfig.app.port}`
 };
 
 Object.keys(replacements).forEach(placeholder => {

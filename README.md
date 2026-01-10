@@ -143,7 +143,7 @@ npm run build:ssr   # SSR production build
 
 ### EC2 Server Configuration
 - **Server**: t3.micro EC2 instance
-- **IP**: 13.126.228.247
+- **IP**: 13.126.228.247 (BeaX RM & True Process) | 68.178.171.103 (RaccontiXRM)
 - **Process Manager**: PM2 with optimized settings
 - **Build**: SSR prerendering for production
 
@@ -181,10 +181,12 @@ npm run pm2:restart:true-process # Restart True Process
 **Backend APIs:**
 - **BeaX RM API**: http://13.126.228.247:3000/api
 - **True Process API**: http://13.126.228.247:3001/api
+- **RaccontiXRM API**: http://68.178.171.103:3002/api
 
 **Frontend Applications:**
 - **BeaX RM**: http://localhost:4200
 - **True Process**: http://localhost:4201
+- **RaccontiXRM**: http://localhost:4202 (or http://68.178.171.103:4202 on server)
 
 ### Memory Optimization
 - Max memory restart: 200MB per process
