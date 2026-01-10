@@ -5,6 +5,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AuthService, Organization } from '../../services/auth.service';
@@ -22,7 +23,7 @@ import { ErrorHandlerService } from '../../services/error-handler.service';
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
-
+    MatIconModule,
     MatSnackBarModule,
   ],
   template: `
@@ -50,10 +51,13 @@ import { ErrorHandlerService } from '../../services/error-handler.service';
               <mat-label>Password</mat-label>
               <input
                 matInput
-                type="password"
+                [type]="hidePassword() ? 'password' : 'text'"
                 formControlName="password"
                 required
               />
+              <button mat-icon-button matSuffix type="button" (click)="hidePassword.set(!hidePassword())">
+                <mat-icon>{{ hidePassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+              </button>
               @if (loginForm.get('password')?.hasError('required')) {
               <mat-error>Password is required</mat-error>
               }
@@ -155,6 +159,7 @@ export class LoginComponent implements OnInit {
   protected brandConfig = inject(BrandConfigService);
 
   loading = signal(false);
+  hidePassword = signal(true);
 
   ngOnInit() {
     this.setupSEO();

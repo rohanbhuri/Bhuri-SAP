@@ -55,7 +55,7 @@ export class QuotationsComponent implements OnInit {
   
   selectedTabIndex = 0;
   private tabs = ['enquiries', 'presentations', 'quotations'];
-
+  
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
       const tab = params['tab'];

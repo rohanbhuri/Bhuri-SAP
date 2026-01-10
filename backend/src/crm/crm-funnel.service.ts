@@ -251,7 +251,7 @@ export class CrmFunnelService {
       throw new NotFoundException('Presentation not found');
     }
 
-    presentation.status = PresentationStatus.SENT;
+    presentation.status = PresentationStatus.SENT_TO_CLIENT;
     presentation.sentAt = new Date();
     presentation.updatedAt = new Date();
 

@@ -141,6 +141,13 @@ export class QuotationsService {
     }
 
     async delete(id: string): Promise<void> {
+        const quotation = await this.findOne(id);
+        if (quotation?.presentationId) {
+            await this.presentationRepository.update(
+                { _id: new ObjectId(quotation.presentationId) },
+                { quotationId: null, updatedAt: new Date() }
+            );
+        }
         await this.quotationRepository.delete({ _id: new ObjectId(id) });
     }
 
@@ -204,12 +211,57 @@ export class QuotationsService {
     }
 
     async updatePresentation(id: string, data: Partial<Presentation>): Promise<Presentation> {
+        const presentation = await this.findPresentation(id);
+        if (!presentation) throw new NotFoundException('Presentation not found');
+        
+        if (presentation.status !== PresentationStatus.DRAFT) {
+            throw new Error('Only draft presentations can be edited');
+        }
+        
         await this.presentationRepository.update({ _id: new ObjectId(id) }, { ...data, updatedAt: new Date() });
+        return this.findPresentation(id);
+    }
+
+    async markPresentationFinal(id: string): Promise<Presentation> {
+        const presentation = await this.findPresentation(id);
+        if (!presentation) throw new NotFoundException('Presentation not found');
+        
+        if (presentation.status !== PresentationStatus.DRAFT) {
+            throw new Error('Only draft presentations can be marked as final');
+        }
+        
+        await this.presentationRepository.update(
+            { _id: new ObjectId(id) },
+            { status: PresentationStatus.FINAL, updatedAt: new Date() }
+        );
+        return this.findPresentation(id);
+    }
+
+    async sendPresentationToClient(id: string): Promise<Presentation> {
+        const presentation = await this.findPresentation(id);
+        if (!presentation) throw new NotFoundException('Presentation not found');
+        
+        if (presentation.status !== PresentationStatus.FINAL) {
+            throw new Error('Only final presentations can be sent to client');
+        }
+        
+        await this.presentationRepository.update(
+            { _id: new ObjectId(id) },
+            { status: PresentationStatus.SENT_TO_CLIENT, sentAt: new Date(), updatedAt: new Date() }
+        );
         return this.findPresentation(id);
     }
 
     async deletePresentation(id: string): Promise<void> {
         await this.presentationRepository.delete({ _id: new ObjectId(id) });
+    }
+
+    async linkQuotationToPresentation(presentationId: string, quotationId: string): Promise<Presentation> {
+        await this.presentationRepository.update(
+            { _id: new ObjectId(presentationId) },
+            { quotationId, updatedAt: new Date() }
+        );
+        return this.findPresentation(presentationId);
     }
 
     async generatePPTX(id: string): Promise<Buffer> {
@@ -220,7 +272,7 @@ export class QuotationsService {
         pptx.layout = 'LAYOUT_WIDE';
         pptx.defineLayout({ name: 'CUSTOM', width: 10, height: 5.625 });
         pptx.layout = 'CUSTOM';
-
+        
         // Cover slide
         const coverSlide = pptx.addSlide();
         if (presentation.coverBackground) {
@@ -246,9 +298,9 @@ export class QuotationsService {
             });
         }
 
-        // Add brand logo (centered, larger)
+        // Add brand logo (centered)
         try {
-            coverSlide.addImage({ path: '../configs/assets/raccontixrm/icons/racconti-logo.svg', x: 3.5, y: 1.5, w: 3, h: 0.8 });
+            coverSlide.addImage({ path: '../configs/assets/raccontixrm/icons/logo-racconti.png', x: 4.055, y: 1.5, w: 1.89, h: 0.2 });
         } catch (error) {
             console.error('Failed to load brand logo');
         }
@@ -262,9 +314,9 @@ export class QuotationsService {
             const layoutSlide = pptx.addSlide();
             layoutSlide.background = { color: 'FFFFFF' };
             
-            // Add brand logo
+            // Add brand logo (top right)
             try {
-                layoutSlide.addImage({ path: '../configs/assets/raccontixrm/icons/racconti-logo.svg', x: 9, y: 0.2, w: 0.8, h: 0.4 });
+                layoutSlide.addImage({ path: '../configs/assets/raccontixrm/icons/logo-racconti.png', x: 8.555, y: 0.4, w: 0.945, h: 0.1 });
             } catch (error) {
                 console.error('Failed to load brand logo');
             }
@@ -277,7 +329,7 @@ export class QuotationsService {
                 ? `.${presentation.layoutImage}` 
                 : presentation.layoutImage;
             try {
-                layoutSlide.addImage({ path: layoutImagePath, x: 1, y: 0.8, w: 8, h: 4, sizing: { type: 'crop', w: 8, h: 4 } });
+                layoutSlide.addImage({ path: layoutImagePath, x: 0.5, y: 0.8 });
             } catch (error) {
                 console.error('Failed to load layout image:', error);
             }
@@ -287,9 +339,9 @@ export class QuotationsService {
         for (const slide of presentation.slides) {
             const productSlide = pptx.addSlide();
 
-            // Add brand logo to each slide
+            // Add brand logo (top right)
             try {
-                productSlide.addImage({ path: '../configs/assets/raccontixrm/icons/racconti-logo.svg', x: 9, y: 0.2, w: 0.8, h: 0.4 });
+                productSlide.addImage({ path: '../configs/assets/raccontixrm/icons/logo-racconti.png', x: 8.555, y: 0.4, w: 0.945, h: 0.1 });
             } catch (error) {
                 console.error('Failed to load brand logo');
             }
@@ -310,7 +362,7 @@ export class QuotationsService {
                 if (productImage) {
                     const imgPath = productImage.startsWith('/') ? `.${productImage}` : productImage;
                     try {
-                        productSlide.addImage({ path: imgPath, x: 1, y: 1, w: 8, h: 3.5, sizing: { type: 'crop', w: 8, h: 3.5 } });
+                        productSlide.addImage({ path: imgPath, x: 0.5, y: 1 });
                     } catch (error) {
                         console.error('Failed to load image:', imgPath);
                     }
@@ -327,7 +379,7 @@ export class QuotationsService {
                         if (productImage) {
                             const imgPath = productImage.startsWith('/') ? `.${productImage}` : productImage;
                             try {
-                                productSlide.addImage({ path: imgPath, x: 1, y: yPos, w: 3, h: 2, sizing: { type: 'crop', w: 3, h: 2 } });
+                                productSlide.addImage({ path: imgPath, x: 1, y: yPos });
                             } catch (error) {
                                 console.error('Failed to load image:', imgPath);
                             }
@@ -345,9 +397,9 @@ export class QuotationsService {
         const thankYouSlide = pptx.addSlide();
         thankYouSlide.background = { color: 'FFFFFF' };
         
-        // Add brand logo (centered, larger)
+        // Add brand logo (centered)
         try {
-            thankYouSlide.addImage({ path: '../configs/assets/raccontixrm/icons/racconti-logo.svg', x: 3.5, y: 1.5, w: 3, h: 0.8 });
+            thankYouSlide.addImage({ path: '../configs/assets/raccontixrm/icons/logo-racconti.png', x: 4.055, y: 1.5, w: 1.89, h: 0.2 });
         } catch (error) {
             console.error('Failed to load brand logo');
         }
@@ -357,10 +409,18 @@ export class QuotationsService {
 
         return pptx.write({ outputType: 'nodebuffer' }) as Promise<Buffer>;
     }
-
+    
     async convertPresentationToQuotation(presentationId: string): Promise<any> {
         const presentation = await this.findPresentation(presentationId);
         if (!presentation) throw new NotFoundException('Presentation not found');
+        
+        if (presentation.status !== PresentationStatus.FINAL && presentation.status !== PresentationStatus.SENT_TO_CLIENT) {
+            throw new Error('Only final or sent presentations can be converted to quotation');
+        }
+
+        if (presentation.quotationId) {
+            return { existingQuotationId: presentation.quotationId };
+        }
 
         // Get all unique product IDs from all slides
         const productIds = [...new Set(presentation.slides.flatMap(slide => slide.productIds))];

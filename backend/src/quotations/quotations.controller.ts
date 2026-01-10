@@ -121,6 +121,16 @@ export class QuotationsController {
         return this.quotationsService.updatePresentation(id, data);
     }
 
+    @Post('presentations/:id/mark-final')
+    async markPresentationFinal(@Param('id') id: string) {
+        return this.quotationsService.markPresentationFinal(id);
+    }
+
+    @Post('presentations/:id/send-to-client')
+    async sendPresentationToClient(@Param('id') id: string) {
+        return this.quotationsService.sendPresentationToClient(id);
+    }
+
     @Delete('presentations/:id')
     async deletePresentation(@Param('id') id: string) {
         return this.quotationsService.deletePresentation(id);
@@ -137,6 +147,11 @@ export class QuotationsController {
     @Post('presentations/:id/convert-to-quotation')
     async convertPresentationToQuotation(@Param('id') id: string) {
         return this.quotationsService.convertPresentationToQuotation(id);
+    }
+
+    @Post('presentations/:id/link-quotation')
+    async linkQuotationToPresentation(@Param('id') id: string, @Body() body: { quotationId: string }) {
+        return this.quotationsService.linkQuotationToPresentation(id, body.quotationId);
     }
 
     @Get(':id/download-pdf')

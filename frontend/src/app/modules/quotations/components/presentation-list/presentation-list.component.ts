@@ -6,6 +6,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { Router } from '@angular/router';
 import { QuotationsService } from '../../quotations.service';
 import { PresentationDialogComponent } from '../../dialogs/presentation-dialog.component';
 import { QuotationDialogComponent } from '../../dialogs/quotation-dialog.component';
@@ -13,7 +15,7 @@ import { QuotationDialogComponent } from '../../dialogs/quotation-dialog.compone
 @Component({
   selector: 'app-presentation-list',
   standalone: true,
-  imports: [CommonModule, MatTableModule, MatButtonModule, MatIconModule, MatChipsModule, MatDialogModule],
+  imports: [CommonModule, MatTableModule, MatButtonModule, MatIconModule, MatChipsModule, MatDialogModule, MatTooltipModule],
   template: `
     <div class="list-container">
       <div class="list-header">
@@ -47,15 +49,17 @@ import { QuotationDialogComponent } from '../../dialogs/quotation-dialog.compone
         <ng-container matColumnDef="status">
           <th mat-header-cell *matHeaderCellDef>Status</th>
           <td mat-cell *matCellDef="let p">
-            <mat-chip [color]="p.status === 'completed' ? 'primary' : 'accent'">{{p.status}}</mat-chip>
+            <mat-chip [style.background-color]="getStatusColor(p.status)" [style.color]="'white'">{{getStatusLabel(p.status)}}</mat-chip>
           </td>
         </ng-container>
 
         <ng-container matColumnDef="actions">
           <th mat-header-cell *matHeaderCellDef>Actions</th>
           <td mat-cell *matCellDef="let p">
-            <button mat-icon-button (click)="editPresentation(p)"><mat-icon>edit</mat-icon></button>
-            <button mat-icon-button (click)="convertToQuotation(p)" matTooltip="Convert to Quotation"><mat-icon>request_quote</mat-icon></button>
+            <button mat-icon-button [disabled]="p.status !== 'draft'" (click)="editPresentation(p)" matTooltip="Edit (Draft only)"><mat-icon>edit</mat-icon></button>
+            <button mat-icon-button [disabled]="p.status !== 'draft'" (click)="markAsFinal(p)" matTooltip="Mark as Final"><mat-icon>check_circle</mat-icon></button>
+            <button mat-icon-button [disabled]="p.status !== 'final'" (click)="sendToClient(p)" matTooltip="Send to Client"><mat-icon>send</mat-icon></button>
+            <button mat-icon-button [disabled]="p.status === 'draft'" (click)="convertToQuotation(p)" [matTooltip]="p.quotationId ? 'Go to Quotation' : 'Convert to Quotation (Final/Sent only)'"><mat-icon>{{p.quotationId ? 'open_in_new' : 'request_quote'}}</mat-icon></button>
             <button mat-icon-button (click)="downloadPresentation(p._id)"><mat-icon>download</mat-icon></button>
             <button mat-icon-button color="warn" (click)="deletePresentation(p._id)"><mat-icon>delete</mat-icon></button>
           </td>
@@ -70,6 +74,7 @@ import { QuotationDialogComponent } from '../../dialogs/quotation-dialog.compone
     .list-container { padding: 20px; }
     .list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     .data-table { width: 100%; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
   `]
 })
 export class PresentationListComponent implements OnInit {
@@ -77,12 +82,16 @@ export class PresentationListComponent implements OnInit {
   private dialog = inject(MatDialog);
   private cdr = inject(ChangeDetectorRef);
   private snackBar = inject(MatSnackBar);
+  private router = inject(Router);
 
   presentations: any[] = [];
   displayedColumns = ['presentationNumber', 'title', 'clientName', 'slides', 'status', 'actions'];
 
   ngOnInit() {
     this.loadPresentations();
+    this.quotationsService.quotationDeleted$.subscribe(() => {
+      this.loadPresentations();
+    });
   }
 
   loadPresentations() {
@@ -99,6 +108,10 @@ export class PresentationListComponent implements OnInit {
   }
 
   editPresentation(presentation: any) {
+    if (presentation.status !== 'draft') {
+      this.snackBar.open('Only draft presentations can be edited', 'Close', { duration: 3000 });
+      return;
+    }
     this.dialog.open(PresentationDialogComponent, { width: '800px', data: presentation }).afterClosed().subscribe(result => {
       if (result) this.loadPresentations();
     });
@@ -122,17 +135,85 @@ export class PresentationListComponent implements OnInit {
   }
 
   convertToQuotation(presentation: any) {
-    this.quotationsService.convertPresentationToQuotation(presentation._id).subscribe({
-      next: (quotationData) => {
+    if (presentation.status === 'draft') {
+      this.snackBar.open('Only final or sent presentations can be converted to quotation', 'Close', { duration: 3000 });
+      return;
+    }
+    
+    if (presentation.quotationId) {
+      this.quotationsService.getQuotation(presentation.quotationId).subscribe(quotation => {
         this.dialog.open(QuotationDialogComponent, {
-          data: { quotation: quotationData, mode: 'create-from-presentation' }
-        }).afterClosed().subscribe(result => {
-          if (result) {
-            this.snackBar.open('Quotation created from presentation', 'Close', { duration: 3000 });
+          data: { quotation, mode: 'edit' }
+        });
+      });
+      return;
+    }
+    
+    this.quotationsService.convertPresentationToQuotation(presentation._id).subscribe({
+      next: (result) => {
+        if (result.existingQuotationId) {
+          this.quotationsService.getQuotation(result.existingQuotationId).subscribe(quotation => {
+            this.dialog.open(QuotationDialogComponent, {
+              data: { quotation, mode: 'edit' }
+            });
+          });
+          return;
+        }
+        
+        this.dialog.open(QuotationDialogComponent, {
+          data: { quotation: result, mode: 'create-from-presentation' }
+        }).afterClosed().subscribe(savedQuotation => {
+          if (savedQuotation) {
+            this.quotationsService.linkQuotationToPresentation(presentation._id, savedQuotation._id).subscribe(() => {
+              this.snackBar.open('Quotation created from presentation', 'Close', { duration: 3000 });
+              this.loadPresentations();
+            });
           }
         });
       },
-      error: () => this.snackBar.open('Failed to convert presentation', 'Close', { duration: 3000 })
+      error: (err) => this.snackBar.open(err.error?.message || 'Failed to convert presentation', 'Close', { duration: 3000 })
     });
+  }
+
+  markAsFinal(presentation: any) {
+    if (confirm('Mark this presentation as final? It will no longer be editable.')) {
+      this.quotationsService.markPresentationFinal(presentation._id).subscribe({
+        next: () => {
+          this.snackBar.open('Presentation marked as final', 'Close', { duration: 3000 });
+          this.loadPresentations();
+        },
+        error: (err) => this.snackBar.open(err.error?.message || 'Failed to mark as final', 'Close', { duration: 3000 })
+      });
+    }
+  }
+
+  sendToClient(presentation: any) {
+    if (confirm('Send this presentation to client?')) {
+      this.quotationsService.sendPresentationToClient(presentation._id).subscribe({
+        next: () => {
+          this.snackBar.open('Presentation sent to client', 'Close', { duration: 3000 });
+          this.loadPresentations();
+        },
+        error: (err) => this.snackBar.open(err.error?.message || 'Failed to send to client', 'Close', { duration: 3000 })
+      });
+    }
+  }
+
+  getStatusColor(status: string): string {
+    switch (status) {
+      case 'draft': return '#9e9e9e';
+      case 'final': return '#2196f3';
+      case 'sent_to_client': return '#4caf50';
+      default: return '#9e9e9e';
+    }
+  }
+
+  getStatusLabel(status: string): string {
+    switch (status) {
+      case 'draft': return 'Draft';
+      case 'final': return 'Final';
+      case 'sent_to_client': return 'Sent to Client';
+      default: return status;
+    }
   }
 }

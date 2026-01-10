@@ -3,9 +3,8 @@ import { ObjectId } from 'mongodb';
 
 export enum PresentationStatus {
     DRAFT = 'draft',
-    SENT = 'sent',
-    VIEWED = 'viewed',
-    COMPLETED = 'completed'
+    FINAL = 'final',
+    SENT_TO_CLIENT = 'sent_to_client'
 }
 
 export interface PresentationSlide {
@@ -58,6 +57,9 @@ export class Presentation {
 
     @Column({ nullable: true })
     layoutImage?: string;
+
+    @Column({ nullable: true })
+    quotationId?: string;
 
     @Column()
     organizationId: string;

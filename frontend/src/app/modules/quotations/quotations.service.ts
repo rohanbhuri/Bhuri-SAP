@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { getBrandConfig } from '../../brand.config';
 
 @Injectable({
@@ -10,6 +11,9 @@ export class QuotationsService {
     private get apiUrl() {
         return `${getBrandConfig().app.apiUrl}/quotations`;
     }
+
+    private quotationDeletedSubject = new Subject<string>();
+    quotationDeleted$ = this.quotationDeletedSubject.asObservable();
 
     constructor(private http: HttpClient) { }
 
@@ -51,7 +55,9 @@ export class QuotationsService {
     }
 
     deleteQuotation(id: string): Observable<any> {
-        return this.http.delete<any>(`${this.apiUrl}/${id}`);
+        return this.http.delete<any>(`${this.apiUrl}/${id}`).pipe(
+            tap(() => this.quotationDeletedSubject.next(id))
+        );
     }
 
     // Enquiries
@@ -111,6 +117,18 @@ export class QuotationsService {
 
     convertPresentationToQuotation(id: string): Observable<any> {
         return this.http.post<any>(`${this.apiUrl}/presentations/${id}/convert-to-quotation`, {});
+    }
+
+    linkQuotationToPresentation(presentationId: string, quotationId: string): Observable<any> {
+        return this.http.post<any>(`${this.apiUrl}/presentations/${presentationId}/link-quotation`, { quotationId });
+    }
+
+    markPresentationFinal(id: string): Observable<any> {
+        return this.http.post<any>(`${this.apiUrl}/presentations/${id}/mark-final`, {});
+    }
+
+    sendPresentationToClient(id: string): Observable<any> {
+        return this.http.post<any>(`${this.apiUrl}/presentations/${id}/send-to-client`, {});
     }
 
     downloadQuotationPDF(id: string): Observable<Blob> {

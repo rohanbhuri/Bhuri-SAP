@@ -192,6 +192,11 @@ export class SelectOrganizationComponent {
   organizations = signal<Organization[]>([]);
 
   ngOnInit() {
+    const savedOrgId = localStorage.getItem('selectedOrganizationId');
+    if (savedOrgId) {
+      this.router.navigate(['/dashboard']);
+      return;
+    }
     this.loadOrganizations();
   }
 
@@ -229,6 +234,7 @@ export class SelectOrganizationComponent {
 
   selectOrganization(organizationId: string) {
     this.loading.set(true);
+    localStorage.setItem('selectedOrganizationId', organizationId);
     this.authService.updateUserOrganization(organizationId).subscribe({
       next: () => {
         this.loading.set(false);
@@ -236,7 +242,6 @@ export class SelectOrganizationComponent {
       },
       error: (error) => {
         this.loading.set(false);
-        // Fallback to local storage update
         const user = this.authService.getCurrentUser();
         if (user) {
           user.organizationId = organizationId;
@@ -250,6 +255,7 @@ export class SelectOrganizationComponent {
   }
 
   skip() {
+    localStorage.setItem('selectedOrganizationId', 'personal');
     this.router.navigate(['/dashboard']);
   }
 }
