@@ -9,6 +9,7 @@ import { EditProfileComponent } from './pages/profile/edit-profile.component';
 import { SettingsComponent } from './pages/settings/settings.component';
 import { PreferencesComponent } from './pages/settings/preferences.component';
 import { NotificationsSettingsComponent } from './pages/settings/notifications.component';
+import { ApiKeysComponent } from './pages/settings/api-keys.component';
 import { MessagesComponent } from './pages/messages/messages.component';
 import { SearchComponent } from './pages/search/search.component';
 import { NotificationsComponent } from './pages/notifications/notifications.component';
@@ -51,6 +52,11 @@ export const routes: Routes = [
   {
     path: 'settings/notifications',
     component: NotificationsSettingsComponent,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'settings/api-keys',
+    component: ApiKeysComponent,
     canActivate: [authGuard],
   },
   // Placeholder routes for settings sub-pages

@@ -24,23 +24,11 @@ async function bootstrap() {
     },
   }));
 
-  // Enable CORS for frontend communication
+  // Enable CORS for cross-domain access
   app.enableCors({
-    origin: [
-      'http://localhost:4200',
-      'http://localhost:4201',
-      'http://localhost:4202',
-      'http://13.126.228.247:4200',
-      'http://13.126.228.247:4201',
-      'http://13.126.228.247:4202',
-      'http://13.126.228.247:4202',
-      'http://3.111.139.181:4200',
-      'http://3.111.139.181:4201',
-      'http://68.178.171.103:4202',
-      'http://68.178.171.103:3002'
-    ],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    origin: true, // Allow all domains
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-API-Key'],
     credentials: true,
   });
 

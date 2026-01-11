@@ -32,8 +32,8 @@ export class WebSocketService {
 
   connect(): void {
     const user = this.auth.getCurrentUser();
-    if (!user) {
-      console.log('WebSocket: No authenticated user, skipping connection');
+    if (!user || !user.id) {
+      console.log('WebSocket: No authenticated user or user ID, skipping connection');
       return;
     }
 

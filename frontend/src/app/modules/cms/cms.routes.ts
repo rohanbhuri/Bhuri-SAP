@@ -5,6 +5,7 @@ import { BlogsPageComponent } from './pages/blogs-page.component';
 import { MenusPageComponent } from './pages/menus-page.component';
 import { MediaPageComponent } from './pages/media-page.component';
 import { AnalyticsPageComponent } from './pages/analytics-page.component';
+import { CmsApiDocsComponent } from './pages/api-docs-page.component';
 
 export const CMS_ROUTES: Routes = [
   {
@@ -30,5 +31,9 @@ export const CMS_ROUTES: Routes = [
   {
     path: 'analytics',
     component: AnalyticsPageComponent
+  },
+  {
+    path: 'api-doc',
+    component: CmsApiDocsComponent
   }
 ];

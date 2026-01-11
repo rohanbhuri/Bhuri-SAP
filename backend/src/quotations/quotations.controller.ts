@@ -5,10 +5,11 @@ import { Enquiry } from '../entities/enquiry.entity';
 import { EmailTemplate } from '../entities/email-template.entity';
 import { Presentation } from '../entities/presentation.entity';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { ApiKeyGuard } from '../guards/api-key.guard';
 import { Response } from 'express';
 
 @Controller('quotations')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, ApiKeyGuard)
 export class QuotationsController {
     constructor(private readonly quotationsService: QuotationsService) { }
 

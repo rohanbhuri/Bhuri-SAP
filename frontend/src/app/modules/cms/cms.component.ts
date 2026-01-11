@@ -2,6 +2,8 @@ import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatMenuModule } from '@angular/material/menu';
 import { NavbarComponent } from '../../components/navbar.component';
 import { BottomNavbarComponent } from '../../components/bottom-navbar.component';
 import { PagesPageComponent } from './pages/pages-page.component';
@@ -16,6 +18,8 @@ import { AnalyticsPageComponent } from './pages/analytics-page.component';
   imports: [
     MatTabsModule,
     MatIconModule,
+    MatButtonModule,
+    MatMenuModule,
     NavbarComponent,
     BottomNavbarComponent,
     PagesPageComponent,
@@ -28,13 +32,26 @@ import { AnalyticsPageComponent } from './pages/analytics-page.component';
     <app-navbar></app-navbar>
     <div class="page">
       <div class="page-header">
-        <nav class="breadcrumb">
-          <span>Modules</span>
-          <mat-icon>chevron_right</mat-icon>
-          <span class="current">CMS</span>
-        </nav>
-        <h1>Content Management System</h1>
-        <p class="subtitle">Manage your website content, pages, blogs, and media</p>
+        <div class="header-content">
+          <div>
+            <nav class="breadcrumb">
+              <span>Modules</span>
+              <mat-icon>chevron_right</mat-icon>
+              <span class="current">CMS</span>
+            </nav>
+            <h1>Content Management System</h1>
+            <p class="subtitle">Manage your website content, pages, blogs, and media</p>
+          </div>
+          <button mat-icon-button [matMenuTriggerFor]="menu">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #menu="matMenu">
+            <button mat-menu-item (click)="openApiDocs()">
+              <mat-icon>api</mat-icon>
+              <span>API Docs</span>
+            </button>
+          </mat-menu>
+        </div>
       </div>
 
       <mat-tab-group class="cms-tabs" [selectedIndex]="selectedTabIndex" (selectedTabChange)="onTabChange($event)">
@@ -82,5 +99,9 @@ export class CmsComponent implements OnInit {
       queryParams: { tab: tabName },
       queryParamsHandling: 'merge'
     });
+  }
+
+  openApiDocs() {
+    this.router.navigate(['/modules/cms/api-doc']);
   }
 }

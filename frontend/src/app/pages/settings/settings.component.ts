@@ -319,6 +319,13 @@ export class SettingsComponent implements OnInit {
       route: '/settings/security',
       badge: this.userSettings()?.security.twoFactorEnabled ? '' : '!',
       color: 'warn'
+    },
+    {
+      id: 'api-keys',
+      title: 'API Keys',
+      description: 'Manage API keys for external integrations',
+      icon: 'vpn_key',
+      route: '/settings/api-keys'
     }
   ];
 

@@ -71,6 +71,15 @@ Secondary application for process management.
 - [Catalogue Module - Production Ready](./documentation/CATALOGUE_PRODUCTION_READY.md)
 - [Catalogue Module - Changes Summary](./documentation/CATALOGUE_CHANGES_SUMMARY.md)
 - [Catalogue Module - Quick Reference](./documentation/CATALOGUE_QUICK_REFERENCE.md)
+- [Catalogue API Documentation](./documentation/CATALOGUE_API_DOCUMENTATION.md) - External API integration
+- [Catalogue API Key Integration](./documentation/CATALOGUE_API_KEY_INTEGRATION.md) - Complete implementation guide
+- [Catalogue API Quick Reference](./documentation/CATALOGUE_API_QUICK_REFERENCE.md) - API cheat sheet
+
+- [Quotations API Documentation](./documentation/QUOTATIONS_API_DOCUMENTATION.md) - External API integration
+- [Quotations API Quick Reference](./documentation/QUOTATIONS_API_QUICK_REFERENCE.md) - API cheat sheet
+
+- [CMS API Documentation](./documentation/CMS_API_DOCUMENTATION.md) - External API integration
+- [CMS API Quick Reference](./documentation/CMS_API_QUICK_REFERENCE.md) - API cheat sheet
 
 ## Tests
 
@@ -82,6 +91,9 @@ The following tests can be found in the `tests/` directory:
 - `test-fixes.js`: Script to test recent fixes.
 - `test-personal-activation.js`: Script to test personal activation.
 - `test-search.js`: Script to test search functionality.
+- `test-catalogue-api-key.js`: Script to test Catalogue API key authentication.
+- `test-quotations-api-key.js`: Script to test Quotations API key authentication.
+- `test-cms-api-key.js`: Script to test CMS API key authentication.
 
 
 ## Brand Configuration System

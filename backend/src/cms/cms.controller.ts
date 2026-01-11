@@ -1,10 +1,12 @@
-import { Controller, Get, Post, Put, Delete, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
 import { CmsService } from './cms.service';
 import { Page } from '../entities/page.entity';
 import { BlogPost } from '../entities/blog-post.entity';
 import { Menu } from '../entities/menu.entity';
+import { ApiKeyGuard } from '../guards/api-key.guard';
 
 @Controller('cms')
+@UseGuards(ApiKeyGuard)
 export class CmsController {
     constructor(private readonly cmsService: CmsService) { }
 

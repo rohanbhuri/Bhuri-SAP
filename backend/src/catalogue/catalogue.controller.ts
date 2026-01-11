@@ -8,7 +8,7 @@ import { Product } from '../entities/product.entity';
 import { Category } from '../entities/category.entity';
 import { Collection } from '../entities/collection.entity';
 import { Designer } from '../entities/designer.entity';
-// import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'; // Uncomment when Auth is ready or stub
+import { ApiKeyGuard } from '../guards/api-key.guard';
 
 const imageStorage = diskStorage({
     destination: './uploads/products/images',
@@ -67,6 +67,7 @@ const presentationStorage = diskStorage({
 });
 
 @Controller('catalogue')
+@UseGuards(ApiKeyGuard)
 export class CatalogueController {
     constructor(private readonly catalogueService: CatalogueService) { }
 

@@ -7,10 +7,12 @@ import { Product } from '../entities/product.entity';
 import { Category } from '../entities/category.entity';
 import { Collection } from '../entities/collection.entity';
 import { Designer } from '../entities/designer.entity';
+import { ApiKeyModule } from '../guards/api-key.module';
 
 @Module({
     imports: [
         TypeOrmModule.forFeature([Product, Category, Collection, Designer]),
+        ApiKeyModule,
         MulterModule.register({
             dest: './uploads/products'
         })

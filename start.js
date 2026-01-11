@@ -21,7 +21,7 @@ console.log(`Environment: ${ipConfig.isProduction ? 'Production' : 'Development'
 console.log(`Using IP: ${ipConfig.ip}`);
 
 // Update brand config with dynamic IP
-brandConfig.app.dynamicApiUrl = ipConfig.getURL(brandConfig.development.PORT || brandConfig.production.PORT);
+brandConfig.app.dynamicApiUrl = ipConfig.getURL(brandConfig.development.PORT || brandConfig.production.PORT) + '/api';
 brandConfig.app.dynamicFrontendUrl = ipConfig.getURL(brandConfig.app.port);
 
 // Replace environment variables in frontend files using templates
@@ -31,12 +31,14 @@ const manifestPath = path.join(__dirname, 'frontend/public/manifest.json');
 const robotsPath = path.join(__dirname, 'frontend/public/robots.txt');
 const swPath = path.join(__dirname, 'frontend/public/sw.js');
 const sitemapPath = path.join(__dirname, 'frontend/public/sitemap.xml');
+const environmentPath = path.join(__dirname, 'frontend/src/environments/environment.ts');
 
 let indexContent = fs.readFileSync(templatePath, 'utf8');
 let manifestContent = fs.readFileSync(manifestPath, 'utf8');
 let robotsContent = fs.readFileSync(robotsPath, 'utf8');
 let swContent = fs.readFileSync(swPath, 'utf8');
 let sitemapContent = fs.readFileSync(sitemapPath, 'utf8');
+let environmentContent = fs.readFileSync(environmentPath, 'utf8');
 
 const replacements = {
   '{{BRAND_NAME}}': brandConfig.brand.name,
@@ -61,6 +63,7 @@ Object.keys(replacements).forEach(placeholder => {
   robotsContent = robotsContent.replace(regex, replacements[placeholder]);
   swContent = swContent.replace(regex, replacements[placeholder]);
   sitemapContent = sitemapContent.replace(regex, replacements[placeholder]);
+  environmentContent = environmentContent.replace(regex, replacements[placeholder]);
 });
 
 fs.writeFileSync(indexPath, indexContent);
@@ -68,6 +71,7 @@ fs.writeFileSync(manifestPath, manifestContent);
 fs.writeFileSync(robotsPath, robotsContent);
 fs.writeFileSync(swPath, swContent);
 fs.writeFileSync(sitemapPath, sitemapContent);
+fs.writeFileSync(environmentPath, environmentContent);
 console.log(`Environment variables replaced for ${brand}`);
 
 // Set database credentials (same for all environments)

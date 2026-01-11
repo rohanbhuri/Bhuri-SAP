@@ -4,6 +4,8 @@ import { Router } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { BrandConfigService } from './brand-config.service';
+import { MatDialog } from '@angular/material/dialog';
+import { SessionTimeoutDialogComponent } from '../dialogs/session-timeout-dialog.component';
 
 export interface User {
   id: string;
@@ -78,6 +80,7 @@ export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
   private brandConfig = inject(BrandConfigService);
+  private dialog = inject(MatDialog);
   private get apiUrl() { return this.brandConfig.getApiUrl(); }
   
   private currentUserSubject = new BehaviorSubject<User | null>(null);
@@ -138,6 +141,14 @@ export class AuthService {
     }
     this.currentUserSubject.next(null);
     this.router.navigate(['/login']);
+  }
+
+  showSessionTimeout(): void {
+    this.dialog.open(SessionTimeoutDialogComponent, {
+      disableClose: true,
+      width: '400px'
+    });
+    this.logout();
   }
 
   isAuthenticated(): boolean {

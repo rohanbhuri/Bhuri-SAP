@@ -8,10 +8,12 @@ import { EmailTemplate } from '../entities/email-template.entity';
 import { Presentation } from '../entities/presentation.entity';
 import { Product } from '../entities/product.entity';
 import { Client } from '../entities/client.entity';
+import { ApiKeyModule } from '../guards/api-key.module';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([Quotation, Enquiry, EmailTemplate, Presentation, Product, Client])
+        TypeOrmModule.forFeature([Quotation, Enquiry, EmailTemplate, Presentation, Product, Client]),
+        ApiKeyModule
     ],
     controllers: [QuotationsController],
     providers: [QuotationsService],
