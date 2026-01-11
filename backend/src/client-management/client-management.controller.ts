@@ -84,4 +84,31 @@ export class ClientManagementController {
   async toggleClientStatus(@Param('clientId') clientId: string, @Body() body: { isActive: boolean }) {
     return this.clientManagementService.toggleClientStatus(clientId, body.isActive);
   }
+
+  @Post('clients/:clientId/request-credentials')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
+  async requestLoginCredentials(
+    @Param('clientId') clientId: string,
+    @Body() credentialData: any
+  ) {
+    return this.clientManagementService.requestLoginCredentials(clientId, credentialData);
+  }
+
+  @Get('clients/:clientId/security-settings')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
+  async getSecuritySettings(@Param('clientId') clientId: string) {
+    return this.clientManagementService.getSecuritySettings(clientId);
+  }
+
+  @Put('clients/:clientId/security-settings')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
+  async updateSecuritySettings(
+    @Param('clientId') clientId: string,
+    @Body() settings: any
+  ) {
+    return this.clientManagementService.updateSecuritySettings(clientId, settings);
+  }
 }

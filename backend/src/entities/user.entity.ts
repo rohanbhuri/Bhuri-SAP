@@ -44,6 +44,30 @@ export class User {
   @Column('array')
   activeModuleIds: ObjectId[];
 
+  @Column({ default: false })
+  forcePasswordChange: boolean;
+
+  @Column({ default: false })
+  requireTwoFactor: boolean;
+
+  @Column({ nullable: true })
+  sessionTimeout?: number;
+
+  @Column({ default: false })
+  restrictToBusinessHours: boolean;
+
+  @Column({ default: false })
+  allowApiAccess: boolean;
+
+  @Column({ nullable: true })
+  expiryDate?: Date;
+
+  @Column({ nullable: true })
+  ipWhitelist?: string;
+
+  @Column({ nullable: true })
+  maxDevices?: number;
+
   @Column()
   createdAt: Date;
 

@@ -173,6 +173,8 @@ export class ClientManagementService {
     });
     const savedClient = await this.clientRepository.save(client);
 
+    await this.syncClientSecurityToUser(savedClient, savedUser);
+
     request.status = ClientRequestStatus.CONVERTED;
     request.convertedUserId = savedUser._id;
     request.convertedOrganizationId = savedOrg._id;
@@ -214,7 +216,18 @@ export class ClientManagementService {
     }
 
     Object.assign(client, updateData);
-    return this.clientRepository.save(client);
+    const updatedClient = await this.clientRepository.save(client);
+
+    if (client.userId) {
+      const user = await this.userRepository.findOne({ 
+        where: { _id: client.userId } 
+      });
+      if (user) {
+        await this.syncClientSecurityToUser(updatedClient, user);
+      }
+    }
+
+    return updatedClient;
   }
 
   async deleteClient(clientId: string) {
@@ -244,6 +257,83 @@ export class ClientManagementService {
     return this.clientRepository.save(client);
   }
 
+  async requestLoginCredentials(clientId: string, credentialData: any) {
+    const client = await this.clientRepository.findOne({ 
+      where: { _id: new ObjectId(clientId) } 
+    });
+    
+    if (!client) {
+      throw new NotFoundException('Client not found');
+    }
+
+    let user = await this.userRepository.findOne({ 
+      where: { _id: client.userId } 
+    });
+
+    const password = this.generatePassword();
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    if (user) {
+      user.password = hashedPassword;
+      user.forcePasswordChange = true;
+      user = await this.userRepository.save(user);
+    } else {
+      let clientRole = await this.roleRepository.findOne({ 
+        where: { type: RoleType.CLIENT } 
+      });
+      
+      if (!clientRole) {
+        clientRole = await this.roleRepository.save(
+          this.roleRepository.create({
+            name: 'Client',
+            type: RoleType.CLIENT,
+            description: 'Client user with limited access',
+            permissionIds: []
+          })
+        );
+      }
+
+      user = this.userRepository.create({
+        email: credentialData.email || client.email,
+        password: hashedPassword,
+        firstName: credentialData.firstName || client.contactPerson.split(' ')[0],
+        lastName: credentialData.lastName || client.contactPerson.split(' ').slice(1).join(' '),
+        isActive: true,
+        organizationId: client.organizationId,
+        organizationIds: [client.organizationId],
+        roleIds: [clientRole._id],
+        permissionIds: [],
+        forcePasswordChange: true
+      });
+      user = await this.userRepository.save(user);
+      client.userId = user._id;
+      await this.clientRepository.save(client);
+    }
+
+    await this.syncClientSecurityToUser(client, user);
+
+    return {
+      success: true,
+      message: 'Login credentials created successfully',
+      credentials: {
+        email: user.email,
+        password,
+        userId: user._id
+      }
+    };
+  }
+
+  private async syncClientSecurityToUser(client: Client, user: User): Promise<void> {
+    user.requireTwoFactor = client.requireTwoFactor;
+    user.sessionTimeout = client.sessionTimeout;
+    user.restrictToBusinessHours = client.restrictToBusinessHours;
+    user.allowApiAccess = client.allowApiAccess;
+    user.expiryDate = client.expiryDate;
+    user.ipWhitelist = client.ipWhitelist;
+    user.maxDevices = client.maxDevices;
+    await this.userRepository.save(user);
+  }
+
   private generatePassword(): string {
     const length = 12;
     const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
@@ -252,5 +342,49 @@ export class ClientManagementService {
       password += charset.charAt(Math.floor(Math.random() * charset.length));
     }
     return password;
+  }
+
+  async getSecuritySettings(clientId: string) {
+    const client = await this.clientRepository.findOne({ 
+      where: { _id: new ObjectId(clientId) } 
+    });
+    
+    if (!client) {
+      throw new NotFoundException('Client not found');
+    }
+
+    return {
+      requireTwoFactor: client.requireTwoFactor,
+      sessionTimeout: client.sessionTimeout,
+      restrictToBusinessHours: client.restrictToBusinessHours,
+      allowApiAccess: client.allowApiAccess,
+      expiryDate: client.expiryDate,
+      ipWhitelist: client.ipWhitelist,
+      maxDevices: client.maxDevices
+    };
+  }
+
+  async updateSecuritySettings(clientId: string, settings: any) {
+    const client = await this.clientRepository.findOne({ 
+      where: { _id: new ObjectId(clientId) } 
+    });
+    
+    if (!client) {
+      throw new NotFoundException('Client not found');
+    }
+
+    Object.assign(client, settings);
+    const updatedClient = await this.clientRepository.save(client);
+
+    if (client.userId) {
+      const user = await this.userRepository.findOne({ 
+        where: { _id: client.userId } 
+      });
+      if (user) {
+        await this.syncClientSecurityToUser(updatedClient, user);
+      }
+    }
+
+    return this.getSecuritySettings(clientId);
   }
 }

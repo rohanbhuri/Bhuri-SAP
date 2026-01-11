@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -10,7 +10,6 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { NavbarComponent } from '../../../components/navbar.component';
 import { BottomNavbarComponent } from '../../../components/bottom-navbar.component';
-import { environment } from '../../../../environments/environment';
 
 interface ApiEndpoint {
   method: string;
@@ -159,11 +158,15 @@ interface ApiEndpoint {
     .endpoint-details pre code { font-size: 13px; line-height: 1.6; }
   `]
 })
-export class CmsApiDocsComponent {
+export class CmsApiDocsComponent implements OnInit {
   private snackBar = inject(MatSnackBar);
   private router = inject(Router);
   
-  baseUrl = `${environment.apiUrl}/cms`;
+  baseUrl = '';
+
+  ngOnInit() {
+    this.baseUrl = `${window.location.origin}/api/cms`;
+  }
 
   pageEndpoints: ApiEndpoint[] = [
     { method: 'GET', path: '/pages', description: 'Get all pages', response: '[{ "_id": "...", "title": "About Us", "slug": "about-us", ... }]' },

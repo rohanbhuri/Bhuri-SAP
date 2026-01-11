@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -10,7 +10,6 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { NavbarComponent } from '../../../components/navbar.component';
 import { BottomNavbarComponent } from '../../../components/bottom-navbar.component';
-import { environment } from '../../../../environments/environment';
 
 interface ApiEndpoint {
   method: string;
@@ -159,11 +158,11 @@ interface ApiEndpoint {
     .endpoint-details pre code { font-size: 13px; line-height: 1.6; }
   `]
 })
-export class QuotationsApiDocsComponent {
+export class QuotationsApiDocsComponent implements OnInit {
   private snackBar = inject(MatSnackBar);
   private router = inject(Router);
   
-  baseUrl = `${environment.apiUrl}/quotations`;
+  baseUrl = `${window.location.origin}/api/quotations`;
 
   quotationEndpoints: ApiEndpoint[] = [
     { method: 'GET', path: '/', description: 'Get all quotations', response: '[{ "_id": "...", "quotationNumber": "QT-001", ... }]' },
@@ -195,6 +194,11 @@ export class QuotationsApiDocsComponent {
   copyUrl(url: string) {
     navigator.clipboard.writeText(url);
     this.snackBar.open('URL copied to clipboard', 'Close', { duration: 2000 });
+  }
+
+  ngOnInit() {
+    // Update baseUrl with current domain
+    this.baseUrl = `${window.location.origin}/api/quotations`;
   }
 
   navigateToApiKeys() {
