@@ -4,6 +4,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
+import { CommonModule } from '@angular/common';
 import { NavbarComponent } from '../../components/navbar.component';
 import { BottomNavbarComponent } from '../../components/bottom-navbar.component';
 import { PagesPageComponent } from './pages/pages-page.component';
@@ -11,11 +12,13 @@ import { BlogsPageComponent } from './pages/blogs-page.component';
 import { MenusPageComponent } from './pages/menus-page.component';
 import { MediaPageComponent } from './pages/media-page.component';
 import { AnalyticsPageComponent } from './pages/analytics-page.component';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-cms',
   standalone: true,
   imports: [
+    CommonModule,
     MatTabsModule,
     MatIconModule,
     MatButtonModule,
@@ -46,7 +49,7 @@ import { AnalyticsPageComponent } from './pages/analytics-page.component';
             <mat-icon>more_vert</mat-icon>
           </button>
           <mat-menu #menu="matMenu">
-            <button mat-menu-item (click)="openApiDocs()">
+            <button mat-menu-item (click)="openApiDocs()" *ngIf="canAccessApi()">
               <mat-icon>api</mat-icon>
               <span>API Docs</span>
             </button>
@@ -79,9 +82,14 @@ import { AnalyticsPageComponent } from './pages/analytics-page.component';
 export class CmsComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private authService = inject(AuthService);
   
   selectedTabIndex = 0;
   private tabs = ['pages', 'blogs', 'menus', 'media', 'analytics'];
+
+  canAccessApi(): boolean {
+    return this.authService.getCurrentUser()?.allowApiAccess ?? false;
+  }
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {

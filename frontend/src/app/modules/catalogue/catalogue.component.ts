@@ -4,6 +4,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
+import { CommonModule } from '@angular/common';
 import { NavbarComponent } from '../../components/navbar.component';
 import { BottomNavbarComponent } from '../../components/bottom-navbar.component';
 import { ProductsPageComponent } from './pages/products-page.component';
@@ -11,11 +12,13 @@ import { CategoriesPageComponent } from './pages/categories-page.component';
 import { CollectionsPageComponent } from './pages/collections-page.component';
 import { DesignersPageComponent } from './pages/designers-page.component';
 import { AnalyticsPageComponent } from './pages/analytics-page.component';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-catalogue',
   standalone: true,
   imports: [
+    CommonModule,
     MatTabsModule,
     MatIconModule,
     MatButtonModule,
@@ -46,7 +49,7 @@ import { AnalyticsPageComponent } from './pages/analytics-page.component';
             <mat-icon>more_vert</mat-icon>
           </button>
           <mat-menu #menu="matMenu">
-            <button mat-menu-item (click)="openApiDocs()">
+            <button mat-menu-item (click)="openApiDocs()" *ngIf="canAccessApi()">
               <mat-icon>api</mat-icon>
               <span>API Docs</span>
             </button>
@@ -79,9 +82,14 @@ import { AnalyticsPageComponent } from './pages/analytics-page.component';
 export class CatalogueComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private authService = inject(AuthService);
   
   selectedTabIndex = 0;
   private tabs = ['products', 'categories', 'collections', 'designers', 'analytics'];
+
+  canAccessApi(): boolean {
+    return this.authService.getCurrentUser()?.allowApiAccess ?? false;
+  }
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {

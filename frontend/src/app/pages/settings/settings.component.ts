@@ -319,13 +319,6 @@ export class SettingsComponent implements OnInit {
       route: '/settings/security',
       badge: this.userSettings()?.security.twoFactorEnabled ? '' : '!',
       color: 'warn'
-    },
-    {
-      id: 'api-keys',
-      title: 'API Keys',
-      description: 'Manage API keys for external integrations',
-      icon: 'vpn_key',
-      route: '/settings/api-keys'
     }
   ];
 
@@ -391,6 +384,20 @@ export class SettingsComponent implements OnInit {
   ngOnInit() {
     this.themeService.applyModuleTheme('settings');
     this.loadUserSettings();
+    this.updatePrivacySettings();
+  }
+
+  private updatePrivacySettings() {
+    const currentUser = this.authService.getCurrentUser();
+    if (currentUser?.allowApiAccess) {
+      this.privacySettings.push({
+        id: 'api-keys',
+        title: 'API Keys',
+        description: 'Manage API keys for external integrations',
+        icon: 'vpn_key',
+        route: '/settings/api-keys'
+      });
+    }
   }
 
   loadUserSettings() {

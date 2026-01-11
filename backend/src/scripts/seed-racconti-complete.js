@@ -401,11 +401,11 @@ async function seedRaccontiComplete() {
         type: 'staff',
         hierarchyLevel: 2,
         permissionIds: [
-          'crm:read:organization', 'crm:create:organization', 'crm:update:organization',
-          'client-management:read:organization', 'client-management:create:organization', 'client-management:update:organization',
-          'reports:read:organization', 'reports:create:organization',
-          'dashboard:read:organization'
-        ].map(key => permMap[key]).filter(Boolean)
+          permMap['crm:read:organization'], permMap['crm:create:organization'], permMap['crm:update:organization'],
+          permMap['client-management:read:organization'], permMap['client-management:create:organization'], permMap['client-management:update:organization'],
+          permMap['reports:read:organization'], permMap['reports:create:organization'],
+          permMap['dashboard:read:organization']
+        ].filter(Boolean)
       },
       {
         name: 'Manager',
@@ -413,12 +413,12 @@ async function seedRaccontiComplete() {
         type: 'staff',
         hierarchyLevel: 2,
         permissionIds: [
-          'crm:read:organization', 'crm:create:organization', 'crm:update:organization',
-          'client-management:read:organization', 'client-management:create:organization', 'client-management:update:organization',
-          'reports:read:organization', 'reports:create:organization',
-          'catalogue:read:organization', 'quotations:read:organization', 'quotations:create:organization',
-          'dashboard:read:organization'
-        ].map(key => permMap[key]).filter(Boolean)
+          permMap['crm:read:organization'], permMap['crm:create:organization'], permMap['crm:update:organization'],
+          permMap['client-management:read:organization'], permMap['client-management:create:organization'], permMap['client-management:update:organization'],
+          permMap['reports:read:organization'], permMap['reports:create:organization'],
+          permMap['catalogue:read:organization'], permMap['quotations:read:organization'], permMap['quotations:create:organization'],
+          permMap['dashboard:read:organization']
+        ].filter(Boolean)
       },
       {
         name: 'Staff',
@@ -426,11 +426,11 @@ async function seedRaccontiComplete() {
         type: 'staff',
         hierarchyLevel: 1,
         permissionIds: [
-          'crm:read:organization', 'crm:create:organization', 'crm:update:organization',
-          'client-management:read:organization', 'client-management:create:organization',
-          'catalogue:read:organization', 'quotations:read:organization',
-          'dashboard:read:organization'
-        ].map(key => permMap[key]).filter(Boolean)
+          permMap['crm:read:organization'], permMap['crm:create:organization'], permMap['crm:update:organization'],
+          permMap['client-management:read:organization'], permMap['client-management:create:organization'],
+          permMap['catalogue:read:organization'], permMap['quotations:read:organization'],
+          permMap['dashboard:read:organization']
+        ].filter(Boolean)
       },
       {
         name: 'Employee',
@@ -438,11 +438,11 @@ async function seedRaccontiComplete() {
         type: 'staff',
         hierarchyLevel: 0,
         permissionIds: [
-          'crm:read:organization',
-          'client-management:read:organization',
-          'catalogue:read:organization', 'quotations:read:organization',
-          'dashboard:read:organization'
-        ].map(key => permMap[key]).filter(Boolean)
+          permMap['crm:read:organization'],
+          permMap['client-management:read:organization'],
+          permMap['catalogue:read:organization'], permMap['quotations:read:organization'],
+          permMap['dashboard:read:organization']
+        ].filter(Boolean)
       }
     ];
 
@@ -472,12 +472,13 @@ async function seedRaccontiComplete() {
 
     const hashedPassword = await bcrypt.hash('password123', 10);
     
-    const superAdminRole = insertedRoles.insertedIds[0];
-    const adminRole = insertedRoles.insertedIds[1];
-    const hrManagerRole = insertedRoles.insertedIds[2];
-    const managerRole = insertedRoles.insertedIds[3];
-    const staffRole = insertedRoles.insertedIds[4];
-    const employeeRole = insertedRoles.insertedIds[5];
+    const roleIds = Object.values(insertedRoles.insertedIds);
+    const superAdminRole = roleIds[0];
+    const adminRole = roleIds[1];
+    const hrManagerRole = roleIds[2];
+    const managerRole = roleIds[3];
+    const staffRole = roleIds[4];
+    const employeeRole = roleIds[5];
 
     const moduleIds = modules.map(m => m._id);
 
@@ -495,6 +496,7 @@ async function seedRaccontiComplete() {
         activeModuleIds: moduleIds,
         forcePasswordChange: true,
         requireTwoFactor: true,
+        allowApiAccess: true,
         createdAt: new Date()
       },
       {
@@ -510,6 +512,7 @@ async function seedRaccontiComplete() {
         activeModuleIds: moduleIds,
         forcePasswordChange: true,
         requireTwoFactor: true,
+        allowApiAccess: true,
         createdAt: new Date()
       },
       {
@@ -524,6 +527,7 @@ async function seedRaccontiComplete() {
         permissionIds: [],
         activeModuleIds: moduleIds,
         forcePasswordChange: true,
+        allowApiAccess: false,
         createdAt: new Date()
       },
       {
@@ -538,6 +542,7 @@ async function seedRaccontiComplete() {
         permissionIds: [],
         activeModuleIds: moduleIds,
         forcePasswordChange: true,
+        allowApiAccess: false,
         createdAt: new Date()
       },
       {
@@ -551,6 +556,7 @@ async function seedRaccontiComplete() {
         roleIds: [staffRole],
         permissionIds: [],
         activeModuleIds: moduleIds,
+        allowApiAccess: false,
         createdAt: new Date()
       },
       {
@@ -564,6 +570,7 @@ async function seedRaccontiComplete() {
         roleIds: [employeeRole],
         permissionIds: [],
         activeModuleIds: moduleIds,
+        allowApiAccess: false,
         createdAt: new Date()
       }
     ];

@@ -4,16 +4,19 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
+import { CommonModule } from '@angular/common';
 import { NavbarComponent } from '../../components/navbar.component';
 import { BottomNavbarComponent } from '../../components/bottom-navbar.component';
 import { QuotationListComponent } from './components/quotation-list/quotation-list.component';
 import { EnquiryListComponent } from './components/enquiry-list/enquiry-list.component';
 import { PresentationListComponent } from './components/presentation-list/presentation-list.component';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-quotations',
   standalone: true,
   imports: [
+    CommonModule,
     MatTabsModule,
     MatIconModule,
     MatButtonModule,
@@ -42,7 +45,7 @@ import { PresentationListComponent } from './components/presentation-list/presen
             <mat-icon>more_vert</mat-icon>
           </button>
           <mat-menu #menu="matMenu">
-            <button mat-menu-item (click)="openApiDocs()">
+            <button mat-menu-item (click)="openApiDocs()" *ngIf="canAccessApi()">
               <mat-icon>api</mat-icon>
               <span>API Docs</span>
             </button>
@@ -69,9 +72,14 @@ import { PresentationListComponent } from './components/presentation-list/presen
 export class QuotationsComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private authService = inject(AuthService);
   
   selectedTabIndex = 0;
   private tabs = ['enquiries', 'presentations', 'quotations'];
+
+  canAccessApi(): boolean {
+    return this.authService.getCurrentUser()?.allowApiAccess ?? false;
+  }
   
   ngOnInit() {
     this.route.queryParams.subscribe(params => {

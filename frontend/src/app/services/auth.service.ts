@@ -21,6 +21,7 @@ export interface User {
   organizations: UserOrganization[];
   organizationId?: string;
   currentOrganization?: UserOrganization;
+  allowApiAccess?: boolean;
 }
 
 export interface UserRole {
