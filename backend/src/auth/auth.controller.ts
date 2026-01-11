@@ -3,6 +3,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { Public } from '../decorators/public.decorator';
 import { IsEmail, IsString, MinLength } from 'class-validator';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -46,11 +47,13 @@ export class AuthController {
     private usersService: UsersService
   ) {}
 
+  @Public()
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto.email, loginDto.password);
   }
 
+  @Public()
   @Post('signup')
   async signup(@Body() signupDto: SignupDto) {
     // Validate required fields

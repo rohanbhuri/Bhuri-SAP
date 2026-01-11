@@ -58,10 +58,10 @@ export class PermissionsGuard implements CanActivate {
 
     // Check permission requirements
     if (requiredPermissions) {
-      const userPermissions = await this.permissionRepository.find({
-        where: { _id: { $in: fullUser.permissionIds } }
+      const rolePermissions = await this.permissionRepository.find({
+        where: { _id: { $in: userRoles.flatMap(r => r.permissionIds) } }
       });
-      const permissionStrings = userPermissions.map(p => `${p.module}:${p.action}`);
+      const permissionStrings = rolePermissions.map(p => `${p.module}:${p.action}`);
       return requiredPermissions.every(permission => permissionStrings.includes(permission));
     }
 

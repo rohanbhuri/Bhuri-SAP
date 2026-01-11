@@ -13,7 +13,6 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ConfirmDialogComponent } from '../dialogs/confirm-dialog.component';
 import { RoleDialogComponent } from '../dialogs/role-dialog.component';
-import { PermissionTemplateDialogComponent } from '../dialogs/permission-template-dialog.component';
 import { UserManagementService } from '../user-management.service';
 import { FormsModule } from '@angular/forms';
 
@@ -327,15 +326,8 @@ export class RolesComponent {
   }
 
   applyTemplate(role: any) {
-    const ref = this.dialog.open(PermissionTemplateDialogComponent, {
-      width: '520px',
-      data: { roleId: role._id || role.id, roleName: role.name }
-    });
-    
-    ref.afterClosed().subscribe((result) => {
-      if (result) {
-        this.loadRoles();
-      }
+    this.snackBar.open('Template application has been removed', 'Close', {
+      duration: 3000,
     });
   }
 

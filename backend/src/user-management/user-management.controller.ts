@@ -70,12 +70,6 @@ export class UserManagementController {
     return this.userManagementService.updateUserRoles(userId, body.roleIds);
   }
 
-  @Put('users/:userId/permissions')
-  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
-  async updateUserPermissions(@Param('userId') userId: string, @Body() body: { permissionIds: string[] }) {
-    return this.userManagementService.updateUserPermissions(userId, body.permissionIds);
-  }
-
   @Post('roles')
   @RequireRoles(RoleType.SUPER_ADMIN)
   async createRole(@Body() roleData: any) {
@@ -112,21 +106,4 @@ export class UserManagementController {
     return this.userManagementService.deleteRole(roleId);
   }
 
-  @Post('setup-defaults')
-  @RequireRoles(RoleType.SUPER_ADMIN)
-  async setupDefaults() {
-    return this.userManagementService.setupDefaults();
-  }
-
-  @Get('permission-templates')
-  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
-  async getPermissionTemplates() {
-    return this.userManagementService.getPermissionTemplates();
-  }
-
-  @Post('roles/:roleId/apply-template')
-  @RequireRoles(RoleType.SUPER_ADMIN)
-  async applyPermissionTemplate(@Param('roleId') roleId: string, @Body() body: { templateId: string }) {
-    return this.userManagementService.applyPermissionTemplate(roleId, body.templateId);
-  }
 }

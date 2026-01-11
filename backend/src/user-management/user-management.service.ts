@@ -7,7 +7,7 @@ import { Role, RoleType } from '../entities/role.entity';
 import { Permission, ActionType } from '../entities/permission.entity';
 import { Module, ModulePermissionType } from '../entities/module.entity';
 import { Organization } from '../entities/organization.entity';
-import { PERMISSION_TEMPLATES, PermissionTemplate } from './permission-templates.config';
+
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -65,8 +65,7 @@ export class UserManagementService {
       isActive: userData.isActive ?? true,
       organizationId: userData.organizationId ? new ObjectId(userData.organizationId) : null,
       organizationIds: userData.organizationId ? [new ObjectId(userData.organizationId)] : [],
-      roleIds: userData.roleIds?.map(id => new ObjectId(id)) || [],
-      permissionIds: userData.permissionIds?.map(id => new ObjectId(id)) || []
+      roleIds: userData.roleIds?.map(id => new ObjectId(id)) || []
     });
 
     const savedUser = await this.userRepository.save(user);
@@ -100,7 +99,6 @@ export class UserManagementService {
       }
     }
     if (userData.roleIds) user.roleIds = userData.roleIds.map(id => new ObjectId(id));
-    if (userData.permissionIds) user.permissionIds = userData.permissionIds.map(id => new ObjectId(id));
 
     // Hash new password if provided
     if (userData.password) {
@@ -156,15 +154,6 @@ export class UserManagementService {
     });
     
     user.roleIds = roleIds.map(id => new ObjectId(id));
-    return this.userRepository.save(user);
-  }
-
-  async updateUserPermissions(userId: string, permissionIds: string[]) {
-    const user = await this.userRepository.findOne({
-      where: { _id: new ObjectId(userId) }
-    });
-    
-    user.permissionIds = permissionIds.map(id => new ObjectId(id));
     return this.userRepository.save(user);
   }
 
@@ -234,92 +223,5 @@ export class UserManagementService {
     return { success: true, message: 'Role deleted successfully' };
   }
 
-  async getPermissionTemplates() {
-    return PERMISSION_TEMPLATES;
-  }
 
-  async applyPermissionTemplate(roleId: string, templateId: string) {
-    const template = PERMISSION_TEMPLATES.find(t => t.id === templateId);
-    if (!template) {
-      throw new NotFoundException('Permission template not found');
-    }
-
-    // Create permissions if they don't exist
-    const permissionIds = [];
-    for (const permData of template.permissions) {
-      let permission = await this.permissionRepository.findOne({
-        where: { module: permData.module, action: permData.action, resource: permData.resource }
-      });
-      
-      if (!permission) {
-        permission = await this.permissionRepository.save(
-          this.permissionRepository.create(permData)
-        );
-      }
-      permissionIds.push(permission._id);
-    }
-
-    // Update role with permissions
-    const role = await this.roleRepository.findOne({ where: { _id: new ObjectId(roleId) } });
-    if (!role) {
-      throw new NotFoundException('Role not found');
-    }
-
-    role.permissionIds = permissionIds;
-    await this.roleRepository.save(role);
-
-    return { success: true, message: `Applied ${template.name} template to role`, permissionsCount: permissionIds.length };
-  }
-
-  async setupDefaults() {
-    // Create default modules
-    const modules = [
-      { id: 'user-management', name: 'user-management', displayName: 'User Management', description: 'Manage users, roles and permissions', permissionType: ModulePermissionType.PUBLIC, category: 'administration', icon: 'people', color: '#2196F3', isActive: true },
-      { id: 'organization-management', name: 'organization-management', displayName: 'Organization Management', description: 'Manage organizations and organizational settings', permissionType: ModulePermissionType.REQUIRE_PERMISSION, category: 'administration', icon: 'business', color: '#FF9800', isActive: true },
-      { id: 'dashboard', name: 'dashboard', displayName: 'Dashboard', description: 'Main dashboard view', permissionType: ModulePermissionType.PUBLIC, category: 'core', icon: 'dashboard', color: '#4CAF50', isActive: true },
-      { id: 'reports', name: 'reports', displayName: 'Reports', description: 'Generate and view reports', permissionType: ModulePermissionType.REQUIRE_PERMISSION, category: 'analytics', icon: 'assessment', color: '#9C27B0', isActive: true },
-      { id: 'settings', name: 'settings', displayName: 'Settings', description: 'System settings', permissionType: ModulePermissionType.REQUIRE_PERMISSION, category: 'configuration', icon: 'settings', color: '#607D8B', isActive: true }
-    ];
-
-    for (const moduleData of modules) {
-      const existing = await this.moduleRepository.findOne({ where: { name: moduleData.name } });
-      if (!existing) {
-        await this.moduleRepository.save(this.moduleRepository.create(moduleData));
-      }
-    }
-
-    // Create all permissions from templates
-    const allPermissions = new Set();
-    PERMISSION_TEMPLATES.forEach(template => {
-      template.permissions.forEach(perm => {
-        allPermissions.add(JSON.stringify(perm));
-      });
-    });
-
-    for (const permStr of allPermissions) {
-      const permData = JSON.parse(permStr as string);
-      const existing = await this.permissionRepository.findOne({ 
-        where: { module: permData.module, action: permData.action, resource: permData.resource } 
-      });
-      if (!existing) {
-        await this.permissionRepository.save(this.permissionRepository.create(permData));
-      }
-    }
-
-    // Create super admin role with full template
-    const superAdminRole = await this.roleRepository.findOne({ where: { type: RoleType.SUPER_ADMIN } });
-    if (!superAdminRole) {
-      const newRole = await this.roleRepository.save(this.roleRepository.create({
-        name: 'Super Administrator',
-        type: RoleType.SUPER_ADMIN,
-        description: 'Full system access',
-        permissionIds: []
-      }));
-      
-      // Apply super admin template
-      await this.applyPermissionTemplate(newRole._id.toString(), 'super-admin-full');
-    }
-
-    return { success: true, message: 'Default data created with permission templates' };
-  }
 }

@@ -1,16 +1,27 @@
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MongoRepository } from 'typeorm';
 import { ApiKey } from '../entities/api-key.entity';
+import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 
 @Injectable()
 export class ApiKeyGuard implements CanActivate {
     constructor(
+        private reflector: Reflector,
         @InjectRepository(ApiKey)
         private apiKeyRepository: MongoRepository<ApiKey>,
     ) { }
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
+        const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+            context.getHandler(),
+            context.getClass(),
+        ]);
+        if (isPublic) {
+            return true;
+        }
+
         const request = context.switchToHttp().getRequest();
         
         // Check if JWT token exists (allow authenticated users)

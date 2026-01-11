@@ -38,11 +38,7 @@ export class User {
   @Column('array')
   roleIds: ObjectId[];
 
-  @Column('array')
-  permissionIds: ObjectId[];
 
-  @Column('array')
-  activeModuleIds: ObjectId[];
 
   @Column({ default: false })
   forcePasswordChange: boolean;
@@ -75,8 +71,6 @@ export class User {
     this.isActive = true;
     this.organizationIds = [];
     this.roleIds = [];
-    this.permissionIds = [];
-    this.activeModuleIds = [];
     this.createdAt = new Date();
   }
 }

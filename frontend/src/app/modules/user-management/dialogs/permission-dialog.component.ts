@@ -51,8 +51,8 @@ import { UserManagementService } from '../user-management.service';
           <mat-label>Action</mat-label>
           <mat-select formControlName="action" required>
             <mat-option value="read">Read</mat-option>
-            <mat-option value="write">Write</mat-option>
-            <mat-option value="edit">Edit</mat-option>
+            <mat-option value="create">Create</mat-option>
+            <mat-option value="update">Update</mat-option>
             <mat-option value="delete">Delete</mat-option>
           </mat-select>
           <mat-error *ngIf="permissionForm.get('action')?.hasError('required')">
@@ -68,6 +68,11 @@ import { UserManagementService } from '../user-management.service';
           >
             Resource is required
           </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Description</mat-label>
+          <textarea matInput formControlName="description" rows="3"></textarea>
         </mat-form-field>
       </form>
     </mat-dialog-content>
@@ -127,6 +132,7 @@ export class PermissionDialogComponent {
       module: ['', Validators.required],
       action: ['', Validators.required],
       resource: ['', Validators.required],
+      description: [''],
     });
 
     if (this.isEdit && this.data.permission) {
@@ -134,6 +140,7 @@ export class PermissionDialogComponent {
         module: this.data.permission.module,
         action: this.data.permission.action,
         resource: this.data.permission.resource,
+        description: this.data.permission.description || '',
       });
     }
   }

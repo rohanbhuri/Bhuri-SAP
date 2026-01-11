@@ -140,10 +140,9 @@ export class ClientManagementService {
       isActive: true,
       organizationId: savedOrg._id,
       organizationIds: [savedOrg._id],
-      roleIds: [clientRole._id],
-      permissionIds: []
-    });
-    const savedUser = await this.userRepository.save(user);
+      roleIds: [clientRole._id]
+    } as any);
+    const savedUser = await this.userRepository.save(user) as unknown as User;
 
     const client = this.clientRepository.create({
       userId: savedUser._id,
@@ -173,10 +172,10 @@ export class ClientManagementService {
     });
     const savedClient = await this.clientRepository.save(client);
 
-    await this.syncClientSecurityToUser(savedClient, savedUser);
+    await this.syncClientSecurityToUser(savedClient, savedUser as User);
 
     request.status = ClientRequestStatus.CONVERTED;
-    request.convertedUserId = savedUser._id;
+    request.convertedUserId = (savedUser as any)._id;
     request.convertedOrganizationId = savedOrg._id;
     request.reviewedBy = new ObjectId(adminUserId);
     request.reviewedAt = new Date();
@@ -184,9 +183,9 @@ export class ClientManagementService {
 
     return {
       client: savedClient,
-      user: { ...savedUser, password: undefined },
+      user: { ...(savedUser as any), password: undefined },
       organization: savedOrg,
-      credentials: { email: savedUser.email, password }
+      credentials: { email: (savedUser as any).email, password }
     };
   }
 
@@ -293,7 +292,7 @@ export class ClientManagementService {
         );
       }
 
-      user = this.userRepository.create({
+      const newUser = this.userRepository.create({
         email: credentialData.email || client.email,
         password: hashedPassword,
         firstName: credentialData.firstName || client.contactPerson.split(' ')[0],
@@ -302,11 +301,10 @@ export class ClientManagementService {
         organizationId: client.organizationId,
         organizationIds: [client.organizationId],
         roleIds: [clientRole._id],
-        permissionIds: [],
         forcePasswordChange: true
-      });
-      user = await this.userRepository.save(user);
-      client.userId = user._id;
+      } as any);
+      user = await this.userRepository.save(newUser) as unknown as User;
+      client.userId = (user as any)._id;
       await this.clientRepository.save(client);
     }
 

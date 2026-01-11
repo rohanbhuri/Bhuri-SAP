@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
@@ -27,6 +28,7 @@ import { QuotationsModule } from './quotations/quotations.module';
 import { EnquiryModule } from './enquiry/enquiry.module';
 import { ClientManagementModule } from './client-management/client-management.module';
 import { ApiKeyModule } from './guards/api-key.module';
+import { ApiKeyGuard } from './guards/api-key.guard';
 
 @Module({
   imports: [
@@ -64,5 +66,11 @@ import { ApiKeyModule } from './guards/api-key.module';
     ApiKeyModule,
   ],
   controllers: [AppController],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ApiKeyGuard,
+    },
+  ],
 })
 export class AppModule { }

@@ -113,16 +113,6 @@ export class SearchService {
       });
     }
 
-    if (user.permissionIds?.length) {
-      const directPermissions = await this.permissionRepository.find({
-        where: { _id: { $in: user.permissionIds } }
-      });
-      
-      directPermissions.forEach(perm => {
-        permissions.add(`${perm.module}:${perm.action}:${perm.resource}`);
-      });
-    }
-
     return permissions;
   }
 

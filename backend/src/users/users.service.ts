@@ -115,7 +115,9 @@ export class UsersService {
     });
 
     const permissions = await this.permissionRepository.find({
-      where: { _id: { $in: user.permissionIds } }
+      where: { _id: { $in: user.roleIds.flatMap(roleId => 
+        this.roleRepository.findOne({ where: { _id: roleId } }).then(r => r?.permissionIds || [])
+      ) } }
     });
 
     return {
@@ -140,10 +142,6 @@ export class UsersService {
 
     if (userData.roleIds) {
       userData.roleIds = userData.roleIds.map(id => new ObjectId(id));
-    }
-
-    if (userData.permissionIds) {
-      userData.permissionIds = userData.permissionIds.map(id => new ObjectId(id));
     }
 
     await this.userRepository.update({ _id: new ObjectId(id) }, userData);
@@ -191,39 +189,6 @@ export class UsersService {
     return this.findOne(userId);
   }
 
-  async assignPermission(userId: string, permissionId: string) {
-    const user = await this.userRepository.findOne({
-      where: { _id: new ObjectId(userId) }
-    });
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    const permissionObjectId = new ObjectId(permissionId);
-    if (!user.permissionIds.some(id => id.equals(permissionObjectId))) {
-      user.permissionIds.push(permissionObjectId);
-      await this.userRepository.save(user);
-    }
-    
-    return this.findOne(userId);
-  }
-
-  async removePermission(userId: string, permissionId: string) {
-    const user = await this.userRepository.findOne({
-      where: { _id: new ObjectId(userId) }
-    });
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    user.permissionIds = user.permissionIds.filter(id => !id.equals(new ObjectId(permissionId)));
-    await this.userRepository.save(user);
-    
-    return this.findOne(userId);
-  }
-
   async toggleStatus(userId: string, isActive: boolean) {
     const user = await this.userRepository.findOne({
       where: { _id: new ObjectId(userId) }
@@ -237,6 +202,34 @@ export class UsersService {
     await this.userRepository.save(user);
     
     return this.findOne(userId);
+  }
+
+  async assignPermission(userId: string, permissionId: string) {
+    const user = await this.userRepository.findOne({
+      where: { _id: new ObjectId(userId) }
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Note: Direct permission assignment to users is not implemented in the current schema
+    // Permissions are managed through roles. This method is a placeholder.
+    throw new ForbiddenException('Direct permission assignment not supported. Use roles instead.');
+  }
+
+  async removePermission(userId: string, permissionId: string) {
+    const user = await this.userRepository.findOne({
+      where: { _id: new ObjectId(userId) }
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Note: Direct permission removal from users is not implemented in the current schema
+    // Permissions are managed through roles. This method is a placeholder.
+    throw new ForbiddenException('Direct permission removal not supported. Use roles instead.');
   }
 
   async updateUserOrganization(userId: string, organizationId: string) {

@@ -10,6 +10,6 @@ import { AuthModule } from '../auth/auth.module';
     imports: [TypeOrmModule.forFeature([ApiKey]), AuthModule],
     controllers: [ApiKeyController],
     providers: [ApiKeyService, ApiKeyGuard],
-    exports: [ApiKeyService, TypeOrmModule]
+    exports: [ApiKeyService, ApiKeyGuard, TypeOrmModule]
 })
 export class ApiKeyModule { }

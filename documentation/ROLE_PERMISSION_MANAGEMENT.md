@@ -147,15 +147,6 @@ Body: { permissionId: string }
 // Remove permission from role
 DELETE /api/roles/:id/permissions/:permissionId
 Authorization: Bearer <super_admin_token>
-
-// Get permission templates
-GET /api/roles/templates/permission
-Authorization: Bearer <super_admin_token>
-
-// Apply permission template to role
-POST /api/roles/:id/apply-template
-Authorization: Bearer <super_admin_token>
-Body: { templateId: string }
 ```
 
 ## Frontend UI Components
@@ -298,51 +289,9 @@ interface PermissionMatrix {
 
 #### Permission Templates
 ```typescript
-// Available Templates
-const PERMISSION_TEMPLATES = {
-  admin: {
-    name: 'Admin Template',
-    description: 'Full administrative access',
-    permissions: [
-      'users:read:all',
-      'users:write:all',
-      'users:edit:all',
-      'roles:read:all',
-      'organizations:read:all',
-      'modules:read:all'
-    ]
-  },
-  hr_manager: {
-    name: 'HR Manager Template',
-    description: 'Human resources management',
-    permissions: [
-      'hr-management:read:all',
-      'hr-management:write:all',
-      'hr-management:edit:all',
-      'users:read:organization',
-      'users:write:organization'
-    ]
-  },
-  crm_manager: {
-    name: 'CRM Manager Template',
-    description: 'Customer relationship management',
-    permissions: [
-      'crm:read:all',
-      'crm:write:all',
-      'crm:edit:all',
-      'crm:delete:all'
-    ]
-  },
-  staff: {
-    name: 'Staff Template',
-    description: 'Basic user access',
-    permissions: [
-      'users:read:own',
-      'organizations:read:own',
-      'modules:read:own'
-    ]
-  }
-};
+// Permission templates have been removed.
+// Use direct permission assignment instead.
+```
 ```
 
 ## Implementation Guidelines
@@ -411,11 +360,13 @@ export class RoleManagementService {
   }
 
   getPermissionTemplates(): Observable<PermissionTemplate[]> {
-    return this.http.get<PermissionTemplate[]>(`${this.apiUrl}/templates/permission`);
+    // Permission templates have been removed
+    return of([]);
   }
 
   applyTemplate(roleId: string, templateId: string): Observable<Role> {
-    return this.http.post<Role>(`${this.apiUrl}/${roleId}/apply-template`, { templateId });
+    // Permission templates have been removed
+    throw new Error('Permission templates are no longer supported');
   }
 }
 ```

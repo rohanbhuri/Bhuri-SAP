@@ -2,8 +2,8 @@ import { Entity, ObjectIdColumn, ObjectId, Column } from 'typeorm';
 
 export enum ActionType {
   READ = 'read',
-  WRITE = 'write',
-  EDIT = 'edit',
+  CREATE = 'create',
+  UPDATE = 'update',
   DELETE = 'delete'
 }
 
@@ -20,6 +20,9 @@ export class Permission {
 
   @Column()
   resource: string;
+
+  @Column({ nullable: true })
+  description?: string;
 
   @Column()
   createdAt: Date;

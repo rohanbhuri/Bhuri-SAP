@@ -56,13 +56,6 @@ import { filter } from 'rxjs/operators';
             Permissions
           </ng-template>
         </mat-tab>
-
-        <mat-tab>
-          <ng-template mat-tab-label>
-            <mat-icon>assignment</mat-icon>
-            Templates
-          </ng-template>
-        </mat-tab>
       </mat-tab-group>
 
       <div class="tab-content">
@@ -152,8 +145,6 @@ export class UserManagementLayoutComponent {
   updateSelectedTab(url: string) {
     if (url.includes('/roles')) {
       this.selectedTab = 1;
-    } else if (url.includes('/permission-templates')) {
-      this.selectedTab = 3;
     } else if (url.includes('/permissions')) {
       this.selectedTab = 2;
     } else {
@@ -162,7 +153,7 @@ export class UserManagementLayoutComponent {
   }
 
   onTabChange(index: number) {
-    const routes = ['users', 'roles', 'permissions', 'permission-templates'];
+    const routes = ['users', 'roles', 'permissions'];
     if (routes[index]) {
       this.router.navigate(['/modules/user-management', routes[index]]);
     }
