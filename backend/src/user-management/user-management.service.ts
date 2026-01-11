@@ -7,7 +7,6 @@ import { Role, RoleType } from '../entities/role.entity';
 import { Permission, ActionType } from '../entities/permission.entity';
 import { Module, ModulePermissionType } from '../entities/module.entity';
 import { Organization } from '../entities/organization.entity';
-
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -25,11 +24,89 @@ export class UserManagementService {
     private organizationRepository: MongoRepository<Organization>,
   ) {}
 
-  async getAllUsers() {
-    const users = await this.userRepository.find();
+  async getAllUsers(currentUser?: any) {
+    let users = await this.userRepository.find();
     
-    // Populate role data for each user
-    const usersWithRoles = await Promise.all(
+    if (currentUser) {
+      const user = await this.userRepository.findOne({
+        where: { _id: new ObjectId(currentUser.userId) }
+      });
+
+      const userRoles = await this.roleRepository.find({
+        where: { _id: { $in: user.roleIds } }
+      });
+
+      const isSuperAdmin = userRoles.some(role => role.type === RoleType.SUPER_ADMIN);
+      const currentUserMaxLevel = Math.max(...userRoles.map(r => r.hierarchyLevel || 0), 0);
+      
+      if (!isSuperAdmin) {
+        const allRoles = await this.roleRepository.find();
+        users = users.filter(u => {
+          if (u._id.equals(user._id)) return true;
+          const targetUserRoles = allRoles.filter(r => u.roleIds.some(roleId => r._id.equals(roleId)));
+          const targetUserMaxLevel = Math.max(...targetUserRoles.map(r => r.hierarchyLevel || 0), 0);
+          return targetUserMaxLevel < currentUserMaxLevel;
+        });
+      }
+    }
+    
+    return this.populateUserRoles(users);
+  }
+
+  async searchUsers(query: string, currentUser?: any) {
+    const searchRegex = new RegExp(query, 'i');
+    let users = await this.userRepository.find();
+    
+    users = users.filter(u => 
+      searchRegex.test(u.firstName) || 
+      searchRegex.test(u.lastName) || 
+      searchRegex.test(u.email)
+    );
+
+    if (currentUser) {
+      const user = await this.userRepository.findOne({
+        where: { _id: new ObjectId(currentUser.userId) }
+      });
+
+      const userRoles = await this.roleRepository.find({
+        where: { _id: { $in: user.roleIds } }
+      });
+
+      const isSuperAdmin = userRoles.some(role => role.type === RoleType.SUPER_ADMIN);
+      const currentUserMaxLevel = Math.max(...userRoles.map(r => r.hierarchyLevel || 0), 0);
+      
+      if (!isSuperAdmin) {
+        const allRoles = await this.roleRepository.find();
+        users = users.filter(u => {
+          if (u._id.equals(user._id)) return true;
+          const targetUserRoles = allRoles.filter(r => u.roleIds.some(roleId => r._id.equals(roleId)));
+          const targetUserMaxLevel = Math.max(...targetUserRoles.map(r => r.hierarchyLevel || 0), 0);
+          return targetUserMaxLevel < currentUserMaxLevel;
+        });
+      }
+    }
+
+    return this.populateUserRoles(users);
+  }
+
+  async searchRoles(query: string) {
+    const searchRegex = new RegExp(query, 'i');
+    const roles = await this.roleRepository.find();
+    return roles.filter(r => searchRegex.test(r.name) || searchRegex.test(r.type));
+  }
+
+  async searchPermissions(query: string) {
+    const searchRegex = new RegExp(query, 'i');
+    const permissions = await this.permissionRepository.find();
+    return permissions.filter(p => 
+      searchRegex.test(p.module) || 
+      searchRegex.test(p.action) || 
+      searchRegex.test(p.resource)
+    );
+  }
+
+  private async populateUserRoles(users: User[]) {
+    return Promise.all(
       users.map(async (user) => {
         if (user.roleIds && user.roleIds.length > 0) {
           const roles = await this.roleRepository.find({
@@ -43,18 +120,14 @@ export class UserManagementService {
         return { ...user, roles: [] };
       })
     );
-
-    return usersWithRoles;
   }
 
   async createUser(userData: any) {
-    // Check if user already exists
     const existingUser = await this.userRepository.findOne({ where: { email: userData.email } });
     if (existingUser) {
       throw new ConflictException('User with this email already exists');
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(userData.password, 10);
 
     const user = this.userRepository.create({
@@ -65,7 +138,16 @@ export class UserManagementService {
       isActive: userData.isActive ?? true,
       organizationId: userData.organizationId ? new ObjectId(userData.organizationId) : null,
       organizationIds: userData.organizationId ? [new ObjectId(userData.organizationId)] : [],
-      roleIds: userData.roleIds?.map(id => new ObjectId(id)) || []
+      roleIds: userData.roleIds?.map(id => new ObjectId(id)) || [],
+      currency: userData.currency || 'USD',
+      currencySymbol: userData.currencySymbol || '$',
+      forcePasswordChange: userData.forcePasswordChange || false,
+      requireTwoFactor: userData.requireTwoFactor || false,
+      restrictToBusinessHours: userData.restrictToBusinessHours || false,
+      allowApiAccess: userData.allowApiAccess || false,
+      sessionTimeout: userData.sessionTimeout || null,
+      maxDevices: userData.maxDevices || null,
+      ipWhitelist: userData.ipWhitelist || null
     });
 
     const savedUser = await this.userRepository.save(user);
@@ -79,7 +161,6 @@ export class UserManagementService {
       throw new NotFoundException('User not found');
     }
 
-    // Check email uniqueness if email is being changed
     if (userData.email && userData.email !== user.email) {
       const existingUser = await this.userRepository.findOne({ where: { email: userData.email } });
       if (existingUser) {
@@ -87,7 +168,6 @@ export class UserManagementService {
       }
     }
 
-    // Update user fields
     if (userData.email) user.email = userData.email;
     if (userData.firstName) user.firstName = userData.firstName;
     if (userData.lastName) user.lastName = userData.lastName;
@@ -99,8 +179,16 @@ export class UserManagementService {
       }
     }
     if (userData.roleIds) user.roleIds = userData.roleIds.map(id => new ObjectId(id));
+    if (userData.currency) user.currency = userData.currency;
+    if (userData.currencySymbol) user.currencySymbol = userData.currencySymbol;
+    if (userData.forcePasswordChange !== undefined) user.forcePasswordChange = userData.forcePasswordChange;
+    if (userData.requireTwoFactor !== undefined) user.requireTwoFactor = userData.requireTwoFactor;
+    if (userData.restrictToBusinessHours !== undefined) user.restrictToBusinessHours = userData.restrictToBusinessHours;
+    if (userData.allowApiAccess !== undefined) user.allowApiAccess = userData.allowApiAccess;
+    if (userData.sessionTimeout !== undefined) user.sessionTimeout = userData.sessionTimeout;
+    if (userData.maxDevices !== undefined) user.maxDevices = userData.maxDevices;
+    if (userData.ipWhitelist !== undefined) user.ipWhitelist = userData.ipWhitelist;
 
-    // Hash new password if provided
     if (userData.password) {
       user.password = await bcrypt.hash(userData.password, 10);
     }
@@ -132,38 +220,24 @@ export class UserManagementService {
     return userWithoutPassword;
   }
 
-  async getAllOrganizations() {
-    return this.organizationRepository.find();
-  }
-
   async getAllRoles() {
     return this.roleRepository.find();
   }
 
-  async getAllPermissions() {
-    return this.permissionRepository.find();
-  }
-
-  async getAllModules() {
-    return this.moduleRepository.find();
-  }
-
-  async updateUserRoles(userId: string, roleIds: string[]) {
-    const user = await this.userRepository.findOne({
-      where: { _id: new ObjectId(userId) }
-    });
-    
-    user.roleIds = roleIds.map(id => new ObjectId(id));
-    return this.userRepository.save(user);
-  }
-
   async createRole(roleData: any) {
+    const existingRole = await this.roleRepository.findOne({ where: { name: roleData.name } });
+    if (existingRole) {
+      throw new ConflictException('Role with this name already exists');
+    }
+
     const role = this.roleRepository.create({
       name: roleData.name,
-      type: roleData.type || RoleType.CUSTOM,
-      description: roleData.description,
+      type: roleData.type,
+      description: roleData.description || '',
+      hierarchyLevel: roleData.hierarchyLevel || 0,
       permissionIds: roleData.permissionIds?.map(id => new ObjectId(id)) || []
     });
+
     return this.roleRepository.save(role);
   }
 
@@ -173,20 +247,51 @@ export class UserManagementService {
       throw new NotFoundException('Role not found');
     }
 
+    if (roleData.name && roleData.name !== role.name) {
+      const existingRole = await this.roleRepository.findOne({ where: { name: roleData.name } });
+      if (existingRole) {
+        throw new ConflictException('Role with this name already exists');
+      }
+    }
+
     if (roleData.name) role.name = roleData.name;
     if (roleData.type) role.type = roleData.type;
     if (roleData.description !== undefined) role.description = roleData.description;
+    if (roleData.hierarchyLevel !== undefined) role.hierarchyLevel = roleData.hierarchyLevel;
     if (roleData.permissionIds) role.permissionIds = roleData.permissionIds.map(id => new ObjectId(id));
 
     return this.roleRepository.save(role);
   }
 
+  async deleteRole(roleId: string) {
+    const role = await this.roleRepository.findOne({ where: { _id: new ObjectId(roleId) } });
+    if (!role) {
+      throw new NotFoundException('Role not found');
+    }
+
+    await this.roleRepository.delete({ _id: new ObjectId(roleId) });
+    return { success: true, message: 'Role deleted successfully' };
+  }
+
+  async getAllPermissions() {
+    return this.permissionRepository.find();
+  }
+
   async createPermission(permissionData: any) {
+    const existingPermission = await this.permissionRepository.findOne({
+      where: { module: permissionData.module, action: permissionData.action, resource: permissionData.resource }
+    });
+    if (existingPermission) {
+      throw new ConflictException('Permission already exists');
+    }
+
     const permission = this.permissionRepository.create({
       module: permissionData.module,
       action: permissionData.action,
-      resource: permissionData.resource
+      resource: permissionData.resource,
+      description: permissionData.description || ''
     });
+
     return this.permissionRepository.save(permission);
   }
 
@@ -199,6 +304,7 @@ export class UserManagementService {
     if (permissionData.module) permission.module = permissionData.module;
     if (permissionData.action) permission.action = permissionData.action;
     if (permissionData.resource) permission.resource = permissionData.resource;
+    if (permissionData.description !== undefined) permission.description = permissionData.description;
 
     return this.permissionRepository.save(permission);
   }
@@ -213,15 +319,23 @@ export class UserManagementService {
     return { success: true, message: 'Permission deleted successfully' };
   }
 
-  async deleteRole(roleId: string) {
-    const role = await this.roleRepository.findOne({ where: { _id: new ObjectId(roleId) } });
-    if (!role) {
-      throw new NotFoundException('Role not found');
-    }
-
-    await this.roleRepository.delete({ _id: new ObjectId(roleId) });
-    return { success: true, message: 'Role deleted successfully' };
+  async getAllOrganizations() {
+    return this.organizationRepository.find();
   }
 
+  async getAllModules() {
+    return this.moduleRepository.find();
+  }
 
+  async updateUserRoles(userId: string, roleIds: string[]) {
+    const user = await this.userRepository.findOne({ where: { _id: new ObjectId(userId) } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.roleIds = roleIds.map(id => new ObjectId(id));
+    const savedUser = await this.userRepository.save(user);
+    const { password, ...userWithoutPassword } = savedUser;
+    return userWithoutPassword;
+  }
 }

@@ -11,10 +11,12 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { ConfirmDialogComponent } from '../dialogs/confirm-dialog.component';
 import { PermissionDialogComponent } from '../dialogs/permission-dialog.component';
 import { UserManagementService } from '../user-management.service';
 import { FormsModule } from '@angular/forms';
+import { debounceTime, Subject } from 'rxjs';
 
 @Component({
   selector: 'app-permissions',
@@ -33,6 +35,7 @@ import { FormsModule } from '@angular/forms';
     FormsModule,
     MatDialogModule,
     MatMenuModule,
+    MatPaginatorModule,
   ],
   template: `
     <div class="permissions-container">
@@ -43,7 +46,7 @@ import { FormsModule } from '@angular/forms';
             <input
               matInput
               [(ngModel)]="searchTerm"
-              (input)="filterPermissions()"
+              (input)="onSearchChange($event)"
               placeholder="Search by module or action"
             />
             <mat-icon matSuffix>search</mat-icon>
@@ -111,6 +114,13 @@ import { FormsModule } from '@angular/forms';
           <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
         </table>
       </div>
+
+      <mat-paginator
+        [length]="totalPermissions"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="pageSizeOptions"
+        (page)="onPageChange($event)"
+      ></mat-paginator>
 
       <div *ngIf="dataSource.data.length === 0" class="empty-state">
         <mat-icon class="empty-icon">security</mat-icon>
@@ -188,14 +198,21 @@ export class PermissionsComponent implements OnInit {
   private userService = inject(UserManagementService);
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
+  private searchSubject = new Subject<string>();
 
   dataSource = new MatTableDataSource<any>([]);
   searchTerm = '';
   displayedColumns = ['module', 'action', 'resource', 'actions'];
+  pageSize = 10;
+  pageSizeOptions = [5, 10, 25, 50];
+  totalPermissions = 0;
   allPermissions: any[] = [];
 
   ngOnInit() {
     this.loadPermissions();
+    this.searchSubject.pipe(debounceTime(500)).subscribe((query) => {
+      this.performSearch(query);
+    });
   }
 
   loadPermissions() {
@@ -209,7 +226,8 @@ export class PermissionsComponent implements OnInit {
           resource: p.resource || '',
           createdAt: p.createdAt
         }));
-        this.dataSource.data = this.allPermissions;
+        this.totalPermissions = this.allPermissions.length;
+        this.updatePaginatedData();
       },
       error: () => {
         const mockPermissions = [
@@ -220,20 +238,50 @@ export class PermissionsComponent implements OnInit {
           { _id: '5', id: '5', module: 'reports', action: 'read', resource: 'reports' },
         ];
         this.allPermissions = mockPermissions;
-        this.dataSource.data = mockPermissions;
+        this.totalPermissions = mockPermissions.length;
+        this.updatePaginatedData();
       },
     });
   }
 
-  filterPermissions() {
-    const term = this.searchTerm.toLowerCase();
-    const filtered = this.allPermissions.filter(
-      (permission) =>
-        permission.module.toLowerCase().includes(term) ||
-        permission.action.toLowerCase().includes(term) ||
-        permission.resource.toLowerCase().includes(term)
-    );
-    this.dataSource.data = filtered;
+  onSearchChange(event: any) {
+    this.searchSubject.next(this.searchTerm);
+  }
+
+  performSearch(query: string) {
+    if (!query.trim()) {
+      this.loadPermissions();
+      return;
+    }
+    this.userService.searchPermissions(query).subscribe({
+      next: (permissions) => {
+        this.allPermissions = permissions.map(p => ({
+          _id: p._id || p.id,
+          id: p._id || p.id,
+          module: p.module || '',
+          action: p.action || '',
+          resource: p.resource || '',
+          createdAt: p.createdAt
+        }));
+        this.totalPermissions = this.allPermissions.length;
+        this.updatePaginatedData();
+      },
+      error: () => {
+        this.allPermissions = [];
+        this.totalPermissions = 0;
+        this.dataSource.data = [];
+      },
+    });
+  }
+
+  onPageChange(event: PageEvent) {
+    const startIndex = event.pageIndex * event.pageSize;
+    const endIndex = startIndex + event.pageSize;
+    this.dataSource.data = this.allPermissions.slice(startIndex, endIndex);
+  }
+
+  private updatePaginatedData() {
+    this.dataSource.data = this.allPermissions.slice(0, this.pageSize);
   }
 
   openAddPermissionDialog() {

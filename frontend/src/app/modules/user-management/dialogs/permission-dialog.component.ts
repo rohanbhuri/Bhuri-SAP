@@ -73,6 +73,7 @@ import { UserManagementService } from '../user-management.service';
         <mat-form-field appearance="outline">
           <mat-label>Description</mat-label>
           <textarea matInput formControlName="description" rows="3"></textarea>
+          <mat-hint>Brief description of what this permission allows</mat-hint>
         </mat-form-field>
       </form>
     </mat-dialog-content>

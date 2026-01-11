@@ -90,14 +90,48 @@ import { PasswordDialogComponent } from './password-dialog.component';
           <mat-label>Roles</mat-label>
           <mat-select formControlName="roleIds" multiple>
             @for (role of roles(); track role._id) {
-            <mat-option [value]="role._id">{{ role.name }}</mat-option>
+            <mat-option [value]="role._id">{{ role.name }} (Level: {{ role.hierarchyLevel }})</mat-option>
             }
           </mat-select>
         </mat-form-field>
 
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Currency</mat-label>
+            <input matInput formControlName="currency" placeholder="USD">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Currency Symbol</mat-label>
+            <input matInput formControlName="currencySymbol" placeholder="$">
+          </mat-form-field>
+        </div>
+
         <div class="checkbox-container">
           <mat-checkbox formControlName="isActive">Active User</mat-checkbox>
+          <mat-checkbox formControlName="forcePasswordChange">Force Password Change</mat-checkbox>
+          <mat-checkbox formControlName="requireTwoFactor">Require Two Factor</mat-checkbox>
+          <mat-checkbox formControlName="restrictToBusinessHours">Restrict to Business Hours</mat-checkbox>
+          <mat-checkbox formControlName="allowApiAccess">Allow API Access</mat-checkbox>
         </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Session Timeout (minutes)</mat-label>
+            <input matInput type="number" formControlName="sessionTimeout" min="0">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Max Devices</mat-label>
+            <input matInput type="number" formControlName="maxDevices" min="1">
+          </mat-form-field>
+        </div>
+
+        <mat-form-field appearance="outline">
+          <mat-label>IP Whitelist</mat-label>
+          <input matInput formControlName="ipWhitelist" placeholder="Comma-separated IPs">
+          <mat-hint>e.g., 192.168.1.1, 10.0.0.1</mat-hint>
+        </mat-form-field>
 
         @if (isEdit) {
         <div class="password-section">
@@ -127,7 +161,7 @@ import { PasswordDialogComponent } from './password-dialog.component';
       display: flex;
       flex-direction: column;
       gap: 16px;
-      min-width: 400px;
+      min-width: 450px;
     }
 
     .form-row {
@@ -140,7 +174,10 @@ import { PasswordDialogComponent } from './password-dialog.component';
     }
 
     .checkbox-container {
-      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 8px 0;
     }
 
     .password-section {
@@ -202,7 +239,16 @@ export class UserDialogComponent implements OnInit {
         email: ['', [Validators.required, Validators.email]],
         organizationId: [''],
         roleIds: [[]],
-        isActive: [true]
+        currency: ['USD'],
+        currencySymbol: ['$'],
+        isActive: [true],
+        forcePasswordChange: [false],
+        requireTwoFactor: [false],
+        restrictToBusinessHours: [false],
+        allowApiAccess: [false],
+        sessionTimeout: [null],
+        maxDevices: [null],
+        ipWhitelist: ['']
       });
     } else {
       return this.fb.group({
@@ -212,7 +258,16 @@ export class UserDialogComponent implements OnInit {
         password: ['', [Validators.required, Validators.minLength(6)]],
         organizationId: [''],
         roleIds: [[]],
-        isActive: [true]
+        currency: ['USD'],
+        currencySymbol: ['$'],
+        isActive: [true],
+        forcePasswordChange: [false],
+        requireTwoFactor: [false],
+        restrictToBusinessHours: [false],
+        allowApiAccess: [false],
+        sessionTimeout: [null],
+        maxDevices: [null],
+        ipWhitelist: ['']
       });
     }
   }
@@ -224,7 +279,16 @@ export class UserDialogComponent implements OnInit {
       email: user.email,
       organizationId: user.organizationId,
       roleIds: user.roleIds || [],
-      isActive: user.isActive
+      currency: user.currency || 'USD',
+      currencySymbol: user.currencySymbol || '$',
+      isActive: user.isActive,
+      forcePasswordChange: user.forcePasswordChange || false,
+      requireTwoFactor: user.requireTwoFactor || false,
+      restrictToBusinessHours: user.restrictToBusinessHours || false,
+      allowApiAccess: user.allowApiAccess || false,
+      sessionTimeout: user.sessionTimeout || null,
+      maxDevices: user.maxDevices || null,
+      ipWhitelist: user.ipWhitelist || ''
     });
   }
 
@@ -253,7 +317,16 @@ export class UserDialogComponent implements OnInit {
         email: formValue.email,
         organizationId: formValue.organizationId || null,
         roleIds: formValue.roleIds || [],
-        isActive: formValue.isActive
+        currency: formValue.currency,
+        currencySymbol: formValue.currencySymbol,
+        isActive: formValue.isActive,
+        forcePasswordChange: formValue.forcePasswordChange,
+        requireTwoFactor: formValue.requireTwoFactor,
+        restrictToBusinessHours: formValue.restrictToBusinessHours,
+        allowApiAccess: formValue.allowApiAccess,
+        sessionTimeout: formValue.sessionTimeout,
+        maxDevices: formValue.maxDevices,
+        ipWhitelist: formValue.ipWhitelist
       };
 
       if (!this.isEdit && formValue.password) {

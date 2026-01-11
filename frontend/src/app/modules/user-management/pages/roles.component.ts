@@ -3,7 +3,7 @@ import { TitleCasePipe } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatTableModule } from '@angular/material/table';
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatChipsModule } from '@angular/material/chips';
@@ -11,10 +11,12 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { ConfirmDialogComponent } from '../dialogs/confirm-dialog.component';
 import { RoleDialogComponent } from '../dialogs/role-dialog.component';
 import { UserManagementService } from '../user-management.service';
 import { FormsModule } from '@angular/forms';
+import { debounceTime, Subject } from 'rxjs';
 
 @Component({
   selector: 'app-roles',
@@ -33,6 +35,7 @@ import { FormsModule } from '@angular/forms';
     TitleCasePipe,
     MatDialogModule,
     MatMenuModule,
+    MatPaginatorModule,
   ],
   template: `
     <div class="roles-container">
@@ -43,7 +46,7 @@ import { FormsModule } from '@angular/forms';
             <input
               matInput
               [(ngModel)]="searchTerm"
-              (input)="filterRoles()"
+              (input)="onSearchChange($event)"
               placeholder="Search by name or type"
             />
             <mat-icon matSuffix>search</mat-icon>
@@ -56,7 +59,7 @@ import { FormsModule } from '@angular/forms';
       </div>
 
       <div class="roles-table">
-        <table mat-table [dataSource]="filteredRoles()" class="role-table">
+        <table mat-table [dataSource]="dataSource" class="role-table">
           <ng-container matColumnDef="name">
             <th mat-header-cell *matHeaderCellDef>Role Name</th>
             <td mat-cell *matCellDef="let role">
@@ -73,6 +76,15 @@ import { FormsModule } from '@angular/forms';
               <mat-chip [color]="getRoleTypeColor(role.type)">
                 {{ role.type | titlecase }}
               </mat-chip>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="hierarchy">
+            <th mat-header-cell *matHeaderCellDef>Hierarchy Level</th>
+            <td mat-cell *matCellDef="let role">
+              <div class="hierarchy-level">
+                {{ role.hierarchyLevel || 0 }}
+              </div>
             </td>
           </ng-container>
 
@@ -104,10 +116,6 @@ import { FormsModule } from '@angular/forms';
                       <mat-icon>edit</mat-icon>
                       <span>Edit</span>
                     </button>
-                    <button mat-menu-item (click)="applyTemplate(role)">
-                      <mat-icon>assignment</mat-icon>
-                      <span>Apply Template</span>
-                    </button>
                     <button mat-menu-item (click)="deleteRole(role)">
                       <mat-icon color="warn">delete</mat-icon>
                       <span>Delete</span>
@@ -123,7 +131,14 @@ import { FormsModule } from '@angular/forms';
         </table>
       </div>
 
-      @if (filteredRoles().length === 0) {
+      <mat-paginator
+        [length]="totalRoles"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="pageSizeOptions"
+        (page)="onPageChange($event)"
+      ></mat-paginator>
+
+      @if (dataSource.data.length === 0) {
       <div class="empty-state">
         <mat-icon class="empty-icon">admin_panel_settings</mat-icon>
         <h3>No roles found</h3>
@@ -172,6 +187,11 @@ import { FormsModule } from '@angular/forms';
       .role-description {
         font-size: 0.9rem;
         color: color-mix(in srgb, var(--theme-on-surface) 60%, transparent);
+      }
+
+      .hierarchy-level {
+        font-weight: 500;
+        color: var(--theme-primary);
       }
 
       mat-chip {
@@ -228,29 +248,37 @@ export class RolesComponent {
   private userService = inject(UserManagementService);
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
+  private searchSubject = new Subject<string>();
 
-  roles = signal<any[]>([]);
-  filteredRoles = signal<any[]>([]);
+  dataSource = new MatTableDataSource<any>([]);
   searchTerm = '';
-  displayedColumns = ['name', 'type', 'permissions', 'actions'];
+  displayedColumns = ['name', 'type', 'hierarchy', 'permissions', 'actions'];
+  pageSize = 10;
+  pageSizeOptions = [5, 10, 25, 50];
+  totalRoles = 0;
+  allRoles: any[] = [];
 
   ngOnInit() {
     this.loadRoles();
+    this.searchSubject.pipe(debounceTime(500)).subscribe((query) => {
+      this.performSearch(query);
+    });
   }
 
   loadRoles() {
     this.userService.getRoles().subscribe({
       next: (roles) => {
-        this.roles.set(roles);
-        this.filteredRoles.set(roles);
+        this.allRoles = roles;
+        this.totalRoles = roles.length;
+        this.updatePaginatedData();
       },
       error: () => {
-        // Show mock data when backend fails
         const mockRoles = [
           {
             _id: '1',
             name: 'Super Administrator',
             type: 'super_admin',
+            hierarchyLevel: 4,
             description: 'Full system access',
             permissionIds: ['1', '2', '3', '4', '5'],
           },
@@ -258,6 +286,7 @@ export class RolesComponent {
             _id: '2',
             name: 'Administrator',
             type: 'admin',
+            hierarchyLevel: 3,
             description: 'Organization management',
             permissionIds: ['1', '2', '3'],
           },
@@ -265,24 +294,49 @@ export class RolesComponent {
             _id: '3',
             name: 'Staff',
             type: 'staff',
+            hierarchyLevel: 1,
             description: 'Basic user access',
             permissionIds: ['1'],
           },
         ];
-        this.roles.set(mockRoles);
-        this.filteredRoles.set(mockRoles);
+        this.allRoles = mockRoles;
+        this.totalRoles = mockRoles.length;
+        this.updatePaginatedData();
       },
     });
   }
 
-  filterRoles() {
-    const term = this.searchTerm.toLowerCase();
-    const filtered = this.roles().filter(
-      (role) =>
-        role.name.toLowerCase().includes(term) ||
-        role.type.toLowerCase().includes(term)
-    );
-    this.filteredRoles.set(filtered);
+  onSearchChange(event: any) {
+    this.searchSubject.next(this.searchTerm);
+  }
+
+  performSearch(query: string) {
+    if (!query.trim()) {
+      this.loadRoles();
+      return;
+    }
+    this.userService.searchRoles(query).subscribe({
+      next: (roles) => {
+        this.allRoles = roles;
+        this.totalRoles = roles.length;
+        this.updatePaginatedData();
+      },
+      error: () => {
+        this.allRoles = [];
+        this.totalRoles = 0;
+        this.dataSource.data = [];
+      },
+    });
+  }
+
+  onPageChange(event: PageEvent) {
+    const startIndex = event.pageIndex * event.pageSize;
+    const endIndex = startIndex + event.pageSize;
+    this.dataSource.data = this.allRoles.slice(startIndex, endIndex);
+  }
+
+  private updatePaginatedData() {
+    this.dataSource.data = this.allRoles.slice(0, this.pageSize);
   }
 
   getRoleTypeColor(type: string): string {
@@ -297,7 +351,8 @@ export class RolesComponent {
 
   openAddRoleDialog() {
     const ref = this.dialog.open(RoleDialogComponent, {
-      width: '520px',
+      width: '600px',
+      maxHeight: '90vh',
       data: { role: null },
     });
     ref.afterClosed().subscribe((result) => {
@@ -312,7 +367,8 @@ export class RolesComponent {
 
   editRole(role: any) {
     const ref = this.dialog.open(RoleDialogComponent, {
-      width: '520px',
+      width: '600px',
+      maxHeight: '90vh',
       data: { role },
     });
     ref.afterClosed().subscribe((result) => {
@@ -322,12 +378,6 @@ export class RolesComponent {
         });
         this.loadRoles();
       }
-    });
-  }
-
-  applyTemplate(role: any) {
-    this.snackBar.open('Template application has been removed', 'Close', {
-      duration: 3000,
     });
   }
 

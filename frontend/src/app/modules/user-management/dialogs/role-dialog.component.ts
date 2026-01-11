@@ -61,11 +61,17 @@ import { UserManagementService } from '../user-management.service';
         </mat-form-field>
 
         <mat-form-field appearance="outline">
+          <mat-label>Hierarchy Level</mat-label>
+          <input matInput type="number" formControlName="hierarchyLevel" min="0" max="10" />
+          <mat-hint>0 = Lowest, 10 = Highest</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
           <mat-label>Description</mat-label>
           <textarea matInput rows="3" formControlName="description"></textarea>
         </mat-form-field>
 
-        <mat-form-field appearance="outline">
+        <mat-form-field appearance="outline" class="full-width">
           <mat-label>Permissions</mat-label>
           <mat-select formControlName="permissionIds" multiple>
             @for (perm of permissions(); track perm._id) {
@@ -97,22 +103,35 @@ import { UserManagementService } from '../user-management.service';
         display: flex;
         flex-direction: column;
         gap: 16px;
-        min-width: 420px;
+        min-width: 100%;
       }
+
+      .full-width {
+        width: 100%;
+      }
+
       h2[mat-dialog-title] {
         background: var(--theme-surface);
         color: var(--theme-on-surface);
         margin: 0;
         padding: 20px 24px 0;
       }
+
       mat-dialog-content {
         padding: 20px 24px;
         background: var(--theme-surface);
         color: var(--theme-on-surface);
+        max-height: 70vh;
+        overflow-y: auto;
       }
+
       mat-dialog-actions {
         padding: 8px 24px 20px;
         background: var(--theme-surface);
+      }
+
+      mat-form-field {
+        width: 100%;
       }
     `,
   ],
@@ -134,6 +153,7 @@ export class RoleDialogComponent implements OnInit {
     this.roleForm = this.fb.group({
       name: ['', Validators.required],
       type: ['custom', Validators.required],
+      hierarchyLevel: [0, [Validators.required, Validators.min(0), Validators.max(10)]],
       description: [''],
       permissionIds: [[]],
     });
@@ -145,6 +165,7 @@ export class RoleDialogComponent implements OnInit {
       this.roleForm.patchValue({
         name: this.data.role.name,
         type: this.data.role.type || 'custom',
+        hierarchyLevel: this.data.role.hierarchyLevel || 0,
         description: this.data.role.description || '',
         permissionIds: this.data.role.permissionIds || [],
       });

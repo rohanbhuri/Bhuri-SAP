@@ -32,6 +32,7 @@ export class UsersService {
     });
 
     const isSuperAdmin = userRoles.some(role => role.type === RoleType.SUPER_ADMIN);
+    const currentUserMaxLevel = Math.max(...userRoles.map(r => r.hierarchyLevel || 0), 0);
     
     let users;
     if (isSuperAdmin) {
@@ -40,21 +41,32 @@ export class UsersService {
       users = await this.userRepository.find({
         where: { organizationId: user.organizationId }
       });
+      
+      // Fetch all roles to check hierarchy levels
+      const allRoles = await this.roleRepository.find();
+      
+      // Filter users: only show same level or below
+      users = users.filter(u => {
+        if (u._id.equals(user._id)) return true; // Always show self
+        const targetUserRoles = allRoles.filter(r => u.roleIds.some(roleId => r._id.equals(roleId)));
+        const targetUserMaxLevel = Math.max(...targetUserRoles.map(r => r.hierarchyLevel || 0), 0);
+        return targetUserMaxLevel < currentUserMaxLevel;
+      });
     }
 
     // Populate role data for each user
     const usersWithRoles = await Promise.all(
-      users.map(async (user) => {
-        if (user.roleIds && user.roleIds.length > 0) {
+      users.map(async (u) => {
+        if (u.roleIds && u.roleIds.length > 0) {
           const roles = await this.roleRepository.find({
-            where: { _id: { $in: user.roleIds } }
+            where: { _id: { $in: u.roleIds } }
           });
           return {
-            ...user,
+            ...u,
             roles: roles.map(role => ({ id: role._id, name: role.name, type: role.type }))
           };
         }
-        return { ...user, roles: [] };
+        return { ...u, roles: [] };
       })
     );
 

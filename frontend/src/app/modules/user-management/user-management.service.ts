@@ -24,12 +24,29 @@ export class UserManagementService {
 
   getUsers(): Observable<any[]> {
     const url = `${this.apiUrl}/user-management/users`;
-    console.log('Making API call to:', url);
     return this.http.get<any[]>(url).pipe(
       catchError((error) => {
         console.error('API call failed:', error);
         throw error;
       })
+    );
+  }
+
+  searchUsers(query: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/user-management/users?search=${encodeURIComponent(query)}`).pipe(
+      catchError(() => of([]))
+    );
+  }
+
+  searchRoles(query: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/user-management/roles?search=${encodeURIComponent(query)}`).pipe(
+      catchError(() => of([]))
+    );
+  }
+
+  searchPermissions(query: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/user-management/permissions?search=${encodeURIComponent(query)}`).pipe(
+      catchError(() => of([]))
     );
   }
 

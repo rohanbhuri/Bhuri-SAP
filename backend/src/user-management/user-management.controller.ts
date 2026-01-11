@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request, Query } from '@nestjs/common';
 import { UserManagementService } from './user-management.service';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { PermissionsGuard } from '../guards/permissions.guard';
@@ -12,8 +12,11 @@ export class UserManagementController {
 
   @Get('users')
   @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
-  async getAllUsers() {
-    return this.userManagementService.getAllUsers();
+  async getAllUsers(@Request() req, @Query('search') search?: string) {
+    if (search) {
+      return this.userManagementService.searchUsers(search, req.user);
+    }
+    return this.userManagementService.getAllUsers(req.user);
   }
 
   @Post('users')
@@ -48,13 +51,19 @@ export class UserManagementController {
 
   @Get('roles')
   @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
-  async getAllRoles() {
+  async getAllRoles(@Query('search') search?: string) {
+    if (search) {
+      return this.userManagementService.searchRoles(search);
+    }
     return this.userManagementService.getAllRoles();
   }
 
   @Get('permissions')
   @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
-  async getAllPermissions() {
+  async getAllPermissions(@Query('search') search?: string) {
+    if (search) {
+      return this.userManagementService.searchPermissions(search);
+    }
     return this.userManagementService.getAllPermissions();
   }
 
@@ -105,5 +114,4 @@ export class UserManagementController {
   async deleteRole(@Param('roleId') roleId: string) {
     return this.userManagementService.deleteRole(roleId);
   }
-
 }

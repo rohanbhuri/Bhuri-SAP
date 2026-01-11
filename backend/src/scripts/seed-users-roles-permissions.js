@@ -103,12 +103,14 @@ async function seedUsersRolesPermissions() {
         name: 'Super Admin',
         description: 'Full system access - Racconti modules only',
         type: 'super_admin',
+        hierarchyLevel: 4,
         permissionIds: Object.values(permMap)
       },
       {
         name: 'Admin',
         description: 'Administrative access - Racconti modules only',
         type: 'admin',
+        hierarchyLevel: 3,
         permissionIds: Object.entries(permMap)
           .filter(([key]) => !key.includes('delete'))
           .map(([, id]) => id)
@@ -117,6 +119,7 @@ async function seedUsersRolesPermissions() {
         name: 'HR Manager',
         description: 'Manage HR operations',
         type: 'staff',
+        hierarchyLevel: 2,
         permissionIds: [
           'crm:read:organization', 'crm:create:organization', 'crm:update:organization',
           'client-management:read:organization', 'client-management:create:organization', 'client-management:update:organization',
@@ -128,6 +131,7 @@ async function seedUsersRolesPermissions() {
         name: 'Manager',
         description: 'Manage operations and staff',
         type: 'staff',
+        hierarchyLevel: 2,
         permissionIds: [
           'crm:read:organization', 'crm:create:organization', 'crm:update:organization',
           'client-management:read:organization', 'client-management:create:organization', 'client-management:update:organization',
@@ -140,6 +144,7 @@ async function seedUsersRolesPermissions() {
         name: 'Staff',
         description: 'Standard staff access',
         type: 'staff',
+        hierarchyLevel: 1,
         permissionIds: [
           'crm:read:organization', 'crm:create:organization', 'crm:update:organization',
           'client-management:read:organization', 'client-management:create:organization',
@@ -151,6 +156,7 @@ async function seedUsersRolesPermissions() {
         name: 'Employee',
         description: 'Basic employee access',
         type: 'staff',
+        hierarchyLevel: 0,
         permissionIds: [
           'crm:read:organization',
           'client-management:read:organization',
@@ -172,7 +178,7 @@ async function seedUsersRolesPermissions() {
       console.log('⚠️ No organizations found. Skipping user seeding.');
     } else {
       const org = orgs[0];
-      const hashedPassword = await bcrypt.hash('SecurePass123!', 10);
+      const hashedPassword = await bcrypt.hash('password123', 10);
       
       const superAdminRole = insertedRoles.insertedIds[0];
       const adminRole = insertedRoles.insertedIds[1];

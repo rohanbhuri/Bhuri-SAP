@@ -2,7 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatTableModule } from '@angular/material/table';
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -11,11 +11,13 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { UserManagementService } from '../user-management.service';
 import { AuthService } from '../../../services/auth.service';
 import { FormsModule } from '@angular/forms';
 import { UserDialogComponent } from '../dialogs/user-dialog.component';
 import { ConfirmDialogComponent } from '../dialogs/confirm-dialog.component';
+import { debounceTime, Subject } from 'rxjs';
 
 @Component({
   selector: 'app-users',
@@ -33,6 +35,7 @@ import { ConfirmDialogComponent } from '../dialogs/confirm-dialog.component';
     MatSnackBarModule,
     MatTooltipModule,
     MatMenuModule,
+    MatPaginatorModule,
     FormsModule,
   ],
   template: `
@@ -44,7 +47,7 @@ import { ConfirmDialogComponent } from '../dialogs/confirm-dialog.component';
             <input
               matInput
               [(ngModel)]="searchTerm"
-              (input)="filterUsers()"
+              (input)="onSearchChange($event)"
               placeholder="Search by name or email"
             />
             <mat-icon matSuffix color="primary">search</mat-icon>
@@ -59,7 +62,7 @@ import { ConfirmDialogComponent } from '../dialogs/confirm-dialog.component';
       <div class="users-table">
         <table
           mat-table
-          [dataSource]="filteredUsers()"
+          [dataSource]="dataSource"
           class="user-table"
           color="primary"
         >
@@ -153,7 +156,14 @@ import { ConfirmDialogComponent } from '../dialogs/confirm-dialog.component';
         </table>
       </div>
 
-      @if (filteredUsers().length === 0) {
+      <mat-paginator
+        [length]="totalUsers"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="pageSizeOptions"
+        (page)="onPageChange($event)"
+      ></mat-paginator>
+
+      @if (dataSource.data.length === 0) {
       <div class="empty-state">
         <mat-icon class="empty-icon" color="primary">people</mat-icon>
         <h3>No users found</h3>
@@ -276,109 +286,89 @@ export class UsersComponent {
   private authService = inject(AuthService);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
+  private searchSubject = new Subject<string>();
 
-  users = signal<any[]>([]);
-  filteredUsers = signal<any[]>([]);
+  dataSource = new MatTableDataSource<any>([]);
   searchTerm = '';
   displayedColumns = ['name', 'roles', 'status', 'actions'];
+  pageSize = 10;
+  pageSizeOptions = [5, 10, 25, 50];
+  totalUsers = 0;
+  allUsers: any[] = [];
+  currentPage = 0;
 
   ngOnInit() {
     this.loadUsers();
+    this.searchSubject.pipe(debounceTime(500)).subscribe((query) => {
+      this.performSearch(query);
+    });
   }
 
   loadUsers() {
-    console.log('Loading users from API...');
     this.userService.getUsers().subscribe({
       next: (users) => {
-        console.log('Users loaded from API:', users);
-        if (users && users.length > 0) {
-          const mappedUsers = users.map((user) => ({
-            id: user._id || user.id,
-            email: user.email,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            roles: user.roles || [],
-            isActive: user.isActive,
-            organizationId: user.organizationId,
-          }));
-          console.log('Mapped users:', mappedUsers);
-          const filteredUsers = this.filterUsersByRole(mappedUsers);
-          console.log('Filtered users:', filteredUsers);
-          this.users.set(filteredUsers);
-          this.filteredUsers.set(filteredUsers);
-        } else {
-          console.log('No users returned from API');
-          this.users.set([]);
-          this.filteredUsers.set([]);
-        }
+        this.allUsers = users.map((user) => ({
+          id: user._id || user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          roles: user.roles || [],
+          isActive: user.isActive,
+          organizationId: user.organizationId,
+        }));
+        this.totalUsers = this.allUsers.length;
+        this.updatePaginatedData();
       },
       error: (error) => {
-        console.error('Failed to load users:', error);
         this.snackBar.open(
           `Failed to load users: ${error.message || 'Unknown error'}`,
           'Close',
           { duration: 5000 }
         );
-        this.users.set([]);
-        this.filteredUsers.set([]);
       },
     });
   }
 
-  filterUsersByRole(users: any[]): any[] {
-    const currentUser = this.authService.getCurrentUser();
-    console.log('Current user:', currentUser);
-    console.log('User roles:', currentUser?.roles);
-
-    // For now, show all users regardless of role
-    return users;
-
-    // Original filtering logic (commented out for debugging)
-    /*
-    if (this.authService.hasRole('super_admin')) {
-      return users;
-    }
-    
-    if (this.authService.hasRole('admin')) {
-      return users.filter(user => user.organizationId === currentUser?.organizationId);
-    }
-    
-    return users.filter(user => this.canEditUser(user));
-    */
+  onSearchChange(event: any) {
+    this.currentPage = 0;
+    this.searchSubject.next(this.searchTerm);
   }
 
-  filterUsers() {
-    const term = this.searchTerm.toLowerCase();
-    const filtered = this.users().filter(
-      (user) =>
-        user.firstName.toLowerCase().includes(term) ||
-        user.lastName.toLowerCase().includes(term) ||
-        user.email.toLowerCase().includes(term)
-    );
-    this.filteredUsers.set(filtered);
+  performSearch(query: string) {
+    if (!query.trim()) {
+      this.loadUsers();
+      return;
+    }
+    this.userService.searchUsers(query).subscribe({
+      next: (users) => {
+        this.allUsers = users.map((user) => ({
+          id: user._id || user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          roles: user.roles || [],
+          isActive: user.isActive,
+          organizationId: user.organizationId,
+        }));
+        this.totalUsers = this.allUsers.length;
+        this.updatePaginatedData();
+      },
+      error: () => {
+        this.allUsers = [];
+        this.totalUsers = 0;
+        this.dataSource.data = [];
+      },
+    });
   }
 
-  canEditUser(user: any): boolean {
-    const currentUser = this.authService.getCurrentUser();
-
-    if (this.authService.hasRole('super_admin')) {
-      return true;
-    }
-
-    if (this.authService.hasRole('admin')) {
-      return user.organizationId === currentUser?.organizationId;
-    }
-
-    return false;
+  onPageChange(event: PageEvent) {
+    const startIndex = event.pageIndex * event.pageSize;
+    const endIndex = startIndex + event.pageSize;
+    this.dataSource.data = this.allUsers.slice(startIndex, endIndex);
   }
 
-  canDeleteUser(user: any): boolean {
-    return (
-      this.authService.hasRole('super_admin') ||
-      (this.authService.hasRole('admin') &&
-        user.organizationId ===
-          this.authService.getCurrentUser()?.organizationId)
-    );
+  private updatePaginatedData() {
+    this.dataSource.data = this.allUsers.slice(0, this.pageSize);
   }
 
   getUserInitials(user: any): string {
@@ -429,7 +419,6 @@ export class UsersComponent {
         );
       },
       error: (error) => {
-        console.error('Failed to toggle user status:', error);
         this.snackBar.open('Failed to update user status', 'Close', {
           duration: 3000,
         });
@@ -457,7 +446,6 @@ export class UsersComponent {
             this.loadUsers();
           },
           error: (error) => {
-            console.error('Failed to delete user:', error);
             this.snackBar.open('Failed to delete user', 'Close', {
               duration: 3000,
             });
