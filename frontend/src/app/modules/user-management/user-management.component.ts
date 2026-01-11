@@ -1,4 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -42,15 +43,28 @@ import { ConfirmDialogComponent } from './dialogs/confirm-dialog.component';
 
     <div class="page">
       <div class="page-header">
-        <nav class="breadcrumb">
-          <span>Modules</span>
-          <mat-icon>chevron_right</mat-icon>
-          <span class="current">User Management</span>
-        </nav>
-        <h1>User Management</h1>
-        <p class="subtitle">
-          Manage users and their roles within your organization
-        </p>
+        <div class="header-content">
+          <div>
+            <nav class="breadcrumb">
+              <span>Modules</span>
+              <mat-icon>chevron_right</mat-icon>
+              <span class="current">User Management</span>
+            </nav>
+            <h1>User Management</h1>
+            <p class="subtitle">
+              Manage users and their roles within your organization
+            </p>
+          </div>
+          <button mat-icon-button [matMenuTriggerFor]="menu">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #menu="matMenu">
+            <button mat-menu-item (click)="openApiDocs()">
+              <mat-icon>api</mat-icon>
+              <span>API Docs</span>
+            </button>
+          </mat-menu>
+        </div>
       </div>
 
       <div class="content-card">
@@ -185,6 +199,13 @@ import { ConfirmDialogComponent } from './dialogs/confirm-dialog.component';
 
       .page-header {
         margin-bottom: 24px;
+      }
+
+      .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
       }
 
       .breadcrumb {
@@ -329,6 +350,7 @@ export class UserManagementComponent {
   private userService = inject(UserManagementService);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
+  private router = inject(Router);
 
   users = signal<UserInfo[]>([]);
   filteredUsers = signal<UserInfo[]>([]);
@@ -422,5 +444,9 @@ export class UserManagementComponent {
         });
       }
     });
+  }
+
+  openApiDocs() {
+    this.router.navigate(['/modules/user-management/api-doc']);
   }
 }

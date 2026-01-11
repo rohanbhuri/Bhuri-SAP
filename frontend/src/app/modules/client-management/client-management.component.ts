@@ -2,6 +2,8 @@ import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatMenuModule } from '@angular/material/menu';
 import { NavbarComponent } from '../../components/navbar.component';
 import { BottomNavbarComponent } from '../../components/bottom-navbar.component';
 import { RequestLoginListComponent } from './components/request-login-list.component';
@@ -13,6 +15,8 @@ import { ClientsListComponent } from './components/clients-list.component';
   imports: [
     MatTabsModule,
     MatIconModule,
+    MatButtonModule,
+    MatMenuModule,
     NavbarComponent,
     BottomNavbarComponent,
     RequestLoginListComponent,
@@ -22,13 +26,26 @@ import { ClientsListComponent } from './components/clients-list.component';
     <app-navbar></app-navbar>
     <div class="page-container">
       <div class="page-header">
-        <div class="breadcrumb">
-          <span>Modules</span>
-          <mat-icon>chevron_right</mat-icon>
-          <span>Client Management</span>
+        <div class="header-content">
+          <div>
+            <div class="breadcrumb">
+              <span>Modules</span>
+              <mat-icon>chevron_right</mat-icon>
+              <span>Client Management</span>
+            </div>
+            <h1 class="page-title">Client Management</h1>
+            <p class="page-subtitle">Manage client requests and accounts</p>
+          </div>
+          <button mat-icon-button [matMenuTriggerFor]="menu">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #menu="matMenu">
+            <button mat-menu-item (click)="openApiDocs()">
+              <mat-icon>api</mat-icon>
+              <span>API Docs</span>
+            </button>
+          </mat-menu>
         </div>
-        <h1 class="page-title">Client Management</h1>
-        <p class="page-subtitle">Manage client requests and accounts</p>
       </div>
 
       <mat-tab-group class="custom-tabs" [selectedIndex]="selectedTabIndex" (selectedTabChange)="onTabChange($event)">
@@ -55,6 +72,13 @@ import { ClientsListComponent } from './components/clients-list.component';
 
     .page-header {
       margin-bottom: 32px;
+    }
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
     }
 
     .breadcrumb {
@@ -129,5 +153,9 @@ export class ClientManagementComponent implements OnInit {
       queryParams: { tab: tabName },
       queryParamsHandling: 'merge'
     });
+  }
+
+  openApiDocs() {
+    this.router.navigate(['/modules/client-management/api-doc']);
   }
 }

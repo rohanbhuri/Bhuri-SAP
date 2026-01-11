@@ -8,5 +8,9 @@ export const CLIENT_MANAGEMENT_ROUTES: Routes = [
   { path: '', component: ClientManagementComponent },
   { path: 'request-access', component: PublicClientRequestComponent },
   { path: 'requests', component: RequestLoginListComponent },
-  { path: 'clients', component: ClientsListComponent }
+  { path: 'clients', component: ClientsListComponent },
+  { 
+    path: 'api-doc', 
+    loadComponent: () => import('./pages/api-docs-page.component').then(m => m.ClientManagementApiDocsComponent)
+  }
 ];

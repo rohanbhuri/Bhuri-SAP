@@ -1,4 +1,4 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MongoRepository } from 'typeorm';
 import { ObjectId } from 'mongodb';
@@ -7,6 +7,7 @@ import { Role, RoleType } from '../entities/role.entity';
 import { Permission, ActionType } from '../entities/permission.entity';
 import { Module, ModulePermissionType } from '../entities/module.entity';
 import { Organization } from '../entities/organization.entity';
+import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -22,7 +23,45 @@ export class UserManagementService {
     private moduleRepository: MongoRepository<Module>,
     @InjectRepository(Organization)
     private organizationRepository: MongoRepository<Organization>,
+    private jwtService: JwtService,
   ) {}
+
+  async apiLogin(email: string, password: string) {
+    const user = await this.userRepository.findOne({ where: { email } });
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    if (!user.isActive) {
+      throw new UnauthorizedException('User account is inactive');
+    }
+
+    const roles = await this.roleRepository.find({
+      where: { _id: { $in: user.roleIds } }
+    });
+
+    const payload = {
+      email: user.email,
+      sub: user._id.toString(),
+      organizationId: user.organizationId?.toString() || user.organizationIds[0]?.toString(),
+      roles: roles.map(r => r.type)
+    };
+
+    const { password: _, ...userWithoutPassword } = user;
+    return {
+      access_token: this.jwtService.sign(payload),
+      user: userWithoutPassword,
+      roles: roles.map(r => ({ id: r._id.toString(), name: r.name, type: r.type }))
+    };
+  }
+
+  async apiLogout(userId: string) {
+    const user = await this.userRepository.findOne({ where: { _id: new ObjectId(userId) } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return { success: true, message: 'Logged out successfully' };
+  }
 
   async getAllUsers(currentUser?: any) {
     let users = await this.userRepository.find();

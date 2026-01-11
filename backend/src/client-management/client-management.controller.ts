@@ -4,10 +4,23 @@ import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { PermissionsGuard } from '../guards/permissions.guard';
 import { RequireRoles } from '../decorators/permissions.decorator';
 import { RoleType } from '../entities/role.entity';
+import { ApiKeyGuard } from '../guards/api-key.guard';
 
 @Controller('client-management')
 export class ClientManagementController {
   constructor(private clientManagementService: ClientManagementService) {}
+
+  @Post('login')
+  @UseGuards(ApiKeyGuard)
+  async apiLogin(@Body() body: { email: string; password: string }) {
+    return this.clientManagementService.apiLogin(body.email, body.password);
+  }
+
+  @Post('logout')
+  @UseGuards(ApiKeyGuard)
+  async apiLogout(@Body() body: { clientId: string }) {
+    return this.clientManagementService.apiLogout(body.clientId);
+  }
 
   @Post('requests')
   async createClientRequest(@Body() requestData: any) {

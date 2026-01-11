@@ -22,6 +22,10 @@ export const userManagementRoutes: Routes = [
       {
         path: 'permissions',
         loadComponent: () => import('./pages/permissions.component').then(m => m.PermissionsComponent)
+      },
+      {
+        path: 'api-doc',
+        loadComponent: () => import('./pages/api-docs-page.component').then(m => m.UserManagementApiDocsComponent)
       }
     ]
   }

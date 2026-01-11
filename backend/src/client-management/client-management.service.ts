@@ -1,4 +1,4 @@
-import { Injectable, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException, BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MongoRepository } from 'typeorm';
 import { ObjectId } from 'mongodb';
@@ -7,6 +7,7 @@ import { Client } from '../entities/client.entity';
 import { User } from '../entities/user.entity';
 import { Organization } from '../entities/organization.entity';
 import { Role, RoleType } from '../entities/role.entity';
+import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -22,7 +23,55 @@ export class ClientManagementService {
     private organizationRepository: MongoRepository<Organization>,
     @InjectRepository(Role)
     private roleRepository: MongoRepository<Role>,
+    private jwtService: JwtService,
   ) {}
+
+  async apiLogin(email: string, password: string) {
+    const user = await this.userRepository.findOne({ where: { email } });
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    if (!user.isActive) {
+      throw new UnauthorizedException('User account is inactive');
+    }
+
+    const client = await this.clientRepository.findOne({ where: { userId: user._id } });
+    if (!client || !client.isActive) {
+      throw new UnauthorizedException('Client account is inactive');
+    }
+
+    const roles = await this.roleRepository.find({
+      where: { _id: { $in: user.roleIds } }
+    });
+
+    const payload = {
+      email: user.email,
+      sub: user._id.toString(),
+      organizationId: user.organizationId?.toString() || user.organizationIds[0]?.toString(),
+      roles: roles.map(r => r.type)
+    };
+
+    const { password: _, ...userWithoutPassword } = user;
+    return {
+      access_token: this.jwtService.sign(payload),
+      user: userWithoutPassword,
+      client: {
+        id: client._id.toString(),
+        companyName: client.companyName,
+        email: client.email
+      },
+      roles: roles.map(r => ({ id: r._id.toString(), name: r.name, type: r.type }))
+    };
+  }
+
+  async apiLogout(clientId: string) {
+    const client = await this.clientRepository.findOne({ where: { _id: new ObjectId(clientId) } });
+    if (!client) {
+      throw new NotFoundException('Client not found');
+    }
+    return { success: true, message: 'Logged out successfully' };
+  }
 
   async createClientRequest(requestData: any) {
     const existing = await this.clientRequestRepository.findOne({ 

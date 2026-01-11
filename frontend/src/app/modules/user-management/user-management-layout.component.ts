@@ -1,6 +1,8 @@
 import { Component, inject } from '@angular/core';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatMenuModule } from '@angular/material/menu';
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { NavbarComponent } from '../../components/navbar.component';
 import { BottomNavbarComponent } from '../../components/bottom-navbar.component';
@@ -13,6 +15,8 @@ import { filter } from 'rxjs/operators';
   imports: [
     MatTabsModule,
     MatIconModule,
+    MatButtonModule,
+    MatMenuModule,
     RouterOutlet,
     NavbarComponent,
     BottomNavbarComponent,
@@ -22,13 +26,26 @@ import { filter } from 'rxjs/operators';
 
     <div class="page">
       <div class="page-header">
-        <nav class="breadcrumb">
-          <span>Modules</span>
-          <mat-icon>chevron_right</mat-icon>
-          <span class="current">User Management</span>
-        </nav>
-        <h1>User Management</h1>
-        <p class="subtitle">Manage users, roles, and permissions</p>
+        <div class="header-content">
+          <div>
+            <nav class="breadcrumb">
+              <span>Modules</span>
+              <mat-icon>chevron_right</mat-icon>
+              <span class="current">User Management</span>
+            </nav>
+            <h1>User Management</h1>
+            <p class="subtitle">Manage users, roles, and permissions</p>
+          </div>
+          <button mat-icon-button [matMenuTriggerFor]="menu">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #menu="matMenu">
+            <button mat-menu-item (click)="openApiDocs()">
+              <mat-icon>api</mat-icon>
+              <span>API Docs</span>
+            </button>
+          </mat-menu>
+        </div>
       </div>
 
       <mat-tab-group
@@ -75,6 +92,13 @@ import { filter } from 'rxjs/operators';
 
       .page-header {
         margin-bottom: 24px;
+      }
+
+      .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
       }
 
       .breadcrumb {
@@ -157,6 +181,10 @@ export class UserManagementLayoutComponent {
     if (routes[index]) {
       this.router.navigate(['/modules/user-management', routes[index]]);
     }
+  }
+
+  openApiDocs() {
+    this.router.navigate(['/modules/user-management/api-doc']);
   }
 
   canManageRoles(): boolean {
