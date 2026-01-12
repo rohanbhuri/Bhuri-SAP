@@ -225,7 +225,7 @@ import { ScrollVisibilityService } from '../services/scroll-visibility.service';
         
         .nav-button {
           height: 44px;
-          min-width: 44px;
+          min-width: 50px;
           padding: 2px 4px;
           flex-shrink: 0;
         }
@@ -254,7 +254,7 @@ export class BottomNavbarComponent implements OnInit, OnDestroy {
   pinnedModules = signal<AppModuleInfo[]>([]);
   messageCount = this.messageCountService.messageCount;
   isHidden = this.scrollVisibilityService.isBottomNavHidden;
-  
+
   constructor(private router: Router) {
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
