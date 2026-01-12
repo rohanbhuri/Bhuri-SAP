@@ -14,6 +14,13 @@ import { Lead } from '../entities/lead.entity';
 import { Deal } from '../entities/deal.entity';
 import { Department } from '../entities/department.entity';
 import { Module as ModuleEntity } from '../entities/module.entity';
+import { Client } from '../entities/client.entity';
+import { ClientRequest } from '../entities/client-request.entity';
+import { Product } from '../entities/product.entity';
+import { BlogPost } from '../entities/blog-post.entity';
+import { Page } from '../entities/page.entity';
+import { Quotation } from '../entities/quotation.entity';
+import { Order } from '../entities/order.entity';
 
 @Module({
   imports: [
@@ -30,10 +37,17 @@ import { Module as ModuleEntity } from '../entities/module.entity';
       Deal,
       Department,
       ModuleEntity,
+      Client,
+      ClientRequest,
+      Product,
+      BlogPost,
+      Page,
+      Quotation,
+      Order,
     ]),
   ],
   controllers: [SearchController],
   providers: [SearchService],
   exports: [SearchService],
 })
-export class SearchModule {}
+export class SearchModule { }

@@ -11,6 +11,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { Router } from '@angular/router';
 import { Subject, debounceTime, distinctUntilChanged, switchMap, takeUntil, of } from 'rxjs';
 import { SearchService, SearchResult } from '../services/search.service';
+import { getModuleById } from '../modules/module-registry';
 
 @Component({
   selector: 'app-quick-search',
@@ -229,7 +230,7 @@ export class QuickSearchComponent implements OnInit, OnDestroy {
           this.results = [];
           return of([]);
         }
-        
+
         this.isLoading = true;
         return this.searchService.quickSearch(query, 8);
       }),
@@ -253,22 +254,39 @@ export class QuickSearchComponent implements OnInit, OnDestroy {
 
   private navigateToResult(result: SearchResult) {
     const routes: { [key: string]: string } = {
-      'user': `/modules/user-management/users/${result.id}`,
-      'employee': `/modules/hr-management/employees/${result.id}`,
-      'project': `/modules/projects-management/projects/${result.id}`,
-      'task': `/modules/tasks-management/tasks/${result.id}`,
-      'contact': `/modules/crm/contacts/${result.id}`,
-      'lead': `/modules/crm/leads/${result.id}`,
-      'deal': `/modules/crm/deals/${result.id}`,
-      'department': `/modules/organization-management/departments/${result.id}`,
-      'organization': `/modules/organization-management/organizations/${result.id}`
+      'user': '/modules/user-management/users',
+      'employee': '/modules/hr-management',
+      'project': '/modules/projects-management',
+      'task': '/modules/crm/tasks',
+      'contact': '/modules/crm/contacts',
+      'lead': '/modules/crm/leads',
+      'deal': '/modules/crm/deals',
+      'department': '/modules/organization-management',
+      'organization': '/modules/organization-management',
+      'client': '/modules/client-management/clients',
+      'client-request': '/modules/client-management/requests',
+      'product': '/modules/catalogue',
+      'blog-post': '/modules/cms/blogs',
+      'page': '/modules/cms/pages',
+      'quotation': '/modules/quotations',
+      'order': '/modules/order-management'
     };
 
-    const route = routes[result.type];
+    let route = routes[result.type];
+
+    // Fallback: If no specific route for type, try to find the module's default route
+    if (!route && result.module) {
+      const moduleConfig = getModuleById(result.module);
+      if (moduleConfig?.route) {
+        route = moduleConfig.route;
+      }
+    }
+
     if (route) {
-      this.router.navigate([route]).catch(error => {
+      this.router.navigate([route], {
+        queryParams: { selectedId: result.id }
+      }).catch(error => {
         console.error('Navigation error:', error);
-        // Fallback to module list if specific route fails
         this.router.navigate(['/modules']);
       });
     } else {

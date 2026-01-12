@@ -2,23 +2,13 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map, catchError, of, forkJoin, BehaviorSubject } from 'rxjs';
 import { AuthService } from './auth.service';
+import { BrandConfigService } from './brand-config.service';
+import { MODULE_REGISTRY } from '../modules/module-registry';
 
 // Dynamic API URL based on current port
-const getApiUrl = () => {
-  const port = window.location.port;
-  const basePort = port === '4200' ? '3000' : port === '4201' ? '3001' : '3000';
-  return `http://localhost:${basePort}/api`;
-};
+// API URL will be derived from BrandConfigService
 
-// Default enabled modules for search
-const DEFAULT_MODULES = [
-  'user-management',
-  'hr-management', 
-  'projects-management',
-  'tasks-management',
-  'crm',
-  'organization-management'
-];
+// No longer using hardcoded defaults, will derive from MODULE_REGISTRY
 
 export interface SearchResult {
   id: string;
@@ -49,7 +39,10 @@ export interface SearchResponse {
 export class SearchService {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
-  private apiUrl = `${getApiUrl()}/search`;
+  private brandConfig = inject(BrandConfigService);
+  private get apiUrl() {
+    return `${this.brandConfig.getApiUrl()}/search`;
+  }
   private searchCache = new Map<string, { data: SearchResponse; timestamp: number }>();
   private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
@@ -74,8 +67,9 @@ export class SearchService {
       params = params.set('organizationId', currentUser.organizationId);
     }
 
-    // Add filters - use defaults if none provided
-    const modulesToSearch = filters?.modules?.length ? filters.modules : DEFAULT_MODULES;
+    // Add filters - use active modules if none provided
+    const activeModules = MODULE_REGISTRY.filter(m => m.isActive).map(m => m.id);
+    const modulesToSearch = filters?.modules?.length ? filters.modules : activeModules;
     params = params.set('modules', modulesToSearch.join(','));
 
     if (filters?.types?.length) {

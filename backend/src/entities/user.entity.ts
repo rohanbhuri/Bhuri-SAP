@@ -38,6 +38,9 @@ export class User {
   @Column('array')
   roleIds: ObjectId[];
 
+  @Column('array')
+  activeModuleIds: ObjectId[];
+
 
 
   @Column({ default: false })
