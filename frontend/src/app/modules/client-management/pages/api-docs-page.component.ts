@@ -136,6 +136,32 @@ interface ApiEndpoint {
           </div>
         </mat-tab>
 
+        <mat-tab label="Contact Us">
+          <div class="tab-content">
+            <mat-accordion>
+              <mat-expansion-panel *ngFor="let endpoint of contactUsEndpoints">
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    <mat-chip [class]="'method-' + endpoint.method.toLowerCase()">{{ endpoint.method }}</mat-chip>
+                    <code>{{ endpoint.path }}</code>
+                  </mat-panel-title>
+                  <mat-panel-description>{{ endpoint.description }}</mat-panel-description>
+                </mat-expansion-panel-header>
+                <div class="endpoint-details">
+                  <div *ngIf="endpoint.body" class="body">
+                    <h4>Request Body</h4>
+                    <pre><code>{{ endpoint.body }}</code></pre>
+                  </div>
+                  <div class="response">
+                    <h4>Response</h4>
+                    <pre><code>{{ endpoint.response }}</code></pre>
+                  </div>
+                </div>
+              </mat-expansion-panel>
+            </mat-accordion>
+          </div>
+        </mat-tab>
+
         <mat-tab label="Security">
           <div class="tab-content">
             <mat-accordion>
@@ -225,7 +251,50 @@ export class ClientManagementApiDocsComponent implements OnInit {
     { method: 'GET', path: '/clients/:clientId', description: 'Get single client', response: '{ "_id": "...", "companyName": "Acme Corp", ... }' },
     { method: 'PUT', path: '/clients/:clientId', description: 'Update client', response: '{ "_id": "...", "companyName": "Updated Corp", ... }' },
     { method: 'DELETE', path: '/clients/:clientId', description: 'Delete client', response: '{ "success": true, "message": "Client deleted successfully" }' },
-    { method: 'PUT', path: '/clients/:clientId/status', description: 'Toggle client status', response: '{ "_id": "...", "isActive": false, ... }' }
+    { method: 'PUT', path: '/clients/:clientId/status', description: 'Toggle client status', response: '{ "_id": "...", "isActive": false, ... }' },
+    { method: 'POST', path: '/clients/:clientId/request-credentials', description: 'Request login credentials', response: '{ "success": true, "credentials": {...} }' },
+    { method: 'GET', path: '/clients/:clientId/security-settings', description: 'Get security settings', response: '{ "requireTwoFactor": false, "sessionTimeout": 3600, ... }' },
+    { method: 'PUT', path: '/clients/:clientId/security-settings', description: 'Update security settings', response: '{ "requireTwoFactor": true, "sessionTimeout": 1800, ... }' }
+  ];
+
+  contactUsEndpoints: ApiEndpoint[] = [
+    {
+      method: 'POST',
+      path: '/contact-us',
+      description: 'Submit contact message (Public)',
+      body: '{ "name": "Jane Smith", "email": "jane@example.com", "subject": "Product Inquiry", "message": "I would like to know more" }',
+      response: '{ "_id": "...", "name": "Jane Smith", "email": "jane@example.com", "subject": "Product Inquiry", "isRead": false, "createdAt": "2024-01-12T07:08:42.943Z" }'
+    },
+    {
+      method: 'GET',
+      path: '/contact-us',
+      description: 'Get all contact messages',
+      response: '[{ "_id": "...", "name": "Jane Smith", "email": "jane@example.com", "subject": "Product Inquiry", "isRead": false, ... }]'
+    },
+    {
+      method: 'GET',
+      path: '/contact-us/unread-count',
+      description: 'Get unread message count',
+      response: '{ "count": 3 }'
+    },
+    {
+      method: 'GET',
+      path: '/contact-us/:messageId',
+      description: 'Get contact message by ID',
+      response: '{ "_id": "...", "name": "Jane Smith", "email": "jane@example.com", "subject": "Product Inquiry", "message": "...", "isRead": false, ... }'
+    },
+    {
+      method: 'PUT',
+      path: '/contact-us/:messageId/read',
+      description: 'Mark message as read',
+      response: '{ "_id": "...", "name": "Jane Smith", "isRead": true, ... }'
+    },
+    {
+      method: 'DELETE',
+      path: '/contact-us/:messageId',
+      description: 'Delete contact message',
+      response: '{ "success": true, "message": "Message deleted successfully" }'
+    }
   ];
 
   securityEndpoints: ApiEndpoint[] = [

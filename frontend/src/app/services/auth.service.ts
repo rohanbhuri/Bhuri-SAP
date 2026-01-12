@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, Injector } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
@@ -82,6 +82,7 @@ export class AuthService {
   private router = inject(Router);
   private brandConfig = inject(BrandConfigService);
   private dialog = inject(MatDialog);
+  private injector = inject(Injector);
   private get apiUrl() { return this.brandConfig.getApiUrl(); }
   
   private currentUserSubject = new BehaviorSubject<User | null>(null);
@@ -106,6 +107,7 @@ export class AuthService {
             localStorage.setItem('user', JSON.stringify(response.user));
           }
           this.currentUserSubject.next(response.user);
+          this.connectWebSocketWithAuth(response.user, response.access_token);
         })
       );
   }
@@ -119,6 +121,7 @@ export class AuthService {
             localStorage.setItem('user', JSON.stringify(response.user));
           }
           this.currentUserSubject.next(response.user);
+          this.connectWebSocketWithAuth(response.user, response.access_token);
         })
       );
   }
@@ -140,6 +143,7 @@ export class AuthService {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
     }
+    this.disconnectWebSocket();
     this.currentUserSubject.next(null);
     this.router.navigate(['/login']);
   }
@@ -222,7 +226,37 @@ export class AuthService {
     if (!avatarPath) {
       return '/assets/default-avatar.svg';
     }
-    // avatarPath should already include /uploads/ prefix from backend
     return `${this.apiUrl}${avatarPath}`;
+  }
+
+  private connectWebSocket(): void {
+    try {
+      const wsService = this.injector.get(require('./websocket.service').WebSocketService) as any;
+      const user = this.getCurrentUser();
+      const token = this.getToken();
+      wsService.connectWithAuth(user, token);
+    } catch (e) {
+      // WebSocketService not yet initialized
+    }
+  }
+
+  private connectWebSocketWithAuth(user: User, token: string): void {
+    console.log('connectWebSocketWithAuth called with user:', user?.id, 'token:', !!token);
+    try {
+      const wsService = this.injector.get(require('./websocket.service').WebSocketService) as any;
+      console.log('Got wsService, calling connectWithAuth');
+      wsService.connectWithAuth(user, token);
+    } catch (e) {
+      console.error('Error getting wsService:', e);
+    }
+  }
+
+  private disconnectWebSocket(): void {
+    try {
+      const wsService = this.injector.get(require('./websocket.service').WebSocketService) as any;
+      wsService.disconnect();
+    } catch (e) {
+      // WebSocketService not yet initialized
+    }
   }
 }

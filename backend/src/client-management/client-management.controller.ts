@@ -124,4 +124,45 @@ export class ClientManagementController {
   ) {
     return this.clientManagementService.updateSecuritySettings(clientId, settings);
   }
+
+  @Post('contact-us')
+  async createContactMessage(@Body() messageData: any) {
+    return this.clientManagementService.createContactMessage(messageData);
+  }
+
+  @Get('contact-us')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
+  async getAllContactMessages() {
+    return this.clientManagementService.getAllContactMessages();
+  }
+
+  @Get('contact-us/unread-count')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
+  async getContactUnreadCount() {
+    const count = await this.clientManagementService.getContactUnreadCount();
+    return { count };
+  }
+
+  @Get('contact-us/:messageId')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
+  async getContactMessageById(@Param('messageId') messageId: string) {
+    return this.clientManagementService.getContactMessageById(messageId);
+  }
+
+  @Put('contact-us/:messageId/read')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
+  async markContactMessageAsRead(@Param('messageId') messageId: string) {
+    return this.clientManagementService.markContactMessageAsRead(messageId);
+  }
+
+  @Delete('contact-us/:messageId')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
+  async deleteContactMessage(@Param('messageId') messageId: string) {
+    return this.clientManagementService.deleteContactMessage(messageId);
+  }
 }

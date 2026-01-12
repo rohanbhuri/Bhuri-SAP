@@ -8,6 +8,7 @@ import { NavbarComponent } from '../../components/navbar.component';
 import { BottomNavbarComponent } from '../../components/bottom-navbar.component';
 import { RequestLoginListComponent } from './components/request-login-list.component';
 import { ClientsListComponent } from './components/clients-list.component';
+import { ContactUsComponent } from './pages/contact-us.component';
 
 @Component({
   selector: 'app-client-management',
@@ -20,7 +21,8 @@ import { ClientsListComponent } from './components/clients-list.component';
     NavbarComponent,
     BottomNavbarComponent,
     RequestLoginListComponent,
-    ClientsListComponent
+    ClientsListComponent,
+    ContactUsComponent
   ],
   template: `
     <app-navbar></app-navbar>
@@ -57,6 +59,11 @@ import { ClientsListComponent } from './components/clients-list.component';
         <mat-tab label="Clients">
           <div class="tab-content">
             <app-clients-list></app-clients-list>
+          </div>
+        </mat-tab>
+        <mat-tab label="Contact Us">
+          <div class="tab-content">
+            <app-contact-us></app-contact-us>
           </div>
         </mat-tab>
       </mat-tab-group>
@@ -135,7 +142,7 @@ export class ClientManagementComponent implements OnInit {
   private router = inject(Router);
   
   selectedTabIndex = 0;
-  private tabs = ['requests', 'clients'];
+  private tabs = ['requests', 'clients', 'contact-us'];
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {

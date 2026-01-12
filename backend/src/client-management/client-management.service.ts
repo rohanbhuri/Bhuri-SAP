@@ -7,6 +7,7 @@ import { Client } from '../entities/client.entity';
 import { User } from '../entities/user.entity';
 import { Organization } from '../entities/organization.entity';
 import { Role, RoleType } from '../entities/role.entity';
+import { ContactUs } from '../entities/contact-us.entity';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 
@@ -23,6 +24,8 @@ export class ClientManagementService {
     private organizationRepository: MongoRepository<Organization>,
     @InjectRepository(Role)
     private roleRepository: MongoRepository<Role>,
+    @InjectRepository(ContactUs)
+    private contactUsRepository: MongoRepository<ContactUs>,
     private jwtService: JwtService,
   ) {}
 
@@ -433,5 +436,59 @@ export class ClientManagementService {
     }
 
     return this.getSecuritySettings(clientId);
+  }
+
+  async createContactMessage(messageData: any) {
+    const contactUs = this.contactUsRepository.create({
+      name: messageData.name,
+      email: messageData.email,
+      subject: messageData.subject,
+      message: messageData.message,
+      organizationId: messageData.organizationId?.toString() || '',
+    } as any);
+    return this.contactUsRepository.save(contactUs);
+  }
+
+  async getAllContactMessages(organizationId?: string) {
+    const query: any = {};
+    if (organizationId) {
+      query.organizationId = organizationId;
+    }
+    return this.contactUsRepository.find({
+      where: query,
+      order: { createdAt: -1 }
+    });
+  }
+
+  async getContactMessageById(messageId: string) {
+    const message = await this.contactUsRepository.findOne({
+      where: { _id: new ObjectId(messageId) }
+    });
+    if (!message) {
+      throw new NotFoundException('Message not found');
+    }
+    return message;
+  }
+
+  async markContactMessageAsRead(messageId: string) {
+    const message = await this.getContactMessageById(messageId);
+    message.isRead = true;
+    return this.contactUsRepository.save(message);
+  }
+
+  async deleteContactMessage(messageId: string) {
+    const result = await this.contactUsRepository.delete({ _id: new ObjectId(messageId) });
+    if (result.affected === 0) {
+      throw new NotFoundException('Message not found');
+    }
+    return { success: true, message: 'Message deleted successfully' };
+  }
+
+  async getContactUnreadCount(organizationId?: string) {
+    const query: any = { isRead: false };
+    if (organizationId) {
+      query.organizationId = organizationId;
+    }
+    return this.contactUsRepository.count({ where: query });
   }
 }

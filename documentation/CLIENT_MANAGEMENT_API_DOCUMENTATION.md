@@ -1,298 +1,322 @@
 # Client Management API Documentation
 
 ## Overview
-
-The Client Management API provides RESTful endpoints for managing client requests and client accounts. Login/logout endpoints require API key authentication, while all other endpoints require JWT authentication.
+The Client Management API provides endpoints for managing client requests, client accounts, and contact messages from external websites.
 
 ## Base URL
-
 ```
 http://localhost:3000/api/client-management
 ```
 
-For production:
-```
-http://13.126.228.247:3000/api/client-management
-```
-
 ## Authentication
+Most endpoints require JWT authentication. The public endpoint for contact message submission does not require authentication.
 
-### API Key Authentication (for login/logout)
-Include API key in header:
-```
-X-API-Key: your_api_key_here
-```
+---
 
-### JWT Authentication (for other endpoints)
-Include JWT token in header:
-```
-Authorization: Bearer your_jwt_token_here
-```
+## Client Request Endpoints
 
-## Managing API Keys
+### 1. Create Client Request (Public)
+**POST** `/requests`
 
-1. Navigate to `http://localhost:4200/settings`
-2. Click on "API Keys" under Privacy & Security section
-3. Create a new API key with:
-   - Name: Descriptive name for your integration
-   - Expiry Date: When the key should expire
-   - Allowed Domains: (Optional) Restrict usage to specific domains
+Submit a new client request from an external website.
 
-## Authentication Endpoints
-
-### Login
-```http
-POST /login
-```
-
-**Headers:**
-```
-X-API-Key: your_api_key_here
-Content-Type: application/json
-```
+**Authentication:** Not required
 
 **Request Body:**
 ```json
 {
-  "email": "client@example.com",
-  "password": "password123"
+  "companyName": "Acme Corp",
+  "contactPerson": "John Doe",
+  "email": "john@acme.com",
+  "phone": "+1-555-0123",
+  "website": "https://acme.com",
+  "industry": "Technology",
+  "companySize": "50-100",
+  "address": "123 Main St",
+  "city": "New York",
+  "country": "USA",
+  "message": "Interested in your services"
 }
 ```
 
-**Response:**
+**Response (201 Created):**
 ```json
 {
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "_id": "507f1f77bcf86cd799439011",
-    "firstName": "John",
-    "lastName": "Doe",
-    "email": "client@example.com",
-    "isActive": true,
-    "createdAt": "2024-01-15T10:30:00Z"
-  },
-  "client": {
-    "id": "507f1f77bcf86cd799439012",
-    "companyName": "Acme Corp",
-    "email": "client@example.com"
-  },
-  "roles": [
-    {
-      "id": "507f1f77bcf86cd799439013",
-      "name": "Client",
-      "type": "client"
-    }
-  ]
+  "_id": "507f1f77bcf86cd799439011",
+  "companyName": "Acme Corp",
+  "contactPerson": "John Doe",
+  "email": "john@acme.com",
+  "phone": "+1-555-0123",
+  "website": "https://acme.com",
+  "industry": "Technology",
+  "companySize": "50-100",
+  "address": "123 Main St",
+  "city": "New York",
+  "country": "USA",
+  "message": "Interested in your services",
+  "status": "pending",
+  "createdAt": "2024-01-12T07:08:42.943Z"
 }
 ```
 
-### Logout
-```http
-POST /logout
-```
+---
 
-**Headers:**
-```
-X-API-Key: your_api_key_here
-Content-Type: application/json
-```
+### 2. Get All Client Requests
+**GET** `/requests`
 
-**Request Body:**
-```json
-{
-  "clientId": "507f1f77bcf86cd799439012"
-}
-```
+Retrieve all client requests.
 
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Logged out successfully"
-}
-```
+**Authentication:** Required (JWT Token)
+**Authorization:** Super Admin, Admin
 
-## Client Requests API
-
-### Get All Client Requests
-```http
-GET /requests
-```
-
-**Headers:**
-```
-Authorization: Bearer your_jwt_token_here
-```
-
-**Response:**
+**Response (200 OK):**
 ```json
 [
   {
     "_id": "507f1f77bcf86cd799439011",
-    "clientName": "John Doe",
-    "email": "john@example.com",
-    "phone": "+1234567890",
-    "company": "Acme Corp",
-    "requestType": "inquiry",
-    "subject": "Product Information",
-    "message": "I would like to know more about your products",
+    "companyName": "Acme Corp",
+    "contactPerson": "John Doe",
+    "email": "john@acme.com",
     "status": "pending",
-    "priority": "normal",
-    "assignedTo": "507f1f77bcf86cd799439012",
-    "notes": "Follow up next week",
-    "createdAt": "2024-01-15T10:30:00Z",
-    "updatedAt": "2024-01-15T10:30:00Z"
+    "createdAt": "2024-01-12T07:08:42.943Z"
   }
 ]
 ```
 
-### Get Single Client Request
-```http
-GET /requests/:requestId
+---
+
+### 3. Get Client Request by ID
+**GET** `/requests/:requestId`
+
+Retrieve a specific client request.
+
+**Authentication:** Required (JWT Token)
+**Authorization:** Super Admin, Admin
+
+**Path Parameters:**
+- `requestId` (required): The request ID
+
+**Response (200 OK):**
+```json
+{
+  "_id": "507f1f77bcf86cd799439011",
+  "companyName": "Acme Corp",
+  "contactPerson": "John Doe",
+  "email": "john@acme.com",
+  "phone": "+1-555-0123",
+  "website": "https://acme.com",
+  "industry": "Technology",
+  "companySize": "50-100",
+  "address": "123 Main St",
+  "city": "New York",
+  "country": "USA",
+  "message": "Interested in your services",
+  "status": "pending",
+  "createdAt": "2024-01-12T07:08:42.943Z"
+}
 ```
 
-**Parameters:**
-- `requestId` (string, required): Request ID
+---
 
-**Response:** Single client request object
+### 4. Update Client Request
+**PUT** `/requests/:requestId`
 
-### Create Client Request
-```http
-POST /requests
-```
+Update a client request.
+
+**Authentication:** Required (JWT Token)
+**Authorization:** Super Admin, Admin
+
+**Path Parameters:**
+- `requestId` (required): The request ID
 
 **Request Body:**
 ```json
 {
-  "clientName": "John Doe",
-  "email": "john@example.com",
-  "phone": "+1234567890",
-  "company": "Acme Corp",
-  "requestType": "inquiry",
-  "subject": "Product Information",
-  "message": "I would like to know more about your products",
-  "priority": "normal"
+  "status": "reviewed",
+  "notes": "Reviewed and approved"
 }
 ```
 
-**Response:** Created client request object
-
-### Update Client Request
-```http
-PUT /requests/:requestId
+**Response (200 OK):**
+```json
+{
+  "_id": "507f1f77bcf86cd799439011",
+  "companyName": "Acme Corp",
+  "status": "reviewed",
+  "reviewedBy": "507f1f77bcf86cd799439012",
+  "reviewedAt": "2024-01-12T08:00:00.000Z"
+}
 ```
 
-**Parameters:**
-- `requestId` (string, required): Request ID
+---
+
+### 5. Convert Request to Client
+**POST** `/requests/:requestId/convert`
+
+Convert a client request into an active client account.
+
+**Authentication:** Required (JWT Token)
+**Authorization:** Super Admin, Admin
+
+**Path Parameters:**
+- `requestId` (required): The request ID
 
 **Request Body:**
 ```json
 {
-  "status": "in-progress",
-  "assignedTo": "507f1f77bcf86cd799439012",
-  "notes": "Contacted client, awaiting response"
+  "companyName": "Acme Corp",
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john@acme.com",
+  "password": "SecurePass123!",
+  "phone": "+1-555-0123",
+  "website": "https://acme.com",
+  "industry": "Technology",
+  "companySize": "50-100",
+  "address": "123 Main St",
+  "city": "New York",
+  "country": "USA",
+  "taxId": "12-3456789",
+  "billingAddress": "123 Main St, New York, USA",
+  "notes": "Premium client",
+  "maxDevices": 5,
+  "sessionTimeout": 3600,
+  "requireTwoFactor": false,
+  "forcePasswordChange": true,
+  "restrictToBusinessHours": false,
+  "allowApiAccess": false
 }
 ```
 
-**Response:** Updated client request object
-
-### Convert Request to Client
-```http
-POST /requests/:requestId/convert
-```
-
-**Parameters:**
-- `requestId` (string, required): Request ID
-
-**Request Body:**
+**Response (201 Created):**
 ```json
 {
-  "accountType": "standard",
-  "initialCredit": 1000,
-  "notes": "Converted from inquiry"
+  "client": {
+    "_id": "507f1f77bcf86cd799439013",
+    "userId": "507f1f77bcf86cd799439014",
+    "organizationId": "507f1f77bcf86cd799439015",
+    "companyName": "Acme Corp",
+    "email": "john@acme.com",
+    "isActive": true
+  },
+  "user": {
+    "_id": "507f1f77bcf86cd799439014",
+    "email": "john@acme.com",
+    "firstName": "John",
+    "lastName": "Doe"
+  },
+  "organization": {
+    "_id": "507f1f77bcf86cd799439015",
+    "name": "Acme Corp",
+    "code": "acme-corp"
+  },
+  "credentials": {
+    "email": "john@acme.com",
+    "password": "SecurePass123!"
+  }
 }
 ```
 
-**Response:**
-```json
-{
-  "message": "Request converted to client successfully",
-  "clientId": "507f1f77bcf86cd799439013"
-}
-```
+---
 
-## Clients API
+## Client Endpoints
 
-### Get All Clients
-```http
-GET /clients
-```
+### 6. Get All Clients
+**GET** `/clients`
 
-**Headers:**
-```
-Authorization: Bearer your_jwt_token_here
-```
+Retrieve all clients.
 
-**Response:**
+**Authentication:** Required (JWT Token)
+**Authorization:** Super Admin, Admin
+
+**Response (200 OK):**
 ```json
 [
   {
     "_id": "507f1f77bcf86cd799439013",
-    "clientName": "John Doe",
-    "email": "john@example.com",
-    "phone": "+1234567890",
-    "company": "Acme Corp",
-    "accountType": "standard",
-    "accountStatus": "active",
-    "creditBalance": 5000,
-    "totalSpent": 15000,
+    "companyName": "Acme Corp",
+    "email": "john@acme.com",
     "isActive": true,
-    "lastActivity": "2024-01-15T10:30:00Z",
-    "createdAt": "2024-01-15T10:30:00Z",
-    "updatedAt": "2024-01-15T10:30:00Z"
+    "createdAt": "2024-01-12T07:08:42.943Z"
   }
 ]
 ```
 
-### Get Single Client
-```http
-GET /clients/:clientId
+---
+
+### 7. Get Client by ID
+**GET** `/clients/:clientId`
+
+Retrieve a specific client.
+
+**Authentication:** Required (JWT Token)
+**Authorization:** Super Admin, Admin
+
+**Path Parameters:**
+- `clientId` (required): The client ID
+
+**Response (200 OK):**
+```json
+{
+  "_id": "507f1f77bcf86cd799439013",
+  "userId": "507f1f77bcf86cd799439014",
+  "organizationId": "507f1f77bcf86cd799439015",
+  "companyName": "Acme Corp",
+  "contactPerson": "John Doe",
+  "email": "john@acme.com",
+  "phone": "+1-555-0123",
+  "website": "https://acme.com",
+  "industry": "Technology",
+  "isActive": true
+}
 ```
 
-**Parameters:**
-- `clientId` (string, required): Client ID
+---
 
-**Response:** Single client object
+### 8. Update Client
+**PUT** `/clients/:clientId`
 
-### Update Client
-```http
-PUT /clients/:clientId
-```
+Update client information.
 
-**Parameters:**
-- `clientId` (string, required): Client ID
+**Authentication:** Required (JWT Token)
+**Authorization:** Super Admin, Admin
+
+**Path Parameters:**
+- `clientId` (required): The client ID
 
 **Request Body:**
 ```json
 {
-  "clientName": "Jane Doe",
-  "phone": "+1987654321",
-  "company": "Updated Corp",
-  "creditBalance": 7500
+  "companyName": "Acme Corp Updated",
+  "phone": "+1-555-0124",
+  "website": "https://acme-updated.com"
 }
 ```
 
-**Response:** Updated client object
-
-### Delete Client
-```http
-DELETE /clients/:clientId
+**Response (200 OK):**
+```json
+{
+  "_id": "507f1f77bcf86cd799439013",
+  "companyName": "Acme Corp Updated",
+  "phone": "+1-555-0124",
+  "website": "https://acme-updated.com"
+}
 ```
 
-**Parameters:**
-- `clientId` (string, required): Client ID
+---
 
-**Response:**
+### 9. Delete Client
+**DELETE** `/clients/:clientId`
+
+Delete a client.
+
+**Authentication:** Required (JWT Token)
+**Authorization:** Super Admin only
+
+**Path Parameters:**
+- `clientId` (required): The client ID
+
+**Response (200 OK):**
 ```json
 {
   "success": true,
@@ -300,13 +324,18 @@ DELETE /clients/:clientId
 }
 ```
 
-### Toggle Client Status
-```http
-PUT /clients/:clientId/status
-```
+---
 
-**Parameters:**
-- `clientId` (string, required): Client ID
+### 10. Toggle Client Status
+**PUT** `/clients/:clientId/status`
+
+Activate or deactivate a client.
+
+**Authentication:** Required (JWT Token)
+**Authorization:** Super Admin, Admin
+
+**Path Parameters:**
+- `clientId` (required): The client ID
 
 **Request Body:**
 ```json
@@ -315,98 +344,353 @@ PUT /clients/:clientId/status
 }
 ```
 
-**Response:** Updated client object
-
-### Request Login Credentials
-```http
-POST /clients/:clientId/request-credentials
+**Response (200 OK):**
+```json
+{
+  "_id": "507f1f77bcf86cd799439013",
+  "isActive": false
+}
 ```
 
-**Parameters:**
-- `clientId` (string, required): Client ID
+---
+
+### 11. Request Login Credentials
+**POST** `/clients/:clientId/request-credentials`
+
+Generate new login credentials for a client.
+
+**Authentication:** Required (JWT Token)
+**Authorization:** Super Admin, Admin
+
+**Path Parameters:**
+- `clientId` (required): The client ID
 
 **Request Body:**
 ```json
 {
-  "credentialType": "email",
-  "expiryDays": 7
+  "email": "john@acme.com",
+  "firstName": "John",
+  "lastName": "Doe"
 }
 ```
 
-**Response:**
+**Response (200 OK):**
 ```json
 {
   "success": true,
-  "message": "Credentials request sent successfully",
-  "credentialId": "507f1f77bcf86cd799439014"
+  "message": "Login credentials created successfully",
+  "credentials": {
+    "email": "john@acme.com",
+    "password": "GeneratedPass123!",
+    "userId": "507f1f77bcf86cd799439014"
+  }
 }
 ```
 
-### Get Security Settings
-```http
-GET /clients/:clientId/security-settings
-```
+---
 
-**Parameters:**
-- `clientId` (string, required): Client ID
+### 12. Get Client Security Settings
+**GET** `/clients/:clientId/security-settings`
 
-**Response:**
+Retrieve security settings for a client.
+
+**Authentication:** Required (JWT Token)
+**Authorization:** Super Admin, Admin
+
+**Path Parameters:**
+- `clientId` (required): The client ID
+
+**Response (200 OK):**
 ```json
 {
-  "clientId": "507f1f77bcf86cd799439013",
-  "twoFactorEnabled": false,
-  "ipWhitelist": [],
+  "requireTwoFactor": false,
   "sessionTimeout": 3600,
-  "passwordExpiry": 90,
-  "lastPasswordChange": "2024-01-15T10:30:00Z",
-  "loginAttempts": 0,
-  "accountLocked": false
+  "restrictToBusinessHours": false,
+  "allowApiAccess": false,
+  "expiryDate": null,
+  "ipWhitelist": null,
+  "maxDevices": 5
 }
 ```
 
-### Update Security Settings
-```http
-PUT /clients/:clientId/security-settings
-```
+---
 
-**Parameters:**
-- `clientId` (string, required): Client ID
+### 13. Update Client Security Settings
+**PUT** `/clients/:clientId/security-settings`
+
+Update security settings for a client.
+
+**Authentication:** Required (JWT Token)
+**Authorization:** Super Admin, Admin
+
+**Path Parameters:**
+- `clientId` (required): The client ID
 
 **Request Body:**
 ```json
 {
-  "twoFactorEnabled": true,
-  "ipWhitelist": ["192.168.1.1", "10.0.0.1"],
+  "requireTwoFactor": true,
   "sessionTimeout": 1800,
-  "passwordExpiry": 60
+  "maxDevices": 3,
+  "ipWhitelist": "192.168.1.1,192.168.1.2"
 }
 ```
 
-**Response:** Updated security settings object
+**Response (200 OK):**
+```json
+{
+  "requireTwoFactor": true,
+  "sessionTimeout": 1800,
+  "maxDevices": 3,
+  "ipWhitelist": "192.168.1.1,192.168.1.2"
+}
+```
+
+---
+
+## Contact Us Endpoints
+
+### 14. Create Contact Message (Public)
+**POST** `/contact-us`
+
+Submit a contact message from an external website.
+
+**Authentication:** Not required
+
+**Request Body:**
+```json
+{
+  "name": "Jane Smith",
+  "email": "jane@example.com",
+  "subject": "Product Inquiry",
+  "message": "I would like to know more about your products"
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "_id": "507f1f77bcf86cd799439020",
+  "name": "Jane Smith",
+  "email": "jane@example.com",
+  "subject": "Product Inquiry",
+  "message": "I would like to know more about your products",
+  "isRead": false,
+  "createdAt": "2024-01-12T07:08:42.943Z"
+}
+```
+
+---
+
+### 15. Get All Contact Messages
+**GET** `/contact-us`
+
+Retrieve all contact messages.
+
+**Authentication:** Required (JWT Token)
+**Authorization:** Super Admin, Admin
+
+**Response (200 OK):**
+```json
+[
+  {
+    "_id": "507f1f77bcf86cd799439020",
+    "name": "Jane Smith",
+    "email": "jane@example.com",
+    "subject": "Product Inquiry",
+    "message": "I would like to know more about your products",
+    "isRead": false,
+    "createdAt": "2024-01-12T07:08:42.943Z"
+  }
+]
+```
+
+---
+
+### 16. Get Unread Contact Message Count
+**GET** `/contact-us/unread-count`
+
+Get the count of unread contact messages.
+
+**Authentication:** Required (JWT Token)
+**Authorization:** Super Admin, Admin
+
+**Response (200 OK):**
+```json
+{
+  "count": 3
+}
+```
+
+---
+
+### 17. Get Contact Message by ID
+**GET** `/contact-us/:messageId`
+
+Retrieve a specific contact message.
+
+**Authentication:** Required (JWT Token)
+**Authorization:** Super Admin, Admin
+
+**Path Parameters:**
+- `messageId` (required): The message ID
+
+**Response (200 OK):**
+```json
+{
+  "_id": "507f1f77bcf86cd799439020",
+  "name": "Jane Smith",
+  "email": "jane@example.com",
+  "subject": "Product Inquiry",
+  "message": "I would like to know more about your products",
+  "isRead": false,
+  "createdAt": "2024-01-12T07:08:42.943Z"
+}
+```
+
+---
+
+### 18. Mark Contact Message as Read
+**PUT** `/contact-us/:messageId/read`
+
+Mark a contact message as read.
+
+**Authentication:** Required (JWT Token)
+**Authorization:** Super Admin, Admin
+
+**Path Parameters:**
+- `messageId` (required): The message ID
+
+**Response (200 OK):**
+```json
+{
+  "_id": "507f1f77bcf86cd799439020",
+  "name": "Jane Smith",
+  "email": "jane@example.com",
+  "subject": "Product Inquiry",
+  "message": "I would like to know more about your products",
+  "isRead": true,
+  "createdAt": "2024-01-12T07:08:42.943Z"
+}
+```
+
+---
+
+### 19. Delete Contact Message
+**DELETE** `/contact-us/:messageId`
+
+Delete a contact message.
+
+**Authentication:** Required (JWT Token)
+**Authorization:** Super Admin, Admin
+
+**Path Parameters:**
+- `messageId` (required): The message ID
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Message deleted successfully"
+}
+```
+
+---
+
+## Authentication Endpoints
+
+### 20. API Login
+**POST** `/login`
+
+Login via API using email and password.
+
+**Authentication:** API Key required
+
+**Request Body:**
+```json
+{
+  "email": "john@acme.com",
+  "password": "SecurePass123!"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "_id": "507f1f77bcf86cd799439014",
+    "email": "john@acme.com",
+    "firstName": "John",
+    "lastName": "Doe"
+  },
+  "client": {
+    "id": "507f1f77bcf86cd799439013",
+    "companyName": "Acme Corp",
+    "email": "john@acme.com"
+  },
+  "roles": [
+    {
+      "id": "507f1f77bcf86cd799439016",
+      "name": "Client",
+      "type": "client"
+    }
+  ]
+}
+```
+
+---
+
+### 21. API Logout
+**POST** `/logout`
+
+Logout from API session.
+
+**Authentication:** API Key required
+
+**Request Body:**
+```json
+{
+  "clientId": "507f1f77bcf86cd799439013"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Logged out successfully"
+}
+```
+
+---
 
 ## Error Responses
 
-All endpoints may return the following error responses:
+### 400 Bad Request
+```json
+{
+  "statusCode": 400,
+  "message": "Invalid request data",
+  "error": "Bad Request"
+}
+```
 
 ### 401 Unauthorized
 ```json
 {
   "statusCode": 401,
-  "message": "API key is required"
+  "message": "Unauthorized",
+  "error": "Unauthorized"
 }
 ```
 
+### 403 Forbidden
 ```json
 {
-  "statusCode": 401,
-  "message": "Invalid API key"
-}
-```
-
-```json
-{
-  "statusCode": 401,
-  "message": "Invalid credentials"
+  "statusCode": 403,
+  "message": "Forbidden",
+  "error": "Forbidden"
 }
 ```
 
@@ -414,7 +698,8 @@ All endpoints may return the following error responses:
 ```json
 {
   "statusCode": 404,
-  "message": "Client not found"
+  "message": "Resource not found",
+  "error": "Not Found"
 }
 ```
 
@@ -422,130 +707,63 @@ All endpoints may return the following error responses:
 ```json
 {
   "statusCode": 409,
-  "message": "Email already exists"
+  "message": "Resource already exists",
+  "error": "Conflict"
 }
 ```
 
-### 500 Internal Server Error
-```json
-{
-  "statusCode": 500,
-  "message": "Internal server error"
-}
-```
+---
 
-## Example Integration
+## Integration Examples
 
 ### JavaScript/Node.js
 ```javascript
-const API_KEY = 'your_api_key_here';
-const BASE_URL = 'http://localhost:3000/api/client-management';
-
-// Login with API key
-fetch(`${BASE_URL}/login`, {
-  method: 'POST',
-  headers: {
-    'X-API-Key': API_KEY,
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    email: 'client@example.com',
-    password: 'password123'
-  })
-})
-  .then(res => res.json())
-  .then(data => {
-    const accessToken = data.access_token;
-    console.log('Logged in:', data.user);
-    return accessToken;
-  })
-  .then(accessToken => {
-    // Get all clients with JWT token
-    return fetch(`${BASE_URL}/clients`, {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`
-      }
-    });
-  })
-  .then(res => res.json())
-  .then(clients => console.log(clients));
-
-// Logout
-fetch(`${BASE_URL}/logout`, {
-  method: 'POST',
-  headers: {
-    'X-API-Key': API_KEY,
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    clientId: '507f1f77bcf86cd799439013'
-  })
-})
-  .then(res => res.json())
-  .then(result => console.log(result));
-```
-
-### Python
-```python
-import requests
-
-API_KEY = 'your_api_key_here'
-BASE_URL = 'http://localhost:3000/api/client-management'
-
-api_headers = {
-    'X-API-Key': API_KEY,
-    'Content-Type': 'application/json'
+// Create contact message
+async function submitContactForm(data) {
+  const response = await fetch('http://localhost:3000/api/client-management/contact-us', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  return response.json();
 }
 
-# Login
-response = requests.post(f'{BASE_URL}/login', headers=api_headers, json={
-    'email': 'client@example.com',
-    'password': 'password123'
-})
-login_data = response.json()
-access_token = login_data['access_token']
-print('Logged in:', login_data['user'])
-
-# Get all clients with JWT token
-jwt_headers = {
-    'Authorization': f'Bearer {access_token}'
+// Get contact messages (requires auth)
+async function getContactMessages(token) {
+  const response = await fetch('http://localhost:3000/api/client-management/contact-us', {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  return response.json();
 }
-response = requests.get(f'{BASE_URL}/clients', headers=jwt_headers)
-clients = response.json()
-
-# Logout
-response = requests.post(f'{BASE_URL}/logout', headers=api_headers, json={
-    'clientId': '507f1f77bcf86cd799439013'
-})
-print(response.json())
 ```
 
 ### cURL
 ```bash
-# Login with API key
-LOGIN_RESPONSE=$(curl -X POST "http://localhost:3000/api/client-management/login" \
-  -H "X-API-Key: your_api_key_here" \
+# Create contact message
+curl -X POST http://localhost:3000/api/client-management/contact-us \
   -H "Content-Type: application/json" \
   -d '{
-    "email": "client@example.com",
-    "password": "password123"
-  }')
-
-ACCESS_TOKEN=$(echo $LOGIN_RESPONSE | jq -r '.access_token')
-
-# Get all clients with JWT token
-curl -X GET "http://localhost:3000/api/client-management/clients" \
-  -H "Authorization: Bearer $ACCESS_TOKEN"
-
-# Logout
-curl -X POST "http://localhost:3000/api/client-management/logout" \
-  -H "X-API-Key: your_api_key_here" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "clientId": "507f1f77bcf86cd799439013"
+    "name": "Jane Smith",
+    "email": "jane@example.com",
+    "subject": "Product Inquiry",
+    "message": "I would like to know more about your products"
   }'
+
+# Get contact messages
+curl -X GET http://localhost:3000/api/client-management/contact-us \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
-## Support
+---
 
-For API support or questions, please contact the development team or refer to the in-app API documentation at `http://localhost:4200/modules/client-management` (click the 3-dot menu → API Docs).
+## Permissions Required
+
+| Endpoint | Permission | Role |
+|----------|-----------|------|
+| POST /requests | Public | None |
+| GET /requests | client-management:read:organization | Admin, Super Admin |
+| POST /contact-us | Public | None |
+| GET /contact-us | client-management:read:contact-us | Admin, Super Admin, Manager |
+| PUT /contact-us/:id/read | client-management:update:contact-us | Admin, Super Admin, Manager |
+| DELETE /contact-us/:id | client-management:delete:contact-us | Admin, Super Admin, Manager |
+

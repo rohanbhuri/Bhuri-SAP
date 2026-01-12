@@ -10,11 +10,12 @@ import { Organization } from '../entities/organization.entity';
 import { Role } from '../entities/role.entity';
 import { Permission } from '../entities/permission.entity';
 import { ApiKey } from '../entities/api-key.entity';
+import { ContactUs } from '../entities/contact-us.entity';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([ClientRequest, Client, User, Organization, Role, Permission, ApiKey]),
+    TypeOrmModule.forFeature([ClientRequest, Client, User, Organization, Role, Permission, ApiKey, ContactUs]),
     AuthModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'rohanbhuri',

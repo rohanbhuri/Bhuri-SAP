@@ -1,9 +1,11 @@
-import { WebSocketGateway, WebSocketServer, SubscribeMessage, MessageBody, ConnectedSocket } from '@nestjs/websockets';
+import { WebSocketGateway, WebSocketServer, SubscribeMessage, MessageBody, ConnectedSocket, OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { MessagesService } from './messages.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { JwtService } from '@nestjs/jwt';
+import { Injectable } from '@nestjs/common';
 
-// Single gateway with multiple channels (message, notification, request)
+@Injectable()
 @WebSocketGateway({
   cors: {
     origin: ['http://localhost:4200', 'http://localhost:4201'],
@@ -12,22 +14,38 @@ import { NotificationsService } from '../notifications/notifications.service';
   },
   transports: ['websocket', 'polling']
 })
-export class MessagesGateway {
+export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
   constructor(
     private readonly messagesService: MessagesService,
     private readonly notificationsService: NotificationsService,
+    private readonly jwtService: JwtService,
   ) {}
 
-  // Connection event handlers
   handleConnection(client: Socket) {
-    console.log(`Client connected: ${client.id}`);
+    const token = client.handshake.auth?.token || client.handshake.headers?.authorization?.split(' ')[1];
+    
+    if (!token) {
+      console.log(`Client ${client.id} attempted connection without token, disconnecting`);
+      client.disconnect();
+      return;
+    }
+
+    try {
+      const decoded = this.jwtService.verify(token);
+      client.data.userId = decoded.sub || decoded.userId;
+      client.data.user = decoded;
+      console.log(`Client ${client.id} connected with user: ${client.data.userId}`);
+    } catch (error) {
+      console.log(`Client ${client.id} provided invalid token, disconnecting`);
+      client.disconnect();
+    }
   }
 
   handleDisconnect(client: Socket) {
-    console.log(`Client disconnected: ${client.id}`);
+    console.log(`Client ${client.id} disconnected`);
   }
 
   // Generic join for rooms

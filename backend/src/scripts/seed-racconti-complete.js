@@ -339,6 +339,9 @@ async function seedRaccontiComplete() {
       { module: 'client-management', action: 'create', resource: 'organization', description: 'Create clients' },
       { module: 'client-management', action: 'update', resource: 'organization', description: 'Update clients' },
       { module: 'client-management', action: 'delete', resource: 'organization', description: 'Delete clients' },
+      { module: 'client-management', action: 'read', resource: 'contact-us', description: 'View contact messages' },
+      { module: 'client-management', action: 'update', resource: 'contact-us', description: 'Mark contact messages as read' },
+      { module: 'client-management', action: 'delete', resource: 'contact-us', description: 'Delete contact messages' },
       
       // Reports & Analytics - Racconti only
       { module: 'reports', action: 'read', resource: 'organization', description: 'View reports' },
@@ -415,6 +418,7 @@ async function seedRaccontiComplete() {
         permissionIds: [
           permMap['crm:read:organization'], permMap['crm:create:organization'], permMap['crm:update:organization'],
           permMap['client-management:read:organization'], permMap['client-management:create:organization'], permMap['client-management:update:organization'],
+          permMap['client-management:read:contact-us'], permMap['client-management:update:contact-us'], permMap['client-management:delete:contact-us'],
           permMap['reports:read:organization'], permMap['reports:create:organization'],
           permMap['catalogue:read:organization'], permMap['quotations:read:organization'], permMap['quotations:create:organization'],
           permMap['dashboard:read:organization']
