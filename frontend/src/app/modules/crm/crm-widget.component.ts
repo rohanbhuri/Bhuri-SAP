@@ -280,13 +280,9 @@ import { CrmFunnelService } from './crm-funnel.service';
         grid-template-columns: 2fr 1fr;
         gap: 8px;
         padding: 10px;
-        background: linear-gradient(
-          135deg,
-          color-mix(in srgb, #4caf50 10%, transparent),
-          color-mix(in srgb, #4caf50 5%, transparent)
-        );
+        background: transparent;
         border-radius: 6px;
-        border: 1px solid color-mix(in srgb, #4caf50 20%, transparent);
+        border: 1px solid color-mix(in srgb, var(--theme-on-surface) 8%, transparent);
       }
 
       :host-context([data-view="expanded"]) .pipeline-overview {
@@ -339,11 +335,7 @@ import { CrmFunnelService } from './crm-funnel.service';
         text-align: center;
         padding: 6px;
         border-radius: 4px;
-        background: color-mix(
-          in srgb,
-          var(--theme-surface) 95%,
-          var(--theme-primary)
-        );
+        background: transparent;
       }
 
       :host-context([data-view="expanded"]) .metric {
@@ -386,11 +378,7 @@ import { CrmFunnelService } from './crm-funnel.service';
         justify-content: space-between;
         gap: 6px;
         padding: 8px;
-        background: color-mix(
-          in srgb,
-          var(--theme-surface) 98%,
-          var(--theme-primary)
-        );
+        background: transparent;
         border-radius: 6px;
       }
 
@@ -564,10 +552,10 @@ export class CrmWidgetComponent implements OnInit, OnDestroy {
   }
 
   getPercentage(count: number): number {
-    const total = (this.pipeline()?.new?.length || 0) + 
-                  (this.pipeline()?.processing?.length || 0) + 
-                  (this.pipeline()?.quoted?.length || 0) + 
-                  (this.pipeline()?.converted?.length || 0);
+    const total = (this.pipeline()?.new?.length || 0) +
+      (this.pipeline()?.processing?.length || 0) +
+      (this.pipeline()?.quoted?.length || 0) +
+      (this.pipeline()?.converted?.length || 0);
     return total > 0 ? (count / total) * 100 : 0;
   }
 

@@ -90,8 +90,7 @@ import { ClientManagementService } from './services/client-management.service';
       display: flex;
       flex-direction: column;
       gap: 20px;
-      background: white;
-      border-radius: 12px;
+      background: transparent;
     }
     
     .widget-header {
@@ -140,7 +139,7 @@ import { ClientManagementService } from './services/client-management.service';
     .metric-card {
       padding: 16px;
       border-radius: 10px;
-      border: 1px solid;
+      border: 1px solid color-mix(in srgb, var(--theme-on-surface) 8%, transparent);
       transition: transform 0.2s, box-shadow 0.2s;
     }
     
@@ -150,13 +149,13 @@ import { ClientManagementService } from './services/client-management.service';
     }
     
     .metric-card.primary {
-      background: #fef3c7;
-      border-color: #fbbf24;
+      background: transparent;
+      border-color: color-mix(in srgb, var(--theme-primary) 20%, transparent);
     }
     
     .metric-card.success {
-      background: #d1fae5;
-      border-color: #6ee7b7;
+      background: transparent;
+      border-color: color-mix(in srgb, var(--theme-success) 20%, transparent);
     }
     
     .metric-header {
@@ -227,7 +226,7 @@ import { ClientManagementService } from './services/client-management.service';
       flex-direction: column;
       gap: 10px;
       padding: 16px;
-      background: #f9fafb;
+      background: color-mix(in srgb, var(--theme-surface) 95%, var(--theme-on-surface));
       border-radius: 10px;
     }
     
@@ -326,12 +325,12 @@ export class ClientManagementWidgetComponent implements OnInit {
         this.activeClients.set(clients.filter(c => c.isActive).length);
         this.inactiveClients.set(clients.filter(c => !c.isActive).length);
         this.clientsWith2FA.set(clients.filter(c => c.requireTwoFactor).length);
-        
+
         const now = new Date();
         const thisMonth = clients.filter(c => {
           const created = new Date(c.createdAt);
-          return created.getMonth() === now.getMonth() && 
-                 created.getFullYear() === now.getFullYear();
+          return created.getMonth() === now.getMonth() &&
+            created.getFullYear() === now.getFullYear();
         });
         this.newThisMonth.set(thisMonth.length);
       },

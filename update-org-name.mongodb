@@ -1,9 +1,0 @@
-// MongoDB shell script to update organization name
-// Run this with: mongosh beax-rm update-org-name.mongodb
-
-db.organizations.updateMany(
-  { name: "Racconti Corporation" },
-  { $set: { name: "RACCONTI" } }
-);
-
-print("✅ Organization name updated from 'Racconti Corporation' to 'RACCONTI'");

@@ -105,7 +105,6 @@ interface DashboardWidget {
     ReportsManagementWidgetComponent,
     FormBuilderWidgetComponent,
     MessagesWidgetComponent,
-    // Racconti XRM Widgets
     CatalogueWidgetComponent,
     CmsWidgetComponent,
     QuotationsWidgetComponent,
@@ -172,9 +171,6 @@ interface DashboardWidget {
             </mat-menu>
           </div>
         </div>
-        <p class="subtitle">
-          Check the sales, value and bounce rate by country.
-        </p>
       </div>
 
       <section
@@ -198,8 +194,7 @@ interface DashboardWidget {
           color="primary"
           [attr.data-size]="getWidgetSize(w)"
           [attr.data-view]="viewMode()"
-          [style.border-color]="getModuleColor(w.id)"
-          [style.background]="getModuleColor(w.id) + '33'"
+          [style.--module-color]="getModuleColor(w.id)"
           cdkDrag
           role="listitem"
           tabindex="0"
@@ -307,569 +302,7 @@ interface DashboardWidget {
 
     <app-bottom-navbar></app-bottom-navbar>
   `,
-  styles: [
-    `
-      .page {
-        padding: 16px;
-        max-width: 1400px;
-        margin: 0 auto;
-      }
-
-      .page-header {
-        margin-bottom: 16px;
-      }
-
-      .header-controls {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 6px;
-        flex-wrap: wrap;
-      }
-
-      .dashboard-menu {
-        margin-left: auto;
-      }
-
-      .view-selector {
-        width: auto;
-        min-width: 0;
-      }
-      
-      .view-selector ::ng-deep .mat-mdc-form-field-subscript-wrapper {
-        display: none;
-      }
-      
-      .view-selector ::ng-deep .mdc-notched-outline {
-        border: none !important;
-      }
-      
-      .view-selector ::ng-deep .mat-mdc-text-field-wrapper {
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        padding: 0 !important;
-      }
-      
-      .view-selector ::ng-deep .mat-mdc-form-field-infix {
-        padding: 0 !important;
-        min-height: auto !important;
-      }
-      
-      .view-selector ::ng-deep .mat-mdc-select {
-        font-size: 1.5rem;
-        font-weight: 600;
-        padding: 0px 8px;
-        margin: 0;
-      }
-      
-      .view-selector ::ng-deep .mat-mdc-select-value {
-        display: flex;
-        align-items: center;
-        gap: 0;
-        padding: 0px;
-        margin: 0;
-      }
-      
-
-
-      .breadcrumb {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        color: color-mix(in srgb, var(--theme-on-surface) 60%, transparent);
-        font-size: 0.8rem;
-        margin-bottom: 6px;
-      }
-      .breadcrumb .current {
-        color: var(--theme-on-surface);
-      }
-
-      h1 {
-        margin: 0;
-        font-weight: 600;
-        font-size: 1.5rem;
-      }
-      .subtitle {
-        color: color-mix(in srgb, var(--theme-on-surface) 65%, transparent);
-        font-size: 0.9rem;
-        line-height: 1.4;
-      }
-
-      .widgets {
-        display: grid;
-        gap: 16px;
-        grid-template-columns: repeat(12, minmax(0, 1fr));
-      }
-
-      .widgets.compact {
-        gap: 8px;
-        grid-template-columns: repeat(12, minmax(0, 1fr));
-      }
-
-      .widgets.expanded {
-        gap: 20px;
-        grid-template-columns: repeat(12, minmax(0, 1fr));
-      }
-
-      .widget {
-        grid-column: span 12;
-        background: var(--theme-surface);
-        border: 1px solid color-mix(in srgb, var(--theme-on-surface) 12%, transparent);
-        border-radius: var(--border-radius);
-        box-shadow: 0 2px 8px color-mix(in srgb, var(--theme-on-surface) 8%, transparent);
-        transition: var(--transition);
-      }
-
-      .widget:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px color-mix(in srgb, var(--theme-on-surface) 15%, transparent);
-        border-color: color-mix(in srgb, var(--theme-primary) 25%, transparent);
-      }
-
-      .widgets.compact .widget {
-        grid-column: span 3;
-        border-radius: 6px;
-        min-height: 180px;
-      }
-
-      .widgets.expanded .widget {
-        grid-column: span 12;
-        min-height: 400px;
-        border-radius: 16px;
-      }
-
-      .widget[data-size='xl'] {
-        grid-column: span 12;
-        min-height: 400px;
-      }
-
-      .widget-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 12px 16px 0 16px;
-      }
-      .widget-title {
-        margin: 0;
-        font-size: 1rem;
-        font-weight: 600;
-        color: var(--theme-on-surface);
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        line-height: 1.3;
-      }
-
-      .widget-title::before {
-        content: '';
-        width: 3px;
-        height: 16px;
-        background: linear-gradient(135deg, var(--theme-primary), var(--theme-accent));
-        border-radius: 2px;
-        flex-shrink: 0;
-      }
-
-      .widgets.compact .widget-header {
-        padding: 4px 8px 0 8px;
-      }
-      .widgets.compact .widget-title {
-        font-size: 0.75rem;
-      }
-
-      .widgets.expanded .widget-header {
-        padding: 20px 24px 0 24px;
-      }
-      .widgets.expanded .widget-title {
-        font-size: 1.2rem;
-      }
-      .widget-actions {
-        display: inline-flex;
-        gap: 4px;
-      }
-
-      .widget-body {
-        padding: 4px 16px 16px 16px;
-      }
-
-      .widgets.compact .widget-body {
-        padding: 2px 8px 8px 8px;
-      }
-
-      .widgets.expanded .widget-body {
-        padding: 8px 24px 24px 24px;
-        flex: 1;
-      }
-      .metric {
-        font-size: 1.8rem;
-        font-weight: 700;
-        margin: 6px 0;
-      }
-      .trend {
-        font-weight: 600;
-        font-size: 0.9rem;
-      }
-      .trend.positive {
-        color: var(--theme-success, #4caf50);
-      }
-      .trend.negative {
-        color: var(--theme-error, #f44336);
-      }
-
-      /* Mobile-first responsive design */
-      @media (max-width: 599px) {
-        .page {
-          padding: 12px;
-        }
-        
-        .header-controls {
-          flex-direction: column;
-          align-items: stretch;
-          gap: 8px;
-        }
-        
-        .view-selector {
-          width: auto;
-        }
-        
-        .view-selector ::ng-deep .mat-mdc-select {
-          font-size: 1.3rem;
-        }
-        
-        h1 {
-          font-size: 1.3rem;
-          text-align: center;
-        }
-        
-        .subtitle {
-          font-size: 0.85rem;
-          text-align: center;
-        }
-        
-        .breadcrumb {
-          font-size: 0.75rem;
-          justify-content: center;
-        }
-        
-        .widgets {
-          gap: 12px;
-        }
-        
-        .widget-title {
-          font-size: 0.9rem;
-        }
-        
-        .widgets.compact .widget-title {
-          font-size: 0.8rem;
-        }
-        
-        /* Compact mode: 2 columns on mobile */
-        .widgets.compact .widget {
-          grid-column: span 6;
-          min-height: 160px;
-        }
-
-        /* Expanded mode: single column on mobile */
-        .widgets.expanded .widget {
-          grid-column: span 12;
-          min-height: 300px;
-        }
-      }
-      
-      @media (min-width: 600px) and (max-width: 899px) {
-        .page {
-          padding: 16px;
-        }
-        
-        .widget[data-size='s'] {
-          grid-column: span 6;
-        }
-        .widget[data-size='m'] {
-          grid-column: span 12;
-        }
-        .widget[data-size='l'] {
-          grid-column: span 12;
-        }
-        
-        /* Compact mode: 3 columns on medium screens */
-        .widgets.compact .widget {
-          grid-column: span 4;
-          min-height: 170px;
-        }
-
-        /* Expanded mode: single column on medium screens */
-        .widgets.expanded .widget {
-          grid-column: span 12;
-          min-height: 350px;
-        }
-      }
-
-      @media (min-width: 900px) and (max-width: 1199px) {
-        .page {
-          padding: 20px;
-        }
-        
-        .widget[data-size='s'] {
-          grid-column: span 4;
-        }
-        .widget[data-size='m'] {
-          grid-column: span 6;
-        }
-        .widget[data-size='l'] {
-          grid-column: span 12;
-        }
-
-        /* Compact mode: 4 columns on large screens */
-        .widgets.compact .widget {
-          grid-column: span 3;
-          min-height: 180px;
-        }
-
-        /* Expanded mode: single column on large screens */
-        .widgets.expanded .widget {
-          grid-column: span 12;
-          min-height: 400px;
-        }
-      }
-
-      @media (min-width: 1200px) {
-        .page {
-          padding: 24px;
-        }
-        
-        .widget[data-size='s'] {
-          grid-column: span 3;
-        }
-        .widget[data-size='m'] {
-          grid-column: span 6;
-        }
-        .widget[data-size='l'] {
-          grid-column: span 12;
-        }
-
-        /* Compact mode: 3 columns on xl screens */
-        .widgets.compact {
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-        }
-        
-        .widgets.compact .widget {
-          grid-column: span 1;
-          min-height: 200px;
-        }
-
-        /* Expanded mode: single column on xl screens */
-        .widgets.expanded .widget {
-          grid-column: span 12;
-          min-height: 450px;
-        }
-      }
-
-      .empty {
-        text-align: center;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 300px;
-        grid-column: 1 / -1;
-        margin: 40px auto;
-        max-width: 400px;
-        gap: 16px;
-      }
-
-      .empty .empty-icon {
-        font-size: 4rem;
-        width: 4rem;
-        height: 4rem;
-        color: color-mix(in srgb, var(--theme-on-surface) 40%, transparent);
-        margin-bottom: 8px;
-      }
-
-      .empty mat-card-title {
-        margin: 0;
-        font-size: 1.5rem;
-        font-weight: 600;
-      }
-
-      .empty mat-card-content {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-        align-items: center;
-      }
-
-      .empty mat-card-content p {
-        color: color-mix(in srgb, var(--theme-on-surface) 70%, transparent);
-        line-height: 1.5;
-        margin: 0;
-      }
-
-      .widget:focus-visible {
-        outline: var(--focus-outline);
-        outline-offset: 2px;
-      }
-
-      .loading-state {
-        grid-column: 1 / -1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 200px;
-        color: color-mix(in srgb, var(--theme-on-surface) 60%, transparent);
-        gap: 12px;
-      }
-
-      .loading-state mat-icon {
-        font-size: 2rem;
-        width: 2rem;
-        height: 2rem;
-        animation: spin 2s linear infinite;
-      }
-
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-
-      /* Compact Mode Responsive Styles */
-      .widgets.compact .widget {
-        ::ng-deep {
-          .header,
-          .widget-header {
-            gap: 6px;
-            margin-bottom: 4px;
-          }
-
-          .icon-container {
-            width: 20px;
-            height: 20px;
-            border-radius: 4px;
-            
-            mat-icon {
-              font-size: 12px;
-              width: 12px;
-              height: 12px;
-            }
-          }
-
-          .subtitle {
-            font-size: 0.7rem;
-            line-height: 1.1;
-          }
-
-          .metric-value,
-          .stat-number,
-          .summary-value,
-          .employee-count .value,
-          .salary-avg .rate {
-            font-size: 1rem;
-          }
-
-          .metric-label,
-          .stat-label,
-          .summary-label {
-            font-size: 0.55rem;
-            margin: 1px 0;
-          }
-
-          .metric-card,
-          .stat-item,
-          .summary-item,
-          .metric {
-            padding: 4px;
-            border-radius: 3px;
-          }
-
-          .metrics-grid,
-          .stats-grid {
-            gap: 3px;
-          }
-
-          button {
-            height: 20px;
-            font-size: 0.6rem;
-            border-radius: 3px;
-            padding: 0 4px;
-            
-            mat-icon {
-              font-size: 10px;
-              width: 10px;
-              height: 10px;
-              margin-right: 2px;
-            }
-          }
-
-          .navigation {
-            margin-top: 4px;
-            gap: 4px;
-          }
-
-          .dot {
-            width: 4px;
-            height: 4px;
-          }
-
-          .card-content {
-            gap: 4px;
-          }
-
-          .pipeline-overview,
-          .workforce-overview,
-          .financial-summary {
-            padding: 4px;
-            border-radius: 3px;
-            gap: 4px;
-          }
-
-          .progress-bar,
-          .status-progress {
-            height: 2px;
-          }
-
-          .circular-chart {
-            width: 40px;
-            height: 40px;
-          }
-
-          .completion-label,
-          .card-title {
-            font-size: 0.6rem;
-          }
-
-          .stat-text {
-            font-size: 0.65rem;
-          }
-
-          .stat-dot {
-            width: 4px;
-            height: 4px;
-          }
-
-          mat-card-header {
-            padding: 4px;
-          }
-          
-          mat-card-title {
-            font-size: 0.7rem;
-          }
-          
-          mat-card-subtitle {
-            font-size: 0.6rem;
-          }
-          
-          mat-card-content {
-            padding: 4px;
-          }
-          
-          mat-card-actions {
-            padding: 4px;
-            gap: 2px;
-          }
-        }
-      }
-    `,
-  ],
+  styleUrls: ['./dashboard.component.scss'],
 })
 export class DashboardComponent implements OnInit {
   private authService = inject(AuthService);
@@ -892,11 +325,11 @@ export class DashboardComponent implements OnInit {
   ngOnInit() {
     this.setupSEO();
     this.loadViewModePreference();
-    
+
     console.log('=== DASHBOARD INIT ===');
     console.log('Is authenticated:', this.authService.isAuthenticated());
     console.log('Token exists:', !!this.authService.getToken());
-    
+
     // Fallback timeout to ensure loading state is cleared
     setTimeout(() => {
       if (this.isLoadingWidgets()) {
@@ -904,12 +337,12 @@ export class DashboardComponent implements OnInit {
         this.isLoadingWidgets.set(false);
       }
     }, 5000);
-    
+
     this.authService.currentUser$.subscribe((user) => {
       console.log('=== USER SUBSCRIPTION ===');
       console.log('Current user:', user);
       console.log('Is authenticated:', this.authService.isAuthenticated());
-      
+
       this.currentUser.set(user);
       if (user && this.authService.isAuthenticated()) {
         console.log('User authenticated, loading organizations...');
@@ -953,13 +386,13 @@ export class DashboardComponent implements OnInit {
         duration: 2000,
       });
     }
-    
+
     const updated = this.widgets().map((x) =>
       x.id === w.id ? { ...x, size } : x
     );
     this.widgets.set(updated);
     this.saveWidgetSizes(updated);
-    
+
     const sizeNames = { s: 'Small', m: 'Medium', l: 'Large' };
     this.snackBar.open(`${w.title} resized to ${sizeNames[size]}`, 'Close', {
       duration: 2000,
@@ -1003,15 +436,15 @@ export class DashboardComponent implements OnInit {
     console.log('=== CONTEXT CHANGE ===');
     console.log('New context:', context);
     console.log('Current context:', this.selectedContext());
-    
+
     if (!context) {
       console.log('Invalid context, ignoring');
       return;
     }
-    
+
     this.selectedContext.set(context);
     this.saveContext(context);
-    
+
     if (context === 'personal') {
       console.log('Loading personal modules...');
       this.loadPersonalModules();
@@ -1032,10 +465,10 @@ export class DashboardComponent implements OnInit {
         }
       });
     }
-    
-    const contextName = context === 'personal' ? 'Personal' : 
+
+    const contextName = context === 'personal' ? 'Personal' :
       this.organizations().find(org => (org._id || org.id) === context)?.name || 'Organization';
-    
+
     this.snackBar.open(`Switched to ${contextName} dashboard`, 'Close', {
       duration: 2000,
     });
@@ -1044,7 +477,7 @@ export class DashboardComponent implements OnInit {
   private loadOrganizationModules(orgId: string) {
     console.log('=== LOADING ORG MODULES ===');
     console.log('Organization ID:', orgId);
-    
+
     this.modulesService.getOrganizationModules(orgId).subscribe({
       next: (modules) => {
         console.log('API Response - Organization modules:', modules);
@@ -1083,7 +516,7 @@ export class DashboardComponent implements OnInit {
 
   private loadPersonalModules() {
     console.log('=== LOADING PERSONAL MODULES ===');
-    
+
     this.modulesService.getPersonalModules().subscribe({
       next: (modules) => {
         console.log('API Response - Personal modules:', modules);
@@ -1107,13 +540,13 @@ export class DashboardComponent implements OnInit {
 
   loadModulesForContext(context: string) {
     console.log('Loading modules for context:', context);
-    
+
     // Ensure context is valid
     if (!context) {
       console.warn('Context is undefined, defaulting to personal');
       context = 'personal';
     }
-    
+
     if (context === 'personal') {
       // Load personal modules (user-specific modules without organization context)
       this.modulesService.getPersonalModules().subscribe({
@@ -1136,7 +569,7 @@ export class DashboardComponent implements OnInit {
         this.loadModulesForContext('personal');
         return;
       }
-      
+
       // Load organization-specific modules
       this.modulesService.getOrganizationModules(context).subscribe({
         next: (modules) => {
@@ -1155,7 +588,7 @@ export class DashboardComponent implements OnInit {
   updateWidgets(modules: AppModuleInfo[]) {
     console.log('Updating widgets with modules:', modules?.length || 0);
     console.log('Module details:', modules?.map(m => ({ id: m.id, name: m.name, displayName: m.displayName })));
-    
+
     // If no modules from API, show empty state
     if (!modules || modules.length === 0) {
       console.log('No modules returned, showing empty state');
@@ -1163,13 +596,13 @@ export class DashboardComponent implements OnInit {
       this.isLoadingWidgets.set(false);
       return;
     }
-    
+
     // Filter modules that have corresponding widget components using module registry
     const filtered = modules.filter(m => {
       const registryModule = this.getModuleFromRegistry(m.name || m.id);
       return registryModule && registryModule.widgetComponent;
     });
-    
+
     // Filter modules based on brand configuration from module registry
     const brandKey = this.brandConfig.getBrandKey();
     const allowedModules = getModulesByBrand(brandKey);
@@ -1177,10 +610,10 @@ export class DashboardComponent implements OnInit {
       const moduleId = m.name || m.id;
       return allowedModules.some(am => am.id === moduleId || am.name === moduleId);
     });
-    
+
     console.log('Filtered supported modules:', filtered.length);
     console.log('Brand filtered modules:', brandFiltered.length);
-    
+
     const savedSizes = this.loadWidgetSizes();
     const mapped: DashboardWidget[] = brandFiltered.map((m, idx) => {
       const registryModule = this.getModuleFromRegistry(m.name || m.id);
@@ -1192,7 +625,7 @@ export class DashboardComponent implements OnInit {
         size: savedSizes[widgetId] || (idx === 0 ? 'm' : idx === 1 ? 'm' : idx % 3 === 0 ? 'l' : 'm'),
       };
     });
-    
+
     // If no supported modules, show empty state with helpful message
     if (mapped.length === 0) {
       console.log('No supported widget modules found, showing empty state');
@@ -1200,7 +633,7 @@ export class DashboardComponent implements OnInit {
       this.isLoadingWidgets.set(false);
       return;
     }
-    
+
     // Add pending work widget if user has super admin role and in organization context
     const user = this.currentUser();
     if (this.authService.hasRole('super_admin') && this.selectedContext() !== 'personal') {
@@ -1243,7 +676,7 @@ export class DashboardComponent implements OnInit {
   getModuleColor(moduleId: string): string | null {
     const module = this.activeModules().find((m) => m.name === moduleId);
     if (module?.color) return module.color;
-    
+
     // Fallback to module registry
     const registryModule = this.getModuleFromRegistry(moduleId);
     return registryModule?.color || '#2196F3';
@@ -1423,14 +856,14 @@ export class DashboardComponent implements OnInit {
 
   private validateAndGetContext(savedContext: string | null): string | null {
     if (!savedContext) return null;
-    
+
     // 'personal' is always valid
     if (savedContext === 'personal') return savedContext;
-    
+
     // Check if the saved organization ID is still valid
     const orgs = this.organizations();
     const isValidOrg = orgs.some(org => (org._id || org.id) === savedContext);
-    
+
     if (isValidOrg) {
       return savedContext;
     } else {
@@ -1451,11 +884,11 @@ export class DashboardComponent implements OnInit {
   private setInitialContext() {
     const user = this.currentUser();
     const orgs = this.organizations();
-    
+
     console.log('=== SETTING INITIAL CONTEXT ===');
     console.log('User:', user);
     console.log('Organizations:', orgs);
-    
+
     if (!user) {
       console.log('No user, showing default widgets');
       this.selectedContext.set('personal');
@@ -1463,17 +896,17 @@ export class DashboardComponent implements OnInit {
       this.loadDefaultWidgets();
       return;
     }
-    
+
     const savedContext = this.getSavedContext();
     const validatedContext = this.validateAndGetContext(savedContext);
-    
+
     // Determine initial context priority:
     // 1. Valid saved context
     // 2. User's current organizationId (if exists in organizations)
     // 3. First available organization
     // 4. Personal context
     let initialContext = 'personal';
-    
+
     if (validatedContext) {
       initialContext = validatedContext;
     } else if (user.organizationId && orgs.some(org => (org._id || org.id) === user.organizationId)) {
@@ -1481,7 +914,7 @@ export class DashboardComponent implements OnInit {
     } else if (orgs.length > 0) {
       initialContext = orgs[0]._id || orgs[0].id;
     }
-    
+
     console.log('Initial context determined:', initialContext);
     this.selectedContext.set(initialContext);
     this.loadModulesForContext(initialContext);

@@ -146,6 +146,7 @@ import { PwaInstallModalComponent } from './pwa-install-modal.component';
       .logo {
         height: 16px;
         width: auto;
+        max-width: 150px;
       }
 
       .brand-name {
@@ -249,6 +250,10 @@ import { PwaInstallModalComponent } from './pwa-install-modal.component';
         .navbar {
           padding: 0 16px;
           height: 56px;
+        }
+
+        .nav-actions {
+          gap: 12px;
         }
 
         .brand-name {

@@ -65,7 +65,7 @@ import { Router } from '@angular/router';
       width: 48px;
       height: 48px;
       border-radius: 12px;
-      background: linear-gradient(135deg, #2196F3, #42A5F5);
+      background: linear-gradient(135deg, var(--theme-primary), color-mix(in srgb, var(--theme-primary) 80%, #fff));
       display: flex;
       align-items: center;
       justify-content: center;
@@ -88,16 +88,16 @@ import { Router } from '@angular/router';
     .unread-section {
       text-align: center;
       padding: 20px;
-      background: linear-gradient(135deg, color-mix(in srgb, #2196F3 8%, transparent), color-mix(in srgb, #2196F3 4%, transparent));
+      background: transparent;
       border-radius: 12px;
-      border: 1px solid color-mix(in srgb, #2196F3 20%, transparent);
+      border: 1px solid color-mix(in srgb, var(--theme-on-surface) 8%, transparent);
       position: relative;
     }
     
     .unread-count {
       font-size: 2.5rem;
       font-weight: 700;
-      color: #2196F3;
+      color: var(--theme-primary);
       line-height: 1;
     }
     
@@ -114,12 +114,12 @@ import { Router } from '@angular/router';
       width: 8px;
       height: 8px;
       border-radius: 50%;
-      background: #ccc;
+      background: color-mix(in srgb, var(--theme-on-surface) 20%, transparent);
       transition: all 0.3s ease;
     }
     
     .unread-indicator.has-unread {
-      background: #F44336;
+      background: var(--theme-error, #F44336);
       animation: pulse 2s infinite;
     }
     
@@ -134,7 +134,7 @@ import { Router } from '@angular/router';
       align-items: center;
       gap: 8px;
       padding: 8px 12px;
-      background: color-mix(in srgb, var(--theme-surface) 95%, var(--theme-primary));
+      background: transparent;
       border-radius: 8px;
     }
     
@@ -142,7 +142,7 @@ import { Router } from '@angular/router';
       font-size: 16px;
       width: 16px;
       height: 16px;
-      color: #2196F3;
+      color: var(--theme-primary);
     }
     
     .activity-text {

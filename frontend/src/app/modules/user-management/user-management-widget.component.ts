@@ -107,18 +107,26 @@ import { UserManagementService } from './user-management.service';
       grid-template-columns: 1fr 1fr;
       gap: 12px;
       flex: 1;
+
+      @media (max-width: 480px) {
+        grid-template-columns: 1fr;
+      }
     }
     
     :host-context([data-view="expanded"]) .metrics-grid {
       gap: 20px;
       grid-template-columns: 1fr 1fr;
+
+      @media (max-width: 600px) {
+        grid-template-columns: 1fr;
+      }
     }
     
     .metric-card {
       padding: 16px;
       border-radius: 12px;
-      background: color-mix(in srgb, var(--theme-surface) 95%, var(--theme-primary));
-      border: 1px solid color-mix(in srgb, var(--theme-primary) 15%, transparent);
+      background: transparent;
+      border: 1px solid color-mix(in srgb, var(--theme-on-surface) 8%, transparent);
     }
     
     :host-context([data-view="expanded"]) .metric-card {

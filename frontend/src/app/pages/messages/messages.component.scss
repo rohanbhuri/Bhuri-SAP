@@ -10,6 +10,13 @@
   left: 0;
   right: 0;
   bottom: 0;
+
+  @include mixins.mobile {
+    top: autp;
+    height: calc(100vh - 56px);
+    flex-direction: column;
+    padding-bottom: 80px;
+  }
 }
 
 .sidebar {
@@ -21,6 +28,18 @@
   flex-direction: column;
   overflow: hidden;
   flex-shrink: 0;
+
+  @include mixins.mobile {
+    width: 100%;
+    min-width: 100%;
+    height: 100%;
+    border-right: none;
+    border-bottom: 1px solid color-mix(in srgb, var(--theme-on-surface) 12%, transparent);
+
+    &.hidden {
+      display: none;
+    }
+  }
 }
 
 .sidebar-header {
@@ -30,43 +49,51 @@
   align-items: center;
   justify-content: space-between;
   flex-shrink: 0;
-  
+
+  @include mixins.mobile {
+    padding: 12px 16px;
+  }
+
   .title {
     display: flex;
     align-items: center;
     gap: 8px;
-    
+
     h1 {
       margin: 0;
       font-size: 24px;
       font-weight: 600;
       color: var(--theme-on-surface);
+
+      @include mixins.mobile {
+        font-size: 20px;
+      }
     }
-    
+
     .notification-count {
       display: flex;
       align-items: center;
       justify-content: center;
       color: var(--theme-accent);
       transition: all 0.2s ease;
-      
+
       mat-icon {
         font-size: 20px;
         width: 20px;
         height: 20px;
         animation: pulse 2s infinite;
       }
-      
+
       &:hover {
         color: var(--theme-primary);
         transform: scale(1.1);
       }
     }
   }
-  
+
   button[aria-label="Messages menu"] {
     color: var(--theme-on-surface);
-    
+
     &:hover {
       background: color-mix(in srgb, var(--theme-primary) 8%, transparent);
       color: var(--theme-primary);
@@ -78,9 +105,14 @@
   margin: 16px;
   width: calc(100% - 32px);
   flex-shrink: 0;
+
+  @include mixins.mobile {
+    margin: 12px 16px;
+  }
 }
 
-.loading-state, .error-state {
+.loading-state,
+.error-state {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -88,7 +120,7 @@
   padding: 32px 16px;
   gap: 16px;
   color: var(--theme-on-surface);
-  
+
   mat-icon {
     color: var(--theme-primary);
   }
@@ -97,12 +129,12 @@
 .org-accordion {
   flex: 1;
   overflow-y: auto;
-  
+
   mat-expansion-panel {
     background: var(--theme-surface);
     box-shadow: none;
     border-bottom: 1px solid color-mix(in srgb, var(--theme-on-surface) 8%, transparent);
-    
+
     &:last-child {
       border-bottom: none;
     }
@@ -114,7 +146,7 @@
   align-items: center;
   gap: 12px;
   width: 100%;
-  
+
   .org-avatar {
     width: 40px;
     height: 40px;
@@ -126,16 +158,16 @@
     font-weight: 600;
     font-size: 14px;
   }
-  
+
   .org-info {
     flex: 1;
-    
+
     .org-name {
       display: block;
       font-weight: 500;
       color: var(--theme-on-surface);
     }
-    
+
     .member-count {
       display: block;
       font-size: 12px;
@@ -155,40 +187,40 @@
   padding: 12px 16px;
   cursor: pointer;
   transition: background-color 0.2s ease;
-  
+
   &:hover:not(.has-unread) {
     background: color-mix(in srgb, var(--theme-primary) 8%, transparent);
   }
-  
+
   &.active:not(.has-unread) {
     background: color-mix(in srgb, var(--theme-primary) 12%, transparent);
     border-right: 3px solid var(--theme-primary);
   }
-  
+
   &.active.has-unread {
     background: color-mix(in srgb, var(--theme-primary) 20%, transparent);
     border-right: 3px solid var(--theme-primary);
   }
-  
+
   &.has-unread {
     background: color-mix(in srgb, var(--theme-primary) 15%, transparent);
     border-right: 3px solid var(--theme-primary);
-    
+
     .name {
       font-weight: 600;
     }
   }
-  
+
   .avatar-container {
     position: relative;
-    
+
     .avatar {
       width: 36px;
       height: 36px;
       border-radius: 50%;
       object-fit: cover;
     }
-    
+
     .online-indicator {
       position: absolute;
       bottom: 0;
@@ -200,49 +232,49 @@
       border-radius: 50%;
     }
   }
-  
+
   .meta {
     flex: 1;
-    
+
     .name {
       font-weight: 500;
       color: var(--theme-on-surface);
       margin-bottom: 2px;
     }
-    
+
     .preview {
       font-size: 12px;
       color: color-mix(in srgb, var(--theme-on-surface) 70%, transparent);
     }
   }
-  
+
   .message-actions {
     display: flex;
     align-items: center;
     gap: 8px;
-    
+
     .unread-dot {
       width: 8px;
       height: 8px;
       background: var(--theme-accent);
       border-radius: 50%;
     }
-    
+
     .more-options {
       opacity: 0;
       transition: opacity 0.2s ease;
       color: var(--theme-on-surface);
-      
+
       &:hover {
         background: color-mix(in srgb, var(--theme-on-surface) 8%, transparent);
       }
     }
   }
-  
+
   &.has-unread .message-actions .more-options {
     opacity: 1;
   }
-  
+
   &:hover .message-actions .more-options {
     opacity: 1;
   }
@@ -255,6 +287,19 @@
   background: var(--theme-background);
   overflow: hidden;
   min-width: 0;
+
+  @include mixins.mobile {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 5;
+
+    &.hidden {
+      display: none;
+    }
+  }
 }
 
 .chat-card {
@@ -274,17 +319,30 @@
   align-items: center;
   justify-content: space-between;
   flex-shrink: 0;
-  
+
+  @include mixins.mobile {
+    padding: 12px 16px;
+
+    .back-button {
+      display: flex;
+      margin-right: 8px;
+    }
+  }
+
   .chat-title-section {
     flex: 1;
-    
+
     .chat-title {
       margin: 0;
       font-size: 18px;
       font-weight: 600;
       color: var(--theme-on-surface);
+
+      @include mixins.mobile {
+        font-size: 16px;
+      }
     }
-    
+
     .typing-indicator {
       display: flex;
       align-items: center;
@@ -292,32 +350,37 @@
       margin-top: 4px;
       font-size: 12px;
       color: var(--theme-primary);
-      
+
       .typing-dots {
         display: flex;
         gap: 2px;
-        
+
         span {
           width: 4px;
           height: 4px;
           background: var(--theme-primary);
           border-radius: 50%;
           animation: typing 1.4s infinite ease-in-out;
-          
-          &:nth-child(1) { animation-delay: -0.32s; }
-          &:nth-child(2) { animation-delay: -0.16s; }
+
+          &:nth-child(1) {
+            animation-delay: -0.32s;
+          }
+
+          &:nth-child(2) {
+            animation-delay: -0.16s;
+          }
         }
       }
     }
   }
-  
+
   .chat-actions {
     display: flex;
     gap: 4px;
-    
+
     button {
       color: var(--theme-on-surface);
-      
+
       &:hover {
         background: color-mix(in srgb, var(--theme-primary) 8%, transparent);
         color: var(--theme-primary);
@@ -349,7 +412,7 @@
   padding: 12px;
   color: var(--theme-primary);
   font-size: 13px;
-  
+
   mat-spinner {
     display: inline-block;
   }
@@ -358,7 +421,7 @@
 .date-divider {
   text-align: center;
   margin: 16px 0;
-  
+
   span {
     background: var(--theme-surface);
     padding: 4px 12px;
@@ -375,47 +438,47 @@
   margin-bottom: 16px;
   animation: messageSlideIn 0.3s ease-out;
   transition: background-color 0.3s ease;
-  
+
   &.highlighted {
     background: color-mix(in srgb, var(--theme-primary) 15%, transparent);
     border-radius: 8px;
     padding: 8px;
     margin: 0 -8px 16px -8px;
   }
-  
+
   &.self {
     flex-direction: row-reverse;
-    
+
     .bubble-container {
       align-items: flex-end;
     }
-    
+
     .bubble {
       background: var(--theme-primary);
       color: var(--theme-on-primary);
       border-bottom-right-radius: 4px;
       box-shadow: 0 1px 2px color-mix(in srgb, var(--theme-primary) 30%, transparent);
-      
+
       .message-footer .time {
         color: color-mix(in srgb, var(--theme-on-primary) 80%, transparent);
         justify-content: flex-end;
       }
     }
   }
-  
+
   &.consecutive {
     margin-top: -8px;
-    
+
     .message-avatar {
       visibility: hidden;
     }
   }
-  
+
   .message-avatar {
     width: 32px;
     height: 32px;
     flex-shrink: 0;
-    
+
     img {
       width: 100%;
       height: 100%;
@@ -424,7 +487,7 @@
       border: 2px solid color-mix(in srgb, var(--theme-on-surface) 8%, transparent);
     }
   }
-  
+
   .bubble-container {
     display: flex;
     flex-direction: column;
@@ -432,7 +495,7 @@
     max-width: 65%;
     gap: 4px;
   }
-  
+
   .bubble {
     background: var(--theme-surface);
     color: var(--theme-on-surface);
@@ -443,11 +506,11 @@
     word-wrap: break-word;
     position: relative;
     transition: var(--transition);
-    
+
     &:hover {
       box-shadow: 0 2px 8px color-mix(in srgb, var(--theme-on-surface) 15%, transparent);
     }
-    
+
     .sender {
       font-size: 11px;
       font-weight: 600;
@@ -455,7 +518,7 @@
       margin-bottom: 6px;
       text-transform: capitalize;
     }
-    
+
     .reply-context {
       display: flex;
       gap: 8px;
@@ -464,23 +527,23 @@
       background: color-mix(in srgb, var(--theme-on-surface) 5%, transparent);
       border-radius: 8px;
       border-left: 3px solid var(--theme-primary);
-      
+
       .reply-content {
         font-size: 12px;
         color: color-mix(in srgb, var(--theme-on-surface) 70%, transparent);
         font-style: italic;
       }
     }
-    
+
     .content {
       line-height: 1.5;
       font-size: 14px;
       word-break: break-word;
     }
-    
+
     .attachments {
       margin-top: 8px;
-      
+
       .attachment {
         display: flex;
         align-items: center;
@@ -491,25 +554,25 @@
         margin-bottom: 6px;
         cursor: pointer;
         transition: var(--transition);
-        
+
         &:hover {
           background: color-mix(in srgb, var(--theme-primary) 10%, transparent);
         }
-        
+
         mat-icon {
           color: var(--theme-primary);
           font-size: 20px;
         }
-        
+
         .attachment-info {
           flex: 1;
-          
+
           .attachment-name {
             font-size: 13px;
             font-weight: 500;
             color: var(--theme-on-surface);
           }
-          
+
           .attachment-size {
             font-size: 11px;
             color: color-mix(in srgb, var(--theme-on-surface) 60%, transparent);
@@ -517,13 +580,13 @@
         }
       }
     }
-    
+
     .message-footer {
       display: flex;
       align-items: center;
       gap: 6px;
       margin-top: 6px;
-      
+
       .time {
         display: flex;
         align-items: center;
@@ -531,16 +594,16 @@
         font-size: 11px;
         font-weight: 500;
         color: color-mix(in srgb, var(--theme-on-surface) 50%, transparent);
-        
+
         .status-icon {
           font-size: 14px;
           width: 14px;
           height: 14px;
-          
+
           &.delivered {
             color: color-mix(in srgb, var(--theme-on-surface) 50%, transparent);
           }
-          
+
           &.read {
             color: var(--theme-primary);
           }
@@ -548,13 +611,13 @@
       }
     }
   }
-  
+
   .reactions {
     display: flex;
     gap: 4px;
     margin-top: 4px;
     flex-wrap: wrap;
-    
+
     .reaction {
       background: var(--theme-surface);
       border: 1px solid color-mix(in srgb, var(--theme-on-surface) 12%, transparent);
@@ -567,19 +630,19 @@
       display: flex;
       align-items: center;
       gap: 4px;
-      
+
       &.own-reaction {
         background: color-mix(in srgb, var(--theme-primary) 15%, transparent);
         border-color: var(--theme-primary);
         color: var(--theme-primary);
       }
-      
+
       &:hover {
         background: color-mix(in srgb, var(--theme-primary) 10%, transparent);
         transform: scale(1.05);
       }
     }
-    
+
     .add-reaction {
       background: transparent;
       border: 1px dashed color-mix(in srgb, var(--theme-on-surface) 20%, transparent);
@@ -588,13 +651,13 @@
       color: var(--theme-on-surface);
       cursor: pointer;
       transition: var(--transition);
-      
+
       &:hover {
         background: color-mix(in srgb, var(--theme-primary) 8%, transparent);
         border-color: var(--theme-primary);
         color: var(--theme-primary);
       }
-      
+
       mat-icon {
         font-size: 14px;
         width: 14px;
@@ -609,6 +672,7 @@
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -616,9 +680,12 @@
 }
 
 @keyframes highlightPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     background: color-mix(in srgb, var(--theme-primary) 15%, transparent);
   }
+
   50% {
     background: color-mix(in srgb, var(--theme-primary) 25%, transparent);
   }
@@ -632,40 +699,40 @@
   border-top: 1px solid color-mix(in srgb, var(--theme-on-surface) 8%, transparent);
   background: var(--theme-surface);
   flex-shrink: 0;
-  
+
   .attachment-btn {
     color: var(--theme-on-surface);
-    
+
     &:hover {
       background: color-mix(in srgb, var(--theme-primary) 8%, transparent);
       color: var(--theme-primary);
     }
   }
-  
+
   .message-input {
     flex: 1;
-    
+
     textarea {
       resize: none;
       color: var(--theme-on-surface);
     }
   }
-  
+
   button[aria-label="Send message"] {
     color: var(--theme-primary);
-    
+
     &:disabled {
       color: color-mix(in srgb, var(--theme-on-surface) 30%, transparent);
     }
-    
+
     &:not(:disabled):hover {
       background: color-mix(in srgb, var(--theme-primary) 8%, transparent);
     }
   }
-  
+
   button[aria-label="Record voice message"] {
     color: var(--theme-on-surface);
-    
+
     &:hover {
       background: color-mix(in srgb, var(--theme-accent) 8%, transparent);
       color: var(--theme-accent);
@@ -682,10 +749,10 @@
   padding: 32px;
   text-align: center;
   color: var(--theme-on-surface);
-  
+
   .empty-icon {
     margin-bottom: 16px;
-    
+
     mat-icon {
       font-size: 64px;
       width: 64px;
@@ -693,26 +760,30 @@
       color: color-mix(in srgb, var(--theme-on-surface) 30%, transparent);
     }
   }
-  
+
   h3 {
     margin: 0 0 8px 0;
     color: var(--theme-on-surface);
   }
-  
+
   p {
     margin: 0 0 24px 0;
     color: color-mix(in srgb, var(--theme-on-surface) 70%, transparent);
   }
-  
+
   .start-chat-btn {
     @include mixins.themed-button('primary');
   }
 }
 
 @keyframes typing {
-  0%, 60%, 100% {
+
+  0%,
+  60%,
+  100% {
     transform: translateY(0);
   }
+
   30% {
     transform: translateY(-10px);
   }
@@ -722,9 +793,11 @@
   0% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.6;
   }
+
   100% {
     opacity: 1;
   }
@@ -733,23 +806,23 @@
 // Mobile & Tablet responsive
 @include mixins.mobile {
   .layout {
-    top: 56px;
-    height: calc(100vh - 56px - 56px);
+    top: auto;
+    height: calc(100vh - 56px);
     flex-direction: column;
   }
-  
+
   .sidebar {
     width: 100%;
     min-width: 100%;
     height: 100%;
     border-right: none;
     border-bottom: 1px solid color-mix(in srgb, var(--theme-on-surface) 12%, transparent);
-    
+
     &.hidden {
       display: none;
     }
   }
-  
+
   .chat-pane {
     width: 100%;
     height: 100%;
@@ -757,61 +830,61 @@
     top: 0;
     left: 0;
     z-index: 5;
-    
+
     &.hidden {
       display: none;
     }
   }
-  
+
   .sidebar-header {
     padding: 12px 16px;
-    
+
     h1 {
       font-size: 20px !important;
     }
   }
-  
+
   .search-box {
     margin: 12px 16px;
     width: calc(100% - 32px);
   }
-  
+
   .chat-header {
     padding: 12px 16px;
-    
+
     .back-button {
       display: flex;
       margin-right: 8px;
     }
-    
+
     .chat-title {
       font-size: 16px !important;
     }
   }
-  
+
   .message {
     .bubble-container {
       max-width: 85%;
     }
-    
+
     .bubble {
       padding: 8px 12px;
       font-size: 14px;
     }
   }
-  
+
   .composer {
     padding: 12px 16px;
     gap: 6px;
-    
+
     .message-input {
       font-size: 14px;
     }
   }
-  
+
   .member {
     padding: 10px 16px;
-    
+
     .avatar {
       width: 40px !important;
       height: 40px !important;
@@ -823,12 +896,12 @@
   .layout {
     height: calc(100vh - 64px);
   }
-  
+
   .sidebar {
     width: 280px;
     min-width: 280px;
   }
-  
+
   .message {
     .bubble-container {
       max-width: 75%;
@@ -840,17 +913,17 @@
 @include mixins.high-contrast {
   .member {
     border: 1px solid var(--theme-on-surface);
-    
+
     &.active {
       border-color: var(--theme-primary);
       border-width: 2px;
     }
   }
-  
+
   .bubble {
     border-width: 2px;
   }
-  
+
   .message.self .bubble {
     border-color: var(--theme-primary);
   }

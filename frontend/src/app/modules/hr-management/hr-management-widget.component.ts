@@ -283,13 +283,9 @@ import { HrManagementService, HrStats, Employee, LeaveRequestDto } from './hr-ma
         grid-template-columns: 2fr 1fr;
         gap: 8px;
         padding: 10px;
-        background: linear-gradient(
-          135deg,
-          color-mix(in srgb, #ff9800 10%, transparent),
-          color-mix(in srgb, #ff9800 5%, transparent)
-        );
+        background: transparent;
         border-radius: 6px;
-        border: 1px solid color-mix(in srgb, #ff9800 20%, transparent);
+        border: 1px solid color-mix(in srgb, var(--theme-on-surface) 8%, transparent);
       }
 
       :host-context([data-view="expanded"]) .workforce-overview {
@@ -342,11 +338,7 @@ import { HrManagementService, HrStats, Employee, LeaveRequestDto } from './hr-ma
         text-align: center;
         padding: 6px;
         border-radius: 4px;
-        background: color-mix(
-          in srgb,
-          var(--theme-surface) 95%,
-          var(--theme-primary)
-        );
+        background: transparent;
       }
 
       :host-context([data-view="expanded"]) .metric {
@@ -393,11 +385,7 @@ import { HrManagementService, HrStats, Employee, LeaveRequestDto } from './hr-ma
         display: flex;
         justify-content: space-around;
         padding: 8px;
-        background: color-mix(
-          in srgb,
-          var(--theme-surface) 98%,
-          var(--theme-primary)
-        );
+        background: transparent;
         border-radius: 6px;
       }
 
@@ -472,11 +460,7 @@ import { HrManagementService, HrStats, Employee, LeaveRequestDto } from './hr-ma
         display: flex;
         justify-content: space-around;
         padding: 8px;
-        background: color-mix(
-          in srgb,
-          var(--theme-surface) 98%,
-          var(--theme-primary)
-        );
+        background: transparent;
         border-radius: 6px;
       }
 
@@ -529,11 +513,7 @@ import { HrManagementService, HrStats, Employee, LeaveRequestDto } from './hr-ma
         justify-content: space-between;
         align-items: center;
         padding: 4px 6px;
-        background: color-mix(
-          in srgb,
-          var(--theme-surface) 95%,
-          var(--theme-primary)
-        );
+        background: transparent;
         border-radius: 4px;
       }
 
@@ -718,7 +698,7 @@ export class HrManagementWidgetComponent implements OnInit, OnDestroy {
     });
 
     const totalEmployees = this.employees().length;
-    
+
     return Object.entries(deptCounts)
       .map(([name, count]) => ({
         name,

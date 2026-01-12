@@ -34,10 +34,25 @@ import { Router } from '@angular/router';
   `,
   styles: [`
     .widget-content { padding: 16px; }
-    .widget-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px; }
-    .stat-item { text-align: center; }
+    .widget-stats { 
+      display: grid; 
+      grid-template-columns: 1fr 1fr 1fr; 
+      gap: 12px; 
+      margin-bottom: 16px; 
+
+      @media (max-width: 400px) {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+    }
+    .stat-item { 
+      text-align: center; 
+      padding: 8px;
+      background: transparent;
+      border-radius: 8px;
+    }
     .stat-number { font-size: 1.4rem; font-weight: 700; color: var(--theme-primary); margin-bottom: 4px; }
-    .stat-label { font-size: 0.8rem; color: rgba(0, 0, 0, 0.6); }
+    .stat-label { font-size: 0.8rem; color: color-mix(in srgb, var(--theme-on-surface) 60%, transparent); }
     .widget-actions { display: flex; justify-content: center; }
     button { width: 100%; }
   `],

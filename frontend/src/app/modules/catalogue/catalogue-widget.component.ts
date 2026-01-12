@@ -11,11 +11,11 @@ import { CatalogueService } from './catalogue.service';
   standalone: true,
   imports: [CommonModule, MatCardModule, MatIconModule, MatButtonModule],
   template: `
-    <mat-card class="widget-card catalogue-widget">
-      <mat-card-header>
-        <mat-card-subtitle>Product catalogue with 3D models & variations</mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-content>
+    <div class="catalogue-widget">
+      <div class="widget-header-content">
+        <p class="subtitle">Product catalogue with 3D models & variations</p>
+      </div>
+      <div class="widget-body-content">
         <div class="widget-stats">
           <div class="stat-item primary">
             <mat-icon>inventory_2</mat-icon>
@@ -47,26 +47,25 @@ import { CatalogueService } from './catalogue.service';
             </div>
           </div>
         </div>
-      </mat-card-content>
-      <mat-card-actions>
+      </div>
+      <div class="widget-footer-actions">
         <button mat-raised-button color="primary" (click)="navigateToModule()">
           <mat-icon>dashboard</mat-icon>
-          Manage Catalogue
+          Manage
         </button>
         <button  mat-raised-button color="primary" (click)="navigateToAnalytics()">
           <mat-icon>analytics</mat-icon>
-          View Analytics
+          Analytics
         </button>
-      </mat-card-actions>
-    </mat-card>
+      </div>
+    </div>
   `,
   styles: [`
     .catalogue-widget {
       height: 100%;
       display: flex;
       flex-direction: column;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
+      background: transparent;
     }
     
     :host-context([data-view="expanded"]) .catalogue-widget {
@@ -100,8 +99,10 @@ import { CatalogueService } from './catalogue.service';
       font-size: 20px;
       margin-bottom: 4px;
     }
-    .catalogue-widget mat-card-subtitle {
-      color: rgba(255,255,255,0.8);
+    .subtitle {
+      color: color-mix(in srgb, var(--theme-on-surface) 70%, transparent);
+      padding: 0 16px;
+      font-size: 0.9rem;
     }
     
     :host-context([data-view="expanded"]) .catalogue-widget mat-card-subtitle {
@@ -124,9 +125,9 @@ import { CatalogueService } from './catalogue.service';
       align-items: center;
       gap: 12px;
       padding: 12px;
-      background: rgba(255,255,255,0.15);
+      background: color-mix(in srgb, var(--theme-surface) 95%, var(--theme-primary));
+      border: 1px solid color-mix(in srgb, var(--theme-primary) 10%, transparent);
       border-radius: 8px;
-      backdrop-filter: blur(10px);
     }
     
     :host-context([data-view="expanded"]) .stat-item {
@@ -140,7 +141,7 @@ import { CatalogueService } from './catalogue.service';
       font-size: 32px;
       width: 32px;
       height: 32px;
-      color: white;
+      color: var(--theme-primary);
     }
     
     :host-context([data-view="expanded"]) .stat-item mat-icon {
@@ -155,7 +156,7 @@ import { CatalogueService } from './catalogue.service';
     .stat-number {
       font-size: 24px;
       font-weight: 700;
-      color: white;
+      color: var(--theme-primary);
       line-height: 1;
     }
     
@@ -164,7 +165,7 @@ import { CatalogueService } from './catalogue.service';
     }
     .stat-label {
       font-size: 12px;
-      color: rgba(255,255,255,0.8);
+      color: color-mix(in srgb, var(--theme-on-surface) 70%, transparent);
       margin-top: 2px;
     }
     
@@ -173,14 +174,14 @@ import { CatalogueService } from './catalogue.service';
     }
     .stat-detail {
       font-size: 10px;
-      color: rgba(255,255,255,0.6);
+      color: color-mix(in srgb, var(--theme-on-surface) 50%, transparent);
       margin-top: 2px;
     }
-    .catalogue-widget mat-card-actions {
+    .widget-footer-actions {
       padding: 16px;
       display: flex;
       gap: 8px;
-      border-top: 1px solid rgba(255,255,255,0.2);
+      margin-top: auto;
     }
     
     :host-context([data-view="expanded"]) .catalogue-widget mat-card-actions {
@@ -201,7 +202,7 @@ import { CatalogueService } from './catalogue.service';
 export class CatalogueWidgetComponent implements OnInit {
   private router = inject(Router);
   private catalogueService = inject(CatalogueService);
-  
+
   stats = signal({
     products: 0,
     published: 0,

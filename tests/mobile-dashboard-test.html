@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -180,41 +181,41 @@
             .page {
                 padding: 12px;
             }
-            
+
             .header-controls {
                 flex-direction: column;
                 align-items: stretch;
                 gap: 8px;
             }
-            
+
             .view-selector {
                 min-width: auto;
                 width: 100%;
             }
-            
+
             h1 {
                 font-size: 1.3rem;
                 text-align: center;
             }
-            
+
             .subtitle {
                 font-size: 0.85rem;
                 text-align: center;
             }
-            
+
             .breadcrumb {
                 font-size: 0.75rem;
                 justify-content: center;
             }
-            
+
             .widgets {
                 gap: 12px;
             }
-            
+
             .widget-title {
                 font-size: 0.9rem;
             }
-            
+
             .select-box {
                 padding: 14px 40px 14px 16px;
                 font-size: 1rem;
@@ -225,13 +226,15 @@
             .page {
                 padding: 16px;
             }
-            
+
             .widget[data-size='s'] {
                 grid-column: span 6;
             }
+
             .widget[data-size='m'] {
                 grid-column: span 12;
             }
+
             .widget[data-size='l'] {
                 grid-column: span 12;
             }
@@ -241,13 +244,15 @@
             .page {
                 padding: 20px;
             }
-            
+
             .widget[data-size='s'] {
                 grid-column: span 4;
             }
+
             .widget[data-size='m'] {
                 grid-column: span 6;
             }
+
             .widget[data-size='l'] {
                 grid-column: span 12;
             }
@@ -257,13 +262,15 @@
             .page {
                 padding: 24px;
             }
-            
+
             .widget[data-size='s'] {
                 grid-column: span 3;
             }
+
             .widget[data-size='m'] {
                 grid-column: span 6;
             }
+
             .widget[data-size='l'] {
                 grid-column: span 12;
             }
@@ -306,9 +313,10 @@
         }
     </style>
 </head>
+
 <body>
     <div class="viewport-indicator" id="viewportIndicator">Desktop</div>
-    
+
     <div class="demo-controls">
         <button class="demo-btn" onclick="setViewport(320)">Mobile</button>
         <button class="demo-btn" onclick="setViewport(768)">Tablet</button>
@@ -332,9 +340,6 @@
                 </div>
                 <h1>Dashboard</h1>
             </div>
-            <p class="subtitle">
-                Check the sales, value and bounce rate by country.
-            </p>
         </div>
 
         <section class="widgets">
@@ -394,11 +399,11 @@
         function setViewport(width) {
             const container = document.querySelector('.page');
             const indicator = document.getElementById('viewportIndicator');
-            
+
             // Reset container width
             container.style.maxWidth = width + 'px';
             container.style.margin = '0 auto';
-            
+
             // Update indicator
             if (width <= 599) {
                 indicator.textContent = 'Mobile (' + width + 'px)';
@@ -407,7 +412,7 @@
             } else {
                 indicator.textContent = 'Desktop (' + width + 'px)';
             }
-            
+
             // Trigger responsive styles by dispatching resize event
             window.dispatchEvent(new Event('resize'));
         }
@@ -416,7 +421,7 @@
         function updateViewportIndicator() {
             const width = window.innerWidth;
             const indicator = document.getElementById('viewportIndicator');
-            
+
             if (width <= 599) {
                 indicator.textContent = 'Mobile (' + width + 'px)';
             } else if (width <= 899) {
@@ -430,4 +435,5 @@
         updateViewportIndicator();
     </script>
 </body>
+
 </html>

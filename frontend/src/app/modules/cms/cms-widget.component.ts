@@ -18,16 +18,8 @@ import { CmsService } from './cms.service';
     MatChipsModule
   ],
   template: `
-    <mat-card class="cms-widget">
-      <mat-card-header>
-        <div mat-card-avatar class="widget-avatar">
-          <mat-icon>web</mat-icon>
-        </div>
-        <mat-card-title>Content Management</mat-card-title>
-        <mat-card-subtitle>Manage your website content</mat-card-subtitle>
-      </mat-card-header>
-      
-      <mat-card-content>
+      <div class="cms-widget">
+      <div>
         <div class="widget-stats">
           <div class="stat-item">
             <div class="stat-value">{{ stats().pages }}</div>
@@ -58,9 +50,8 @@ import { CmsService } from './cms.service';
             </div>
           </div>
         </div>
-      </mat-card-content>
-      
-      <mat-card-actions>
+      </div>
+      <div>
         <button mat-button (click)="navigateToPages()">
           <mat-icon>article</mat-icon>
           Manage Pages
@@ -73,8 +64,8 @@ import { CmsService } from './cms.service';
           <mat-icon>dashboard</mat-icon>
           View All
         </button>
-      </mat-card-actions>
-    </mat-card>
+      </div>
+      </div>
   `,
   styles: [`
     .cms-widget {
@@ -374,10 +365,10 @@ export class CmsWidgetComponent implements OnInit {
     // Load blogs
     this.cmsService.getBlogs().subscribe(blogs => {
       const blogDrafts = blogs.filter(b => b.status === 'draft').length;
-      this.stats.update(stats => ({ 
-        ...stats, 
-        blogs: blogs.length, 
-        drafts: stats.drafts + blogDrafts 
+      this.stats.update(stats => ({
+        ...stats,
+        blogs: blogs.length,
+        drafts: stats.drafts + blogDrafts
       }));
     });
   }
