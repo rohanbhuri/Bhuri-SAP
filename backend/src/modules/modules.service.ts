@@ -20,7 +20,7 @@ export class ModulesService {
     @InjectRepository(User)
     private userRepository: MongoRepository<User>,
     private notificationsService: NotificationsService,
-  ) {}
+  ) { }
 
   private getDbConfig() {
     const uri = process.env.MONGODB_URI;
@@ -43,31 +43,31 @@ export class ModulesService {
   async getActiveModulesForOrg(orgId: string, userId?: string) {
     const { uri, dbName } = this.getDbConfig();
     const client = new MongoClient(uri);
-    
+
     try {
       await client.connect();
       const db = client.db(dbName);
-      
+
       let activeIds = [];
-      
+
       if (orgId && orgId !== 'undefined') {
         const org = await db.collection('organizations').findOne({ _id: new ObjectId(orgId) });
         activeIds = org?.activeModuleIds || [];
       }
-      
+
       if (activeIds.length === 0 && userId) {
         const user = await db.collection('users').findOne({ _id: new ObjectId(userId) });
         activeIds = user?.activeModuleIds || [];
       }
-      
+
       if (activeIds.length === 0) {
         return [];
       }
-      
+
       const modules = await db.collection('modules').find({
         _id: { $in: activeIds }
       }).toArray();
-      
+
       return modules.map(module => ({
         id: module._id.toString(),
         name: module.name,
@@ -87,11 +87,11 @@ export class ModulesService {
   async activateModule(moduleId: string, orgId: string, userId?: string) {
     const { uri, dbName } = this.getDbConfig();
     const client = new MongoClient(uri);
-    
+
     try {
       await client.connect();
       const db = client.db(dbName);
-      
+
       // For organization context
       if (orgId && orgId !== 'undefined' && orgId !== 'personal') {
         await db.collection('organizations').updateOne(
@@ -100,7 +100,7 @@ export class ModulesService {
         );
         return { success: true };
       }
-      
+
       // For personal context or when no valid orgId
       if (userId) {
         await db.collection('users').updateOne(
@@ -109,7 +109,7 @@ export class ModulesService {
         );
         return { success: true };
       }
-      
+
       return { success: false, message: 'No organization or user found' };
     } finally {
       await client.close();
@@ -119,11 +119,11 @@ export class ModulesService {
   async deactivateModule(moduleId: string, orgId: string, userId?: string) {
     const { uri, dbName } = this.getDbConfig();
     const client = new MongoClient(uri);
-    
+
     try {
       await client.connect();
       const db = client.db(dbName);
-      
+
       // For organization context
       if (orgId && orgId !== 'undefined' && orgId !== 'personal') {
         await db.collection('organizations').updateOne(
@@ -132,7 +132,7 @@ export class ModulesService {
         );
         return { success: true };
       }
-      
+
       // For personal context or when no valid orgId
       if (userId) {
         await db.collection('users').updateOne(
@@ -141,7 +141,7 @@ export class ModulesService {
         );
         return { success: true };
       }
-      
+
       return { success: false, message: 'No organization or user found' };
     } finally {
       await client.close();
@@ -151,15 +151,15 @@ export class ModulesService {
   async getAllAvailable(orgId: string, userId: string) {
     const { uri, dbName } = this.getDbConfig();
     const client = new MongoClient(uri);
-    
+
     try {
       await client.connect();
       const db = client.db(dbName);
       const modules = await db.collection('modules').find({}).toArray();
-      
+
       let activeIds = [];
       let isPersonalContext = false;
-      
+
       // Check if this is personal context
       if (!orgId || orgId === 'undefined' || orgId === 'personal') {
         isPersonalContext = true;
@@ -172,10 +172,10 @@ export class ModulesService {
         activeIds = org?.activeModuleIds || [];
         console.log('Organization context - Org active modules:', activeIds.length);
       }
-      
+
       // Get pending requests based on context
       let pendingRequestsQuery: any = { status: 'pending', userId: new ObjectId(userId) };
-      
+
       if (!isPersonalContext && orgId && orgId !== 'undefined') {
         pendingRequestsQuery.organizationId = new ObjectId(orgId);
       } else if (isPersonalContext) {
@@ -185,15 +185,15 @@ export class ModulesService {
           { organizationId: null }
         ];
       }
-      
+
       const pendingRequests = await db.collection('module-requests').find(pendingRequestsQuery).toArray();
-      
+
       const pendingModuleIds = pendingRequests.map(req => req.moduleId.toString());
-      
+
       const result = modules.map(module => {
         const isActive = activeIds.some(id => id.toString() === module._id.toString());
         const isPending = pendingModuleIds.includes(module._id.toString());
-        
+
         return {
           id: module._id.toString(),
           name: module.name,
@@ -208,10 +208,10 @@ export class ModulesService {
           color: module.color
         };
       });
-      
+
       console.log('Returning modules with active count:', result.filter(m => m.isActive).length);
       return result;
-      
+
     } finally {
       await client.close();
     }
@@ -220,16 +220,16 @@ export class ModulesService {
   async requestActivation(moduleId: string, userId: string, orgId: string, requesterRoles?: string[]) {
     const { uri, dbName } = this.getDbConfig();
     const client = new MongoClient(uri);
-    
+
     try {
       await client.connect();
       const db = client.db(dbName);
-      
+
       const module = await db.collection('modules').findOne({ _id: new ObjectId(moduleId) });
       if (!module) {
         throw new Error('Module not found');
       }
-      
+
       // Check if user is super admin - they can auto-approve their own requests
       const isSuperAdmin = requesterRoles?.includes('super_admin');
       console.log('=== MODULE REQUEST ACTIVATION ===');
@@ -238,7 +238,7 @@ export class ModulesService {
       console.log('Requester roles:', requesterRoles);
       console.log('Organization ID:', orgId);
       console.log('User ID:', userId);
-      
+
       if (module.permissionType === 'public' || isSuperAdmin) {
         console.log('Auto-activating module (public or super admin)');
         // For personal context, pass 'personal' as orgId to ensure user activation
@@ -251,7 +251,7 @@ export class ModulesService {
           message: isSuperAdmin ? 'Module activated automatically (Super Admin)' : 'Module activated (Public)'
         };
       }
-      
+
       const query: any = {
         moduleId: new ObjectId(moduleId),
         userId: new ObjectId(userId),
@@ -261,14 +261,14 @@ export class ModulesService {
         query.organizationId = new ObjectId(orgId);
       }
       const existingRequest = await db.collection('module-requests').findOne(query);
-      
+
       if (existingRequest) {
         return { success: false, message: 'Request already pending' };
       }
-      
+
       // Determine the appropriate approver for this request
       const approverInfo = await this.determineApprover(userId, orgId, moduleId);
-      
+
       const requestDoc = {
         moduleId: new ObjectId(moduleId),
         userId: new ObjectId(userId),
@@ -279,14 +279,15 @@ export class ModulesService {
         approverId: approverInfo.approverId,
         priority: approverInfo.priority
       };
-      
-      await db.collection('module-requests').insertOne(requestDoc);
-      
+
+      const result = await db.collection('module-requests').insertOne(requestDoc);
+      const requestId = result.insertedId;
+
       // Notify appropriate approvers about the new module request
-      await this.notifyApproversAboutModuleRequest(moduleId, userId, orgId, approverInfo);
-      
-      return { 
-        success: true, 
+      await this.notifyApproversAboutModuleRequest(moduleId, userId, orgId, approverInfo, requestId);
+
+      return {
+        success: true,
         message: `Request submitted for approval to ${approverInfo.type}`,
         approverType: approverInfo.type,
         requiresApproval: true
@@ -296,29 +297,29 @@ export class ModulesService {
     }
   }
 
-  async getPendingRequests(orgId: string, isSuperAdmin: boolean = false, currentUserId?: string) {
+  async getPendingRequests(orgId: string, isSuperAdmin: boolean = false, currentUserId?: string, status: string = 'pending') {
     const { uri, dbName } = this.getDbConfig();
     const client = new MongoClient(uri);
-    
+
     try {
       await client.connect();
       const db = client.db(dbName);
-      
-      let query: any = { status: 'pending' };
-      
+
+      let query: any = { status };
+
       // Super admins can see all requests
       if (isSuperAdmin) {
-        // No additional filtering - show all pending requests
+        // No additional filtering - show all requests with requested status
       } else {
         // Regular admins can only see requests for their organization
         if (orgId && orgId !== 'undefined') {
           query.organizationId = new ObjectId(orgId);
-        } else {
+        } else if (currentUserId) {
           // If no organization, only show requests where they are the approver
           query.approverId = new ObjectId(currentUserId);
         }
       }
-      
+
       const requests = await db.collection('module-requests').aggregate([
         { $match: query },
         {
@@ -351,7 +352,7 @@ export class ModulesService {
           }
         }
       ]).toArray();
-      
+
       return requests.map(req => ({
         _id: req._id.toString(),
         moduleId: req.moduleId.toString(),
@@ -373,39 +374,39 @@ export class ModulesService {
   async approveRequest(requestId: string, adminId: string) {
     const { uri, dbName } = this.getDbConfig();
     const client = new MongoClient(uri);
-    
+
     try {
       await client.connect();
       const db = client.db(dbName);
-      
+
       const request = await db.collection('module-requests').findOne({ _id: new ObjectId(requestId) });
       if (!request) {
         return { success: false, message: 'Request not found' };
       }
-      
+
       // Check if the admin has permission to approve this request
       const admin = await db.collection('users').findOne({ _id: new ObjectId(adminId) });
       if (!admin) {
         return { success: false, message: 'Admin not found' };
       }
-      
+
       // Get admin roles to check permissions
       const adminRoles = await db.collection('roles').find({
         _id: { $in: admin.roleIds }
       }).toArray();
-      
+
       const isSuperAdmin = adminRoles.some(role => role.type === 'super_admin');
       const isOrgAdmin = adminRoles.some(role => role.type === 'admin');
-      
+
       // Check if admin can approve this request
-      const canApprove = isSuperAdmin || 
-        (isOrgAdmin && request.organizationId && 
-         admin.organizationIds?.some(orgId => orgId.toString() === request.organizationId.toString()));
-      
+      const canApprove = isSuperAdmin ||
+        (isOrgAdmin && request.organizationId &&
+          admin.organizationIds?.some(orgId => orgId.toString() === request.organizationId.toString()));
+
       if (!canApprove) {
         return { success: false, message: 'Insufficient permissions to approve this request' };
       }
-      
+
       // Activate the module
       if (request.organizationId) {
         await db.collection('organizations').updateOne(
@@ -419,19 +420,19 @@ export class ModulesService {
           { $addToSet: { activeModuleIds: request.moduleId } } as any
         );
       }
-      
+
       // Update request status
       await db.collection('module-requests').updateOne(
         { _id: new ObjectId(requestId) },
-        { 
-          $set: { 
-            status: 'approved', 
+        {
+          $set: {
+            status: 'approved',
             processedAt: new Date(),
             processedBy: new ObjectId(adminId)
-          } 
+          }
         } as any
       );
-      
+
       // Create audit log
       await this.createAuditLog('module_request_approved', {
         requestId: requestId,
@@ -441,12 +442,12 @@ export class ModulesService {
         approvedBy: adminId,
         approverType: isSuperAdmin ? 'super_admin' : 'org_admin'
       });
-      
+
       // Notify the requester about approval
       await this.notifyRequesterAboutApproval(request.userId, request.moduleId, true);
-      
+
       return { success: true };
-      
+
     } catch (error) {
       return { success: false, message: error.message };
     } finally {
@@ -457,42 +458,42 @@ export class ModulesService {
   async rejectRequest(requestId: string, adminId: string) {
     const { uri, dbName } = this.getDbConfig();
     const client = new MongoClient(uri);
-    
+
     try {
       await client.connect();
       const db = client.db(dbName);
-      
+
       const request = await db.collection('module-requests').findOne({ _id: new ObjectId(requestId) });
       if (!request) {
         return { success: false, message: 'Request not found' };
       }
-      
+
       // Check if the admin has permission to reject this request
       const admin = await db.collection('users').findOne({ _id: new ObjectId(adminId) });
       if (!admin) {
         return { success: false, message: 'Admin not found' };
       }
-      
+
       // Get admin roles to check permissions
       const adminRoles = await db.collection('roles').find({
         _id: { $in: admin.roleIds }
       }).toArray();
-      
+
       const isSuperAdmin = adminRoles.some(role => role.type === 'super_admin');
       const isOrgAdmin = adminRoles.some(role => role.type === 'admin');
-      
+
       // Check if admin can reject this request
-      const canReject = isSuperAdmin || 
-        (isOrgAdmin && request.organizationId && 
-         admin.organizationIds?.some(orgId => orgId.toString() === request.organizationId.toString()));
-      
+      const canReject = isSuperAdmin ||
+        (isOrgAdmin && request.organizationId &&
+          admin.organizationIds?.some(orgId => orgId.toString() === request.organizationId.toString()));
+
       if (!canReject) {
         return { success: false, message: 'Insufficient permissions to reject this request' };
       }
-      
+
       await db.collection('module-requests').updateOne(
         { _id: new ObjectId(requestId) },
-        { 
+        {
           $set: {
             status: 'rejected',
             processedAt: new Date(),
@@ -500,7 +501,7 @@ export class ModulesService {
           }
         } as any
       );
-      
+
       // Create audit log
       await this.createAuditLog('module_request_rejected', {
         requestId: requestId,
@@ -510,10 +511,10 @@ export class ModulesService {
         rejectedBy: adminId,
         approverType: isSuperAdmin ? 'super_admin' : 'org_admin'
       });
-      
+
       // Notify the requester about rejection
       await this.notifyRequesterAboutApproval(request.userId, request.moduleId, false);
-      
+
       return { success: true };
     } finally {
       await client.close();
@@ -523,22 +524,22 @@ export class ModulesService {
   async getPersonalModules(userId: string) {
     const { uri, dbName } = this.getDbConfig();
     const client = new MongoClient(uri);
-    
+
     try {
       await client.connect();
       const db = client.db(dbName);
-      
+
       const user = await db.collection('users').findOne({ _id: new ObjectId(userId) });
       const activeIds = user?.activeModuleIds || [];
-      
+
       if (activeIds.length === 0) {
         return [];
       }
-      
+
       const modules = await db.collection('modules').find({
         _id: { $in: activeIds }
       }).toArray();
-      
+
       return modules.map(module => ({
         id: module._id.toString(),
         name: module.name,
@@ -558,15 +559,15 @@ export class ModulesService {
   private async determineApprover(userId: string, orgId: string, moduleId: string) {
     const { uri, dbName } = this.getDbConfig();
     const client = new MongoClient(uri);
-    
+
     try {
       await client.connect();
       const db = client.db(dbName);
-      
+
       // Get module details to check if it's a critical module
       const module = await db.collection('modules').findOne({ _id: new ObjectId(moduleId) });
       const isCriticalModule = module?.category === 'core' || module?.permissionType === 'require_permission';
-      
+
       // If user has organization, check for org admins first
       if (orgId && orgId !== 'undefined') {
         const org = await db.collection('organizations').findOne({ _id: new ObjectId(orgId) });
@@ -575,13 +576,13 @@ export class ModulesService {
           const adminRoles = await db.collection('roles').find({
             type: { $in: ['admin', 'super_admin'] }
           }).toArray();
-          
+
           const adminRoleIds = adminRoles.map(role => role._id);
           const orgAdmins = await db.collection('users').find({
             roleIds: { $in: adminRoleIds },
             organizationIds: new ObjectId(orgId)
           }).toArray();
-          
+
           if (orgAdmins.length > 0) {
             return {
               type: 'org_admin',
@@ -591,18 +592,18 @@ export class ModulesService {
           }
         }
       }
-      
+
       // Fallback to super admins for critical modules or when no org admin
       if (isCriticalModule || !orgId || orgId === 'undefined') {
         const superAdminRoles = await db.collection('roles').find({
           type: 'super_admin'
         }).toArray();
-        
+
         const superAdminRoleIds = superAdminRoles.map(role => role._id);
         const superAdmins = await db.collection('users').find({
           roleIds: { $in: superAdminRoleIds }
         }).toArray();
-        
+
         if (superAdmins.length > 0) {
           return {
             type: 'super_admin',
@@ -611,7 +612,7 @@ export class ModulesService {
           };
         }
       }
-      
+
       // System fallback
       return {
         type: 'system',
@@ -623,22 +624,22 @@ export class ModulesService {
     }
   }
 
-  private async notifyApproversAboutModuleRequest(moduleId: string, userId: string, orgId: string, approverInfo: any) {
+  private async notifyApproversAboutModuleRequest(moduleId: string, userId: string, orgId: string, approverInfo: any, requestId?: ObjectId) {
     const { uri, dbName } = this.getDbConfig();
     const client = new MongoClient(uri);
-    
+
     try {
       await client.connect();
       const db = client.db(dbName);
-      
+
       // Get module and user details
       const module = await db.collection('modules').findOne({ _id: new ObjectId(moduleId) });
       const user = await db.collection('users').findOne({ _id: new ObjectId(userId) });
-      
+
       if (!module || !user) return;
-      
+
       let approvers = [];
-      
+
       // Determine who to notify based on approver type
       switch (approverInfo.type) {
         case 'org_admin':
@@ -646,7 +647,7 @@ export class ModulesService {
             const adminRoles = await db.collection('roles').find({
               type: { $in: ['admin', 'super_admin'] }
             }).toArray();
-            
+
             const adminRoleIds = adminRoles.map(role => role._id);
             approvers = await db.collection('users').find({
               roleIds: { $in: adminRoleIds },
@@ -654,49 +655,50 @@ export class ModulesService {
             }).toArray();
           }
           break;
-          
+
         case 'super_admin':
           const superAdminRoles = await db.collection('roles').find({
             type: 'super_admin'
           }).toArray();
-          
+
           const superAdminRoleIds = superAdminRoles.map(role => role._id);
           approvers = await db.collection('users').find({
             roleIds: { $in: superAdminRoleIds }
           }).toArray();
           break;
-          
+
         case 'system':
           // Notify all super admins as system fallback
           const systemAdminRoles = await db.collection('roles').find({
             type: 'super_admin'
           }).toArray();
-          
+
           const systemAdminRoleIds = systemAdminRoles.map(role => role._id);
           approvers = await db.collection('users').find({
             roleIds: { $in: systemAdminRoleIds }
           }).toArray();
           break;
       }
-      
+
       // Send notification to each approver
       for (const approver of approvers) {
-        const notificationTitle = approverInfo.priority === 'high' 
-          ? 'High Priority Module Request' 
+        const notificationTitle = approverInfo.priority === 'high'
+          ? 'High Priority Module Request'
           : 'New Module Request';
-          
+
         const notificationMessage = approverInfo.type === 'super_admin'
           ? `${user.firstName || user.email} has requested access to ${module.displayName || module.name} (requires super admin approval)`
           : `${user.firstName || user.email} has requested access to ${module.displayName || module.name}`;
-        
+
         await this.notificationsService.createNotification(
           approver._id,
-          'system',
+          'module_request',
           notificationTitle,
           notificationMessage,
           {
             moduleId: new ObjectId(moduleId),
             requesterId: new ObjectId(userId),
+            requestId: requestId,
             organizationId: orgId && orgId !== 'undefined' ? new ObjectId(orgId) : null,
             approverType: approverInfo.type,
             priority: approverInfo.priority
@@ -713,18 +715,18 @@ export class ModulesService {
   private async createAuditLog(action: string, data: any) {
     const { uri, dbName } = this.getDbConfig();
     const client = new MongoClient(uri);
-    
+
     try {
       await client.connect();
       const db = client.db(dbName);
-      
+
       const auditLog = {
         action,
         data,
         timestamp: new Date(),
         source: 'modules_service'
       };
-      
+
       await db.collection('audit_logs').insertOne(auditLog);
     } catch (error) {
       console.error('Error creating audit log:', error);
@@ -736,22 +738,22 @@ export class ModulesService {
   private async notifyRequesterAboutApproval(userId: ObjectId, moduleId: ObjectId, approved: boolean) {
     const { uri, dbName } = this.getDbConfig();
     const client = new MongoClient(uri);
-    
+
     try {
       await client.connect();
       const db = client.db(dbName);
-      
+
       const module = await db.collection('modules').findOne({ _id: moduleId });
       if (!module) return;
-      
+
       const title = approved ? 'Module Request Approved' : 'Module Request Rejected';
-      const message = approved 
+      const message = approved
         ? `Your request for ${module.displayName || module.name} has been approved. You can now access this module.`
         : `Your request for ${module.displayName || module.name} has been rejected. Please contact your administrator for more information.`;
-      
+
       await this.notificationsService.createNotification(
         userId,
-        'system',
+        approved ? 'module_approved' : 'module_rejected',
         title,
         message,
         {

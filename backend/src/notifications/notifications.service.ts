@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MongoRepository } from 'typeorm';
 import { ObjectId } from 'mongodb';
 import { Notification, NotificationType, NotificationData } from '../entities/notification.entity';
 import { User } from '../entities/user.entity';
+import { MessagesGateway } from '../messages/messages.gateway';
 
 // Utility function to validate ObjectId format
 function isValidObjectId(id: string | ObjectId): boolean {
@@ -30,7 +31,9 @@ export class NotificationsService {
     private notificationRepo: MongoRepository<Notification>,
     @InjectRepository(User)
     private userRepo: MongoRepository<User>,
-  ) {}
+    @Inject(forwardRef(() => MessagesGateway))
+    private gateway: MessagesGateway,
+  ) { }
 
   async createNotification(
     userId: string | ObjectId,
@@ -49,7 +52,26 @@ export class NotificationsService {
       createdAt: new Date(),
     });
 
-    return this.notificationRepo.save(notification);
+    const saved = await this.notificationRepo.save(notification);
+
+    // Emit real-time notification
+    try {
+      this.gateway.emitNotification(
+        { userId: String(userId) },
+        {
+          notification: saved,
+          type: type
+        }
+      );
+
+      // Also emit updated unread count
+      const unreadCount = await this.getUnreadCount(userId);
+      this.gateway.server.to(`user:${userId}`).emit('notification:count', { count: unreadCount });
+    } catch (error) {
+      console.error('Failed to emit real-time notification:', error);
+    }
+
+    return saved;
   }
 
   async createMessageNotification(
@@ -67,8 +89,8 @@ export class NotificationsService {
     }
 
     const title = `New message from ${senderName}`;
-    const message = messageContent.length > 100 
-      ? `${messageContent.substring(0, 100)}...` 
+    const message = messageContent.length > 100
+      ? `${messageContent.substring(0, 100)}...`
       : messageContent;
 
     const data: NotificationData = {

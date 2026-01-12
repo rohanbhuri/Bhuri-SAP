@@ -92,12 +92,12 @@ export class ModulesService {
       );
   }
 
-  getPendingRequests(): Observable<ModuleRequest[]> {
+  getPendingRequests(status: string = 'pending'): Observable<ModuleRequest[]> {
     return this.http
-      .get<ModuleRequest[]>(`${this.apiUrl}/modules/requests`)
+      .get<ModuleRequest[]>(`${this.apiUrl}/modules/requests`, { params: { status } })
       .pipe(
         catchError((error) => {
-          console.error('Error fetching pending requests:', error);
+          console.error(`Error fetching ${status} requests:`, error);
           return of([]);
         })
       );

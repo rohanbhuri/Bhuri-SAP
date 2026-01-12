@@ -3,7 +3,7 @@ import { Server, Socket } from 'socket.io';
 import { MessagesService } from './messages.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { JwtService } from '@nestjs/jwt';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 
 @Injectable()
 @WebSocketGateway({
@@ -20,13 +20,14 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
 
   constructor(
     private readonly messagesService: MessagesService,
+    @Inject(forwardRef(() => NotificationsService))
     private readonly notificationsService: NotificationsService,
     private readonly jwtService: JwtService,
-  ) {}
+  ) { }
 
   handleConnection(client: Socket) {
     const token = client.handshake.auth?.token || client.handshake.headers?.authorization?.split(' ')[1];
-    
+
     if (!token) {
       console.log(`Client ${client.id} attempted connection without token, disconnecting`);
       client.disconnect();
@@ -85,26 +86,26 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
       const notifications = await this.notificationsService.getUserNotifications(payload.senderId, 1);
       if (notifications.length > 0) {
         const latestNotification = notifications[0];
-        
+
         // Emit notification to recipient's room
         if (latestNotification.data?.conversationId) {
           // Get conversation to find all participants
           const conversation = await this.messagesService['conversationRepo'].findOne({
             where: { _id: latestNotification.data.conversationId }
           });
-          
+
           if (conversation) {
             const recipientIds = (conversation as any).memberIds.filter(
               (memberId: any) => String(memberId) !== String(payload.senderId)
             );
-            
+
             // Emit to each recipient
             for (const recipientId of recipientIds) {
               this.server.to(`user:${recipientId}`).emit('notification:new', {
                 notification: latestNotification,
                 type: 'message'
               });
-              
+
               // Also emit updated notification count
               const unreadCount = await this.notificationsService.getUnreadCount(recipientId);
               this.server.to(`user:${recipientId}`).emit('notification:count', { count: unreadCount });

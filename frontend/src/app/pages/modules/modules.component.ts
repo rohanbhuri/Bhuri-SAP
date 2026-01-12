@@ -237,73 +237,110 @@ import { getModuleById } from '../../modules/module-registry';
 
           <div class="tab-content">
             @if (pendingRequests().length > 0) {
-            <div class="requests-list">
-              @for (request of pendingRequests(); track request._id) {
-              <mat-card class="request-card" [class.high-priority]="request.priority === 'high'">
-                <div class="request-header">
-                  <div class="request-info">
-                    <h4>{{ request.moduleName || getModuleName(request.moduleId) }}</h4>
-                    <p class="request-user">
-                      Requested by: {{ request.userName }}
-                    </p>
-                    <p class="request-date">
-                      {{ formatDate(request.requestedAt) }}
-                    </p>
-                    <div class="request-meta">
-                      <mat-chip class="approver-chip" [class]="'approver-' + (request.approverType || 'unknown')">
-                        <mat-icon>{{ getApproverIcon(request.approverType) }}</mat-icon>
-                        {{ getApproverLabel(request.approverType) }}
+              <div class="requests-section">
+                <h3 class="section-title">Pending Requests</h3>
+                <div class="requests-list">
+                  @for (request of pendingRequests(); track request._id) {
+                  <mat-card class="request-card" [class.high-priority]="request.priority === 'high'">
+                    <div class="request-header">
+                      <div class="request-info">
+                        <h4>{{ request.moduleName || getModuleName(request.moduleId) }}</h4>
+                        <p class="request-user">Requested by: {{ request.userName }}</p>
+                        <p class="request-date">{{ formatDate(request.requestedAt) }}</p>
+                        <div class="request-meta">
+                          <mat-chip class="approver-chip" [class]="'approver-' + (request.approverType || 'unknown')">
+                            <mat-icon>{{ getApproverIcon(request.approverType) }}</mat-icon>
+                            {{ getApproverLabel(request.approverType) }}
+                          </mat-chip>
+                          @if (request.priority === 'high') {
+                            <mat-chip class="priority-chip high">
+                              <mat-icon>priority_high</mat-icon>
+                              High Priority
+                            </mat-chip>
+                          }
+                        </div>
+                      </div>
+                      <mat-chip class="status-chip pending">
+                        <mat-icon>schedule</mat-icon>
+                        Pending
                       </mat-chip>
-                      @if (request.priority === 'high') {
-                        <mat-chip class="priority-chip high">
-                          <mat-icon>priority_high</mat-icon>
-                          High Priority
-                        </mat-chip>
+                    </div>
+
+                    <div class="request-actions">
+                      @if (request.canApprove !== false) {
+                        <button mat-raised-button color="primary" (click)="approveRequest(request)" [disabled]="loading()">
+                          <mat-icon>check</mat-icon>
+                          Approve
+                        </button>
+                        <button mat-stroked-button color="warn" (click)="rejectRequest(request)" [disabled]="loading()">
+                          <mat-icon>close</mat-icon>
+                          Reject
+                        </button>
+                      } @else {
+                        <p class="no-permission">
+                          <mat-icon>lock</mat-icon>
+                          You don't have permission to approve this request
+                        </p>
                       }
                     </div>
-                  </div>
-                  <mat-chip class="status-chip pending">
-                    <mat-icon>schedule</mat-icon>
-                    Pending
-                  </mat-chip>
-                </div>
-
-                <div class="request-actions">
-                  @if (request.canApprove !== false) {
-                    <button
-                      mat-raised-button
-                      color="primary"
-                      (click)="approveRequest(request)"
-                      [disabled]="loading()"
-                    >
-                      <mat-icon>check</mat-icon>
-                      Approve
-                    </button>
-                    <button
-                      mat-stroked-button
-                      color="warn"
-                      (click)="rejectRequest(request)"
-                      [disabled]="loading()"
-                    >
-                      <mat-icon>close</mat-icon>
-                      Reject
-                    </button>
-                  } @else {
-                    <p class="no-permission">
-                      <mat-icon>lock</mat-icon>
-                      You don't have permission to approve this request
-                    </p>
+                  </mat-card>
                   }
                 </div>
-              </mat-card>
-              }
-            </div>
-            } @else {
-            <div class="empty-state">
-              <mat-icon class="empty-icon">inbox</mat-icon>
-              <h3>No pending requests</h3>
-              <p>All module requests have been processed.</p>
-            </div>
+              </div>
+            }
+
+            @if (approvedRequests().length > 0) {
+              <div class="requests-section history-section">
+                <h3 class="section-title">Approved Requests</h3>
+                <div class="requests-list">
+                  @for (request of approvedRequests(); track request._id) {
+                  <mat-card class="request-card history-card processed-approved">
+                    <div class="request-header">
+                      <div class="request-info">
+                        <h4>{{ request.moduleName || getModuleName(request.moduleId) }}</h4>
+                        <p class="request-user">Requester: {{ request.userName }}</p>
+                        <p class="request-date">Approved on: {{ formatDate(request.processedAt || request.requestedAt) }}</p>
+                      </div>
+                      <mat-chip class="status-chip active">
+                        <mat-icon>check_circle</mat-icon>
+                        Approved
+                      </mat-chip>
+                    </div>
+                  </mat-card>
+                  }
+                </div>
+              </div>
+            }
+
+            @if (rejectedRequests().length > 0) {
+              <div class="requests-section history-section">
+                <h3 class="section-title">Rejected Requests</h3>
+                <div class="requests-list">
+                  @for (request of rejectedRequests(); track request._id) {
+                  <mat-card class="request-card history-card processed-rejected">
+                    <div class="request-header">
+                      <div class="request-info">
+                        <h4>{{ request.moduleName || getModuleName(request.moduleId) }}</h4>
+                        <p class="request-user">Requester: {{ request.userName }}</p>
+                        <p class="request-date">Rejected on: {{ formatDate(request.processedAt || request.requestedAt) }}</p>
+                      </div>
+                      <mat-chip class="status-chip restricted">
+                        <mat-icon>cancel</mat-icon>
+                        Rejected
+                      </mat-chip>
+                    </div>
+                  </mat-card>
+                  }
+                </div>
+              </div>
+            }
+
+            @if (pendingRequests().length === 0 && approvedRequests().length === 0 && rejectedRequests().length === 0) {
+              <div class="empty-state">
+                <mat-icon class="empty-icon">inbox</mat-icon>
+                <h3>No requests found</h3>
+                <p>There are no module requests in the system.</p>
+              </div>
             }
           </div>
         </mat-tab>
@@ -833,6 +870,56 @@ import { getModuleById } from '../../modules/module-registry';
         }
       }
 
+      .requests-section {
+        margin-bottom: 48px;
+        
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+
+      .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--theme-on-surface);
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        
+        &::after {
+          content: '';
+          flex: 1;
+          height: 1px;
+          background: color-mix(in srgb, var(--theme-on-surface) 10%, transparent);
+        }
+      }
+
+      .history-section {
+        opacity: 0.85;
+        
+        .section-title {
+          color: color-mix(in srgb, var(--theme-on-surface) 70%, transparent);
+        }
+      }
+
+      .history-card {
+        padding: 0 !important;
+        border-left-width: 4px;
+        
+        .request-header {
+          background: transparent;
+        }
+        
+        &.processed-approved {
+          border-left-color: var(--theme-success);
+        }
+        
+        &.processed-rejected {
+          border-left-color: var(--theme-error);
+        }
+      }
+
       .request-actions {
         padding: 0 20px 20px;
         display: flex;
@@ -1057,6 +1144,8 @@ export class ModulesComponent implements OnInit {
   modules = signal<AppModuleInfo[]>([]);
   filteredModules = signal<AppModuleInfo[]>([]);
   pendingRequests = signal<ModuleRequest[]>([]);
+  approvedRequests = signal<ModuleRequest[]>([]);
+  rejectedRequests = signal<ModuleRequest[]>([]);
   selectedTab = signal(0);
   loading = signal(false);
   pinLoading = signal<string | null>(null);
@@ -1107,16 +1196,22 @@ export class ModulesComponent implements OnInit {
 
   loadPendingRequests() {
     console.log('Loading pending requests...');
-    this.modulesService.getPendingRequests().subscribe({
+    this.modulesService.getPendingRequests('pending').subscribe({
       next: (requests) => {
         console.log('Loaded pending requests:', requests);
         this.pendingRequests.set(requests);
       },
-      error: (error) => {
-        console.error('Failed to load requests:', error);
-        this.snackBar.open('Failed to load requests', 'Close', {
-          duration: 3000,
-        });
+    });
+
+    this.modulesService.getPendingRequests('approved').subscribe({
+      next: (requests) => {
+        this.approvedRequests.set(requests);
+      },
+    });
+
+    this.modulesService.getPendingRequests('rejected').subscribe({
+      next: (requests) => {
+        this.rejectedRequests.set(requests);
       },
     });
   }
@@ -1249,16 +1344,22 @@ export class ModulesComponent implements OnInit {
   approveRequest(request: ModuleRequest) {
     this.loading.set(true);
     this.modulesService.approveRequest(request._id).subscribe({
-      next: () => {
-        // Immediately update the UI optimistically
-        this.updateModuleStatus(request.moduleId, { isActive: true, isPending: false, canActivate: false });
+      next: (result) => {
+        if (result.success !== false) {
+          // Immediately update the UI optimistically
+          this.updateModuleStatus(request.moduleId, { isActive: true, isPending: false, canActivate: false });
 
-        // Remove from pending requests
-        const currentRequests = this.pendingRequests();
-        const updatedRequests = currentRequests.filter(r => r._id !== request._id);
-        this.pendingRequests.set(updatedRequests);
+          // Remove from pending requests
+          this.pendingRequests.update(requests => requests.filter(r => r._id !== request._id));
 
-        this.snackBar.open('Request approved', 'Close', { duration: 3000 });
+          // Add to approved requests (optimistically)
+          const approvedReq = { ...request, status: 'approved' as const, processedAt: new Date().toISOString() };
+          this.approvedRequests.update(requests => [approvedReq, ...requests]);
+
+          this.snackBar.open('Request approved', 'Close', { duration: 3000 });
+        } else {
+          this.snackBar.open('Failed to approve request', 'Close', { duration: 3000 });
+        }
         this.loading.set(false);
       },
       error: () => {
@@ -1273,16 +1374,22 @@ export class ModulesComponent implements OnInit {
   rejectRequest(request: ModuleRequest) {
     this.loading.set(true);
     this.modulesService.rejectRequest(request._id).subscribe({
-      next: () => {
-        // Immediately update the UI optimistically
-        this.updateModuleStatus(request.moduleId, { isActive: false, isPending: false, canActivate: true });
+      next: (result) => {
+        if (result.success !== false) {
+          // Immediately update the UI optimistically
+          this.updateModuleStatus(request.moduleId, { isActive: false, isPending: false, canActivate: true });
 
-        // Remove from pending requests
-        const currentRequests = this.pendingRequests();
-        const updatedRequests = currentRequests.filter(r => r._id !== request._id);
-        this.pendingRequests.set(updatedRequests);
+          // Remove from pending requests
+          this.pendingRequests.update(requests => requests.filter(r => r._id !== request._id));
 
-        this.snackBar.open('Request rejected', 'Close', { duration: 3000 });
+          // Add to rejected requests (optimistically)
+          const rejectedReq = { ...request, status: 'rejected' as const, processedAt: new Date().toISOString() };
+          this.rejectedRequests.update(requests => [rejectedReq, ...requests]);
+
+          this.snackBar.open('Request rejected', 'Close', { duration: 3000 });
+        } else {
+          this.snackBar.open('Failed to reject request', 'Close', { duration: 3000 });
+        }
         this.loading.set(false);
       },
       error: () => {

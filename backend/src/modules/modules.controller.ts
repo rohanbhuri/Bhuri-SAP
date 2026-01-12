@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Post, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Patch, Post, Param, UseGuards, Request, Query } from '@nestjs/common';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { PermissionsGuard } from '../guards/permissions.guard';
 import { RequireRoles } from '../decorators/permissions.decorator';
@@ -7,7 +7,7 @@ import { ModulesService } from './modules.service';
 
 @Controller('modules')
 export class ModulesController {
-  constructor(private modulesService: ModulesService) {}
+  constructor(private modulesService: ModulesService) { }
 
   @Get()
   findAll() {
@@ -63,26 +63,27 @@ export class ModulesController {
 
   @Get('requests')
   @UseGuards(JwtAuthGuard)
-  async getPendingRequests(@Request() req) {
+  async getPendingRequests(@Request() req, @Query('status') status: string = 'pending') {
     console.log('=== MODULE REQUESTS ENDPOINT ===');
     console.log('User data:', req.user);
     console.log('User roles:', req.user.roles);
-    
+    console.log('Status filter:', status);
+
     // Check if user has admin or super_admin role
     const userRoles = req.user.roles || [];
     const isSuperAdmin = userRoles.includes('super_admin');
     const isAdmin = userRoles.includes('admin');
-    
+
     if (!isSuperAdmin && !isAdmin) {
       console.log('User lacks required permissions');
       throw new Error('Insufficient permissions to view module requests');
     }
-    
+
     const orgId = req.user.organizationId;
     console.log('Organization ID:', orgId);
     console.log('Is Super Admin:', isSuperAdmin);
-    
-    return this.modulesService.getPendingRequests(orgId, isSuperAdmin, req.user.userId);
+
+    return this.modulesService.getPendingRequests(orgId, isSuperAdmin, req.user.userId, status);
   }
 
   @Patch('requests/:id/approve')
@@ -91,15 +92,15 @@ export class ModulesController {
     console.log('=== APPROVE REQUEST ===');
     console.log('Request ID:', id);
     console.log('User:', req.user);
-    
+
     const userRoles = req.user.roles || [];
     const isSuperAdmin = userRoles.includes('super_admin');
     const isAdmin = userRoles.includes('admin');
-    
+
     if (!isSuperAdmin && !isAdmin) {
       throw new Error('Insufficient permissions to approve module requests');
     }
-    
+
     return this.modulesService.approveRequest(id, req.user.userId);
   }
 
@@ -109,15 +110,15 @@ export class ModulesController {
     console.log('=== REJECT REQUEST ===');
     console.log('Request ID:', id);
     console.log('User:', req.user);
-    
+
     const userRoles = req.user.roles || [];
     const isSuperAdmin = userRoles.includes('super_admin');
     const isAdmin = userRoles.includes('admin');
-    
+
     if (!isSuperAdmin && !isAdmin) {
       throw new Error('Insufficient permissions to reject module requests');
     }
-    
+
     return this.modulesService.rejectRequest(id, req.user.userId);
   }
 }

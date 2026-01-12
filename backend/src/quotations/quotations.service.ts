@@ -7,6 +7,9 @@ import { EmailTemplate } from '../entities/email-template.entity';
 import { Presentation, PresentationStatus } from '../entities/presentation.entity';
 import { Product } from '../entities/product.entity';
 import { Client } from '../entities/client.entity';
+import { User } from '../entities/user.entity';
+import { Role, RoleType } from '../entities/role.entity';
+import { NotificationsService } from '../notifications/notifications.service';
 import { ObjectId } from 'mongodb';
 import * as PDFDocument from 'pdfkit';
 import * as https from 'https';
@@ -29,6 +32,11 @@ export class QuotationsService {
         private productRepository: MongoRepository<Product>,
         @InjectRepository(Client)
         private clientRepository: MongoRepository<Client>,
+        @InjectRepository(User)
+        private userRepository: MongoRepository<User>,
+        @InjectRepository(Role)
+        private roleRepository: MongoRepository<Role>,
+        private notificationsService: NotificationsService,
     ) { }
 
     // Quotations
@@ -59,11 +67,11 @@ export class QuotationsService {
         if (!enquiry) throw new NotFoundException('Enquiry not found');
 
         const client = await this.clientRepository.findOneBy({ _id: new ObjectId(enquiry.clientId) });
-        
+
         const quotationItems = await Promise.all(
             enquiry.items.map(async (item) => {
-                const product = await this.productRepository.findOneBy({ 
-                    _id: new ObjectId(item.productId) 
+                const product = await this.productRepository.findOneBy({
+                    _id: new ObjectId(item.productId)
                 });
                 return {
                     productId: item.productId,
@@ -114,15 +122,68 @@ export class QuotationsService {
     }
 
     async submitForApproval(id: string): Promise<Quotation> {
-        return this.update(id, { status: QuotationStatus.PENDING_APPROVAL });
+        const quotation = await this.update(id, { status: QuotationStatus.PENDING_APPROVAL });
+
+        // Notify admins about the pending approval
+        try {
+            const adminRoles = await this.roleRepository.find({
+                where: { type: { $in: [RoleType.ADMIN, RoleType.SUPER_ADMIN] } as any }
+            });
+            const adminRoleIds = adminRoles.map(role => role._id);
+            const admins = await this.userRepository.find({
+                where: {
+                    roleIds: { $in: adminRoleIds } as any,
+                    organizationIds: { $in: [new ObjectId(quotation.organizationId)] } as any
+                }
+            });
+
+            for (const admin of admins) {
+                await this.notificationsService.createNotification(
+                    admin._id,
+                    'system',
+                    'Quotation Pending Approval',
+                    `Quotation ${quotation.quotationNumber} for ${quotation.clientName} requires your approval.`,
+                    {
+                        quotationId: quotation._id,
+                        organizationId: new ObjectId(quotation.organizationId),
+                        type: 'quotation_approval_request'
+                    }
+                );
+            }
+        } catch (error) {
+            console.error('Failed to send quotation approval notifications:', error);
+        }
+
+        return quotation;
     }
 
     async approve(id: string, userId: string): Promise<Quotation> {
-        return this.update(id, { 
-            status: QuotationStatus.APPROVED, 
+        const quotation = await this.update(id, {
+            status: QuotationStatus.APPROVED,
             approvedBy: userId,
             approvedAt: new Date()
         });
+
+        // Notify the creator about the approval
+        try {
+            if (quotation.createdBy) {
+                await this.notificationsService.createNotification(
+                    new ObjectId(quotation.createdBy),
+                    'module_approved',
+                    'Quotation Approved',
+                    `Your quotation ${quotation.quotationNumber} has been approved.`,
+                    {
+                        quotationId: quotation._id,
+                        organizationId: new ObjectId(quotation.organizationId),
+                        type: 'quotation_approved'
+                    }
+                );
+            }
+        } catch (error) {
+            console.error('Failed to send quotation approval notification:', error);
+        }
+
+        return quotation;
     }
 
     async sendQuotation(id: string, via: 'email' | 'whatsapp'): Promise<Quotation> {
@@ -133,7 +194,7 @@ export class QuotationsService {
         }
 
         // TODO: Implement actual email/whatsapp sending
-        return this.update(id, { 
+        return this.update(id, {
             status: QuotationStatus.SENT,
             sentAt: new Date(),
             sentVia: via
@@ -213,11 +274,11 @@ export class QuotationsService {
     async updatePresentation(id: string, data: Partial<Presentation>): Promise<Presentation> {
         const presentation = await this.findPresentation(id);
         if (!presentation) throw new NotFoundException('Presentation not found');
-        
+
         if (presentation.status !== PresentationStatus.DRAFT) {
             throw new Error('Only draft presentations can be edited');
         }
-        
+
         await this.presentationRepository.update({ _id: new ObjectId(id) }, { ...data, updatedAt: new Date() });
         return this.findPresentation(id);
     }
@@ -225,11 +286,11 @@ export class QuotationsService {
     async markPresentationFinal(id: string): Promise<Presentation> {
         const presentation = await this.findPresentation(id);
         if (!presentation) throw new NotFoundException('Presentation not found');
-        
+
         if (presentation.status !== PresentationStatus.DRAFT) {
             throw new Error('Only draft presentations can be marked as final');
         }
-        
+
         await this.presentationRepository.update(
             { _id: new ObjectId(id) },
             { status: PresentationStatus.FINAL, updatedAt: new Date() }
@@ -240,11 +301,11 @@ export class QuotationsService {
     async sendPresentationToClient(id: string): Promise<Presentation> {
         const presentation = await this.findPresentation(id);
         if (!presentation) throw new NotFoundException('Presentation not found');
-        
+
         if (presentation.status !== PresentationStatus.FINAL) {
             throw new Error('Only final presentations can be sent to client');
         }
-        
+
         await this.presentationRepository.update(
             { _id: new ObjectId(id) },
             { status: PresentationStatus.SENT_TO_CLIENT, sentAt: new Date(), updatedAt: new Date() }
@@ -272,12 +333,12 @@ export class QuotationsService {
         pptx.layout = 'LAYOUT_WIDE';
         pptx.defineLayout({ name: 'CUSTOM', width: 10, height: 5.625 });
         pptx.layout = 'CUSTOM';
-        
+
         // Cover slide
         const coverSlide = pptx.addSlide();
         if (presentation.coverBackground) {
-            const imagePath = presentation.coverBackground.startsWith('/') 
-                ? `.${presentation.coverBackground}` 
+            const imagePath = presentation.coverBackground.startsWith('/')
+                ? `.${presentation.coverBackground}`
                 : presentation.coverBackground;
             try {
                 coverSlide.addImage({ path: imagePath, x: 0, y: 0, w: '100%', h: '100%', sizing: { type: 'cover', w: '100%', h: '100%' } });
@@ -313,20 +374,20 @@ export class QuotationsService {
         if (presentation.layoutImage) {
             const layoutSlide = pptx.addSlide();
             layoutSlide.background = { color: 'FFFFFF' };
-            
+
             // Add brand logo (top right)
             try {
                 layoutSlide.addImage({ path: '../configs/assets/raccontixrm/icons/logo-racconti.png', x: 8.555, y: 0.4, w: 0.945, h: 0.1 });
             } catch (error) {
                 console.error('Failed to load brand logo');
             }
-            
+
             // Add "Layout" title at top left
             layoutSlide.addText('Layout', { x: 0.2, y: 0.2, w: 2, h: 0.3, fontSize: 14, bold: true, color: '000000' });
-            
+
             // Add layout image
-            const layoutImagePath = presentation.layoutImage.startsWith('/') 
-                ? `.${presentation.layoutImage}` 
+            const layoutImagePath = presentation.layoutImage.startsWith('/')
+                ? `.${presentation.layoutImage}`
                 : presentation.layoutImage;
             try {
                 layoutSlide.addImage({ path: layoutImagePath, x: 0.5, y: 0.8 });
@@ -358,7 +419,7 @@ export class QuotationsService {
             if (slide.layout === 'single' && products[0]) {
                 const product = products[0];
                 const productImage = product.featuredImage || product.imageGallery?.[0];
-                
+
                 if (productImage) {
                     const imgPath = productImage.startsWith('/') ? `.${productImage}` : productImage;
                     try {
@@ -367,7 +428,7 @@ export class QuotationsService {
                         console.error('Failed to load image:', imgPath);
                     }
                 }
-                
+
                 productSlide.addText(product.name, { x: 1, y: 4.7, w: 8, h: 0.3, fontSize: 20, bold: true });
                 productSlide.addText(`Code: ${product.productCode}`, { x: 1, y: 5.1, w: 8, h: 0.2, fontSize: 14, color: '666666' });
             } else {
@@ -375,7 +436,7 @@ export class QuotationsService {
                 products.forEach((product) => {
                     if (product) {
                         const productImage = product.featuredImage || product.imageGallery?.[0];
-                        
+
                         if (productImage) {
                             const imgPath = productImage.startsWith('/') ? `.${productImage}` : productImage;
                             try {
@@ -384,7 +445,7 @@ export class QuotationsService {
                                 console.error('Failed to load image:', imgPath);
                             }
                         }
-                        
+
                         productSlide.addText(product.name, { x: 4.5, y: yPos, w: 5, h: 0.3, fontSize: 16, bold: true });
                         productSlide.addText(`Code: ${product.productCode}`, { x: 4.5, y: yPos + 0.4, w: 5, h: 0.2, fontSize: 12, color: '666666' });
                         yPos += 2.5;
@@ -396,24 +457,24 @@ export class QuotationsService {
         // Thank you slide
         const thankYouSlide = pptx.addSlide();
         thankYouSlide.background = { color: 'FFFFFF' };
-        
+
         // Add brand logo (centered)
         try {
             thankYouSlide.addImage({ path: '../configs/assets/raccontixrm/icons/logo-racconti.png', x: 4.055, y: 1.5, w: 1.89, h: 0.2 });
         } catch (error) {
             console.error('Failed to load brand logo');
         }
-        
+
         thankYouSlide.addText('Thank You', { x: 3, y: 2.5, w: 4, h: 0.6, fontSize: 36, bold: true, align: 'center', color: '000000' });
         thankYouSlide.addText('We look forward to working with you', { x: 2.5, y: 3.3, w: 5, h: 0.3, fontSize: 18, align: 'center', color: '666666' });
 
         return pptx.write({ outputType: 'nodebuffer' }) as Promise<Buffer>;
     }
-    
+
     async convertPresentationToQuotation(presentationId: string): Promise<any> {
         const presentation = await this.findPresentation(presentationId);
         if (!presentation) throw new NotFoundException('Presentation not found');
-        
+
         if (presentation.status !== PresentationStatus.FINAL && presentation.status !== PresentationStatus.SENT_TO_CLIENT) {
             throw new Error('Only final or sent presentations can be converted to quotation');
         }
@@ -424,7 +485,7 @@ export class QuotationsService {
 
         // Get all unique product IDs from all slides
         const productIds = [...new Set(presentation.slides.flatMap(slide => slide.productIds))];
-        
+
         // Fetch all products
         const products = await Promise.all(
             productIds.map(pid => this.productRepository.findOneBy({ _id: new ObjectId(pid) }))
@@ -502,7 +563,7 @@ export class QuotationsService {
 
             // Check if discount exists and add discount columns
             if (quotation.discount || quotation.discountTotal > 0) {
-                const discountLabel = quotation.discount?.type === 'percentage' 
+                const discountLabel = quotation.discount?.type === 'percentage'
                     ? `DISCOUNTED PRICE PER PIECE @ ${quotation.discount.value}%`
                     : 'DISCOUNTED PRICE PER PIECE';
                 columns.push({ header: discountLabel, width: 100, field: 'discountedUnitPrice' });
@@ -511,7 +572,7 @@ export class QuotationsService {
             columns.push({ header: 'PRICE', width: 70, field: 'total' });
 
             if (quotation.discount || quotation.discountTotal > 0) {
-                const discountLabel = quotation.discount?.type === 'percentage' 
+                const discountLabel = quotation.discount?.type === 'percentage'
                     ? `DISCOUNTED PRICE @ ${quotation.discount.value}%`
                     : 'DISCOUNTED PRICE';
                 columns.push({ header: discountLabel, width: 90, field: 'discountedTotal' });
@@ -552,7 +613,7 @@ export class QuotationsService {
                 // Items
                 for (const item of items as any[]) {
                     const rowHeight = 80;
-                    
+
                     if (yPos + rowHeight > doc.page.height - 50) {
                         doc.addPage({ size: 'A4', margin: 30, layout: 'landscape' });
                         yPos = 30;
@@ -582,7 +643,7 @@ export class QuotationsService {
                                         const imgPath = imgUrl.startsWith('/') ? `.${imgUrl}` : imgUrl;
                                         doc.image(imgPath, xPos + 10, yPos + 10, { width: 60, height: 60, fit: [60, 60] });
                                     }
-                                } catch (e) {}
+                                } catch (e) { }
                             }
                         } else if (col.field === 'quantity') {
                             doc.fontSize(8).text(item.quantity.toString(), xPos + 2, yPos + 35, { width: col.width - 4, align: 'center' });
@@ -591,7 +652,7 @@ export class QuotationsService {
                         } else if (col.field === 'measurements') {
                             const shape = product?.dimensionConfig?.shape || 'rectangle';
                             const unit = product?.dimensionConfig?.unit || 'cm';
-                            const width = shape === 'rectangle' 
+                            const width = shape === 'rectangle'
                                 ? (item.customDimensions?.width || product?.dimensionConfig?.width?.default || '')
                                 : (item.customDimensions?.diameter || product?.dimensionConfig?.diameter?.default || '');
                             const depth = item.customDimensions?.depth || product?.dimensionConfig?.depth || '';
@@ -671,7 +732,7 @@ export class QuotationsService {
         ];
 
         if (quotation.discount || quotation.discountTotal > 0) {
-            const discountLabel = quotation.discount?.type === 'percentage' 
+            const discountLabel = quotation.discount?.type === 'percentage'
                 ? `DISCOUNTED PRICE PER PIECE @ ${quotation.discount.value}%`
                 : 'DISCOUNTED PRICE PER PIECE';
             columns.push({ header: discountLabel, key: 'discountedUnitPrice', width: 20 });
@@ -680,7 +741,7 @@ export class QuotationsService {
         columns.push({ header: 'PRICE', key: 'total', width: 12 });
 
         if (quotation.discount || quotation.discountTotal > 0) {
-            const discountLabel = quotation.discount?.type === 'percentage' 
+            const discountLabel = quotation.discount?.type === 'percentage'
                 ? `DISCOUNTED PRICE @ ${quotation.discount.value}%`
                 : 'DISCOUNTED PRICE';
             columns.push({ header: discountLabel, key: 'discountedTotal', width: 18 });
@@ -745,7 +806,7 @@ export class QuotationsService {
                 };
 
                 rowData.unitPrice = item.unitPrice;
-                
+
                 if (quotation.discount || quotation.discountTotal > 0) {
                     rowData.discountedUnitPrice = quotation.discount?.type === 'percentage'
                         ? item.unitPrice * (1 - quotation.discount.value / 100)
@@ -775,7 +836,7 @@ export class QuotationsService {
                     try {
                         const imgUrl = product.featuredImage || product.imageGallery[0];
                         let imageBuffer: Buffer;
-                        
+
                         if (imgUrl.startsWith('http://') || imgUrl.startsWith('https://')) {
                             imageBuffer = await downloadImage(imgUrl);
                         } else {

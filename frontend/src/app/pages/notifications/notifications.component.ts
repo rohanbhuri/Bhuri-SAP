@@ -106,7 +106,7 @@ export class NotificationsComponent {
   private notificationsService = inject(NotificationsService);
   private modulesService = inject(ModulesService);
   private router = inject(Router);
-  
+
   notifications = signal<Notification[]>([]);
 
   ngOnInit() {
@@ -136,9 +136,8 @@ export class NotificationsComponent {
     if (!notification.isRead) {
       this.markAsRead(notification);
     }
-    
+
     if (notification.type === 'message') {
-      // Navigate to messages page and optionally open specific conversation
       if (notification.data?.conversationId) {
         this.router.navigate(['/messages'], {
           queryParams: { conversation: notification.data.conversationId }
@@ -146,12 +145,21 @@ export class NotificationsComponent {
       } else {
         this.router.navigate(['/messages']);
       }
+    } else if (notification.type === 'module_request') {
+      // Navigate to modules management page if admin, or stay on notifications
+      this.router.navigate(['/modules/requests']);
+    } else if (notification.type === 'module_approved' || notification.type === 'module_rejected') {
+      this.router.navigate(['/modules']);
+    } else if (notification.data?.['type'] === 'quotation_approval_request') {
+      this.router.navigate(['/quotations']); // Or specific quotation detail if available
+    } else if (notification.data?.['type'] === 'quotation_approved') {
+      this.router.navigate(['/quotations']);
     }
   }
 
   markAsRead(notification: Notification) {
     this.notificationsService.markAsRead(notification._id).subscribe(() => {
-      const updated = this.notifications().map(n => 
+      const updated = this.notifications().map(n =>
         n._id === notification._id ? { ...n, isRead: true } : n
       );
       this.notifications.set(updated);
@@ -207,7 +215,7 @@ export class NotificationsComponent {
     const date = new Date(dateString);
     const now = new Date();
     const diff = now.getTime() - date.getTime();
-    
+
     if (diff < 60000) return 'Just now';
     if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
     if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
