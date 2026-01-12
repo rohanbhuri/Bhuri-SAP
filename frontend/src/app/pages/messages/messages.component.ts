@@ -452,43 +452,54 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
   draft = '';
   query = '';
   meId: string | null = null;
-  unreadMessages = signal<{[userId: string]: boolean}>({});
+  unreadMessages = signal<{ [userId: string]: boolean }>({});
   messageNotificationCount = signal<number>(0);
   userOrgId: string | null = null;
   expandedOrgId = signal<string | null>(null);
   highlightedMessageId = signal<string | null>(null);
+  activeMemberId = signal<string | null>(null);
 
   ngOnInit() {
     this.themeService.applyModuleTheme('messages');
-    
+
     // Subscribe to auth changes - THIS IS THE PROPER WAY
     this.auth.currentUser$.pipe(takeUntil(this.destroy$)).subscribe(user => {
       this.currentUser.set(user);
       this.meId = (user as any)?._id || user?.id || null;
       this.userOrgId = user?.organizationId || null;
     });
-    
+
     console.log('Messages initialized');
-    
+
     this.checkMobileView();
     window.addEventListener('resize', () => this.checkMobileView());
-    
+
     this.loadOrganizations();
     this.setupSearch();
     this.setupRealTimeUpdates();
     this.setupUnreadTracking();
     this.setupNotificationIntegration();
-    
+
+    // Restore highlighted member from last session
+    const lastMemberId = localStorage.getItem('lastMessagesMemberId');
+    if (lastMemberId) {
+      this.activeMemberId.set(lastMemberId);
+    }
+
     // Handle route parameters
     this.route.params.pipe(takeUntil(this.destroy$)).subscribe(params => {
       if (params['orgId'] && params['chatId']) {
         this.handleRouteParams(params['orgId'], params['chatId']);
+        this.api.initialLoadHandled = true;
       } else {
-        // No route params, try to restore last chat
-        this.restoreLastChat();
+        // No route params, try to restore last chat if not already handled in this session
+        if (!this.api.initialLoadHandled) {
+          this.api.initialLoadHandled = true;
+          this.restoreLastChat();
+        }
       }
     });
-    
+
     this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(queryParams => {
       if (queryParams['msgId']) {
         this.highlightedMessageId.set(queryParams['msgId']);
@@ -508,12 +519,12 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
   ngAfterViewInit() {
     // Update message count in service whenever orgs change
     this.messageCountService.setMessageCount(this.totalMembers());
-    
+
     // Attach scroll listeners to scrollable elements
     setTimeout(() => {
       const messageList = document.querySelector('.message-list');
       const orgAccordion = document.querySelector('.org-accordion');
-      
+
       if (messageList) {
         this.scrollVisibilityService.attachScrollListener(messageList as HTMLElement);
       }
@@ -531,11 +542,11 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
   groupedMessages = computed(() => {
     const msgs = this.messages();
     const groups: { date: Date; messages: Message[] }[] = [];
-    
+
     msgs.forEach(msg => {
       const msgDate = new Date(msg.createdAt);
       const dateKey = msgDate.toDateString();
-      
+
       let group = groups.find(g => g.date.toDateString() === dateKey);
       if (!group) {
         group = { date: msgDate, messages: [] };
@@ -543,13 +554,13 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
       }
       group.messages.push(msg);
     });
-    
+
     return groups.sort((a, b) => a.date.getTime() - b.date.getTime());
   });
 
-  canSend = computed(() => 
-    this.draft.trim().length > 0 && 
-    !this.messageState().sending && 
+  canSend = computed(() =>
+    this.draft.trim().length > 0 &&
+    !this.messageState().sending &&
     this.activeConversationId()
   );
 
@@ -566,7 +577,7 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
       .subscribe({
         next: (data) => {
           this.orgs.set(data);
-          
+
           // Auto-expand user's organization
           if (this.userOrgId && !this.expandedOrgId()) {
             this.expandedOrgId.set(this.userOrgId);
@@ -640,7 +651,7 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
       } else {
         senderId = String(rawSenderId);
       }
-      
+
       const transformedMsg = {
         ...message,
         id: message._id || message.id,
@@ -648,7 +659,7 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
         status: 'delivered' as const,
         senderName: this.getSenderName(senderId),
       };
-      
+
       // Only add if it's for the current conversation
       if (String(message.conversationId) === String(this.activeConversationId())) {
         this.messages.update(msgs => {
@@ -658,12 +669,12 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
           return [...msgs, transformedMsg];
         });
         this.scrollToBottom();
-        
+
         // Save current URL with latest message
         const currentUrl = this.router.url.split('?')[0];
         const urlWithMsg = `${currentUrl}?msgId=${transformedMsg.id}`;
         this.saveLastChatUrl(urlWithMsg);
-        
+
         // Mark as read if not from current user
         if (!this.isSelf(senderId)) {
           setTimeout(() => this.markAsRead(), 1000);
@@ -679,7 +690,7 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
       if (data.isTyping && !this.isSelf(data.userId)) {
         this.isTyping.set(true);
         this.typingText.set(`${data.userName} is typing...`);
-        
+
         // Clear typing indicator after 3 seconds
         setTimeout(() => {
           this.isTyping.set(false);
@@ -695,7 +706,7 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
   private handleMessagesRead(data: any) {
     if (String(data.conversationId) === String(this.activeConversationId())) {
       // Update message read status in UI
-      this.messages.update(msgs => 
+      this.messages.update(msgs =>
         msgs.map(msg => {
           if (this.isSelf(msg.senderId)) {
             return { ...msg, status: 'read' as const };
@@ -755,33 +766,34 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     this.api.clearUnreadMessage(otherUserId);
-    
+
     this.api.getOrCreateDM(orgId, otherUserId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (conv: Conversation) => {
           this.api.clearUnreadMessage(otherUserId);
-          
+
           const conversationId = (conv as any)._id || conv.id;
           this.activeConversationId.set(conversationId);
+          this.activeMemberId.set(otherUserId);
           const member = this.orgs()
             .flatMap((o) => o.members)
             .find((m) => String(m.id) === String(otherUserId));
           this.activeTitle.set(
             member ? `${member.firstName} ${member.lastName}` : 'Direct Message'
           );
-          
+
           const url = `/messages/${orgId}/chat/${conversationId}`;
-          this.saveLastChatUrl(url);
-          
+          this.saveLastChatUrl(url, otherUserId);
+
           this.router.navigate(['/messages', orgId, 'chat', conversationId], {
             replaceUrl: true
           });
-          
+
           if (this.isMobileView()) {
             this.showSidebar.set(false);
           }
-          
+
           this.loadMessages();
           this.markAsRead();
           this.markConversationNotificationsAsRead(conversationId);
@@ -797,37 +809,37 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
   loadMessages() {
     const id = this.activeConversationId();
     if (!id) return;
-    
+
     // Reset pagination state
     this.hasMore = true;
     this.oldestMessageId = null;
-    
+
     this.api.listMessages(id, 30)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (msgs) => {
           console.log('Raw messages from API:', msgs);
           console.log('Current user ID:', this.currentUser()?.id);
-          
+
           const transformedMsgs = msgs.reverse().map(msg => {
             // Extract senderId - backend returns ObjectId
             const rawSenderId = (msg as any).senderId;
             let senderId: string;
-            
+
             if (rawSenderId && typeof rawSenderId === 'object') {
               // ObjectId object - convert to string
               senderId = String(rawSenderId);
             } else {
               senderId = String(rawSenderId);
             }
-            
+
             console.log('Transforming message:', {
               rawSenderId,
               extractedSenderId: senderId,
               currentUserId: this.currentUser()?.id,
               isSelf: senderId === this.currentUser()?.id
             });
-            
+
             return {
               ...msg,
               id: (msg as any)._id?.toString() || msg.id,
@@ -836,17 +848,17 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
               senderName: this.getSenderName(senderId),
             };
           });
-          
+
           this.messages.set(transformedMsgs);
-          
+
           // Set oldest message ID for pagination
           if (transformedMsgs.length > 0) {
             this.oldestMessageId = transformedMsgs[0].id;
           }
-          
+
           // Check if there are more messages
           this.hasMore = msgs.length === 30;
-          
+
           this.scrollToBottom();
         },
         error: (error) => {
@@ -866,10 +878,10 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
   send() {
     const id = this.activeConversationId();
     if (!id || !this.draft.trim() || !this.auth.isAuthenticated()) return;
-    
+
     const content = this.draft.trim();
     this.draft = '';
-    
+
     // Send via HTTP API only (backend will handle WebSocket broadcast)
     this.api.sendMessage(id, content)
       .pipe(takeUntil(this.destroy$))
@@ -904,7 +916,7 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
   markAsRead() {
     const conversationId = this.activeConversationId();
     if (!conversationId || !this.meId) return;
-    
+
     this.api.markAsRead(conversationId).subscribe();
   }
 
@@ -918,13 +930,7 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // Enhanced methods for full functionality
   isActiveMember(memberId: string): boolean {
-    const activeConvId = this.activeConversationId();
-    if (!activeConvId) return false;
-    
-    // Check if this member is part of the active conversation
-    return this.orgs().some(org => 
-      org.members.some(m => String(m.id) === String(memberId))
-    );
+    return this.activeMemberId() === memberId;
   }
 
   getUnreadMessages(memberId: string): boolean {
@@ -938,14 +944,14 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
   loadMoreMessages() {
     const id = this.activeConversationId();
     if (!id || this.isLoadingOlder || !this.hasMore || !this.oldestMessageId) return;
-    
+
     this.isLoadingOlder = true;
     this.loadingMore.set(true);
-    
+
     // Save current scroll position
     const messageListEl = this.messageList?.nativeElement;
     const scrollHeightBefore = messageListEl?.scrollHeight || 0;
-    
+
     this.api.listMessages(id, 30, this.oldestMessageId)
       .pipe(
         takeUntil(this.destroy$),
@@ -960,7 +966,7 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
             this.hasMore = false;
             return;
           }
-          
+
           const transformedMsgs = msgs.reverse().map(msg => {
             const senderId = String((msg as any).senderId?._id || (msg as any).senderId || msg.senderId);
             return {
@@ -971,18 +977,18 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
               senderName: this.getSenderName(senderId),
             };
           });
-          
+
           // Prepend older messages
           this.messages.update(existing => [...transformedMsgs, ...existing]);
-          
+
           // Update oldest message ID
           if (transformedMsgs.length > 0) {
             this.oldestMessageId = transformedMsgs[0].id;
           }
-          
+
           // Check if there are more messages
           this.hasMore = msgs.length === 30;
-          
+
           // Restore scroll position
           setTimeout(() => {
             if (messageListEl) {
@@ -1001,10 +1007,10 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
   isConsecutive(msg: Message, messages: Message[]): boolean {
     const msgIndex = messages.findIndex(m => m.id === msg.id);
     if (msgIndex === 0) return false;
-    
+
     const prevMsg = messages[msgIndex - 1];
     const timeDiff = new Date(msg.createdAt).getTime() - new Date(prevMsg.createdAt).getTime();
-    
+
     return prevMsg.senderId === msg.senderId && timeDiff < 5 * 60 * 1000; // 5 minutes
   }
 
@@ -1041,17 +1047,17 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
   toggleReaction(messageId: string, emoji: string) {
     const message = this.messages().find(m => m.id === messageId);
     if (!message) return;
-    
-    const hasReaction = message.reactions?.some(r => 
+
+    const hasReaction = message.reactions?.some(r =>
       r.userId === this.meId && r.emoji === emoji
     );
-    
+
     if (hasReaction) {
       this.api.removeReaction(messageId, emoji)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (updatedMsg) => {
-            this.messages.update(msgs => 
+            this.messages.update(msgs =>
               msgs.map(m => m.id === messageId ? updatedMsg : m)
             );
           },
@@ -1062,7 +1068,7 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (updatedMsg) => {
-            this.messages.update(msgs => 
+            this.messages.update(msgs =>
               msgs.map(m => m.id === messageId ? updatedMsg : m)
             );
           },
@@ -1096,13 +1102,13 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
   onFileSelected(event: any) {
     const files = event.target.files;
     if (!files || files.length === 0) return;
-    
+
     // In a real implementation, upload files and send as attachments
     for (const file of files) {
       console.log('Selected file:', file.name, file.type, file.size);
       // this.api.uploadAttachment(file).subscribe(...);
     }
-    
+
     // Reset file input
     event.target.value = '';
   }
@@ -1153,10 +1159,10 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
           this.activeConversationId.set(conversationId);
           this.activeTitle.set(name);
           this.loadMessages();
-          
+
           // Join group room for real-time updates
           this.wsService.joinRoom(`conversation:${conversationId}`);
-          
+
           this.snackBar.open(`Group "${name}" created successfully!`, 'Close', { duration: 3000 });
         },
         error: (error) => {
@@ -1186,7 +1192,11 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
 
   restoreLastChat() {
     const lastUrl = this.getLastChatUrl();
+    const lastMemberId = localStorage.getItem('lastMessagesMemberId');
     if (lastUrl) {
+      if (lastMemberId) {
+        this.activeMemberId.set(lastMemberId);
+      }
       setTimeout(() => {
         this.router.navigateByUrl(lastUrl, { replaceUrl: true });
       }, 500);
@@ -1201,9 +1211,12 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  saveLastChatUrl(url: string) {
+  saveLastChatUrl(url: string, memberId?: string) {
     try {
       localStorage.setItem('lastMessagesUrl', url);
+      if (memberId) {
+        localStorage.setItem('lastMessagesMemberId', memberId);
+      }
     } catch (error) {
       console.error('Failed to save last chat URL to localStorage:', error);
     }
@@ -1212,6 +1225,7 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
   goBackToSidebar() {
     this.showSidebar.set(true);
     this.activeConversationId.set(null);
+    // Keep activeMemberId so they stay highlighted in the list
     this.router.navigate(['/messages'], { replaceUrl: true });
   }
 
@@ -1221,23 +1235,44 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
         clearInterval(checkOrgs);
         this.expandedOrgId.set(orgId);
         this.activeConversationId.set(chatId);
+
+        // Try to identify the member for this conversation
+        this.api.listConversations(orgId).pipe(takeUntil(this.destroy$)).subscribe(convs => {
+          const currentConv = convs.find(c => (c as any)._id === chatId || c.id === chatId);
+          if (currentConv) {
+            const otherId = currentConv.participants.find(p => p !== this.meId);
+            if (otherId) {
+              this.activeMemberId.set(otherId);
+              this.saveLastChatUrl(this.router.url.split('?')[0], otherId);
+
+              // Set active title
+              const member = this.orgs()
+                .flatMap((o) => o.members)
+                .find((m) => String(m.id) === String(otherId));
+              if (member) {
+                this.activeTitle.set(`${member.firstName} ${member.lastName}`);
+              }
+            }
+          }
+        });
+
         this.loadMessages();
-        
+
         if (this.isMobileView()) {
           this.showSidebar.set(false);
         }
-        
+
         setTimeout(() => this.scrollToHighlightedMessage(), 1000);
       }
     }, 100);
-    
+
     setTimeout(() => clearInterval(checkOrgs), 5000);
   }
 
   scrollToHighlightedMessage() {
     const msgId = this.highlightedMessageId();
     if (!msgId) return;
-    
+
     const messageEl = document.querySelector(`[data-message-id="${msgId}"]`);
     if (messageEl) {
       messageEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1249,7 +1284,7 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
   onMessageListScroll(event: Event) {
     const element = event.target as HTMLElement;
     const scrollTop = element.scrollTop;
-    
+
     // Load more when scrolled near top (within 100px)
     if (scrollTop < 100 && this.hasMoreMessages()) {
       this.loadMoreMessages();

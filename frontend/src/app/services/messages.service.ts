@@ -67,6 +67,8 @@ export interface MessageState {
 
 @Injectable({ providedIn: 'root' })
 export class MessagesApiService {
+  public initialLoadHandled = false;
+
   private http = inject(HttpClient);
   private brand = inject(BrandConfigService);
   private get api() {
@@ -75,9 +77,9 @@ export class MessagesApiService {
 
   // State management
   private messageState = signal<MessageState>({ loading: false, error: null, sending: false });
-  private typingUsers = new BehaviorSubject<{[conversationId: string]: string[]}>({});
+  private typingUsers = new BehaviorSubject<{ [conversationId: string]: string[] }>({});
   private onlineUsers = new BehaviorSubject<string[]>([]);
-  private unreadMessages = new BehaviorSubject<{[userId: string]: boolean}>({});
+  private unreadMessages = new BehaviorSubject<{ [userId: string]: boolean }>({});
 
   getMessageState = this.messageState.asReadonly();
   getTypingUsers = () => this.typingUsers.asObservable();
@@ -177,7 +179,7 @@ export class MessagesApiService {
     });
   }
 
-  getUnreadCount(): Observable<{[conversationId: string]: number}> {
-    return this.http.get<{[conversationId: string]: number}>(`${this.api}/messages/unread-count`);
+  getUnreadCount(): Observable<{ [conversationId: string]: number }> {
+    return this.http.get<{ [conversationId: string]: number }>(`${this.api}/messages/unread-count`);
   }
 }

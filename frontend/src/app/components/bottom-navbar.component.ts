@@ -32,8 +32,8 @@ import { ScrollVisibilityService } from '../services/scroll-visibility.service';
       <button
         class="nav-button"
         (click)="goToMessages()"
-        [attr.aria-current]="activeRoute === '/messages' ? 'page' : null"
-        [class.active]="activeRoute === '/messages'"
+        [attr.aria-current]="activeRoute.startsWith('/messages') ? 'page' : null"
+        [class.active]="activeRoute.startsWith('/messages')"
         aria-label="Messages"
       >
         <span [matBadge]="messageCount()" matBadgeColor="warn" [matBadgeHidden]="messageCount() === 0" class="badge-container">
