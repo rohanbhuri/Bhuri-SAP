@@ -28,7 +28,7 @@ export class MessagesService {
     const orgIds = user?.organizationIds || [];
     if (!orgIds.length) return [];
 
-    // Fetch organizations and members
+    const userObjectId = new ObjectId(userId);
     const organizations = await this.organizationRepo.find({ where: { _id: { $in: orgIds } } });
     const members = await this.userRepo.find({ where: { organizationIds: { $in: orgIds } } });
     
@@ -39,12 +39,17 @@ export class MessagesService {
         organizationName: org?.name || 'Unknown Organization',
         organizationCode: org?.code || '',
         members: members
-          .filter((m) => (m.organizationIds || []).some((id) => id?.toString() === orgId?.toString()))
+          .filter((m) => 
+            (m.organizationIds || []).some((id) => id?.toString() === orgId?.toString()) &&
+            m._id.toString() !== userObjectId.toString()
+          )
           .map((m) => ({
             id: m._id,
             firstName: m.firstName,
             lastName: m.lastName,
             email: m.email,
+            isOnline: (m as any).isOnline || false,
+            lastSeen: (m as any).lastSeen,
           })),
       };
     });
@@ -251,7 +256,6 @@ export class MessagesService {
     if (conversationId) {
       where.conversationId = new ObjectId(conversationId);
     } else {
-      // Only search in conversations where user is a member
       const userConversations = await this.conversationRepo.find({
         where: { memberIds: { $in: [new ObjectId(userId)] } as any },
       });
@@ -264,5 +268,24 @@ export class MessagesService {
       order: { createdAt: 'DESC' } as any,
       take: 50,
     });
+  }
+
+  async getUnreadMessageCount(userId: string): Promise<{[conversationId: string]: number}> {
+    const userObjectId = new ObjectId(userId);
+    const conversations = await this.conversationRepo.find({
+      where: { memberIds: { $in: [userObjectId] } as any },
+    });
+
+    const unreadCounts: {[conversationId: string]: number} = {};
+    for (const conv of conversations) {
+      const unreadCount = await this.messageRepo.count({
+        where: {
+          conversationId: conv._id,
+          readBy: { $nin: [userObjectId] } as any,
+        },
+      });
+      unreadCounts[conv._id.toString()] = unreadCount;
+    }
+    return unreadCounts;
   }
 }

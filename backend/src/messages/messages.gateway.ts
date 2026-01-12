@@ -74,10 +74,10 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
   ) {
     const msg = await this.messagesService.sendMessage(payload.conversationId, payload.senderId, payload.content);
 
-    // Emit to conversation room and org room
-    this.server.to(`conversation:${payload.conversationId}`).emit('message:new', msg);
+    // Emit to conversation room (excluding sender to avoid duplicates)
+    client.to(`conversation:${payload.conversationId}`).emit('message:new', msg);
     if ((msg as any)?.organizationId) {
-      this.server.to(`org:${(msg as any).organizationId}`).emit('message:org', msg);
+      client.to(`org:${(msg as any).organizationId}`).emit('message:org', msg);
     }
 
     // Get recent notifications for recipients to emit real-time updates

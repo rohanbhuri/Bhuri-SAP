@@ -176,4 +176,8 @@ export class MessagesApiService {
       memberIds,
     });
   }
+
+  getUnreadCount(): Observable<{[conversationId: string]: number}> {
+    return this.http.get<{[conversationId: string]: number}>(`${this.api}/messages/unread-count`);
+  }
 }

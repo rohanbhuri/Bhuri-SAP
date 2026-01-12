@@ -2,14 +2,17 @@ import { Component, inject, signal } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatBadgeModule } from '@angular/material/badge';
+import { CommonModule } from '@angular/common';
 import { filter } from 'rxjs/operators';
 import { ModulesService, AppModuleInfo } from '../services/modules.service';
 import { PreferencesService } from '../services/preferences.service';
+import { MessageCountService } from '../services/message-count.service';
 
 @Component({
   selector: 'app-bottom-navbar',
   standalone: true,
-  imports: [MatButtonModule, MatIconModule],
+  imports: [MatButtonModule, MatIconModule, MatBadgeModule, CommonModule],
   template: `
     <nav class="bottom-nav" role="navigation" aria-label="Primary">
       <button
@@ -29,7 +32,9 @@ import { PreferencesService } from '../services/preferences.service';
         [class.active]="activeRoute === '/messages'"
         aria-label="Messages"
       >
-        <mat-icon>message</mat-icon>
+        <span [matBadge]="messageCount()" matBadgeColor="warn" [matBadgeHidden]="messageCount() === 0" class="badge-container">
+          <mat-icon>message</mat-icon>
+        </span>
         <span class="nav-label">Messages</span>
       </button>
       <button
@@ -145,6 +150,13 @@ import { PreferencesService } from '../services/preferences.service';
         margin-bottom: 2px;
       }
 
+      .badge-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+
       .nav-label {
         font-size: 10px;
         font-weight: 500;
@@ -224,9 +236,11 @@ import { PreferencesService } from '../services/preferences.service';
 export class BottomNavbarComponent {
   private modulesService = inject(ModulesService);
   private preferencesService = inject(PreferencesService);
+  private messageCountService = inject(MessageCountService);
   activeRoute: string = '';
   activeModules = signal<AppModuleInfo[]>([]);
   pinnedModules = signal<AppModuleInfo[]>([]);
+  messageCount = this.messageCountService.messageCount;
   
   constructor(private router: Router) {
     this.router.events

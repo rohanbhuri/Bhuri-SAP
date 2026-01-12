@@ -2,11 +2,15 @@ import { Controller, Get, Post, Delete, Param, Body, Query, UseGuards, Request }
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { PermissionsGuard } from '../guards/permissions.guard';
 import { MessagesService } from './messages.service';
+import { MessagesGateway } from './messages.gateway';
 
 @Controller('messages')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class MessagesController {
-  constructor(private readonly messagesService: MessagesService) {}
+  constructor(
+    private readonly messagesService: MessagesService,
+    private readonly messagesGateway: MessagesGateway,
+  ) {}
 
   @Get('org-members')
   async getOrganizationsWithMembers(@Request() req) {
@@ -15,6 +19,9 @@ export class MessagesController {
 
   @Post('dm/:organizationId/:otherUserId')
   async getOrCreateDM(@Request() req, @Param('organizationId') organizationId: string, @Param('otherUserId') otherUserId: string) {
+    if (req.user.userId === otherUserId) {
+      throw new Error('Cannot create DM with yourself');
+    }
     return this.messagesService.getOrCreateDM(organizationId, req.user.userId, otherUserId);
   }
 
@@ -36,7 +43,12 @@ export class MessagesController {
 
   @Post('chat/:conversationId')
   async sendMessage(@Request() req, @Param('conversationId') conversationId: string, @Body() body: { content: string }) {
-    return this.messagesService.sendMessage(conversationId, req.user.userId, body.content);
+    const message = await this.messagesService.sendMessage(conversationId, req.user.userId, body.content);
+    
+    // Emit WebSocket event to all participants in the conversation
+    this.messagesGateway.server.to(`conversation:${conversationId}`).emit('message:new', message);
+    
+    return message;
   }
 
   @Post('chat/:conversationId/read')
@@ -59,8 +71,8 @@ export class MessagesController {
     return this.messagesService.removeReaction(messageId, req.user.userId, emoji);
   }
 
-  @Get('search')
-  async searchMessages(@Request() req, @Query('q') query: string, @Query('conversationId') conversationId?: string) {
-    return this.messagesService.searchMessages(req.user.userId, query, conversationId);
+  @Get('unread-count')
+  async getUnreadCount(@Request() req) {
+    return this.messagesService.getUnreadMessageCount(req.user.userId);
   }
 }

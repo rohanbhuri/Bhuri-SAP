@@ -33,6 +33,7 @@ import { NotificationsService } from '../../services/notifications.service';
 import { Subject, debounceTime, takeUntil, finalize, filter } from 'rxjs';
 import { CreateGroupDialogComponent } from './create-group-dialog.component';
 import { DirectMessageDialogComponent } from './direct-message-dialog.component';
+import { MessageCountService } from '../../services/message-count.service';
 
 @Component({
   selector: 'app-messages',
@@ -65,22 +66,10 @@ import { DirectMessageDialogComponent } from './direct-message-dialog.component'
 
     <div class="layout">
       <!-- Left Sidebar: Organizations & Members -->
-      <div class="sidebar">
+      <div class="sidebar" [class.hidden]="isMobileView() && !showSidebar()">
         <div class="sidebar-header">
           <div class="title">
             <h1>Messages</h1>
-            <span class="badge" [matBadge]="totalMembers()" matBadgeColor="primary">
-              {{ totalMembers() }}
-            </span>
-            @if (messageNotificationCount() > 0) {
-              <span class="notification-count"
-                    [matBadge]="messageNotificationCount()"
-                    matBadgeColor="accent"
-                    matBadgeSize="small"
-                    matTooltip="Unread message notifications">
-                <mat-icon>notifications_active</mat-icon>
-              </span>
-            }
           </div>
           <button 
             mat-icon-button 
@@ -211,9 +200,16 @@ import { DirectMessageDialogComponent } from './direct-message-dialog.component'
       </div>
 
       <!-- Right Chat Pane -->
-      <div class="chat-pane">
+      <div class="chat-pane" [class.hidden]="isMobileView() && showSidebar()">
         <mat-card class="chat-card" *ngIf="activeConversationId(); else empty">
           <mat-card-header class="chat-header">
+            <button mat-icon-button 
+                    class="back-button" 
+                    *ngIf="isMobileView()"
+                    (click)="goBackToSidebar()"
+                    matTooltip="Back to conversations">
+              <mat-icon>arrow_back</mat-icon>
+            </button>
             <div class="chat-title-section">
               <h2 class="chat-title">{{ activeTitle() }}</h2>
               <div class="typing-indicator" *ngIf="isTyping()">
@@ -240,13 +236,11 @@ import { DirectMessageDialogComponent } from './direct-message-dialog.component'
           </mat-card-header>
 
           <mat-card-content class="message-container">
-            <div class="message-list" #messageList>
+            <div class="message-list" #messageList (scroll)="onMessageListScroll($event)">
               <!-- Loading older messages -->
-              <div class="load-more" *ngIf="hasMoreMessages()">
-                <button mat-button color="primary" (click)="loadMoreMessages()" [disabled]="loadingMore()">
-                  <mat-spinner diameter="16" *ngIf="loadingMore()"></mat-spinner>
-                  <span *ngIf="!loadingMore()">Load older messages</span>
-                </button>
+              <div class="load-more" *ngIf="loadingMore()">
+                <mat-spinner diameter="24"></mat-spinner>
+                <span>Loading older messages...</span>
               </div>
 
               <!-- Date dividers and messages -->
@@ -421,9 +415,13 @@ export class MessagesComponent implements OnInit, OnDestroy {
   private wsService = inject(WebSocketService);
   private notificationsService = inject(NotificationsService);
   private dialog = inject(MatDialog);
+  private messageCountService = inject(MessageCountService);
   private destroy$ = new Subject<void>();
   private searchSubject = new Subject<string>();
   private typingTimeout?: number;
+  private isLoadingOlder = false;
+  private hasMore = true;
+  private oldestMessageId: string | null = null;
 
   @ViewChild('messageList') messageList!: ElementRef;
   @ViewChild('scrollAnchor') scrollAnchor!: ElementRef;
@@ -439,6 +437,8 @@ export class MessagesComponent implements OnInit, OnDestroy {
   loadingMore = signal(false);
   isTyping = signal(false);
   typingText = signal('');
+  isMobileView = signal(false);
+  showSidebar = signal(true);
 
   // Form data
   draft = '';
@@ -449,12 +449,12 @@ export class MessagesComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.themeService.applyModuleTheme('messages');
-    this.meId = this.auth.getCurrentUser()?.id || null;
+    const user = this.auth.getCurrentUser();
+    this.meId = user?.id || null;
+    console.log('Messages component initialized with meId:', this.meId, 'user:', user);
     
-    if (!this.meId) {
-      this.snackBar.open('Please log in to access messages', 'Close', { duration: 3000 });
-      return;
-    }
+    this.checkMobileView();
+    window.addEventListener('resize', () => this.checkMobileView());
     
     this.loadOrganizations();
     this.setupSearch();
@@ -469,6 +469,12 @@ export class MessagesComponent implements OnInit, OnDestroy {
     if (this.typingTimeout) {
       clearTimeout(this.typingTimeout);
     }
+    window.removeEventListener('resize', () => this.checkMobileView());
+  }
+
+  ngAfterViewInit() {
+    // Update message count in service whenever orgs change
+    this.messageCountService.setMessageCount(this.totalMembers());
   }
 
   // Computed properties
@@ -509,15 +515,15 @@ export class MessagesComponent implements OnInit, OnDestroy {
 
   // Data loading
   loadOrganizations() {
-    if (!this.auth.isAuthenticated()) {
-      this.snackBar.open('Please log in to access messages', 'Close', { duration: 3000 });
-      return;
-    }
-    
     this.api.getOrganizationsWithMembers()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (data) => this.orgs.set(data),
+        next: (data) => {
+          const user = this.auth.getCurrentUser();
+          this.meId = user?.id || null;
+          console.log('Organizations loaded, meId set to:', this.meId);
+          this.orgs.set(data);
+        },
         error: (error) => {
           console.error('Failed to load organizations:', error);
           this.snackBar.open('Failed to load conversations', 'Retry', {
@@ -531,9 +537,8 @@ export class MessagesComponent implements OnInit, OnDestroy {
     this.searchSubject.pipe(
       debounceTime(300),
       takeUntil(this.destroy$)
-    ).subscribe(query => {
-      setTimeout(() => this.searchLoading.set(false), 0);
-      // Implement search logic here
+    ).subscribe(() => {
+      this.searchLoading.set(false);
     });
   }
 
@@ -569,18 +574,23 @@ export class MessagesComponent implements OnInit, OnDestroy {
   }
 
   setupUnreadTracking() {
-    this.api.getUnreadMessages().pipe(takeUntil(this.destroy$)).subscribe(unread => {
-      this.unreadMessages.set(unread);
-    });
+    this.api.getUnreadCount()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(unreadCounts => {
+        const totalUnread = Object.values(unreadCounts).reduce((sum, count) => sum + (count as number), 0);
+        this.messageCountService.setMessageCount(totalUnread);
+      });
   }
 
   private handleNewMessage(message: any) {
     try {
+      const senderId = String(message.senderId?._id || message.senderId);
       const transformedMsg = {
         ...message,
         id: message._id || message.id,
+        senderId,
         status: 'delivered' as const,
-        senderName: this.getSenderName(message.senderId),
+        senderName: this.getSenderName(senderId),
       };
       
       // Only add if it's for the current conversation
@@ -594,7 +604,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
         this.scrollToBottom();
         
         // Mark as read if not from current user
-        if (!this.isSelf(message.senderId)) {
+        if (!this.isSelf(senderId)) {
           setTimeout(() => this.markAsRead(), 1000);
         }
       }
@@ -637,8 +647,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
 
   // Search and filtering
   onSearchChange(query: string) {
-    setTimeout(() => this.searchLoading.set(true), 0);
-    this.searchSubject.next(query);
+    this.searchLoading.set(false);
   }
 
   filteredMembers(org: OrgWithMembers) {
@@ -650,8 +659,19 @@ export class MessagesComponent implements OnInit, OnDestroy {
   }
 
   // Utility functions
-  isSelf(senderId: string) {
-    return !!this.meId && String(senderId) === String(this.meId);
+  isSelf(senderId: string | undefined): boolean {
+    if (!senderId || !this.meId) {
+      console.warn('isSelf: Missing senderId or meId', { senderId, meId: this.meId });
+      return false;
+    }
+    
+    // Handle both string and ObjectId formats
+    const senderIdStr = typeof senderId === 'object' ? (senderId as any)._id || (senderId as any).toString() : String(senderId);
+    const meIdStr = String(this.meId);
+    
+    const result = senderIdStr === meIdStr;
+    console.log('isSelf:', { senderId: senderIdStr, meId: meIdStr, match: result });
+    return result;
   }
 
   avatarUrl(email: string) {
@@ -708,6 +728,11 @@ export class MessagesComponent implements OnInit, OnDestroy {
           
           console.log('Active conversation set to:', conversationId);
           
+          // Hide sidebar on mobile when opening chat
+          if (this.isMobileView()) {
+            this.showSidebar.set(false);
+          }
+          
           this.loadMessages();
           this.markAsRead();
           
@@ -728,18 +753,35 @@ export class MessagesComponent implements OnInit, OnDestroy {
     const id = this.activeConversationId();
     if (!id) return;
     
-    this.api.listMessages(id, 50)
+    // Reset pagination state
+    this.hasMore = true;
+    this.oldestMessageId = null;
+    
+    this.api.listMessages(id, 30)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (msgs) => {
-          // Transform backend messages to frontend format
-          const transformedMsgs = msgs.reverse().map(msg => ({
-            ...msg,
-            id: (msg as any)._id || msg.id,
-            status: 'delivered' as const,
-            senderName: this.getSenderName(msg.senderId),
-          }));
+          const transformedMsgs = msgs.reverse().map(msg => {
+            const senderId = String((msg as any).senderId?._id || (msg as any).senderId || msg.senderId);
+            return {
+              ...msg,
+              id: (msg as any)._id || msg.id,
+              senderId,
+              status: 'delivered' as const,
+              senderName: this.getSenderName(senderId),
+            };
+          });
+          
           this.messages.set(transformedMsgs);
+          
+          // Set oldest message ID for pagination
+          if (transformedMsgs.length > 0) {
+            this.oldestMessageId = transformedMsgs[0].id;
+          }
+          
+          // Check if there are more messages
+          this.hasMore = msgs.length === 30;
+          
           this.scrollToBottom();
         },
         error: (error) => {
@@ -763,46 +805,16 @@ export class MessagesComponent implements OnInit, OnDestroy {
     const content = this.draft.trim();
     this.draft = '';
     
-    // Optimistically add message to UI
-    const tempId = `temp-${Date.now()}`;
-    const newMsg = {
-      id: tempId,
-      content,
-      senderId: this.meId!,
-      senderName: 'You',
-      conversationId: id,
-      status: 'sending' as const,
-      createdAt: new Date(),
-      reactions: []
-    };
-    
-    this.messages.update(msgs => [...msgs, newMsg]);
-    this.scrollToBottom();
-    
-    // Send via WebSocket for real-time delivery
-    this.wsService.sendMessage(id, this.meId!, content);
-    
-    // Also send via HTTP API for persistence
+    // Send via HTTP API only (backend will handle WebSocket broadcast)
     this.api.sendMessage(id, content)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (msg) => {
-          const transformedMsg = {
-            ...msg,
-            id: (msg as any)._id || msg.id,
-            status: 'sent' as const,
-            senderName: this.getSenderName(msg.senderId),
-          };
-          
-          // Replace temporary message with real message
-          this.messages.update(msgs =>
-            msgs.map(m => m.id === tempId ? transformedMsg : m)
-          );
+          // Message will be added via WebSocket handleNewMessage
+          // No need to add it here to avoid duplicates
         },
         error: (error) => {
           console.error('Failed to send message:', error);
-          // Remove failed message from UI
-          this.messages.update(msgs => msgs.filter(m => m.id !== tempId));
           this.snackBar.open('Failed to send message', 'Retry', {
             duration: 3000
           }).onAction().subscribe(() => {
@@ -855,25 +867,64 @@ export class MessagesComponent implements OnInit, OnDestroy {
   }
 
   hasMoreMessages(): boolean {
-    return this.messages().length >= 50; // If we have 50+ messages, assume there are more
+    return this.hasMore && !this.isLoadingOlder;
   }
 
   loadMoreMessages() {
     const id = this.activeConversationId();
-    if (!id || this.loadingMore()) return;
+    if (!id || this.isLoadingOlder || !this.hasMore || !this.oldestMessageId) return;
     
+    this.isLoadingOlder = true;
     this.loadingMore.set(true);
-    const oldestMessage = this.messages()[0];
-    const before = oldestMessage?.id;
     
-    this.api.listMessages(id, 50, before)
+    // Save current scroll position
+    const messageListEl = this.messageList?.nativeElement;
+    const scrollHeightBefore = messageListEl?.scrollHeight || 0;
+    
+    this.api.listMessages(id, 30, this.oldestMessageId)
       .pipe(
         takeUntil(this.destroy$),
-        finalize(() => this.loadingMore.set(false))
+        finalize(() => {
+          this.isLoadingOlder = false;
+          this.loadingMore.set(false);
+        })
       )
       .subscribe({
         next: (msgs) => {
-          this.messages.update(existing => [...msgs.reverse(), ...existing]);
+          if (msgs.length === 0) {
+            this.hasMore = false;
+            return;
+          }
+          
+          const transformedMsgs = msgs.reverse().map(msg => {
+            const senderId = String((msg as any).senderId?._id || (msg as any).senderId || msg.senderId);
+            return {
+              ...msg,
+              id: (msg as any)._id || msg.id,
+              senderId,
+              status: 'delivered' as const,
+              senderName: this.getSenderName(senderId),
+            };
+          });
+          
+          // Prepend older messages
+          this.messages.update(existing => [...transformedMsgs, ...existing]);
+          
+          // Update oldest message ID
+          if (transformedMsgs.length > 0) {
+            this.oldestMessageId = transformedMsgs[0].id;
+          }
+          
+          // Check if there are more messages
+          this.hasMore = msgs.length === 30;
+          
+          // Restore scroll position
+          setTimeout(() => {
+            if (messageListEl) {
+              const scrollHeightAfter = messageListEl.scrollHeight;
+              messageListEl.scrollTop = scrollHeightAfter - scrollHeightBefore;
+            }
+          }, 0);
         },
         error: (error) => {
           console.error('Failed to load more messages:', error);
@@ -1059,6 +1110,28 @@ export class MessagesComponent implements OnInit, OnDestroy {
         console.error('Failed to mark conversation notifications as read:', error);
       }
     });
+  }
+
+  checkMobileView() {
+    this.isMobileView.set(window.innerWidth <= 768);
+    if (!this.isMobileView()) {
+      this.showSidebar.set(true);
+    }
+  }
+
+  goBackToSidebar() {
+    this.showSidebar.set(true);
+    this.activeConversationId.set(null);
+  }
+
+  onMessageListScroll(event: Event) {
+    const element = event.target as HTMLElement;
+    const scrollTop = element.scrollTop;
+    
+    // Load more when scrolled near top (within 100px)
+    if (scrollTop < 100 && this.hasMoreMessages()) {
+      this.loadMoreMessages();
+    }
   }
 
   // Enhanced message count display

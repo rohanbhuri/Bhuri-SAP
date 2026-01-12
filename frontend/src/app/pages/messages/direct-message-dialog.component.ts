@@ -1,4 +1,4 @@
-import { Component, Inject, signal, computed } from '@angular/core';
+import { Component, Inject, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -9,6 +9,8 @@ import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { OrgWithMembers } from '../../services/messages.service';
+import { MessagesUtilsService } from '../../services/messages-utils.service';
+import { AuthService } from '../../services/auth.service';
 
 interface DialogData {
   organizations: OrgWithMembers[];
@@ -169,6 +171,8 @@ interface DialogData {
 export class DirectMessageDialogComponent {
   searchQuery = '';
   selectedUserId: any = '';
+  private utils = inject(MessagesUtilsService);
+  private auth = inject(AuthService);
 
   constructor(
     public dialogRef: MatDialogRef<DirectMessageDialogComponent>,
@@ -177,31 +181,22 @@ export class DirectMessageDialogComponent {
 
   filteredMembers(org: OrgWithMembers) {
     if (!this.searchQuery.trim()) return org.members;
-    
-    const query = this.searchQuery.toLowerCase();
-    return org.members.filter(member => 
-      `${member.firstName} ${member.lastName} ${member.email}`.toLowerCase().includes(query)
+    const q = this.searchQuery.toLowerCase();
+    return org.members.filter(m => 
+      `${m.firstName} ${m.lastName} ${m.email}`.toLowerCase().includes(q)
     );
   }
 
   avatarUrl(email: string) {
-    const hash = encodeURIComponent(email || 'user');
-    return `https://www.gravatar.com/avatar/${hash}?d=identicon&s=40`;
+    return this.utils.avatarUrl(email);
   }
 
   getOrgInitials(orgName: string): string {
-    if (!orgName) return 'ORG';
-    return orgName
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase())
-      .slice(0, 2)
-      .join('');
+    return this.utils.getOrgInitials(orgName);
   }
 
   getOrgGradient(orgName: string): string {
-    const colors = ['#667eea,#764ba2', '#f093fb,#f5576c', '#4facfe,#00f2fe', '#43e97b,#38f9d7'];
-    const index = orgName.length % colors.length;
-    return `linear-gradient(135deg, ${colors[index]})`;
+    return this.utils.getOrgGradient(orgName);
   }
 
   canStart(): boolean {
@@ -216,7 +211,7 @@ export class DirectMessageDialogComponent {
   }
 
   onStart() {
-    if (this.canStart()) {
+    if (this.canStart() && this.selectedUserId.userId !== this.auth.getCurrentUser()?.id) {
       this.dialogRef.close({
         organizationId: this.selectedUserId.orgId,
         userId: this.selectedUserId.userId
