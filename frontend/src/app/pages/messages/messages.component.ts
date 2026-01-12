@@ -28,7 +28,7 @@ import {
   MessageState,
   Conversation,
 } from '../../services/messages.service';
-import { AuthService } from '../../services/auth.service';
+import { AuthService, User } from '../../services/auth.service';
 import { WebSocketService } from '../../services/websocket.service';
 import { NotificationsService } from '../../services/notifications.service';
 import { Subject, debounceTime, takeUntil, finalize, filter } from 'rxjs';
@@ -446,6 +446,7 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
   typingText = signal('');
   isMobileView = signal(false);
   showSidebar = signal(true);
+  currentUser = signal<User | null>(null);
 
   // Form data
   draft = '';
@@ -459,9 +460,15 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngOnInit() {
     this.themeService.applyModuleTheme('messages');
-    const user = this.auth.getCurrentUser();
-    this.meId = user?.id || null;
-    this.userOrgId = user?.organizationId || null;
+    
+    // Subscribe to auth changes - THIS IS THE PROPER WAY
+    this.auth.currentUser$.pipe(takeUntil(this.destroy$)).subscribe(user => {
+      this.currentUser.set(user);
+      this.meId = (user as any)?._id || user?.id || null;
+      this.userOrgId = user?.organizationId || null;
+    });
+    
+    console.log('Messages initialized');
     
     this.checkMobileView();
     window.addEventListener('resize', () => this.checkMobileView());
@@ -476,6 +483,9 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
     this.route.params.pipe(takeUntil(this.destroy$)).subscribe(params => {
       if (params['orgId'] && params['chatId']) {
         this.handleRouteParams(params['orgId'], params['chatId']);
+      } else {
+        // No route params, try to restore last chat
+        this.restoreLastChat();
       }
     });
     
@@ -555,9 +565,6 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (data) => {
-          const user = this.auth.getCurrentUser();
-          this.meId = user?.id || null;
-          this.userOrgId = user?.organizationId || null;
           this.orgs.set(data);
           
           // Auto-expand user's organization
@@ -625,7 +632,15 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private handleNewMessage(message: any) {
     try {
-      const senderId = String(message.senderId?._id || message.senderId);
+      // Extract senderId properly from ObjectId
+      let senderId: string;
+      const rawSenderId = message.senderId;
+      if (typeof rawSenderId === 'object' && rawSenderId !== null) {
+        senderId = rawSenderId._id?.toString() || rawSenderId.toString();
+      } else {
+        senderId = String(rawSenderId);
+      }
+      
       const transformedMsg = {
         ...message,
         id: message._id || message.id,
@@ -643,6 +658,11 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
           return [...msgs, transformedMsg];
         });
         this.scrollToBottom();
+        
+        // Save current URL with latest message
+        const currentUrl = this.router.url.split('?')[0];
+        const urlWithMsg = `${currentUrl}?msgId=${transformedMsg.id}`;
+        this.saveLastChatUrl(urlWithMsg);
         
         // Mark as read if not from current user
         if (!this.isSelf(senderId)) {
@@ -701,18 +721,10 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // Utility functions
   isSelf(senderId: string | undefined): boolean {
-    if (!senderId || !this.meId) {
-      console.warn('isSelf: Missing senderId or meId', { senderId, meId: this.meId });
-      return false;
-    }
-    
-    // Handle both string and ObjectId formats
-    const senderIdStr = typeof senderId === 'object' ? (senderId as any)._id || (senderId as any).toString() : String(senderId);
-    const meIdStr = String(this.meId);
-    
-    const result = senderIdStr === meIdStr;
-    console.log('isSelf:', { senderId: senderIdStr, meId: meIdStr, match: result });
-    return result;
+    if (!senderId) return false;
+    const user = this.currentUser();
+    const userId = (user as any)?._id || user?.id || this.meId;
+    return String(senderId) === String(userId);
   }
 
   avatarUrl(email: string) {
@@ -759,6 +771,9 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
             member ? `${member.firstName} ${member.lastName}` : 'Direct Message'
           );
           
+          const url = `/messages/${orgId}/chat/${conversationId}`;
+          this.saveLastChatUrl(url);
+          
           this.router.navigate(['/messages', orgId, 'chat', conversationId], {
             replaceUrl: true
           });
@@ -791,11 +806,31 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (msgs) => {
+          console.log('Raw messages from API:', msgs);
+          console.log('Current user ID:', this.currentUser()?.id);
+          
           const transformedMsgs = msgs.reverse().map(msg => {
-            const senderId = String((msg as any).senderId?._id || (msg as any).senderId || msg.senderId);
+            // Extract senderId - backend returns ObjectId
+            const rawSenderId = (msg as any).senderId;
+            let senderId: string;
+            
+            if (rawSenderId && typeof rawSenderId === 'object') {
+              // ObjectId object - convert to string
+              senderId = String(rawSenderId);
+            } else {
+              senderId = String(rawSenderId);
+            }
+            
+            console.log('Transforming message:', {
+              rawSenderId,
+              extractedSenderId: senderId,
+              currentUserId: this.currentUser()?.id,
+              isSelf: senderId === this.currentUser()?.id
+            });
+            
             return {
               ...msg,
-              id: (msg as any)._id || msg.id,
+              id: (msg as any)._id?.toString() || msg.id,
               senderId,
               status: 'delivered' as const,
               senderName: this.getSenderName(senderId),
@@ -1146,6 +1181,31 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
     this.isMobileView.set(window.innerWidth <= 768);
     if (!this.isMobileView()) {
       this.showSidebar.set(true);
+    }
+  }
+
+  restoreLastChat() {
+    const lastUrl = this.getLastChatUrl();
+    if (lastUrl) {
+      setTimeout(() => {
+        this.router.navigateByUrl(lastUrl, { replaceUrl: true });
+      }, 500);
+    }
+  }
+
+  getLastChatUrl(): string | null {
+    try {
+      return localStorage.getItem('lastMessagesUrl');
+    } catch {
+      return null;
+    }
+  }
+
+  saveLastChatUrl(url: string) {
+    try {
+      localStorage.setItem('lastMessagesUrl', url);
+    } catch (error) {
+      console.error('Failed to save last chat URL to localStorage:', error);
     }
   }
 

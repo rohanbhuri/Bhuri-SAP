@@ -102,12 +102,13 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, credentials)
       .pipe(
         tap(response => {
+          const normalizedUser = this.normalizeUser(response.user);
           if (typeof window !== 'undefined') {
             localStorage.setItem('token', response.access_token);
-            localStorage.setItem('user', JSON.stringify(response.user));
+            localStorage.setItem('user', JSON.stringify(normalizedUser));
           }
-          this.currentUserSubject.next(response.user);
-          this.connectWebSocketWithAuth(response.user, response.access_token);
+          this.currentUserSubject.next(normalizedUser);
+          this.connectWebSocketWithAuth(normalizedUser, response.access_token);
         })
       );
   }
@@ -116,12 +117,13 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${this.apiUrl}/auth/signup`, userData)
       .pipe(
         tap(response => {
+          const normalizedUser = this.normalizeUser(response.user);
           if (typeof window !== 'undefined') {
             localStorage.setItem('token', response.access_token);
-            localStorage.setItem('user', JSON.stringify(response.user));
+            localStorage.setItem('user', JSON.stringify(normalizedUser));
           }
-          this.currentUserSubject.next(response.user);
-          this.connectWebSocketWithAuth(response.user, response.access_token);
+          this.currentUserSubject.next(normalizedUser);
+          this.connectWebSocketWithAuth(normalizedUser, response.access_token);
         })
       );
   }
@@ -178,10 +180,11 @@ export class AuthService {
     return this.http.patch<User>(`${this.apiUrl}/auth/update-organization`, { organizationId })
       .pipe(
         tap(updatedUser => {
+          const normalizedUser = this.normalizeUser(updatedUser);
           if (typeof window !== 'undefined') {
-            localStorage.setItem('user', JSON.stringify(updatedUser));
+            localStorage.setItem('user', JSON.stringify(normalizedUser));
           }
-          this.currentUserSubject.next(updatedUser);
+          this.currentUserSubject.next(normalizedUser);
         })
       );
   }
@@ -199,10 +202,11 @@ export class AuthService {
     return this.http.patch<User>(`${this.apiUrl}/auth/profile`, profileData)
       .pipe(
         tap(updatedUser => {
+          const normalizedUser = this.normalizeUser(updatedUser);
           if (typeof window !== 'undefined') {
-            localStorage.setItem('user', JSON.stringify(updatedUser));
+            localStorage.setItem('user', JSON.stringify(normalizedUser));
           }
-          this.currentUserSubject.next(updatedUser);
+          this.currentUserSubject.next(normalizedUser);
         })
       );
   }
@@ -214,10 +218,11 @@ export class AuthService {
     return this.http.post<User>(`${this.apiUrl}/auth/profile/avatar`, formData)
       .pipe(
         tap(updatedUser => {
+          const normalizedUser = this.normalizeUser(updatedUser);
           if (typeof window !== 'undefined') {
-            localStorage.setItem('user', JSON.stringify(updatedUser));
+            localStorage.setItem('user', JSON.stringify(normalizedUser));
           }
-          this.currentUserSubject.next(updatedUser);
+          this.currentUserSubject.next(normalizedUser);
         })
       );
   }
@@ -258,5 +263,17 @@ export class AuthService {
     } catch (e) {
       // WebSocketService not yet initialized
     }
+  }
+
+  private normalizeUser(user: any): User {
+    if (!user) return user;
+    return {
+      ...user,
+      id: user.id || user._id,
+      organizations: user.organizations?.map((org: any) => ({
+        ...org,
+        id: org.id || org._id
+      })) || []
+    };
   }
 }
