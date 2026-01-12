@@ -73,6 +73,7 @@ export const routes: Routes = [
   { path: 'settings/storage', redirectTo: '/settings', pathMatch: 'full' },
   { path: 'settings/delete-account', redirectTo: '/settings', pathMatch: 'full' },
   { path: 'messages', component: MessagesComponent, canActivate: [authGuard] },
+  { path: 'messages/:orgId/chat/:chatId', component: MessagesComponent, canActivate: [authGuard] },
   { path: 'search', component: SearchComponent, canActivate: [authGuard] },
   {
     path: 'notifications',

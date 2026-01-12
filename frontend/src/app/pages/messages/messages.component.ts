@@ -1,6 +1,7 @@
-import { Component, signal, computed, inject, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { Component, signal, computed, inject, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -34,6 +35,7 @@ import { Subject, debounceTime, takeUntil, finalize, filter } from 'rxjs';
 import { CreateGroupDialogComponent } from './create-group-dialog.component';
 import { DirectMessageDialogComponent } from './direct-message-dialog.component';
 import { MessageCountService } from '../../services/message-count.service';
+import { ScrollVisibilityService } from '../../services/scroll-visibility.service';
 
 @Component({
   selector: 'app-messages',
@@ -108,7 +110,9 @@ import { MessageCountService } from '../../services/message-count.service';
 
         <!-- Organizations List -->
         <mat-accordion class="org-accordion" multi *ngIf="!messageState().loading && !messageState().error">
-          <mat-expansion-panel *ngFor="let org of orgs(); trackBy: trackByOrgId">
+          <mat-expansion-panel *ngFor="let org of orgs(); trackBy: trackByOrgId" 
+                               [expanded]="expandedOrgId() === org.organizationId"
+                               (opened)="expandedOrgId.set(org.organizationId)">
             <mat-expansion-panel-header>
               <mat-panel-title class="org-header">
                 <div class="org-avatar" [style.background]="getOrgGradient(org.organizationName)">
@@ -407,7 +411,7 @@ import { MessageCountService } from '../../services/message-count.service';
   `,
   styleUrls: ['./messages.component.scss']
 })
-export class MessagesComponent implements OnInit, OnDestroy {
+export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
   private api = inject(MessagesApiService);
   private auth = inject(AuthService);
   private themeService = inject(ThemeService);
@@ -416,6 +420,9 @@ export class MessagesComponent implements OnInit, OnDestroy {
   private notificationsService = inject(NotificationsService);
   private dialog = inject(MatDialog);
   private messageCountService = inject(MessageCountService);
+  private scrollVisibilityService = inject(ScrollVisibilityService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private destroy$ = new Subject<void>();
   private searchSubject = new Subject<string>();
   private typingTimeout?: number;
@@ -446,12 +453,15 @@ export class MessagesComponent implements OnInit, OnDestroy {
   meId: string | null = null;
   unreadMessages = signal<{[userId: string]: boolean}>({});
   messageNotificationCount = signal<number>(0);
+  userOrgId: string | null = null;
+  expandedOrgId = signal<string | null>(null);
+  highlightedMessageId = signal<string | null>(null);
 
   ngOnInit() {
     this.themeService.applyModuleTheme('messages');
     const user = this.auth.getCurrentUser();
     this.meId = user?.id || null;
-    console.log('Messages component initialized with meId:', this.meId, 'user:', user);
+    this.userOrgId = user?.organizationId || null;
     
     this.checkMobileView();
     window.addEventListener('resize', () => this.checkMobileView());
@@ -461,6 +471,19 @@ export class MessagesComponent implements OnInit, OnDestroy {
     this.setupRealTimeUpdates();
     this.setupUnreadTracking();
     this.setupNotificationIntegration();
+    
+    // Handle route parameters
+    this.route.params.pipe(takeUntil(this.destroy$)).subscribe(params => {
+      if (params['orgId'] && params['chatId']) {
+        this.handleRouteParams(params['orgId'], params['chatId']);
+      }
+    });
+    
+    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(queryParams => {
+      if (queryParams['msgId']) {
+        this.highlightedMessageId.set(queryParams['msgId']);
+      }
+    });
   }
 
   ngOnDestroy() {
@@ -475,6 +498,19 @@ export class MessagesComponent implements OnInit, OnDestroy {
   ngAfterViewInit() {
     // Update message count in service whenever orgs change
     this.messageCountService.setMessageCount(this.totalMembers());
+    
+    // Attach scroll listeners to scrollable elements
+    setTimeout(() => {
+      const messageList = document.querySelector('.message-list');
+      const orgAccordion = document.querySelector('.org-accordion');
+      
+      if (messageList) {
+        this.scrollVisibilityService.attachScrollListener(messageList as HTMLElement);
+      }
+      if (orgAccordion) {
+        this.scrollVisibilityService.attachScrollListener(orgAccordion as HTMLElement);
+      }
+    }, 500);
   }
 
   // Computed properties
@@ -521,8 +557,13 @@ export class MessagesComponent implements OnInit, OnDestroy {
         next: (data) => {
           const user = this.auth.getCurrentUser();
           this.meId = user?.id || null;
-          console.log('Organizations loaded, meId set to:', this.meId);
+          this.userOrgId = user?.organizationId || null;
           this.orgs.set(data);
+          
+          // Auto-expand user's organization
+          if (this.userOrgId && !this.expandedOrgId()) {
+            this.expandedOrgId.set(this.userOrgId);
+          }
         },
         error: (error) => {
           console.error('Failed to load organizations:', error);
@@ -701,20 +742,12 @@ export class MessagesComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Clear unread message for this user
     this.api.clearUnreadMessage(otherUserId);
-    
-    const member = this.orgs()
-      .flatMap((o) => o.members)
-      .find((m) => String(m.id) === String(otherUserId));
-    
-    console.log('Opening DM with:', member);
     
     this.api.getOrCreateDM(orgId, otherUserId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (conv: Conversation) => {
-          // Clear unread message for this user
           this.api.clearUnreadMessage(otherUserId);
           
           const conversationId = (conv as any)._id || conv.id;
@@ -726,20 +759,17 @@ export class MessagesComponent implements OnInit, OnDestroy {
             member ? `${member.firstName} ${member.lastName}` : 'Direct Message'
           );
           
-          console.log('Active conversation set to:', conversationId);
+          this.router.navigate(['/messages', orgId, 'chat', conversationId], {
+            replaceUrl: true
+          });
           
-          // Hide sidebar on mobile when opening chat
           if (this.isMobileView()) {
             this.showSidebar.set(false);
           }
           
           this.loadMessages();
           this.markAsRead();
-          
-          // Mark conversation notifications as read
           this.markConversationNotificationsAsRead(conversationId);
-          
-          // Join conversation room for real-time updates
           this.wsService.joinRoom(`conversation:${conversationId}`);
         },
         error: (error) => {
@@ -1122,6 +1152,38 @@ export class MessagesComponent implements OnInit, OnDestroy {
   goBackToSidebar() {
     this.showSidebar.set(true);
     this.activeConversationId.set(null);
+    this.router.navigate(['/messages'], { replaceUrl: true });
+  }
+
+  handleRouteParams(orgId: string, chatId: string) {
+    const checkOrgs = setInterval(() => {
+      if (this.orgs().length > 0) {
+        clearInterval(checkOrgs);
+        this.expandedOrgId.set(orgId);
+        this.activeConversationId.set(chatId);
+        this.loadMessages();
+        
+        if (this.isMobileView()) {
+          this.showSidebar.set(false);
+        }
+        
+        setTimeout(() => this.scrollToHighlightedMessage(), 1000);
+      }
+    }, 100);
+    
+    setTimeout(() => clearInterval(checkOrgs), 5000);
+  }
+
+  scrollToHighlightedMessage() {
+    const msgId = this.highlightedMessageId();
+    if (!msgId) return;
+    
+    const messageEl = document.querySelector(`[data-message-id="${msgId}"]`);
+    if (messageEl) {
+      messageEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      messageEl.classList.add('highlighted');
+      setTimeout(() => messageEl.classList.remove('highlighted'), 3000);
+    }
   }
 
   onMessageListScroll(event: Event) {

@@ -374,6 +374,14 @@
   gap: 12px;
   margin-bottom: 16px;
   animation: messageSlideIn 0.3s ease-out;
+  transition: background-color 0.3s ease;
+  
+  &.highlighted {
+    background: color-mix(in srgb, var(--theme-primary) 15%, transparent);
+    border-radius: 8px;
+    padding: 8px;
+    margin: 0 -8px 16px -8px;
+  }
   
   &.self {
     flex-direction: row-reverse;
@@ -604,6 +612,15 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes highlightPulse {
+  0%, 100% {
+    background: color-mix(in srgb, var(--theme-primary) 15%, transparent);
+  }
+  50% {
+    background: color-mix(in srgb, var(--theme-primary) 25%, transparent);
   }
 }
 

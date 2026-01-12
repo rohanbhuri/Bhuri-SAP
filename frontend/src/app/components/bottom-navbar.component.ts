@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -8,13 +8,17 @@ import { filter } from 'rxjs/operators';
 import { ModulesService, AppModuleInfo } from '../services/modules.service';
 import { PreferencesService } from '../services/preferences.service';
 import { MessageCountService } from '../services/message-count.service';
+import { ScrollVisibilityService } from '../services/scroll-visibility.service';
 
 @Component({
   selector: 'app-bottom-navbar',
   standalone: true,
   imports: [MatButtonModule, MatIconModule, MatBadgeModule, CommonModule],
   template: `
-    <nav class="bottom-nav" role="navigation" aria-label="Primary">
+    <nav class="bottom-nav" 
+         [class.hidden]="isHidden()"
+         role="navigation" 
+         aria-label="Primary">
       <button
         class="nav-button"
         (click)="goToDashboard()"
@@ -88,7 +92,7 @@ import { MessageCountService } from '../services/message-count.service';
         position: fixed;
         bottom: 20px;
         left: 50%;
-        transform: translateX(-50%);
+        transform: translateX(-50%) translateY(0);
         background: color-mix(in srgb, var(--theme-surface) 80%, transparent);
         backdrop-filter: blur(10px);
         border-radius: 25px;
@@ -107,6 +111,13 @@ import { MessageCountService } from '../services/message-count.service';
         scrollbar-width: none;
         -ms-overflow-style: none;
         scroll-behavior: smooth;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+      }
+
+      .bottom-nav.hidden {
+        transform: translateX(-50%) translateY(calc(100% + 40px));
+        opacity: 0;
+        pointer-events: none;
       }
 
       .bottom-nav::-webkit-scrollbar {
@@ -233,14 +244,16 @@ import { MessageCountService } from '../services/message-count.service';
     `,
   ],
 })
-export class BottomNavbarComponent {
+export class BottomNavbarComponent implements OnInit, OnDestroy {
   private modulesService = inject(ModulesService);
   private preferencesService = inject(PreferencesService);
   private messageCountService = inject(MessageCountService);
+  private scrollVisibilityService = inject(ScrollVisibilityService);
   activeRoute: string = '';
   activeModules = signal<AppModuleInfo[]>([]);
   pinnedModules = signal<AppModuleInfo[]>([]);
   messageCount = this.messageCountService.messageCount;
+  isHidden = this.scrollVisibilityService.isBottomNavHidden;
   
   constructor(private router: Router) {
     this.router.events
@@ -248,6 +261,10 @@ export class BottomNavbarComponent {
       .subscribe((event: NavigationEnd) => {
         this.activeRoute = event.url;
       });
+  }
+
+  ngOnDestroy() {
+    // Cleanup if needed
   }
 
   ngOnInit() {
