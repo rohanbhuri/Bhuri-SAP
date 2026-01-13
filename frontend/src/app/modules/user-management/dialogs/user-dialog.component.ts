@@ -95,18 +95,6 @@ import { PasswordDialogComponent } from './password-dialog.component';
           </mat-select>
         </mat-form-field>
 
-        <div class="form-row">
-          <mat-form-field appearance="outline">
-            <mat-label>Currency</mat-label>
-            <input matInput formControlName="currency" placeholder="USD">
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Currency Symbol</mat-label>
-            <input matInput formControlName="currencySymbol" placeholder="$">
-          </mat-form-field>
-        </div>
-
         <div class="checkbox-container">
           <mat-checkbox formControlName="isActive">Active User</mat-checkbox>
           <mat-checkbox formControlName="forcePasswordChange">Force Password Change</mat-checkbox>
@@ -239,8 +227,6 @@ export class UserDialogComponent implements OnInit {
         email: ['', [Validators.required, Validators.email]],
         organizationId: [''],
         roleIds: [[]],
-        currency: ['USD'],
-        currencySymbol: ['$'],
         isActive: [true],
         forcePasswordChange: [false],
         requireTwoFactor: [false],
@@ -258,8 +244,6 @@ export class UserDialogComponent implements OnInit {
         password: ['', [Validators.required, Validators.minLength(6)]],
         organizationId: [''],
         roleIds: [[]],
-        currency: ['USD'],
-        currencySymbol: ['$'],
         isActive: [true],
         forcePasswordChange: [false],
         requireTwoFactor: [false],
@@ -279,8 +263,6 @@ export class UserDialogComponent implements OnInit {
       email: user.email,
       organizationId: user.organizationId,
       roleIds: user.roleIds || [],
-      currency: user.currency || 'USD',
-      currencySymbol: user.currencySymbol || '$',
       isActive: user.isActive,
       forcePasswordChange: user.forcePasswordChange || false,
       requireTwoFactor: user.requireTwoFactor || false,
@@ -317,8 +299,8 @@ export class UserDialogComponent implements OnInit {
         email: formValue.email,
         organizationId: formValue.organizationId || null,
         roleIds: formValue.roleIds || [],
-        currency: formValue.currency,
-        currencySymbol: formValue.currencySymbol,
+        currency: 'INR',
+        currencySymbol: '₹',
         isActive: formValue.isActive,
         forcePasswordChange: formValue.forcePasswordChange,
         requireTwoFactor: formValue.requireTwoFactor,

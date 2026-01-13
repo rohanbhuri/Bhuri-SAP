@@ -171,8 +171,8 @@ export class PreferencesComponent implements OnInit {
     primaryColor: ['#1976d2'],
     accentColor: ['#ff4081'],
     secondaryColor: ['#424242'],
-    currency: ['USD'],
-    currencySymbol: ['$']
+    currency: ['INR'],
+    currencySymbol: ['₹']
   });
   
   ngOnInit() {
@@ -200,8 +200,8 @@ export class PreferencesComponent implements OnInit {
       primaryColor: brandColors.primary,
       accentColor: brandColors.accent,
       secondaryColor: brandColors.secondary,
-      currency: 'USD',
-      currencySymbol: '$'
+      currency: 'INR',
+      currencySymbol: '₹'
     };
     
     this.preferencesForm.patchValue(defaults);
@@ -238,8 +238,8 @@ export class PreferencesComponent implements OnInit {
       primaryColor: formValues.primaryColor || '#10B981',
       accentColor: formValues.accentColor || '#EF4444',
       secondaryColor: formValues.secondaryColor || '#374151',
-      currency: formValues.currency || 'USD',
-      currencySymbol: formValues.currencySymbol || '$'
+      currency: formValues.currency || 'INR',
+      currencySymbol: formValues.currencySymbol || '₹'
     };
     
     this.preferencesService.saveUserPreferences(preferences).subscribe({
@@ -262,8 +262,8 @@ export class PreferencesComponent implements OnInit {
       primaryColor: brandColors.primary,
       accentColor: brandColors.accent,
       secondaryColor: brandColors.secondary,
-      currency: 'USD',
-      currencySymbol: '$'
+      currency: 'INR',
+      currencySymbol: '₹'
     };
     
     this.preferencesForm.patchValue(defaults);

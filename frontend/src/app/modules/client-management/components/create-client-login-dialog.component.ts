@@ -47,40 +47,6 @@ import { ClientManagementService } from '../services/client-management.service';
           <div class="tab-content">
             <form [formGroup]="basicForm">
               <div class="form-section">
-                <h3 class="section-title">Company Details</h3>
-                <div class="form-row">
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Company Name</mat-label>
-                    <input matInput formControlName="companyName" placeholder="Enter company name">
-                    <mat-error *ngIf="basicForm.get('companyName')?.hasError('required')">
-                      Company name is required
-                    </mat-error>
-                  </mat-form-field>
-                </div>
-
-                <div class="form-row">
-                  <mat-form-field appearance="outline">
-                    <mat-label>Website</mat-label>
-                    <input matInput formControlName="website" placeholder="https://example.com">
-                    <mat-icon matPrefix>language</mat-icon>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Industry</mat-label>
-                    <mat-select formControlName="industry">
-                      <mat-option value="Technology">Technology</mat-option>
-                      <mat-option value="Finance">Finance</mat-option>
-                      <mat-option value="Healthcare">Healthcare</mat-option>
-                      <mat-option value="Education">Education</mat-option>
-                      <mat-option value="Retail">Retail</mat-option>
-                      <mat-option value="Manufacturing">Manufacturing</mat-option>
-                      <mat-option value="Other">Other</mat-option>
-                    </mat-select>
-                  </mat-form-field>
-                </div>
-              </div>
-
-              <div class="form-section">
                 <h3 class="section-title">Contact Information</h3>
                 <div class="form-row">
                   <mat-form-field appearance="outline">
@@ -156,6 +122,37 @@ import { ClientManagementService } from '../services/client-management.service';
         <mat-tab label="Additional Details">
           <div class="tab-content">
             <form [formGroup]="additionalForm">
+              <div class="form-section">
+                <h3 class="section-title">Company Details</h3>
+                <div class="form-row">
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Company Name</mat-label>
+                    <input matInput formControlName="companyName" placeholder="Enter company name">
+                  </mat-form-field>
+                </div>
+
+                <div class="form-row">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Website</mat-label>
+                    <input matInput formControlName="website" placeholder="https://example.com">
+                    <mat-icon matPrefix>language</mat-icon>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Industry</mat-label>
+                    <mat-select formControlName="industry">
+                      <mat-option value="Technology">Technology</mat-option>
+                      <mat-option value="Finance">Finance</mat-option>
+                      <mat-option value="Healthcare">Healthcare</mat-option>
+                      <mat-option value="Education">Education</mat-option>
+                      <mat-option value="Retail">Retail</mat-option>
+                      <mat-option value="Manufacturing">Manufacturing</mat-option>
+                      <mat-option value="Other">Other</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+              </div>
+
               <div class="form-section">
                 <h3 class="section-title">Business Information</h3>
                 <div class="form-row">
@@ -538,18 +535,18 @@ export class CreateClientLoginDialogComponent implements OnInit {
 
   initForms() {
     this.basicForm = this.fb.group({
-      companyName: ['', Validators.required],
       firstName: ['', Validators.required],
       lastName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       phone: ['', Validators.required],
       password: [''],
-      confirmPassword: [''],
-      website: [''],
-      industry: ['']
+      confirmPassword: ['']
     }, { validators: this.passwordMatchValidator });
 
     this.additionalForm = this.fb.group({
+      companyName: [''],
+      website: [''],
+      industry: [''],
       companySize: [''],
       address: [''],
       city: [''],
@@ -572,16 +569,16 @@ export class CreateClientLoginDialogComponent implements OnInit {
     if (this.data) {
       const nameParts = this.data.contactPerson?.split(' ') || [];
       this.basicForm.patchValue({
-        companyName: this.data.companyName,
         firstName: nameParts[0] || '',
         lastName: nameParts.slice(1).join(' ') || '',
         email: this.data.email,
-        phone: this.data.phone,
-        website: this.data.website,
-        industry: this.data.industry
+        phone: this.data.phone
       });
 
       this.additionalForm.patchValue({
+        companyName: this.data.companyName,
+        website: this.data.website,
+        industry: this.data.industry,
         companySize: this.data.companySize,
         address: this.data.address,
         city: this.data.city,

@@ -63,6 +63,13 @@ export class ClientManagementController {
     return this.clientManagementService.convertToClient(requestId, conversionData, req.user.userId);
   }
 
+  @Delete('requests/:requestId')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
+  async deleteClientRequest(@Param('requestId') requestId: string) {
+    return this.clientManagementService.deleteClientRequest(requestId);
+  }
+
   @Get('clients')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)

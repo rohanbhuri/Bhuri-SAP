@@ -27,6 +27,10 @@ export class ClientManagementService {
     return this.http.put(`${this.apiUrl}/client-management/requests/${requestId}`, updateData);
   }
 
+  deleteClientRequest(requestId: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/client-management/requests/${requestId}`);
+  }
+
   convertToClient(requestId: string, conversionData: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/client-management/requests/${requestId}/convert`, conversionData);
   }

@@ -241,6 +241,19 @@ export class ClientManagementService {
     };
   }
 
+  async deleteClientRequest(requestId: string) {
+    const request = await this.clientRequestRepository.findOne({ 
+      where: { _id: new ObjectId(requestId) } 
+    });
+    
+    if (!request) {
+      throw new NotFoundException('Client request not found');
+    }
+
+    await this.clientRequestRepository.delete(requestId);
+    return { message: 'Client request deleted successfully' };
+  }
+
   async getAllClients() {
     return this.clientRepository.find({ order: { createdAt: -1 } });
   }

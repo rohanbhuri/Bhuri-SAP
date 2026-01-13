@@ -9,6 +9,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ClientManagementService } from '../services/client-management.service';
 import { CreateClientLoginDialogComponent } from './create-client-login-dialog.component';
 
@@ -24,7 +26,9 @@ import { CreateClientLoginDialogComponent } from './create-client-login-dialog.c
     MatFormFieldModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    MatChipsModule
+    MatChipsModule,
+    MatIconModule,
+    MatTooltipModule
   ],
   template: `
     <div class="requests-container">
@@ -90,13 +94,42 @@ import { CreateClientLoginDialogComponent } from './create-client-login-dialog.c
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef>ACTIONS</th>
             <td mat-cell *matCellDef="let request">
-              <button 
-                mat-stroked-button 
-                color="primary"
-                (click)="openCreateLoginDialog(request)"
-                [disabled]="request.status === 'CONVERTED'">
-                {{ request.status === 'CONVERTED' ? 'Login Created' : 'Create Login' }}
-              </button>
+              <div class="action-buttons">
+                <button 
+                  *ngIf="request.status === 'PENDING'"
+                  mat-stroked-button 
+                  color="primary"
+                  (click)="approveRequest(request)"
+                  class="action-btn">
+                  Approve
+                </button>
+                <button 
+                  *ngIf="request.status === 'PENDING'"
+                  mat-stroked-button 
+                  color="warn"
+                  (click)="rejectRequest(request)"
+                  class="action-btn">
+                  Reject
+                </button>
+                <button 
+                  *ngIf="request.status === 'APPROVED'"
+                  mat-stroked-button 
+                  color="primary"
+                  (click)="openCreateLoginDialog(request)"
+                  class="action-btn">
+                  Create Login
+                </button>
+                <span *ngIf="request.status === 'CONVERTED'" class="status-text">Login Created</span>
+                <span *ngIf="request.status === 'REJECTED'" class="status-text">Rejected</span>
+                <button 
+                  mat-icon-button 
+                  color="warn"
+                  (click)="deleteRequest(request)"
+                  class="delete-btn"
+                  matTooltip="Delete Request">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
             </td>
           </ng-container>
 
@@ -193,6 +226,27 @@ import { CreateClientLoginDialogComponent } from './create-client-login-dialog.c
       background-color: #fee2e2;
       color: #991b1b;
     }
+
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .action-btn {
+      min-width: 80px;
+      font-size: 0.75rem;
+    }
+
+    .delete-btn {
+      margin-left: auto;
+    }
+
+    .status-text {
+      font-size: 0.75rem;
+      color: #6b7280;
+      font-style: italic;
+    }
   `]
 })
 export class RequestLoginListComponent implements OnInit {
@@ -269,5 +323,38 @@ export class RequestLoginListComponent implements OnInit {
         this.loadRequests();
       }
     });
+  }
+
+  approveRequest(request: any) {
+    if (confirm('Are you sure you want to approve this request?')) {
+      this.clientService.updateClientRequest(request._id, { status: 'APPROVED' }).subscribe({
+        next: () => {
+          this.loadRequests();
+        },
+        error: (err) => console.error('Failed to approve request', err)
+      });
+    }
+  }
+
+  rejectRequest(request: any) {
+    if (confirm('Are you sure you want to reject this request?')) {
+      this.clientService.updateClientRequest(request._id, { status: 'REJECTED' }).subscribe({
+        next: () => {
+          this.loadRequests();
+        },
+        error: (err) => console.error('Failed to reject request', err)
+      });
+    }
+  }
+
+  deleteRequest(request: any) {
+    if (confirm('Are you sure you want to permanently delete this request? This action cannot be undone.')) {
+      this.clientService.deleteClientRequest(request._id).subscribe({
+        next: () => {
+          this.loadRequests();
+        },
+        error: (err) => console.error('Failed to delete request', err)
+      });
+    }
   }
 }
