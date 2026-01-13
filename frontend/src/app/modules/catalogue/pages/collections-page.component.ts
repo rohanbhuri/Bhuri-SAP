@@ -8,6 +8,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatDialog } from '@angular/material/dialog';
 import { CatalogueService } from '../catalogue.service';
 import { CollectionDialogComponent } from '../dialogs/collection-dialog.component';
+import { UploadUrlPipe } from '../../../pipes/upload-url.pipe';
 
 @Component({
   selector: 'app-collections-page',
@@ -18,7 +19,8 @@ import { CollectionDialogComponent } from '../dialogs/collection-dialog.componen
     MatButtonModule,
     MatIconModule,
     MatMenuModule,
-    MatChipsModule
+    MatChipsModule,
+    UploadUrlPipe
   ],
   template: `
     <div class="tab-content">
@@ -36,8 +38,11 @@ import { CollectionDialogComponent } from '../dialogs/collection-dialog.componen
             <th mat-header-cell *matHeaderCellDef>Image</th>
             <td mat-cell *matCellDef="let collection">
               <div class="collection-image-cell">
-                <img *ngIf="collection.image" [src]="collection.image" [alt]="collection.name">
-                <mat-icon *ngIf="!collection.image">collections</mat-icon>
+                <img *ngIf="collection.image && !collection.imageError" 
+                     [src]="collection.image | uploadUrl" 
+                     [alt]="collection.name"
+                     (error)="onImageError(collection)">
+                <mat-icon *ngIf="!collection.image || collection.imageError">collections</mat-icon>
               </div>
             </td>
           </ng-container>
@@ -161,6 +166,10 @@ export class CollectionsPageComponent implements OnInit {
 
   loadCollections() {
     this.catalogueService.getCollections().subscribe(collections => {
+      // Reset image error flags when loading collections
+      collections.forEach(collection => {
+        collection.imageError = false;
+      });
       this.collections.set(collections);
     });
   }
@@ -225,5 +234,9 @@ export class CollectionsPageComponent implements OnInit {
         this.loadCollections();
       });
     }
+  }
+
+  onImageError(collection: any) {
+    collection.imageError = true;
   }
 }

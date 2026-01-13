@@ -243,20 +243,39 @@ export class CatalogueService {
     // Export
     async exportProductsCSV(): Promise<string> {
         const products = await this.productRepository.find();
-        const headers = ['ID', 'Name', 'Product Code', 'Base Price', 'Currency', 'Category', 'Collection', 'Published', 'Tags', 'Variations'];
+        const headers = [
+            '_id', 'name', 'productCode', 'slug', 'description', 'descriptionHtml',
+            'basePrice', 'currency', 'featuredImage', 'imageGallery', 'videos', 'models3d',
+            'categoryId', 'collectionId', 'designerId', 'tags', 'isPublished', 'isExclusive',
+            'dimensionConfig', 'variations', 'attributes', 'seo', 'createdAt', 'updatedAt'
+        ];
         const rows = products.map(p => [
             p._id.toString(),
             p.name,
             p.productCode,
+            p.slug,
+            p.description || '',
+            p.descriptionHtml || '',
             p.basePrice,
             p.currency,
+            p.featuredImage || '',
+            p.imageGallery?.join('; ') || '',
+            p.videos?.join('; ') || '',
+            p.models3d?.join('; ') || '',
             p.categoryId || '',
             p.collectionId || '',
-            p.isPublished ? 'Yes' : 'No',
+            p.designerId || '',
             p.tags?.join('; ') || '',
-            p.variations?.length || 0
+            p.isPublished ? 'true' : 'false',
+            p.isExclusive ? 'true' : 'false',
+            JSON.stringify(p.dimensionConfig),
+            JSON.stringify(p.variations),
+            JSON.stringify(p.attributes),
+            JSON.stringify(p.seo),
+            p.createdAt?.toISOString() || '',
+            p.updatedAt?.toISOString() || ''
         ]);
-        return [headers, ...rows].map(row => row.join(',')).join('\n');
+        return [headers, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
     }
 
     async exportCategoriesCSV(): Promise<string> {
@@ -300,58 +319,69 @@ export class CatalogueService {
 
     async getProductTemplate(): Promise<string> {
         const headers = [
-            'name', 'productCode', 'slug', 'description', 'basePrice', 'currency',
-            'categoryId', 'collectionId', 'designerId', 'tags', 'isPublished',
-            'dimensionShape', 'dimensionUnit', 'widthMin', 'widthMax', 'widthDefault',
-            'height', 'depth', 'diameterMin', 'diameterMax', 'diameterDefault',
-            'featuredImage', 'imageGallery', 'seoTitle', 'seoDescription', 'seoKeywords'
+            '_id', 'name', 'productCode', 'slug', 'description', 'descriptionHtml',
+            'basePrice', 'currency', 'featuredImage', 'imageGallery', 'videos', 'models3d',
+            'categoryId', 'collectionId', 'designerId', 'tags', 'isPublished', 'isExclusive',
+            'dimensionConfig', 'variations', 'attributes', 'seo', 'createdAt', 'updatedAt'
         ];
-        return headers.join(',');
+        return headers.map(h => `"${h}"`).join(',');
     }
 
     async importProductsFromCSV(csvContent: string): Promise<{ success: number; failed: number; errors: string[] }> {
         const lines = csvContent.split('\n').filter(line => line.trim());
-        const headers = lines[0].split(',').map(h => h.trim());
+        const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
         let success = 0;
         let failed = 0;
         const errors: string[] = [];
 
         for (let i = 1; i < lines.length; i++) {
             try {
-                const values = lines[i].split(',').map(v => v.trim());
+                const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
                 const product: any = {};
 
                 headers.forEach((header, index) => {
                     const value = values[index];
-                    if (value) {
-                        if (header === 'tags' || header === 'imageGallery') {
-                            product[header] = value.split(';').map(v => v.trim());
-                        } else if (header === 'basePrice' || header.includes('Min') || header.includes('Max') || header.includes('Default') || header === 'height' || header === 'depth') {
+                    if (value !== undefined && value !== '') {
+                        if (header === 'tags' || header === 'imageGallery' || header === 'videos' || header === 'models3d') {
+                            product[header] = value.split(';').map(v => v.trim()).filter(v => v);
+                        } else if (header === 'basePrice' || header === 'widthMin' || header === 'widthMax' || header === 'widthDefault' || header === 'height' || header === 'depth' || header === 'diameterMin' || header === 'diameterMax' || header === 'diameterDefault') {
                             product[header] = parseFloat(value) || 0;
-                        } else if (header === 'isPublished') {
-                            product[header] = value.toLowerCase() === 'true' || value === '1';
+                        } else if (header === 'isPublished' || header === 'isExclusive') {
+                            product[header] = value.toLowerCase() === 'true';
+                        } else if (header === 'dimensionConfig' || header === 'variations' || header === 'attributes' || header === 'seo') {
+                            try {
+                                product[header] = JSON.parse(value);
+                            } catch {
+                                product[header] = {};
+                            }
+                        } else if (header === 'createdAt' || header === 'updatedAt') {
+                            product[header] = value ? new Date(value) : undefined;
                         } else {
                             product[header] = value;
                         }
                     }
                 });
 
-                // Build dimensionConfig
-                product.dimensionConfig = {
-                    shape: product.dimensionShape || 'rectangle',
-                    unit: product.dimensionUnit || 'cm',
-                    width: { min: product.widthMin || 0, max: product.widthMax || 0, default: product.widthDefault || 0 },
-                    height: product.height || 0,
-                    depth: product.depth || 0,
-                    diameter: { min: product.diameterMin || 0, max: product.diameterMax || 0, default: product.diameterDefault || 0 }
-                };
+                // If dimensionConfig is not provided, build from legacy fields if present
+                if (!product.dimensionConfig || Object.keys(product.dimensionConfig).length === 0) {
+                    product.dimensionConfig = {
+                        shape: product.dimensionShape || 'rectangle',
+                        unit: product.dimensionUnit || 'cm',
+                        width: product.widthMin !== undefined ? { min: product.widthMin, max: product.widthMax || 0, default: product.widthDefault || 0 } : undefined,
+                        height: product.height || undefined,
+                        depth: product.depth || undefined,
+                        diameter: product.diameterMin !== undefined ? { min: product.diameterMin, max: product.diameterMax || 0, default: product.diameterDefault || 0 } : undefined
+                    };
+                }
 
-                // Build SEO
-                product.seo = {
-                    title: product.seoTitle,
-                    description: product.seoDescription,
-                    keywords: product.seoKeywords
-                };
+                // If seo is not provided, build from legacy fields if present
+                if (!product.seo || Object.keys(product.seo).length === 0) {
+                    product.seo = {
+                        title: product.seoTitle,
+                        description: product.seoDescription,
+                        keywords: product.seoKeywords
+                    };
+                }
 
                 // Clean up temporary fields
                 delete product.dimensionShape;
@@ -367,6 +397,15 @@ export class CatalogueService {
                 delete product.seoTitle;
                 delete product.seoDescription;
                 delete product.seoKeywords;
+
+                // Set defaults for arrays if not provided
+                product.imageGallery = product.imageGallery || [];
+                product.videos = product.videos || [];
+                product.models3d = product.models3d || [];
+                product.tags = product.tags || [];
+                product.variations = product.variations || [];
+                product.attributes = product.attributes || {};
+                product.seo = product.seo || {};
 
                 await this.createProduct(product);
                 success++;

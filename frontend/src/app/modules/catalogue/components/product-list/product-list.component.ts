@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { CatalogueService } from '../../catalogue.service';
 import { Observable } from 'rxjs';
+import { UploadUrlPipe } from '../../../../pipes/upload-url.pipe';
 
 @Component({
   selector: 'app-product-list',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, UploadUrlPipe],
   template: `
     <div class="container mx-auto p-6">
       <div class="flex justify-between items-center mb-8">
@@ -20,7 +21,7 @@ import { Observable } from 'rxjs';
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div *ngFor="let product of products$ | async" class="border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow bg-white">
           <div class="h-48 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden">
-             <img *ngIf="product.images?.length" [src]="product.images[0]" class="object-cover h-full w-full" [alt]="product.name">
+             <img *ngIf="product.images?.length" [src]="product.images[0] | uploadUrl" class="object-cover h-full w-full" [alt]="product.name">
              <span *ngIf="!product.images?.length" class="text-gray-400 text-sm">No Image</span>
           </div>
           <div class="p-5">

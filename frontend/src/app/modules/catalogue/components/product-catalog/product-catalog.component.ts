@@ -8,6 +8,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatBadgeModule } from '@angular/material/badge';
 import { CatalogueService } from '../../catalogue.service';
+import { UploadUrlPipe } from '../../../../pipes/upload-url.pipe';
 
 @Component({
   selector: 'app-product-catalog',
@@ -20,7 +21,8 @@ import { CatalogueService } from '../../catalogue.service';
     MatInputModule,
     MatFormFieldModule,
     MatSnackBarModule,
-    MatBadgeModule
+    MatBadgeModule,
+    UploadUrlPipe
   ],
   template: `
     <div class="catalog-container">
@@ -37,7 +39,7 @@ import { CatalogueService } from '../../catalogue.service';
       <div class="products-grid">
         <mat-card *ngFor="let product of products()" class="product-card">
           <div class="product-image">
-            <img *ngIf="product.images?.length > 0" [src]="product.images[0]" [alt]="product.name">
+            <img *ngIf="product.images?.length > 0" [src]="product.images[0] | uploadUrl" [alt]="product.name">
             <div *ngIf="!product.images?.length" class="no-image">
               <mat-icon>image</mat-icon>
             </div>

@@ -8,6 +8,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatDialog } from '@angular/material/dialog';
 import { CatalogueService } from '../catalogue.service';
 import { CategoryDialogComponent } from '../dialogs/category-dialog.component';
+import { UploadUrlPipe } from '../../../pipes/upload-url.pipe';
 
 @Component({
   selector: 'app-categories-page',
@@ -18,7 +19,8 @@ import { CategoryDialogComponent } from '../dialogs/category-dialog.component';
     MatButtonModule,
     MatIconModule,
     MatMenuModule,
-    MatChipsModule
+    MatChipsModule,
+    UploadUrlPipe
   ],
   template: `
     <div class="tab-content">
@@ -36,8 +38,11 @@ import { CategoryDialogComponent } from '../dialogs/category-dialog.component';
             <th mat-header-cell *matHeaderCellDef>Image</th>
             <td mat-cell *matCellDef="let category">
               <div class="category-image-cell">
-                <img *ngIf="category.image" [src]="category.image" [alt]="category.name">
-                <mat-icon *ngIf="!category.image">category</mat-icon>
+                <img *ngIf="category.image && !category.imageError" 
+                     [src]="category.image | uploadUrl" 
+                     [alt]="category.name"
+                     (error)="onImageError(category)">
+                <mat-icon *ngIf="!category.image || category.imageError">category</mat-icon>
               </div>
             </td>
           </ng-container>
@@ -175,6 +180,10 @@ export class CategoriesPageComponent implements OnInit {
 
   loadCategories() {
     this.catalogueService.getCategories().subscribe(categories => {
+      // Reset image error flags when loading categories
+      categories.forEach(category => {
+        category.imageError = false;
+      });
       this.categories.set(categories);
     });
   }
@@ -256,5 +265,9 @@ export class CategoriesPageComponent implements OnInit {
         this.loadCategories();
       });
     }
+  }
+
+  onImageError(category: any) {
+    category.imageError = true;
   }
 }

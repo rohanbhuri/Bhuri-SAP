@@ -11,6 +11,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { HttpClient } from '@angular/common/http';
 import { CatalogueService } from '../catalogue.service';
 import { environment } from '../../../../environments/environment';
+import { UploadUrlPipe } from '../../../pipes/upload-url.pipe';
 
 @Component({
   selector: 'app-category-dialog',
@@ -25,7 +26,8 @@ import { environment } from '../../../../environments/environment';
     MatSelectModule,
     MatButtonModule,
     MatCheckboxModule,
-    MatIconModule
+    MatIconModule,
+    UploadUrlPipe
   ],
   template: `
     <h2 mat-dialog-title>{{ getTitle() }}</h2>
@@ -67,7 +69,13 @@ import { environment } from '../../../../environments/environment';
             Upload Image
           </button>
           <div class="image-preview" *ngIf="uploadedImage()">
-            <img [src]="uploadedImage()" />
+            <img [src]="uploadedImage() | uploadUrl" 
+                 (error)="onImagePreviewError()" 
+                 *ngIf="!imagePreviewError" />
+            <div *ngIf="imagePreviewError" class="image-error">
+              <mat-icon>broken_image</mat-icon>
+              <span>Image failed to load</span>
+            </div>
             <button mat-icon-button (click)="removeImage()">
               <mat-icon>close</mat-icon>
             </button>
@@ -162,6 +170,21 @@ import { environment } from '../../../../environments/environment';
       right: -8px;
       background: white;
     }
+    .image-error {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      background: #f5f5f5;
+      border-radius: 4px;
+      color: #999;
+      font-size: 0.875rem;
+    }
+    .image-error mat-icon {
+      margin-bottom: 0.5rem;
+    }
   `]
 })
 export class CategoryDialogComponent implements OnInit {
@@ -169,6 +192,7 @@ export class CategoryDialogComponent implements OnInit {
   uploadedImage = signal<string>('');
   saving = signal(false);
   imageUrl = '';
+  imagePreviewError = signal(false);
 
   constructor(
     private fb: FormBuilder,
@@ -254,6 +278,7 @@ export class CategoryDialogComponent implements OnInit {
         .subscribe(res => {
           if (res.url) {
             this.uploadedImage.set(res.url);
+            this.imagePreviewError.set(false); // Reset error flag for new image
           }
         });
     }
@@ -262,6 +287,11 @@ export class CategoryDialogComponent implements OnInit {
   removeImage() {
     this.uploadedImage.set('');
     this.imageUrl = '';
+    this.imagePreviewError.set(false);
+  }
+
+  onImagePreviewError() {
+    this.imagePreviewError.set(true);
   }
 
   onSave() {
