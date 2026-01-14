@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MongoRepository } from 'typeorm';
 import { Quotation, QuotationStatus } from '../entities/quotation.entity';
-import { Enquiry, EnquiryStatus } from '../entities/enquiry.entity';
+import { Enquiry, EnquiryStatus, EnquirySource } from '../entities/enquiry.entity';
 import { EmailTemplate } from '../entities/email-template.entity';
 import { Presentation, PresentationStatus } from '../entities/presentation.entity';
 import { Product } from '../entities/product.entity';
@@ -229,6 +229,29 @@ export class QuotationsService {
             createdAt: new Date()
         });
         return this.enquiryRepository.save(enquiry);
+    }
+
+    async createFromWebsiteCart(cartData: any, organizationId: string): Promise<Enquiry> {
+        // Transform cart data to enquiry format
+        const enquiryData = {
+            customerName: cartData.customerName,
+            customerEmail: cartData.customerEmail,
+            customerPhone: cartData.customerPhone,
+            company: cartData.company,
+            items: cartData.items.map(item => ({
+                productId: item.productId,
+                productName: item.productName,
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                specifications: item.specifications
+            })),
+            message: cartData.message,
+            source: EnquirySource.WEBSITE,
+            status: EnquiryStatus.NEW,
+            organizationId
+        };
+
+        return this.createEnquiry(enquiryData, organizationId);
     }
 
     async updateEnquiry(id: string, data: Partial<Enquiry>): Promise<Enquiry> {

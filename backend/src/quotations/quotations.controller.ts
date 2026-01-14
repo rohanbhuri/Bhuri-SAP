@@ -64,6 +64,13 @@ export class QuotationsController {
         return this.quotationsService.delete(id);
     }
 
+    // Website Cart API
+    @Post('cart')
+    @UseGuards(ApiKeyGuard)
+    async createFromWebsiteCart(@Body() cartData: any, @Request() req) {
+        return this.quotationsService.createFromWebsiteCart(cartData, req.apiKey.organizationId);
+    }
+
     // Enquiries
     @Get('enquiries/all')
     async getAllEnquiries(@Request() req) {

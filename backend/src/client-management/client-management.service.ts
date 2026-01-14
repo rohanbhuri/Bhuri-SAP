@@ -136,109 +136,114 @@ export class ClientManagementService {
   }
 
   async convertToClient(requestId: string, conversionData: any, adminUserId: string) {
-    const request = await this.clientRequestRepository.findOne({ 
-      where: { _id: new ObjectId(requestId) } 
-    });
-    
-    if (!request) {
-      throw new NotFoundException('Client request not found');
+    try {
+      const request = await this.clientRequestRepository.findOne({ 
+        where: { _id: new ObjectId(requestId) } 
+      });
+      
+      if (!request) {
+        throw new NotFoundException('Client request not found');
+      }
+
+      if (request.status === ClientRequestStatus.CONVERTED) {
+        throw new BadRequestException('This request has already been converted');
+      }
+
+      const existingUser = await this.userRepository.findOne({ 
+        where: { email: request.email } 
+      });
+      
+      if (existingUser) {
+        throw new ConflictException('User with this email already exists');
+      }
+
+      const organization = this.organizationRepository.create({
+        name: conversionData.companyName || request.companyName,
+        code: (conversionData.companyName || request.companyName).toLowerCase().replace(/\s+/g, '-'),
+        description: conversionData.industry || request.industry || '',
+        isPublic: false,
+        memberCount: 1,
+        activeModuleIds: []
+      });
+      const savedOrg = await this.organizationRepository.save(organization);
+
+      let clientRole = await this.roleRepository.findOne({ 
+        where: { type: RoleType.CLIENT } 
+      });
+      
+      if (!clientRole) {
+        clientRole = await this.roleRepository.save(
+          this.roleRepository.create({
+            name: 'Client',
+            type: RoleType.CLIENT,
+            description: 'Client user with limited access',
+            permissionIds: []
+          })
+        );
+      }
+
+      const password = conversionData.password || this.generatePassword();
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const user = this.userRepository.create({
+        email: conversionData.email || request.email,
+        password: hashedPassword,
+        firstName: conversionData.firstName || request.contactPerson.split(' ')[0],
+        lastName: conversionData.lastName || request.contactPerson.split(' ').slice(1).join(' '),
+        isActive: true,
+        organizationId: savedOrg._id,
+        organizationIds: [savedOrg._id],
+        roleIds: [clientRole._id]
+      } as any);
+      const savedUser = await this.userRepository.save(user) as unknown as User;
+
+      const client = this.clientRepository.create({
+        userId: savedUser._id,
+        organizationId: savedOrg._id,
+        companyName: conversionData.companyName || request.companyName,
+        contactPerson: `${conversionData.firstName} ${conversionData.lastName}`,
+        email: conversionData.email || request.email,
+        phone: conversionData.phone || request.phone,
+        website: conversionData.website || request.website,
+        industry: conversionData.industry || request.industry,
+        companySize: conversionData.companySize || request.companySize,
+        address: conversionData.address || request.address,
+        city: conversionData.city || request.city,
+        country: conversionData.country || request.country,
+        taxId: conversionData.taxId,
+        billingAddress: conversionData.billingAddress,
+        isActive: true,
+        notes: conversionData.notes,
+        maxDevices: conversionData.maxDevices,
+        sessionTimeout: conversionData.sessionTimeout,
+        expiryDate: conversionData.expiryDate ? new Date(conversionData.expiryDate) : null,
+        ipWhitelist: conversionData.ipWhitelist,
+        requireTwoFactor: conversionData.requireTwoFactor || false,
+        forcePasswordChange: conversionData.forcePasswordChange || false,
+        restrictToBusinessHours: conversionData.restrictToBusinessHours || false,
+        allowApiAccess: conversionData.allowApiAccess || false
+      });
+      const savedClient = await this.clientRepository.save(client);
+
+      await this.syncClientSecurityToUser(savedClient, savedUser as User);
+
+      request.status = ClientRequestStatus.CONVERTED;
+      request.convertedUserId = (savedUser as any)._id;
+      request.convertedOrganizationId = savedOrg._id;
+      request.reviewedBy = new ObjectId(adminUserId);
+      request.reviewedAt = new Date();
+      await this.clientRequestRepository.save(request);
+
+      return {
+        client: savedClient,
+        user: { ...(savedUser as any), password: undefined },
+        organization: savedOrg,
+        credentials: { email: (savedUser as any).email, password }
+      };
+    } catch (error) {
+      console.error('Error in convertToClient:', error);
+      throw error;
     }
-
-    if (request.status === ClientRequestStatus.CONVERTED) {
-      throw new BadRequestException('This request has already been converted');
-    }
-
-    const existingUser = await this.userRepository.findOne({ 
-      where: { email: request.email } 
-    });
-    
-    if (existingUser) {
-      throw new ConflictException('User with this email already exists');
-    }
-
-    const organization = this.organizationRepository.create({
-      name: conversionData.companyName || request.companyName,
-      code: (conversionData.companyName || request.companyName).toLowerCase().replace(/\s+/g, '-'),
-      description: conversionData.industry || request.industry || '',
-      isPublic: false,
-      memberCount: 1,
-      activeModuleIds: []
-    });
-    const savedOrg = await this.organizationRepository.save(organization);
-
-    let clientRole = await this.roleRepository.findOne({ 
-      where: { type: RoleType.CLIENT } 
-    });
-    
-    if (!clientRole) {
-      clientRole = await this.roleRepository.save(
-        this.roleRepository.create({
-          name: 'Client',
-          type: RoleType.CLIENT,
-          description: 'Client user with limited access',
-          permissionIds: []
-        })
-      );
-    }
-
-    const password = conversionData.password || this.generatePassword();
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const user = this.userRepository.create({
-      email: conversionData.email || request.email,
-      password: hashedPassword,
-      firstName: conversionData.firstName || request.contactPerson.split(' ')[0],
-      lastName: conversionData.lastName || request.contactPerson.split(' ').slice(1).join(' '),
-      isActive: true,
-      organizationId: savedOrg._id,
-      organizationIds: [savedOrg._id],
-      roleIds: [clientRole._id]
-    } as any);
-    const savedUser = await this.userRepository.save(user) as unknown as User;
-
-    const client = this.clientRepository.create({
-      userId: savedUser._id,
-      organizationId: savedOrg._id,
-      companyName: conversionData.companyName || request.companyName,
-      contactPerson: `${conversionData.firstName} ${conversionData.lastName}`,
-      email: conversionData.email || request.email,
-      phone: conversionData.phone || request.phone,
-      website: conversionData.website || request.website,
-      industry: conversionData.industry || request.industry,
-      companySize: conversionData.companySize || request.companySize,
-      address: conversionData.address || request.address,
-      city: conversionData.city || request.city,
-      country: conversionData.country || request.country,
-      taxId: conversionData.taxId,
-      billingAddress: conversionData.billingAddress,
-      isActive: true,
-      notes: conversionData.notes,
-      maxDevices: conversionData.maxDevices,
-      sessionTimeout: conversionData.sessionTimeout,
-      expiryDate: conversionData.expiryDate,
-      ipWhitelist: conversionData.ipWhitelist,
-      requireTwoFactor: conversionData.requireTwoFactor || false,
-      forcePasswordChange: conversionData.forcePasswordChange || false,
-      restrictToBusinessHours: conversionData.restrictToBusinessHours || false,
-      allowApiAccess: conversionData.allowApiAccess || false
-    });
-    const savedClient = await this.clientRepository.save(client);
-
-    await this.syncClientSecurityToUser(savedClient, savedUser as User);
-
-    request.status = ClientRequestStatus.CONVERTED;
-    request.convertedUserId = (savedUser as any)._id;
-    request.convertedOrganizationId = savedOrg._id;
-    request.reviewedBy = new ObjectId(adminUserId);
-    request.reviewedAt = new Date();
-    await this.clientRequestRepository.save(request);
-
-    return {
-      client: savedClient,
-      user: { ...(savedUser as any), password: undefined },
-      organization: savedOrg,
-      credentials: { email: (savedUser as any).email, password }
-    };
   }
 
   async deleteClientRequest(requestId: string) {
@@ -387,14 +392,19 @@ export class ClientManagementService {
   }
 
   private async syncClientSecurityToUser(client: Client, user: User): Promise<void> {
-    user.requireTwoFactor = client.requireTwoFactor;
-    user.sessionTimeout = client.sessionTimeout;
-    user.restrictToBusinessHours = client.restrictToBusinessHours;
-    user.allowApiAccess = client.allowApiAccess;
-    user.expiryDate = client.expiryDate;
-    user.ipWhitelist = client.ipWhitelist;
-    user.maxDevices = client.maxDevices;
-    await this.userRepository.save(user);
+    try {
+      user.requireTwoFactor = client.requireTwoFactor;
+      user.sessionTimeout = client.sessionTimeout;
+      user.restrictToBusinessHours = client.restrictToBusinessHours;
+      user.allowApiAccess = client.allowApiAccess;
+      user.expiryDate = client.expiryDate;
+      user.ipWhitelist = client.ipWhitelist;
+      user.maxDevices = client.maxDevices;
+      await this.userRepository.save(user);
+    } catch (error) {
+      console.error('Error in syncClientSecurityToUser:', error);
+      throw error;
+    }
   }
 
   private generatePassword(): string {

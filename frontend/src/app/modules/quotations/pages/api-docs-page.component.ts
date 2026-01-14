@@ -178,6 +178,7 @@ export class QuotationsApiDocsComponent implements OnInit {
     { method: 'GET', path: '/enquiries/all', description: 'Get all enquiries', response: '[{ "_id": "...", "enquiryNumber": "ENQ-001", ... }]' },
     { method: 'GET', path: '/enquiries/:id', description: 'Get enquiry by ID', response: '{ "_id": "...", ... }' },
     { method: 'POST', path: '/enquiries', description: 'Create enquiry', response: '{ "_id": "...", ... }' },
+    { method: 'POST', path: '/cart', description: 'Create enquiry from website cart', response: '{ "_id": "...", "enquiryNumber": "ENQ-...", ... }' },
     { method: 'PUT', path: '/enquiries/:id', description: 'Update enquiry', response: '{ "_id": "...", ... }' },
     { method: 'DELETE', path: '/enquiries/:id', description: 'Delete enquiry', response: '{ "message": "Enquiry deleted" }' }
   ];

@@ -85,10 +85,14 @@ async function runTests() {
         console.log('Test 6: Get quotations with API key');
         console.log('⚠️  SKIPPED: Requires valid API key\n');
 
+        // Test 7: Create enquiry from website cart
+        console.log('Test 7: Create enquiry from website cart');
+        console.log('⚠️  SKIPPED: Requires valid API key\n');
+
         console.log('\n📊 Test Summary');
         console.log(`✅ Passed: ${passed}`);
         console.log(`❌ Failed: ${failed}`);
-        console.log(`⏭️  Skipped: 4\n`);
+        console.log(`⏭️  Skipped: 5\n`);
 
         console.log('📝 To run full tests with API key:');
         console.log('1. Navigate to http://localhost:4200/settings');

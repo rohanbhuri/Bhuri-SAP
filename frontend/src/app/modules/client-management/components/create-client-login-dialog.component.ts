@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
@@ -525,6 +525,7 @@ export class CreateClientLoginDialogComponent implements OnInit {
     private clientService: ClientManagementService,
     private dialogRef: MatDialogRef<CreateClientLoginDialogComponent>,
     private snackBar: MatSnackBar,
+    private cdr: ChangeDetectorRef,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {}
 
@@ -605,7 +606,11 @@ export class CreateClientLoginDialogComponent implements OnInit {
   onSubmit() {
     if (!this.isFormValid()) return;
 
-    this.loading = true;
+    setTimeout(() => {
+      this.loading = true;
+      this.cdr.detectChanges();
+    });
+
     const conversionData = {
       ...this.basicForm.value,
       ...this.additionalForm.value

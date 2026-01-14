@@ -77,6 +77,10 @@ export class QuotationsService {
         return this.http.post<any>(`${this.apiUrl}/enquiries`, enquiry);
     }
 
+    createFromWebsiteCart(cartData: any): Observable<any> {
+        return this.http.post<any>(`${this.apiUrl}/cart`, cartData);
+    }
+
     updateEnquiry(id: string, enquiry: any): Observable<any> {
         return this.http.put<any>(`${this.apiUrl}/enquiries/${id}`, enquiry);
     }
