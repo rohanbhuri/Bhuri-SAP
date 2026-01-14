@@ -29,6 +29,7 @@ frontend/bazel-out/
 # NestJS specific
 backend/dist/
 backend/build/
+backend/uploads/
 
 # Logs
 logs/
