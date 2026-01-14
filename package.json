@@ -38,7 +38,8 @@
     "mcp:start": "node mcp-server-improved.js",
     "mcp:dev": "nodemon mcp-server-improved.js",
     "mcp:config": "cat mcp-config.json",
-    "mcp:test": "curl -X POST http://localhost:8931/mcp -H 'Content-Type: application/json' -d '{\"jsonrpc\":\"2.0\",\"method\":\"tools/list\",\"id\":1}'"
+    "mcp:test": "curl -X POST http://localhost:8931/mcp -H 'Content-Type: application/json' -d '{\"jsonrpc\":\"2.0\",\"method\":\"tools/list\",\"id\":1}'",
+    "nginx:setup": "chmod +x setup-nginx.sh && ./setup-nginx.sh"
   },
   "keywords": [
     "sap",
