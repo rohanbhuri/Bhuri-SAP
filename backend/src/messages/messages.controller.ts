@@ -45,8 +45,23 @@ export class MessagesController {
   async sendMessage(@Request() req, @Param('conversationId') conversationId: string, @Body() body: { content: string }) {
     const message = await this.messagesService.sendMessage(conversationId, req.user.userId, body.content);
     
-    // Emit WebSocket event to all participants in the conversation
+    // Emit WebSocket event to OTHER participants in the conversation (not sender)
     this.messagesGateway.server.to(`conversation:${conversationId}`).emit('message:new', message);
+    
+    // Update message counts for ALL participants (including sender)
+    const conversation = await this.messagesService['conversationRepo'].findOne({
+      where: { _id: new (require('mongodb').ObjectId)(conversationId) }
+    });
+    
+    if (conversation) {
+      const allMemberIds = (conversation as any).memberIds;
+      
+      for (const memberId of allMemberIds) {
+        const unreadCount = await this.messagesService.getTotalUnreadCount(String(memberId));
+        console.log(`Emitting message count ${unreadCount} to user ${memberId}`);
+        this.messagesGateway.server.to(`user:${memberId}`).emit('message:count', { count: unreadCount });
+      }
+    }
     
     return message;
   }

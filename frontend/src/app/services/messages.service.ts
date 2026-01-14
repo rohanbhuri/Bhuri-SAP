@@ -1,8 +1,9 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject, interval } from 'rxjs';
+import { Observable, BehaviorSubject, interval, Subscription } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { BrandConfigService } from './brand-config.service';
+import { WebSocketService } from './websocket.service';
 
 export interface OrgMember {
   id: string;
@@ -52,7 +53,7 @@ export interface MessageAttachment {
 export interface Conversation {
   id: string;
   organizationId: string;
-  participants: string[];
+  memberIds: string[];
   lastMessage?: Message;
   unreadCount: number;
   isTyping?: boolean;
@@ -75,15 +76,114 @@ export class MessagesApiService {
     return this.brand.getApiUrl();
   }
 
+  // Merged from MessageCountService
+  private wsService = inject(WebSocketService);
+  messageCount = signal<number>(0);
+  private onlineUsers = signal<Set<string>>(new Set());
+
+  constructor() {
+    this.setupSocketListeners();
+    this.fetchInitialUnreadCount();
+  }
+
+  private setupSocketListeners() {
+    this.wsService.getMessages().subscribe(message => {
+      if (message?.type === 'message:count') {
+        this.setMessageCount(message.payload.count);
+      } else if (message?.type === 'user:online') {
+        this.onlineUsers.update(users => {
+          const newSet = new Set(users);
+          newSet.add(message.payload.userId);
+          return newSet;
+        });
+      } else if (message?.type === 'user:offline') {
+        this.onlineUsers.update(users => {
+          const newSet = new Set(users);
+          newSet.delete(message.payload.userId);
+          return newSet;
+        });
+      }
+    });
+
+    // Fetch count when socket connects
+    this.wsService.getConnectionStatus().subscribe(connected => {
+      if (connected) {
+        this.fetchInitialUnreadCount();
+      }
+    });
+  }
+
+  private fetchInitialUnreadCount() {
+    this.getUnreadCount().subscribe({
+      next: (counts) => {
+        const totalUnread = Object.values(counts).reduce((sum, count) => sum + (count as number), 0);
+        this.setMessageCount(totalUnread);
+      },
+      error: (err) => console.error('Failed to fetch initial unread count:', err)
+    });
+  }
+
+  setMessageCount(count: number) {
+    this.messageCount.set(count);
+  }
+
+  isUserOnline(userId: string): boolean {
+    return this.onlineUsers().has(userId);
+  }
+
+  // Merged from MessagesUtilsService
+  getOrgInitials(orgName: string): string {
+    if (!orgName) return 'ORG';
+    return orgName
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase())
+      .slice(0, 2)
+      .join('');
+  }
+
+  getOrgGradient(orgName: string): string {
+    const colors = ['#667eea,#764ba2', '#f093fb,#f5576c', '#4facfe,#00f2fe', '#43e97b,#38f9d7'];
+    const index = orgName.length % colors.length;
+    return `linear-gradient(135deg, ${colors[index]})`;
+  }
+
+  avatarUrl(email: string): string {
+    const hash = encodeURIComponent(email || 'user');
+    return `https://www.gravatar.com/avatar/${hash}?d=identicon&s=40`;
+  }
+
+  filterMembers(members: any[], query: string) {
+    if (!query.trim()) return members;
+    const q = query.toLowerCase();
+    return members.filter(m =>
+      `${m.firstName} ${m.lastName} ${m.email}`.toLowerCase().includes(q)
+    );
+  }
+
+  getAttachmentIcon(type: string): string {
+    if (type.startsWith('image/')) return 'image';
+    if (type.includes('pdf')) return 'picture_as_pdf';
+    if (type.includes('document') || type.includes('word')) return 'description';
+    return 'attach_file';
+  }
+
+  getStatusIcon(status: string): string {
+    switch (status) {
+      case 'sending': return 'schedule';
+      case 'sent': return 'check';
+      case 'delivered': return 'done_all';
+      case 'read': return 'done_all';
+      default: return 'check';
+    }
+  }
+
   // State management
   private messageState = signal<MessageState>({ loading: false, error: null, sending: false });
   private typingUsers = new BehaviorSubject<{ [conversationId: string]: string[] }>({});
-  private onlineUsers = new BehaviorSubject<string[]>([]);
   private unreadMessages = new BehaviorSubject<{ [userId: string]: boolean }>({});
 
   getMessageState = this.messageState.asReadonly();
   getTypingUsers = () => this.typingUsers.asObservable();
-  getOnlineUsers = () => this.onlineUsers.asObservable();
   getUnreadMessages = () => this.unreadMessages.asObservable();
 
   setUnreadMessage(userId: string, hasUnread: boolean) {
@@ -150,7 +250,15 @@ export class MessagesApiService {
   }
 
   markAsRead(conversationId: string): Observable<void> {
-    return this.http.post<void>(`${this.api}/messages/chat/${conversationId}/read`, {});
+    return this.http.post<void>(`${this.api}/messages/chat/${conversationId}/read`, {}).pipe(
+      finalize(() => {
+        // Fetch updated unread count after marking as read
+        this.getUnreadCount().subscribe(counts => {
+          const totalUnread = Object.values(counts).reduce((sum, count) => sum + (count as number), 0);
+          this.setMessageCount(totalUnread);
+        });
+      })
+    );
   }
 
   setTyping(conversationId: string, isTyping: boolean): Observable<void> {

@@ -48,6 +48,12 @@ export class WebSocketService {
       return;
     }
 
+    // Disconnect existing connection if any
+    if (this.socket?.connected) {
+      console.log('WebSocket: Disconnecting existing connection before reconnecting');
+      this.socket.disconnect();
+    }
+
     try {
       const socketUrl = this.getSocketUrl();
       console.log('WebSocket: Attempting to connect to:', socketUrl);

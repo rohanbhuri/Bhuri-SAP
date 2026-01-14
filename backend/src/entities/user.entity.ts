@@ -41,7 +41,11 @@ export class User {
   @Column('array')
   activeModuleIds: ObjectId[];
 
+  @Column({ default: false })
+  isOnline: boolean;
 
+  @Column({ nullable: true })
+  lastSeen?: Date;
 
   @Column({ default: false })
   forcePasswordChange: boolean;
@@ -75,5 +79,6 @@ export class User {
     this.organizationIds = [];
     this.roleIds = [];
     this.createdAt = new Date();
+    this.isOnline = false;
   }
 }

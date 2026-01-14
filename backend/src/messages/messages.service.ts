@@ -21,7 +21,7 @@ export class MessagesService {
     private organizationRepo: MongoRepository<Organization>,
     @Inject(forwardRef(() => NotificationsService))
     private notificationsService: NotificationsService,
-  ) {}
+  ) { }
 
   async listOrganizationsWithMembers(userId: string) {
     const user = await this.userRepo.findOne({ where: { _id: new ObjectId(userId) } });
@@ -31,7 +31,7 @@ export class MessagesService {
     const userObjectId = new ObjectId(userId);
     const organizations = await this.organizationRepo.find({ where: { _id: { $in: orgIds } } });
     const members = await this.userRepo.find({ where: { organizationIds: { $in: orgIds } } });
-    
+
     const grouped = orgIds.map((orgId) => {
       const org = organizations.find(o => o._id.toString() === orgId?.toString());
       return {
@@ -39,7 +39,7 @@ export class MessagesService {
         organizationName: org?.name || 'Unknown Organization',
         organizationCode: org?.code || '',
         members: members
-          .filter((m) => 
+          .filter((m) =>
             (m.organizationIds || []).some((id) => id?.toString() === orgId?.toString()) &&
             m._id.toString() !== userObjectId.toString()
           )
@@ -107,7 +107,7 @@ export class MessagesService {
       const memberUsers = await this.userRepo.find({
         where: { _id: { $in: conv.memberIds } },
       });
-      
+
       const conversationWithMembers = {
         ...conv,
         members: memberUsers.map(u => ({
@@ -117,7 +117,7 @@ export class MessagesService {
           email: u.email,
         })),
       };
-      
+
       populatedConversations.push(conversationWithMembers);
     }
 
@@ -139,7 +139,7 @@ export class MessagesService {
       conversationId: new ObjectId(conversationId),
       senderId: new ObjectId(senderId),
       content,
-      readBy: [new ObjectId(senderId)],
+      readBy: [new ObjectId(senderId)], // Only sender has read it initially
       createdAt: new Date(),
       organizationId: undefined as any,
     } as any);
@@ -149,6 +149,7 @@ export class MessagesService {
     if (convo) (message as any).organizationId = convo.organizationId;
 
     const saved = await this.messageRepo.save(message);
+    console.log(`Message saved with readBy:`, (saved as any).readBy, 'for conversation:', conversationId);
 
     if (convo) {
       const preview = { senderId: (message as any).senderId, content: content.slice(0, 120), at: new Date() } as any;
@@ -210,6 +211,9 @@ export class MessagesService {
       await this.messageRepo.save(message);
     }
 
+    // Mark conversation notifications as read
+    await this.notificationsService.markConversationNotificationsAsRead(userId, conversationId);
+
     return { success: true, markedCount: messages.length };
   }
 
@@ -225,7 +229,7 @@ export class MessagesService {
 
     const reactions = (message as any).reactions || [];
     const existingReaction = reactions.find((r: any) => r.userId.toString() === userId && r.emoji === emoji);
-    
+
     if (!existingReaction) {
       reactions.push({ userId: new ObjectId(userId), emoji, createdAt: new Date() });
       (message as any).reactions = reactions;
@@ -240,10 +244,10 @@ export class MessagesService {
     if (!message) throw new Error('Message not found');
 
     const reactions = (message as any).reactions || [];
-    (message as any).reactions = reactions.filter((r: any) => 
+    (message as any).reactions = reactions.filter((r: any) =>
       !(r.userId.toString() === userId && r.emoji === emoji)
     );
-    
+
     await this.messageRepo.save(message);
     return message;
   }
@@ -270,22 +274,36 @@ export class MessagesService {
     });
   }
 
-  async getUnreadMessageCount(userId: string): Promise<{[conversationId: string]: number}> {
+  async getUnreadMessageCount(userId: string): Promise<{ [conversationId: string]: number }> {
     const userObjectId = new ObjectId(userId);
     const conversations = await this.conversationRepo.find({
       where: { memberIds: { $in: [userObjectId] } as any },
     });
 
-    const unreadCounts: {[conversationId: string]: number} = {};
+    const unreadCounts: { [conversationId: string]: number } = {};
     for (const conv of conversations) {
-      const unreadCount = await this.messageRepo.count({
-        where: {
-          conversationId: conv._id,
-          readBy: { $nin: [userObjectId] } as any,
-        },
+      // Simplified: Get all messages in conversation, then filter in code
+      const allMessages = await this.messageRepo.find({
+        where: { conversationId: conv._id }
       });
+      
+      // Count messages where user ID is NOT in readBy array
+      const unreadCount = allMessages.filter(msg => {
+        const readByIds = ((msg as any).readBy || []).map((id: any) => String(id));
+        return !readByIds.includes(userId);
+      }).length;
+      
+      console.log(`Unread count for user ${userId} in conversation ${conv._id}: ${unreadCount}`);
       unreadCounts[conv._id.toString()] = unreadCount;
     }
+    console.log(`Total unread counts for user ${userId}:`, unreadCounts);
     return unreadCounts;
+  }
+
+  async getTotalUnreadCount(userId: string): Promise<number> {
+    const counts = await this.getUnreadMessageCount(userId);
+    const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
+    console.log(`getTotalUnreadCount for user ${userId}: individual counts:`, counts, 'total:', total);
+    return total;
   }
 }

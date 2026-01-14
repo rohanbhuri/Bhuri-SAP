@@ -34,7 +34,7 @@ import { NotificationsService } from '../../services/notifications.service';
 import { Subject, debounceTime, takeUntil, finalize, filter } from 'rxjs';
 import { CreateGroupDialogComponent } from './create-group-dialog.component';
 import { DirectMessageDialogComponent } from './direct-message-dialog.component';
-import { MessageCountService } from '../../services/message-count.service';
+// MessageCountService removed
 import { ScrollVisibilityService } from '../../services/scroll-visibility.service';
 
 @Component({
@@ -143,7 +143,7 @@ import { ScrollVisibilityService } from '../../services/scroll-visibility.servic
                 <div class="avatar-container">
                   <img class="avatar" [src]="avatarUrl(m.email)" [alt]="m.firstName + ' avatar'" />
                   <div class="online-indicator" 
-                       *ngIf="m.isOnline" 
+                       *ngIf="isUserOnline(m.id)" 
                        matTooltip="Online"
                        aria-label="User is online">
                   </div>
@@ -151,9 +151,9 @@ import { ScrollVisibilityService } from '../../services/scroll-visibility.servic
                 <div class="meta">
                   <div class="name">{{ m.firstName }} {{ m.lastName }}</div>
                   <div class="preview">
-                    <span *ngIf="m.isOnline; else offline">Online</span>
+                    <span *ngIf="isUserOnline(m.id); else offline">Online</span>
                     <ng-template #offline>
-                      <span *ngIf="m.lastSeen">Last seen {{ m.lastSeen | date:'short' }}</span>
+                      <span *ngIf="m.lastSeen">{{ getRelativeTime(m.lastSeen) }}</span>
                       <span *ngIf="!m.lastSeen">Tap to chat</span>
                     </ng-template>
                   </div>
@@ -419,7 +419,7 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
   private wsService = inject(WebSocketService);
   private notificationsService = inject(NotificationsService);
   private dialog = inject(MatDialog);
-  private messageCountService = inject(MessageCountService);
+  // messageCountService removed
   private scrollVisibilityService = inject(ScrollVisibilityService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -518,7 +518,7 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngAfterViewInit() {
     // Update message count in service whenever orgs change
-    this.messageCountService.setMessageCount(this.totalMembers());
+    this.api.setMessageCount(this.totalMembers());
 
     // Attach scroll listeners to scrollable elements
     setTimeout(() => {
@@ -612,6 +612,17 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
         this.handleMessagesRead(message.payload);
       }
     });
+
+    // Rejoin conversation room on reconnect
+    this.wsService.getConnectionStatus().pipe(takeUntil(this.destroy$)).subscribe(connected => {
+      if (connected) {
+        const activeId = this.activeConversationId();
+        if (activeId) {
+          console.log('Socket reconnected, rejoining conversation:', activeId);
+          this.wsService.joinRoom(`conversation:${activeId}`);
+        }
+      }
+    });
   }
 
   setupNotificationIntegration() {
@@ -620,24 +631,15 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
       const messageNotifications = this.notificationsService.getUnreadMessageCount();
       this.messageNotificationCount.set(messageNotifications);
     });
-
-    // Join user room for notifications (only if WebSocket is connected)
-    const user = this.auth.getCurrentUser();
-    if (user) {
-      this.wsService.getConnectionStatus().pipe(takeUntil(this.destroy$)).subscribe(connected => {
-        if (connected) {
-          this.wsService.joinRoom(`user:${user.id}`);
-        }
-      });
-    }
   }
 
   setupUnreadTracking() {
+    // Fetch initial unread count
     this.api.getUnreadCount()
       .pipe(takeUntil(this.destroy$))
       .subscribe(unreadCounts => {
         const totalUnread = Object.values(unreadCounts).reduce((sum, count) => sum + (count as number), 0);
-        this.messageCountService.setMessageCount(totalUnread);
+        this.api.setMessageCount(totalUnread);
       });
   }
 
@@ -675,9 +677,12 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
         const urlWithMsg = `${currentUrl}?msgId=${transformedMsg.id}`;
         this.saveLastChatUrl(urlWithMsg);
 
-        // Mark as read if not from current user
-        if (!this.isSelf(senderId)) {
+        // Mark as read if not from current user AND user is actively viewing this conversation
+        if (!this.isSelf(senderId) && document.hasFocus() && this.router.url.includes('/messages')) {
+          console.log('New message from other user, user is viewing conversation, marking as read after delay');
           setTimeout(() => this.markAsRead(), 1000);
+        } else if (!this.isSelf(senderId)) {
+          console.log('New message from other user, user not actively viewing, keeping as unread');
         }
       }
     } catch (error) {
@@ -734,28 +739,25 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
   isSelf(senderId: string | undefined): boolean {
     if (!senderId) return false;
     const user = this.currentUser();
-    const userId = (user as any)?._id || user?.id || this.meId;
+    const userId = user?.id || this.meId;
+    // console.log('isSelf check:', {
+    //   senderId,
+    //   userId,
+    //   result: String(senderId) === String(userId)
+    // });
     return String(senderId) === String(userId);
   }
 
   avatarUrl(email: string) {
-    const hash = encodeURIComponent(email || 'user');
-    return `https://www.gravatar.com/avatar/${hash}?d=identicon&s=40`;
+    return this.api.avatarUrl(email);
   }
 
   getOrgInitials(orgName: string): string {
-    if (!orgName) return 'ORG';
-    return orgName
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase())
-      .slice(0, 2)
-      .join('');
+    return this.api.getOrgInitials(orgName);
   }
 
   getOrgGradient(orgName: string): string {
-    const colors = ['#667eea,#764ba2', '#f093fb,#f5576c', '#4facfe,#00f2fe', '#43e97b,#38f9d7'];
-    const index = orgName.length % colors.length;
-    return `linear-gradient(135deg, ${colors[index]})`;
+    return this.api.getOrgGradient(orgName);
   }
 
   // Message handling
@@ -1028,20 +1030,11 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   getAttachmentIcon(type: string): string {
-    if (type.startsWith('image/')) return 'image';
-    if (type.includes('pdf')) return 'picture_as_pdf';
-    if (type.includes('document') || type.includes('word')) return 'description';
-    return 'attach_file';
+    return this.api.getAttachmentIcon(type);
   }
 
   getStatusIcon(status: string): string {
-    switch (status) {
-      case 'sending': return 'schedule';
-      case 'sent': return 'check';
-      case 'delivered': return 'done_all';
-      case 'read': return 'done_all';
-      default: return 'check';
-    }
+    return this.api.getStatusIcon(status);
   }
 
   toggleReaction(messageId: string, emoji: string) {
@@ -1236,11 +1229,14 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
         this.expandedOrgId.set(orgId);
         this.activeConversationId.set(chatId);
 
+        // Join conversation room
+        this.wsService.joinRoom(`conversation:${chatId}`);
+
         // Try to identify the member for this conversation
         this.api.listConversations(orgId).pipe(takeUntil(this.destroy$)).subscribe(convs => {
           const currentConv = convs.find(c => (c as any)._id === chatId || c.id === chatId);
           if (currentConv) {
-            const otherId = currentConv.participants.find(p => p !== this.meId);
+            const otherId = (currentConv as any).memberIds.find((p: any) => String(p) !== String(this.meId));
             if (otherId) {
               this.activeMemberId.set(otherId);
               this.saveLastChatUrl(this.router.url.split('?')[0], otherId);
@@ -1299,5 +1295,26 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
   getConversationUnreadCount(conversationId: string): number {
     // This would be enhanced to show actual unread count per conversation
     return 0;
+  }
+
+  isUserOnline(userId: string): boolean {
+    return this.api.isUserOnline(userId);
+  }
+
+  getRelativeTime(date: Date): string {
+    const now = new Date().getTime();
+    const then = new Date(date).getTime();
+    const diff = now - then;
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (seconds < 60) return 'Just now';
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    if (days === 1) return 'Yesterday';
+    if (days < 7) return `${days}d ago`;
+    return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 }

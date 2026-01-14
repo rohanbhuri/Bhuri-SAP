@@ -4,13 +4,14 @@ import { MessagesService } from './messages.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { JwtService } from '@nestjs/jwt';
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { MongoRepository } from 'typeorm';
+import { ObjectId } from 'mongodb';
+import { User } from '../entities/user.entity';
 
 @Injectable()
 @WebSocketGateway({
-  cors: {
-    origin: ['http://localhost:4200', 'http://localhost:4201'],
-    methods: ['GET', 'POST'],
-    credentials: true
+  cors: { origin: '*'
   },
   transports: ['websocket', 'polling']
 })
@@ -23,9 +24,11 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
     @Inject(forwardRef(() => NotificationsService))
     private readonly notificationsService: NotificationsService,
     private readonly jwtService: JwtService,
+    @InjectRepository(User)
+    private readonly userRepo: MongoRepository<User>,
   ) { }
 
-  handleConnection(client: Socket) {
+  async handleConnection(client: Socket) {
     const token = client.handshake.auth?.token || client.handshake.headers?.authorization?.split(' ')[1];
 
     if (!token) {
@@ -38,15 +41,59 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
       const decoded = this.jwtService.verify(token);
       client.data.userId = decoded.sub || decoded.userId;
       client.data.user = decoded;
+      
+      // Join user room immediately
+      client.join(`user:${client.data.userId}`);
       console.log(`Client ${client.id} connected with user: ${client.data.userId}`);
+      
+      // Update user online status
+      await this.updateUserOnlineStatus(client.data.userId, true);
+      
+      // Get user and join organization rooms
+      const user = await this.userRepo.findOne({ where: { _id: new ObjectId(client.data.userId) } });
+      if (user && user.organizationIds) {
+        for (const orgId of user.organizationIds) {
+          client.join(`org:${orgId}`);
+          // Only emit to the specific org room, not broadcast to all
+          client.to(`org:${orgId}`).emit('user:online', { 
+            userId: client.data.userId,
+            timestamp: new Date()
+          });
+        }
+      }
+      
+      // Send current unread count to user immediately upon connection
+      try {
+        const unreadCount = await this.messagesService.getTotalUnreadCount(client.data.userId);
+        console.log(`Sending initial unread count to user ${client.data.userId}: ${unreadCount}`);
+        client.emit('message:count', { count: unreadCount });
+      } catch (error) {
+        console.error('Failed to send initial unread count:', error);
+      }
     } catch (error) {
       console.log(`Client ${client.id} provided invalid token, disconnecting`);
       client.disconnect();
     }
   }
 
-  handleDisconnect(client: Socket) {
+  async handleDisconnect(client: Socket) {
     console.log(`Client ${client.id} disconnected`);
+    
+    if (client.data.userId) {
+      // Update user offline status
+      await this.updateUserOnlineStatus(client.data.userId, false);
+      
+      // Broadcast offline status to user's organizations
+      const user = await this.userRepo.findOne({ where: { _id: new ObjectId(client.data.userId) } });
+      if (user && user.organizationIds) {
+        for (const orgId of user.organizationIds) {
+          this.server.to(`org:${orgId}`).emit('user:offline', { 
+            userId: client.data.userId,
+            lastSeen: new Date()
+          });
+        }
+      }
+    }
   }
 
   // Generic join for rooms
@@ -75,46 +122,28 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
   ) {
     const msg = await this.messagesService.sendMessage(payload.conversationId, payload.senderId, payload.content);
 
-    // Emit to conversation room (excluding sender to avoid duplicates)
+    // Only send message:new to OTHER participants, not the sender
     client.to(`conversation:${payload.conversationId}`).emit('message:new', msg);
     if ((msg as any)?.organizationId) {
       client.to(`org:${(msg as any).organizationId}`).emit('message:org', msg);
     }
 
-    // Get recent notifications for recipients to emit real-time updates
     try {
-      const notifications = await this.notificationsService.getUserNotifications(payload.senderId, 1);
-      if (notifications.length > 0) {
-        const latestNotification = notifications[0];
+      const conversation = await this.messagesService['conversationRepo'].findOne({
+        where: { _id: new ObjectId(payload.conversationId) }
+      });
 
-        // Emit notification to recipient's room
-        if (latestNotification.data?.conversationId) {
-          // Get conversation to find all participants
-          const conversation = await this.messagesService['conversationRepo'].findOne({
-            where: { _id: latestNotification.data.conversationId }
-          });
+      if (conversation) {
+        const allMemberIds = (conversation as any).memberIds;
 
-          if (conversation) {
-            const recipientIds = (conversation as any).memberIds.filter(
-              (memberId: any) => String(memberId) !== String(payload.senderId)
-            );
-
-            // Emit to each recipient
-            for (const recipientId of recipientIds) {
-              this.server.to(`user:${recipientId}`).emit('notification:new', {
-                notification: latestNotification,
-                type: 'message'
-              });
-
-              // Also emit updated notification count
-              const unreadCount = await this.notificationsService.getUnreadCount(recipientId);
-              this.server.to(`user:${recipientId}`).emit('notification:count', { count: unreadCount });
-            }
-          }
+        for (const memberId of allMemberIds) {
+          const unreadMessageCount = await this.messagesService.getTotalUnreadCount(String(memberId));
+          console.log(`WebSocket: Emitting message count ${unreadMessageCount} to user ${memberId}`);
+          this.server.to(`user:${memberId}`).emit('message:count', { count: unreadMessageCount });
         }
       }
     } catch (error) {
-      console.error('Failed to emit notification updates:', error);
+      console.error('Failed to emit message count updates:', error);
     }
   }
 
@@ -153,6 +182,10 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
       conversationId: payload.conversationId,
       userId: payload.userId,
     });
+
+    // Update message count for the user who read the messages
+    const unreadMessageCount = await this.messagesService.getTotalUnreadCount(payload.userId);
+    this.server.to(`user:${payload.userId}`).emit('message:count', { count: unreadMessageCount });
   }
 
   // Helpers to emit notifications/requests from services
@@ -164,5 +197,18 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
   emitRequest(target: { userId?: string; orgId?: string }, payload: any) {
     if (target.userId) this.server.to(`user:${target.userId}`).emit('request:new', payload);
     if (target.orgId) this.server.to(`org:${target.orgId}`).emit('request:new', payload);
+  }
+
+  private async updateUserOnlineStatus(userId: string, isOnline: boolean) {
+    try {
+      const user = await this.userRepo.findOne({ where: { _id: new ObjectId(userId) } });
+      if (user) {
+        user.isOnline = isOnline;
+        user.lastSeen = new Date();
+        await this.userRepo.save(user);
+      }
+    } catch (error) {
+      console.error('Failed to update user online status:', error);
+    }
   }
 }

@@ -68,7 +68,10 @@ export class ModulesService {
         _id: { $in: activeIds }
       }).toArray();
 
-      return modules.map(module => ({
+      // Filter modules based on user permissions
+      const filteredModules = await this.filterModulesByPermissions(db, modules, userId);
+
+      return filteredModules.map(module => ({
         id: module._id.toString(),
         name: module.name,
         displayName: module.displayName,
@@ -540,7 +543,10 @@ export class ModulesService {
         _id: { $in: activeIds }
       }).toArray();
 
-      return modules.map(module => ({
+      // Filter modules based on user permissions
+      const filteredModules = await this.filterModulesByPermissions(db, modules, userId);
+
+      return filteredModules.map(module => ({
         id: module._id.toString(),
         name: module.name,
         displayName: module.displayName,
@@ -766,6 +772,66 @@ export class ModulesService {
       console.error('Error notifying requester about approval:', error);
     } finally {
       await client.close();
+    }
+  }
+
+  private async filterModulesByPermissions(db: any, modules: any[], userId: string): Promise<any[]> {
+    if (!userId || modules.length === 0) {
+      return modules;
+    }
+
+    try {
+      // Get user with roles
+      const user = await db.collection('users').findOne({ _id: new ObjectId(userId) });
+      if (!user || !user.roleIds || user.roleIds.length === 0) {
+        return [];
+      }
+
+      // Get user's roles
+      const roles = await db.collection('roles').find({
+        _id: { $in: user.roleIds }
+      }).toArray();
+
+      // Super admins have access to all modules
+      const isSuperAdmin = roles.some(role => role.type === 'super_admin');
+      if (isSuperAdmin) {
+        return modules;
+      }
+
+      // Get all permission IDs from user's roles
+      const permissionIds = roles.reduce((acc, role) => {
+        if (role.permissionIds && Array.isArray(role.permissionIds)) {
+          return [...acc, ...role.permissionIds];
+        }
+        return acc;
+      }, []);
+
+      if (permissionIds.length === 0) {
+        return [];
+      }
+
+      // Get permissions
+      const permissions = await db.collection('permissions').find({
+        _id: { $in: permissionIds }
+      }).toArray();
+
+      // Filter modules based on permissions
+      return modules.filter(module => {
+        // Public modules are accessible to everyone
+        if (module.permissionType === 'public') {
+          return true;
+        }
+
+        // Check if user has at least READ permission for this module
+        const hasPermission = permissions.some(perm => 
+          perm.module === module.name && perm.action === 'read'
+        );
+
+        return hasPermission;
+      });
+    } catch (error) {
+      console.error('Error filtering modules by permissions:', error);
+      return [];
     }
   }
 }

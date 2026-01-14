@@ -34,6 +34,7 @@ const MODULE_THEMES: Record<string, Partial<ThemeColors>> = {
   'project-tracking': { primary: '#00bcd4', accent: '#4caf50', secondary: '#795548' },
   'project-timesheet': { primary: '#673ab7', accent: '#e91e63', secondary: '#607d8b' },
   'messages': { primary: '#10B981', accent: '#EF4444', secondary: '#374151' },
+  'notifications': { primary: '#8b5cf6', accent: '#f59e0b', secondary: '#64748b' },
   'search': { primary: '#6366f1', accent: '#f59e0b', secondary: '#64748b' }
 };
 

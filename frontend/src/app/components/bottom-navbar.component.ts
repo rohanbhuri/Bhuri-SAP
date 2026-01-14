@@ -7,7 +7,8 @@ import { CommonModule } from '@angular/common';
 import { filter } from 'rxjs/operators';
 import { ModulesService, AppModuleInfo } from '../services/modules.service';
 import { PreferencesService } from '../services/preferences.service';
-import { MessageCountService } from '../services/message-count.service';
+import { MessagesApiService } from '../services/messages.service';
+import { NotificationsService } from '../services/notifications.service';
 import { ScrollVisibilityService } from '../services/scroll-visibility.service';
 
 @Component({
@@ -58,7 +59,9 @@ import { ScrollVisibilityService } from '../services/scroll-visibility.service';
         [class.active]="activeRoute === '/notifications'"
         aria-label="Notifications"
       >
-        <mat-icon>notifications</mat-icon>
+        <span [matBadge]="notificationCount()" matBadgeColor="warn" [matBadgeHidden]="notificationCount() === 0" class="badge-container">
+          <mat-icon>notifications</mat-icon>
+        </span>
         <span class="nav-label">Notifications</span>
       </button>
       <button
@@ -247,12 +250,14 @@ import { ScrollVisibilityService } from '../services/scroll-visibility.service';
 export class BottomNavbarComponent implements OnInit, OnDestroy {
   private modulesService = inject(ModulesService);
   private preferencesService = inject(PreferencesService);
-  private messageCountService = inject(MessageCountService);
+  private messagesApiService = inject(MessagesApiService);
+  private notificationsService = inject(NotificationsService);
   private scrollVisibilityService = inject(ScrollVisibilityService);
   activeRoute: string = '';
   activeModules = signal<AppModuleInfo[]>([]);
   pinnedModules = signal<AppModuleInfo[]>([]);
-  messageCount = this.messageCountService.messageCount;
+  messageCount = this.messagesApiService.messageCount;
+  notificationCount = this.notificationsService.unreadCount;
   isHidden = this.scrollVisibilityService.isBottomNavHidden;
 
   constructor(private router: Router) {

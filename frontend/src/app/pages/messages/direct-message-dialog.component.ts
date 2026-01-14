@@ -8,8 +8,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { MatExpansionModule } from '@angular/material/expansion';
-import { OrgWithMembers } from '../../services/messages.service';
-import { MessagesUtilsService } from '../../services/messages-utils.service';
+import { OrgWithMembers, MessagesApiService } from '../../services/messages.service';
+// MessagesUtilsService removed
 import { AuthService } from '../../services/auth.service';
 
 interface DialogData {
@@ -171,32 +171,32 @@ interface DialogData {
 export class DirectMessageDialogComponent {
   searchQuery = '';
   selectedUserId: any = '';
-  private utils = inject(MessagesUtilsService);
+  private api = inject(MessagesApiService);
   private auth = inject(AuthService);
 
   constructor(
     public dialogRef: MatDialogRef<DirectMessageDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: DialogData
-  ) {}
+  ) { }
 
   filteredMembers(org: OrgWithMembers) {
     if (!this.searchQuery.trim()) return org.members;
     const q = this.searchQuery.toLowerCase();
-    return org.members.filter(m => 
+    return org.members.filter(m =>
       `${m.firstName} ${m.lastName} ${m.email}`.toLowerCase().includes(q)
     );
   }
 
   avatarUrl(email: string) {
-    return this.utils.avatarUrl(email);
+    return this.api.avatarUrl(email);
   }
 
   getOrgInitials(orgName: string): string {
-    return this.utils.getOrgInitials(orgName);
+    return this.api.getOrgInitials(orgName);
   }
 
   getOrgGradient(orgName: string): string {
-    return this.utils.getOrgGradient(orgName);
+    return this.api.getOrgGradient(orgName);
   }
 
   canStart(): boolean {

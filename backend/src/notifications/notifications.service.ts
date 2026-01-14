@@ -56,6 +56,7 @@ export class NotificationsService {
 
     // Emit real-time notification
     try {
+      // First emit the new notification
       this.gateway.emitNotification(
         { userId: String(userId) },
         {
@@ -64,7 +65,7 @@ export class NotificationsService {
         }
       );
 
-      // Also emit updated unread count
+      // Then get and emit the updated unread count AFTER saving
       const unreadCount = await this.getUnreadCount(userId);
       this.gateway.server.to(`user:${userId}`).emit('notification:count', { count: unreadCount });
     } catch (error) {
@@ -119,17 +120,37 @@ export class NotificationsService {
     skip = 0,
     unreadOnly = false
   ): Promise<Notification[]> {
-    const where: any = { userId: new ObjectId(userId) };
+    const userObjectId = new ObjectId(userId);
+    const query: any = { userId: userObjectId };
     if (unreadOnly) {
-      where.isRead = false;
+      query.isRead = false;
     }
 
-    return this.notificationRepo.find({
-      where,
-      order: { createdAt: 'DESC' } as any,
+    console.log('getUserNotifications query:', {
+      userId: userObjectId.toString(),
+      limit,
+      skip,
+      unreadOnly,
+      query
+    });
+
+    const results = await this.notificationRepo.find({
+      where: query,
+      order: { createdAt: -1 },
       take: limit,
       skip,
     });
+
+    console.log('getUserNotifications results count:', results.length);
+    if (results.length > 0) {
+      console.log('Sample notification userId:', results[0].userId.toString());
+    }
+    
+    // Also check total notifications in DB
+    const total = await this.notificationRepo.count({});
+    console.log('Total notifications in DB:', total);
+    
+    return results;
   }
 
   async getUnreadCount(userId: string | ObjectId): Promise<number> {
@@ -194,7 +215,7 @@ export class NotificationsService {
         userId: new ObjectId(userId),
         type,
       },
-      order: { createdAt: 'DESC' } as any,
+      order: { createdAt: -1 },
       take: limit,
     });
   }
@@ -214,7 +235,7 @@ export class NotificationsService {
 
     return this.notificationRepo.find({
       where,
-      order: { createdAt: 'DESC' } as any,
+      order: { createdAt: -1 },
     });
   }
 

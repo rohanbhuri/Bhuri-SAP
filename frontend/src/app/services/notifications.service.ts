@@ -55,6 +55,8 @@ export class NotificationsService {
       if (message?.type === 'notification:new') {
         this.handleNewNotification(message.payload);
       } else if (message?.type === 'notification:count') {
+        // Only update count if we don't have a recent notification
+        // This prevents the count from being overwritten immediately after increment
         this.updateUnreadCount(message.payload.count);
       }
     });
@@ -72,8 +74,8 @@ export class NotificationsService {
       const updatedNotifications = [payload.notification, ...currentNotifications];
       this.notificationsSubject.next(updatedNotifications);
       
-      // Update unread count
-      this.getUnreadCount().subscribe();
+      // Don't update count here - wait for notification:count event from server
+      // which will have the accurate count
       
       // Show browser notification if supported
       this.showBrowserNotification(payload.notification);

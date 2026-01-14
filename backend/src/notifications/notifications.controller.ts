@@ -16,7 +16,10 @@ export class NotificationsController {
     @Query('unreadOnly') unreadOnly?: string,
     @Query('type') type?: NotificationType
   ) {
-    const userId = req.user.id;
+    const userId = req.user.id || req.user.userId || req.user._id;
+    console.log('getNotifications - User from JWT:', req.user);
+    console.log('getNotifications - userId:', userId);
+    
     const limitNum = limit ? parseInt(limit, 10) : 50;
     const skipNum = skip ? parseInt(skip, 10) : 0;
     const unreadOnlyBool = unreadOnly === 'true';
@@ -25,12 +28,14 @@ export class NotificationsController {
       return this.notificationsService.getNotificationsByType(userId, type, limitNum);
     }
 
-    return this.notificationsService.getUserNotifications(userId, limitNum, skipNum, unreadOnlyBool);
+    const results = await this.notificationsService.getUserNotifications(userId, limitNum, skipNum, unreadOnlyBool);
+    console.log('getNotifications - results count:', results.length);
+    return results;
   }
 
   @Get('count')
   async getUnreadCount(@Request() req) {
-    const userId = req.user.id;
+    const userId = req.user.id || req.user.userId || req.user._id;
     const count = await this.notificationsService.getUnreadCount(userId);
     return { count };
   }

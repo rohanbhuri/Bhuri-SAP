@@ -1,224 +1,251 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, signal, computed, inject, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatBadgeModule } from '@angular/material/badge';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatChipsModule } from '@angular/material/chips';
 import { MatDividerModule } from '@angular/material/divider';
 import { Router } from '@angular/router';
+import { Subject, takeUntil } from 'rxjs';
 import { NavbarComponent } from '../../components/navbar.component';
 import { BottomNavbarComponent } from '../../components/bottom-navbar.component';
+import { ThemeService } from '../../services/theme.service';
 import { NotificationsService, Notification } from '../../services/notifications.service';
-import { ModulesService } from '../../services/modules.service';
 
 @Component({
   selector: 'app-notifications',
   standalone: true,
-  imports: [MatCardModule, MatButtonModule, MatIconModule, MatBadgeModule, MatDividerModule, NavbarComponent, BottomNavbarComponent],
+  imports: [
+    CommonModule,
+    MatIconModule,
+    MatButtonModule,
+    MatProgressSpinnerModule,
+    MatTooltipModule,
+    MatMenuModule,
+    MatSnackBarModule,
+    NavbarComponent,
+    BottomNavbarComponent,
+  ],
   template: `
     <app-navbar></app-navbar>
-    
-    <div class="page">
-      <div class="page-header">
-        <nav class="breadcrumb">
-          <span>Pages</span>
-          <mat-icon>chevron_right</mat-icon>
-          <span class="current">Notifications</span>
-        </nav>
-        <h1>Notifications</h1>
-        <p class="subtitle">Stay updated with your latest activities</p>
+
+    <div class="notifications-container">
+      <div class="header">
+        <div class="title-section">
+          <h1>Notifications</h1>
+          <span class="total-count" *ngIf="notifications().length > 0">({{ notifications().length }})</span>
+        </div>
+        <div class="actions">
+          <span class="unread-count" *ngIf="unreadCount() > 0">{{ unreadCount() }} unread</span>
+          <button mat-icon-button matTooltip="Mark all as read" [disabled]="unreadCount() === 0" (click)="markAllAsRead()">
+            <mat-icon>done_all</mat-icon>
+          </button>
+          <button mat-icon-button matTooltip="Refresh" (click)="refreshNotifications()">
+            <mat-icon>refresh</mat-icon>
+          </button>
+        </div>
       </div>
 
-      <div class="notifications-container">
-        @for (notification of notifications(); track notification._id) {
-          <div class="notification-card" [class.unread]="!notification.isRead" (click)="handleNotificationClick(notification)">
-            <div class="notification-icon">
-              <mat-icon [class]="getNotificationIconClass(notification.type)">{{ getNotificationIcon(notification.type) }}</mat-icon>
+      <div class="notifications-list">
+        <div *ngIf="loading()" class="loading">
+          <mat-spinner diameter="32"></mat-spinner>
+        </div>
+
+        <div *ngIf="!loading() && notifications().length === 0" class="empty">
+          <mat-icon>notifications_none</mat-icon>
+          <p>No notifications</p>
+        </div>
+
+        <div *ngFor="let n of notifications(); trackBy: trackByNotificationId"
+             class="notification"
+             [class.unread]="!n.isRead"
+             (click)="handleNotificationClick(n)">
+          
+          <mat-icon class="icon" [class]="'icon-' + n.type">{{ getNotificationIcon(n.type) }}</mat-icon>
+          
+          <div class="content">
+            <div class="title">{{ n.title }}</div>
+            <div class="message">{{ n.message }}</div>
+            <div class="meta">
+              <span class="type">{{ getTypeLabel(n.type) }}</span>
+              <span class="time">{{ getRelativeTime(n.createdAt) }}</span>
             </div>
-            <div class="notification-content">
-              <div class="notification-header">
-                <h3 class="notification-title">{{ notification.title }}</h3>
-                <span class="notification-time">{{ formatTime(notification.createdAt) }}</span>
-              </div>
-              <p class="notification-message">{{ notification.message }}</p>
-              @if (notification.type === 'module_request') {
-                <div class="notification-actions">
-                  <button mat-raised-button color="primary" (click)="approveRequest(notification, $event)">
-                    <mat-icon>check</mat-icon>
-                    Approve
-                  </button>
-                  <button mat-stroked-button color="warn" (click)="rejectRequest(notification, $event)">
-                    <mat-icon>close</mat-icon>
-                    Reject
-                  </button>
-                </div>
-              }
-            </div>
-            @if (!notification.isRead) {
-              <div class="unread-indicator"></div>
-            }
           </div>
-        }
-        @if (notifications().length === 0) {
-          <div class="empty-state">
-            <mat-icon class="empty-icon">notifications_none</mat-icon>
-            <h3>No notifications</h3>
-            <p>You're all caught up!</p>
-          </div>
-        }
+
+          <button mat-icon-button [matMenuTriggerFor]="menu" (click)="$event.stopPropagation()" class="menu-btn">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+
+          <mat-menu #menu="matMenu">
+            <button mat-menu-item *ngIf="!n.isRead" (click)="markAsRead(n)">
+              <mat-icon>done</mat-icon>
+              Mark as read
+            </button>
+            <button mat-menu-item *ngIf="n.type === 'message'" (click)="openMessage(n)">
+              <mat-icon>chat</mat-icon>
+              Open message
+            </button>
+            <button mat-menu-item (click)="deleteNotification(n)">
+              <mat-icon>delete</mat-icon>
+              Delete
+            </button>
+          </mat-menu>
+        </div>
       </div>
     </div>
-    
+
     <app-bottom-navbar></app-bottom-navbar>
   `,
-  styles: [`
-    .page { padding: 24px; max-width: 800px; margin: 0 auto; }
-    .page-header { margin-bottom: 24px; }
-    .breadcrumb { display: inline-flex; align-items: center; gap: 6px; color: color-mix(in srgb, var(--theme-on-surface) 60%, transparent); font-size: 0.9rem; margin-bottom: 8px; }
-    .breadcrumb .current { color: var(--theme-on-surface); }
-    h1 { margin: 0 0 6px; font-weight: 600; }
-    .subtitle { color: color-mix(in srgb, var(--theme-on-surface) 65%, transparent); margin: 0; }
-    .notifications-container { display: flex; flex-direction: column; gap: 12px; }
-    .notification-card { display: flex; align-items: flex-start; gap: 16px; padding: 16px; background: var(--theme-surface); border: 1px solid color-mix(in srgb, var(--theme-on-surface) 8%, transparent); border-radius: 12px; cursor: pointer; transition: all 0.2s ease; position: relative; }
-    .notification-card:hover { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); transform: translateY(-1px); }
-    .notification-card.unread { border-left: 4px solid var(--theme-primary); background: color-mix(in srgb, var(--theme-primary) 3%, var(--theme-surface)); }
-    .notification-icon { flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-    .notification-icon mat-icon { font-size: 20px; width: 20px; height: 20px; }
-    .icon-approved { background: color-mix(in srgb, #4caf50 15%, transparent); color: #2e7d32; }
-    .icon-rejected { background: color-mix(in srgb, #f44336 15%, transparent); color: #c62828; }
-    .icon-request { background: color-mix(in srgb, #ff9800 15%, transparent); color: #ef6c00; }
-    .icon-system { background: color-mix(in srgb, #2196f3 15%, transparent); color: #1565c0; }
-    .icon-message { background: color-mix(in srgb, #9c27b0 15%, transparent); color: #7b1fa2; }
-    .notification-content { flex: 1; min-width: 0; }
-    .notification-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
-    .notification-title { margin: 0; font-size: 1rem; font-weight: 600; color: var(--theme-on-surface); }
-    .notification-time { font-size: 0.8rem; color: color-mix(in srgb, var(--theme-on-surface) 60%, transparent); white-space: nowrap; }
-    .notification-message { margin: 0 0 12px; color: color-mix(in srgb, var(--theme-on-surface) 80%, transparent); line-height: 1.4; }
-    .notification-actions { display: flex; gap: 8px; }
-    .notification-actions button { font-size: 0.8rem; height: 32px; }
-    .unread-indicator { position: absolute; top: 16px; right: 16px; width: 8px; height: 8px; background: var(--theme-primary); border-radius: 50%; }
-    .empty-state { text-align: center; padding: 48px 24px; color: color-mix(in srgb, var(--theme-on-surface) 60%, transparent); }
-    .empty-icon { font-size: 48px; width: 48px; height: 48px; margin-bottom: 16px; opacity: 0.5; }
-    .empty-state h3 { margin: 0 0 8px; color: var(--theme-on-surface); }
-    .empty-state p { margin: 0; }
-  `]
+  styleUrls: ['./notifications.component.scss']
 })
-export class NotificationsComponent {
+export class NotificationsComponent implements OnInit, OnDestroy {
+  private themeService = inject(ThemeService);
   private notificationsService = inject(NotificationsService);
-  private modulesService = inject(ModulesService);
+  private snackBar = inject(MatSnackBar);
   private router = inject(Router);
+  private destroy$ = new Subject<void>();
 
+  // Signals
   notifications = signal<Notification[]>([]);
+  loading = signal(false);
+  unreadCount = this.notificationsService.unreadCount;
+
+
 
   ngOnInit() {
+    this.themeService.applyModuleTheme('notifications');
     this.loadNotifications();
-    this.subscribeToRealTimeUpdates();
+    this.setupRealtimeUpdates();
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   loadNotifications() {
-    this.notificationsService.getNotifications().subscribe({
-      next: (notifications) => {
-        this.notifications.set(notifications);
-      },
-      error: (error) => {
-        console.error('Failed to load notifications:', error);
-      }
-    });
+    this.loading.set(true);
+    this.notificationsService.getNotifications(1000, 0, false)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (notifications) => {
+          this.notifications.set(notifications);
+          this.loading.set(false);
+        },
+        error: (error) => {
+          console.error('Failed to load notifications:', error);
+          this.loading.set(false);
+          this.snackBar.open('Failed to load notifications', 'Retry', { duration: 3000 })
+            .onAction().subscribe(() => this.loadNotifications());
+        }
+      });
   }
 
-  subscribeToRealTimeUpdates() {
-    // Subscribe to real-time notification updates
-    this.notificationsService.notifications$.subscribe(notifications => {
-      this.notifications.set(notifications);
-    });
+  setupRealtimeUpdates() {
+    this.notificationsService.notifications$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(notifications => {
+        this.notifications.set(notifications);
+      });
   }
 
   handleNotificationClick(notification: Notification) {
-    if (!notification.isRead) {
-      this.markAsRead(notification);
-    }
-
     if (notification.type === 'message') {
-      if (notification.data?.conversationId) {
-        this.router.navigate(['/messages'], {
-          queryParams: { conversation: notification.data.conversationId }
-        });
-      } else {
-        this.router.navigate(['/messages']);
-      }
-    } else if (notification.type === 'module_request') {
-      // Navigate to modules management page if admin, or stay on notifications
-      this.router.navigate(['/modules/requests']);
-    } else if (notification.type === 'module_approved' || notification.type === 'module_rejected') {
-      this.router.navigate(['/modules']);
-    } else if (notification.data?.['type'] === 'quotation_approval_request') {
-      this.router.navigate(['/quotations']); // Or specific quotation detail if available
-    } else if (notification.data?.['type'] === 'quotation_approved') {
-      this.router.navigate(['/quotations']);
+      this.openMessage(notification);
+    } else {
+      this.markAsRead(notification);
     }
   }
 
   markAsRead(notification: Notification) {
-    this.notificationsService.markAsRead(notification._id).subscribe(() => {
-      const updated = this.notifications().map(n =>
-        n._id === notification._id ? { ...n, isRead: true } : n
-      );
-      this.notifications.set(updated);
-    });
+    if (!notification.isRead) {
+      this.notificationsService.markAsRead(notification._id)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          error: (error) => {
+            console.error('Failed to mark notification as read:', error);
+          }
+        });
+    }
   }
 
-  approveRequest(notification: Notification, event: Event) {
-    event.stopPropagation();
-    if (notification.data?.requestId) {
-      this.modulesService.approveRequest(notification.data.requestId).subscribe(() => {
-        this.removeNotification(notification._id);
+  markAllAsRead() {
+    this.notificationsService.markAllAsRead()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => this.snackBar.open('All marked as read', 'Close', { duration: 2000 }),
+        error: () => this.snackBar.open('Failed to mark all as read', 'Close', { duration: 3000 })
+      });
+  }
+
+  deleteNotification(notification: Notification) {
+    this.notificationsService.deleteNotification(notification._id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => this.snackBar.open('Deleted', 'Close', { duration: 2000 }),
+        error: () => this.snackBar.open('Failed to delete', 'Close', { duration: 3000 })
+      });
+  }
+
+  openMessage(notification: Notification) {
+    if (notification.type === 'message' && notification.data?.conversationId) {
+      this.markAsRead(notification);
+      this.router.navigate(['/messages'], {
+        queryParams: { conversation: notification.data.conversationId }
       });
     }
   }
 
-  rejectRequest(notification: Notification, event: Event) {
-    event.stopPropagation();
-    if (notification.data?.requestId) {
-      this.modulesService.rejectRequest(notification.data.requestId).subscribe(() => {
-        this.removeNotification(notification._id);
-      });
-    }
-  }
-
-  removeNotification(id: string) {
-    const updated = this.notifications().filter(n => n._id !== id);
-    this.notifications.set(updated);
+  refreshNotifications() {
+    this.loadNotifications();
   }
 
   getNotificationIcon(type: string): string {
-    const icons: { [key: string]: string } = {
-      'module_approved': 'check_circle',
-      'module_rejected': 'cancel',
-      'module_request': 'request_page',
-      'system': 'info',
-      'message': 'message'
-    };
-    return icons[type] || 'notifications';
+    switch (type) {
+      case 'message': return 'chat';
+      case 'module_request': return 'extension';
+      case 'module_approved': return 'check_circle';
+      case 'module_rejected': return 'cancel';
+      case 'system': return 'info';
+      default: return 'notifications';
+    }
   }
 
-  getNotificationIconClass(type: string): string {
-    const classes: { [key: string]: string } = {
-      'module_approved': 'icon-approved',
-      'module_rejected': 'icon-rejected',
-      'module_request': 'icon-request',
-      'system': 'icon-system',
-      'message': 'icon-message'
-    };
-    return classes[type] || 'icon-system';
+
+
+  getTypeLabel(type: string): string {
+    switch (type) {
+      case 'message': return 'Message';
+      case 'module_request': return 'Module Request';
+      case 'module_approved': return 'Approved';
+      case 'module_rejected': return 'Rejected';
+      case 'system': return 'System';
+      default: return 'Notification';
+    }
   }
 
-  formatTime(dateString: string): string {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
+  getRelativeTime(date: string): string {
+    const now = new Date().getTime();
+    const then = new Date(date).getTime();
+    const diff = now - then;
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
 
-    if (diff < 60000) return 'Just now';
-    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
-    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
-    return `${Math.floor(diff / 86400000)}d ago`;
+    if (seconds < 60) return 'Just now';
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    if (days === 1) return 'Yesterday';
+    if (days < 7) return `${days}d ago`;
+    return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
+
+  trackByNotificationId = (index: number, notification: Notification) => notification._id;
 }
