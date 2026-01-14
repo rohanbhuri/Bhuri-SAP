@@ -340,9 +340,15 @@ export class QuotationsService {
             const imagePath = presentation.coverBackground.startsWith('/')
                 ? `.${presentation.coverBackground}`
                 : presentation.coverBackground;
-            try {
-                coverSlide.addImage({ path: imagePath, x: 0, y: 0, w: '100%', h: '100%', sizing: { type: 'cover', w: '100%', h: '100%' } });
-            } catch (error) {
+            const fs = require('fs');
+            if (fs.existsSync(imagePath)) {
+                try {
+                    coverSlide.addImage({ path: imagePath, x: 0, y: 0, w: '100%', h: '100%', sizing: { type: 'cover', w: '100%', h: '100%' } });
+                } catch (error) {
+                    coverSlide.background = { color: 'FFFFFF' };
+                }
+            } else {
+                console.error('Cover background file does not exist:', imagePath);
                 coverSlide.background = { color: 'FFFFFF' };
             }
         } else {
@@ -389,68 +395,104 @@ export class QuotationsService {
             const layoutImagePath = presentation.layoutImage.startsWith('/')
                 ? `.${presentation.layoutImage}`
                 : presentation.layoutImage;
-            try {
-                layoutSlide.addImage({ path: layoutImagePath, x: 0.5, y: 0.8 });
-            } catch (error) {
-                console.error('Failed to load layout image:', error);
+            const fs = require('fs');
+            if (fs.existsSync(layoutImagePath)) {
+                try {
+                    layoutSlide.addImage({ path: layoutImagePath, x: 0.5, y: 0.8 });
+                } catch (error) {
+                    console.error('Failed to load layout image:', error);
+                }
+            } else {
+                console.error('Layout image file does not exist:', layoutImagePath);
             }
         }
 
         // Product slides
         for (const slide of presentation.slides) {
-            const productSlide = pptx.addSlide();
-
-            // Add brand logo (top right)
-            try {
-                productSlide.addImage({ path: '../configs/assets/raccontixrm/icons/logo-racconti.png', x: 8.555, y: 0.4, w: 0.945, h: 0.1 });
-            } catch (error) {
-                console.error('Failed to load brand logo');
-            }
-
-            // Add slide title if provided
-            if (slide.slideTitle) {
-                productSlide.addText(slide.slideTitle, { x: 0.2, y: 0.2, w: 3, h: 0.3, fontSize: 14, bold: true, color: '000000' });
-            }
-
             const products = await Promise.all(
                 slide.productIds.map(pid => this.productRepository.findOneBy({ _id: new ObjectId(pid) }))
             );
 
             if (slide.layout === 'single' && products[0]) {
+                const productSlide = pptx.addSlide();
+
+                // Add brand logo (top right)
+                try {
+                    productSlide.addImage({ path: '../configs/assets/raccontixrm/icons/logo-racconti.png', x: 8.555, y: 0.4, w: 0.945, h: 0.1 });
+                } catch (error) {
+                    console.error('Failed to load brand logo');
+                }
+
+                // Add slide title if provided
+                if (slide.slideTitle) {
+                    productSlide.addText(slide.slideTitle, { x: 0.2, y: 0.2, w: 3, h: 0.3, fontSize: 14, bold: true, color: '000000' });
+                }
+
                 const product = products[0];
                 const productImage = product.featuredImage || product.imageGallery?.[0];
 
                 if (productImage) {
                     const imgPath = productImage.startsWith('/') ? `.${productImage}` : productImage;
-                    try {
-                        productSlide.addImage({ path: imgPath, x: 0.5, y: 1 });
-                    } catch (error) {
-                        console.error('Failed to load image:', imgPath);
+                    const fs = require('fs');
+                    if (fs.existsSync(imgPath)) {
+                        try {
+                            productSlide.addImage({ path: imgPath, x: 0.5, y: 1 });
+                        } catch (error) {
+                            console.error('Failed to load image:', imgPath);
+                        }
+                    } else {
+                        console.error('Image file does not exist:', imgPath);
                     }
                 }
 
                 productSlide.addText(product.name, { x: 1, y: 4.7, w: 8, h: 0.3, fontSize: 20, bold: true });
                 productSlide.addText(`Code: ${product.productCode}`, { x: 1, y: 5.1, w: 8, h: 0.2, fontSize: 14, color: '666666' });
             } else {
-                let yPos = 0.5;
-                products.forEach((product) => {
-                    if (product) {
+                // Group products into chunks of 2 for multiple slides if needed
+                const validProducts = products.filter(p => p);
+                const productChunks = [];
+                for (let i = 0; i < validProducts.length; i += 2) {
+                    productChunks.push(validProducts.slice(i, i + 2));
+                }
+
+                for (const chunk of productChunks) {
+                    const productSlide = pptx.addSlide();
+
+                    // Add brand logo (top right)
+                    try {
+                        productSlide.addImage({ path: '../configs/assets/raccontixrm/icons/logo-racconti.png', x: 8.555, y: 0.4, w: 0.945, h: 0.1 });
+                    } catch (error) {
+                        console.error('Failed to load brand logo');
+                    }
+
+                    // Add slide title if provided
+                    if (slide.slideTitle) {
+                        productSlide.addText(slide.slideTitle, { x: 0.2, y: 0.2, w: 3, h: 0.3, fontSize: 14, bold: true, color: '000000' });
+                    }
+
+                    let yPos = 0.5;
+                    chunk.forEach((product) => {
                         const productImage = product.featuredImage || product.imageGallery?.[0];
 
                         if (productImage) {
                             const imgPath = productImage.startsWith('/') ? `.${productImage}` : productImage;
-                            try {
-                                productSlide.addImage({ path: imgPath, x: 1, y: yPos });
-                            } catch (error) {
-                                console.error('Failed to load image:', imgPath);
+                            const fs = require('fs');
+                            if (fs.existsSync(imgPath)) {
+                                try {
+                                    productSlide.addImage({ path: imgPath, x: 1, y: yPos });
+                                } catch (error) {
+                                    console.error('Failed to load image:', imgPath);
+                                }
+                            } else {
+                                console.error('Image file does not exist:', imgPath);
                             }
                         }
 
                         productSlide.addText(product.name, { x: 4.5, y: yPos, w: 5, h: 0.3, fontSize: 16, bold: true });
                         productSlide.addText(`Code: ${product.productCode}`, { x: 4.5, y: yPos + 0.4, w: 5, h: 0.2, fontSize: 12, color: '666666' });
                         yPos += 2.5;
-                    }
-                });
+                    });
+                }
             }
         }
 
@@ -467,6 +509,42 @@ export class QuotationsService {
 
         thankYouSlide.addText('Thank You', { x: 3, y: 2.5, w: 4, h: 0.6, fontSize: 36, bold: true, align: 'center', color: '000000' });
         thankYouSlide.addText('We look forward to working with you', { x: 2.5, y: 3.3, w: 5, h: 0.3, fontSize: 18, align: 'center', color: '666666' });
+
+        // Terms and Conditions slide
+        const termsSlide = pptx.addSlide();
+        termsSlide.background = { color: 'FFFFFF' };
+
+        // Add brand logo (top right)
+        try {
+            termsSlide.addImage({ path: '../configs/assets/raccontixrm/icons/logo-racconti.png', x: 8.555, y: 0.4, w: 0.945, h: 0.1 });
+        } catch (error) {
+            console.error('Failed to load brand logo');
+        }
+
+        termsSlide.addText('Terms and Conditions', { x: 0.2, y: 0.2, w: 4, h: 0.3, fontSize: 18, bold: true, color: '000000' });
+
+        // Key terms (summarized for slide format)
+        const keyTerms = [
+            '• Delivery: 16 weeks from fabric payment & mood board selection',
+            '• Payment: 50% advance, 50% before delivery',
+            '• GST & transportation charges extra at actual',
+            '• Material payment: 100% before delivery period starts',
+            '• Fabrics/Leather: Cost extra after selection',
+            '• Hydraulic beds: ₹35,000 extra per bed',
+            '• Installation: First visit included, subsequent visits charged',
+            '• Validity: 30 days from quotation date',
+            '• Modifications: Limited free changes, additional charged'
+        ];
+
+        let yPos = 0.8;
+        keyTerms.forEach(term => {
+            if (yPos < 5) {
+                termsSlide.addText(term, { x: 0.2, y: yPos, w: 9.5, h: 0.2, fontSize: 10, color: '333333' });
+                yPos += 0.25;
+            }
+        });
+
+        termsSlide.addText('For complete terms, please refer to the quotation PDF', { x: 0.2, y: 5.2, w: 9.5, h: 0.2, fontSize: 10, italic: true, color: '666666' });
 
         return pptx.write({ outputType: 'nodebuffer' }) as Promise<Buffer>;
     }
@@ -641,14 +719,43 @@ export class QuotationsService {
                                         doc.image(imageBuffer, xPos + 10, yPos + 10, { width: 60, height: 60, fit: [60, 60] });
                                     } else {
                                         const imgPath = imgUrl.startsWith('/') ? `.${imgUrl}` : imgUrl;
-                                        doc.image(imgPath, xPos + 10, yPos + 10, { width: 60, height: 60, fit: [60, 60] });
+                                        const fs = require('fs');
+                                        if (fs.existsSync(imgPath)) {
+                                            doc.image(imgPath, xPos + 10, yPos + 10, { width: 60, height: 60, fit: [60, 60] });
+                                        } else {
+                                            console.error('PDF image file does not exist:', imgPath);
+                                        }
                                     }
                                 } catch (e) { }
                             }
                         } else if (col.field === 'quantity') {
                             doc.fontSize(8).text(item.quantity.toString(), xPos + 2, yPos + 35, { width: col.width - 4, align: 'center' });
                         } else if (col.field === 'seater') {
-                            doc.fontSize(7).text(product?.attributes?.seater || '', xPos + 2, yPos + 35, { width: col.width - 4, align: 'center' });
+                            let seaterValue = '';
+                            if (item.customDimensions?.seats) {
+                                seaterValue = item.customDimensions.seats.toString();
+                            } else if (product?.attributes?.seater) {
+                                seaterValue = product.attributes.seater;
+                            } else if (item.customDimensions?.width && product?.categoryId === '6966a6b2cdf2abe6fa7981aa') {
+                                // Calculate seats for sofas with custom width
+                                const width = item.customDimensions.width;
+                                const rawSeats = width / 600;
+                                const integerPart = Math.floor(rawSeats);
+                                const decimalPart = rawSeats - integerPart;
+                                
+                                let seats: number;
+                                if (decimalPart < 0.25) {
+                                    seats = integerPart;
+                                } else if (decimalPart >= 0.25 && decimalPart <= 0.50) {
+                                    seats = integerPart + 0.5;
+                                } else if (decimalPart > 0.50 && decimalPart < 0.75) {
+                                    seats = integerPart + 0.5;
+                                } else {
+                                    seats = integerPart + 1;
+                                }
+                                seaterValue = seats.toString();
+                            }
+                            doc.fontSize(7).text(seaterValue, xPos + 2, yPos + 35, { width: col.width - 4, align: 'center' });
                         } else if (col.field === 'measurements') {
                             const shape = product?.dimensionConfig?.shape || 'rectangle';
                             const unit = product?.dimensionConfig?.unit || 'cm';
@@ -681,6 +788,78 @@ export class QuotationsService {
                     yPos += rowHeight;
                     sno++;
                 }
+            }
+
+            // Add footer with totals and terms & conditions
+            // Check if we need a new page for footer
+            if (yPos + 200 > doc.page.height - 50) {
+                doc.addPage({ size: 'A4', margin: 30, layout: 'landscape' });
+                yPos = 30;
+            }
+
+            // Totals section
+            yPos += 20;
+            doc.fontSize(10).fillColor('#000').text('TOTAL', 30, yPos, { width: 50, align: 'left' });
+            doc.text('8', 80, yPos, { width: 40, align: 'center' });
+            doc.text('0', 120, yPos, { width: 40, align: 'center' });
+            doc.text('0', 160, yPos, { width: 40, align: 'center' });
+
+            yPos += 15;
+            doc.fontSize(9).text('PACKING & TRANSPORTATION CHARGES', 30, yPos, { width: 200, align: 'left' });
+            doc.text('EXTRA AS ACTUAL', 230, yPos, { width: 150, align: 'left' });
+
+            yPos += 15;
+            doc.fontSize(9).text('GST @ 18%', 30, yPos, { width: 200, align: 'left' });
+            doc.text('0', 230, yPos, { width: 150, align: 'left' });
+
+            yPos += 15;
+            doc.fontSize(9).text('NET VALUE', 30, yPos, { width: 200, align: 'left' });
+            doc.text('0', 230, yPos, { width: 150, align: 'left' });
+
+            // Terms and Conditions section
+            yPos += 30;
+            doc.fontSize(12).fillColor('#2c3e50').text('Other Terms and Condition', 30, yPos);
+
+            const terms = [
+                '1. The above amount is subject to discount, which is applicable on above prices depends on final quantity of furniture.',
+                '2. Delivery Period will be 16 weeks from the date of payment of the fabric and selection of Mood Board.',
+                '3. Payment terms',
+                '   50 % Advance against order',
+                '   50% before delivery',
+                '4. GST, Any other Taxes, Packing, unloading and Transportation charges will be extra at actual',
+                '5. After selection of the material, 100% payment of material is to be done (Only after making the payment delivery period term will start)',
+                '6. Fabrics, leather and leatherite cost will be extra after selection the material 100% payment is to be done',
+                '7. Bed Hydraulic Charges will be Rs. 35000/- extra per bed.',
+                '8. Embroidery, quilting and accent cushions charges will be extra',
+                '9. Veneer cost is considered as Rs. 200 Per SQFT if any other veneer will be selected cost will change accordingly',
+                '10. The Parties agree that the cost of marble shall be considered an additional charge. Upon the Client\'s selection of the material, full payment for the chosen marble is required to proceed.',
+                '11. The Client acknowledges that the consideration of Matt/Gloss Gold as the PVD (Physical Vapor Deposition) color for the products is integral to the pricing, and understands that any deviation in PVD color selection may result in corresponding adjustments to the product cost. Black PVD cost would be additional.',
+                '12. Above mention prices are provided as per above mention sizes. If size will change, prices may vary.',
+                '13. Furniture installation charges for the FIRST VISIT will be included in the price. However, Due to any circumstances our team is not given workflow on the site and for any reason they must return the second visit will be chargeable.',
+                '14. Any other Visit besides the installation will be chargeable on per visit per day basis.',
+                '15. Quotation will be valid for 30 days',
+                '16. In Case of Upholstery:- If leather is selected price will increase as follows',
+                '   A. Sofa 6000 per Seat',
+                '   B. Dinning Chair 10000 per pcs',
+                '   C. Arm Chair 15000 per pcs',
+                '17. In the event that the client fails to collect the order on the mutually agreed upon date, the buyer shall be held responsible for bearing the warehousing charges which can amount up to 40,000 Indian Rupees per day. Alternatively, the discount rate previously agreed upon shall be deducted from the payment owed to the buyer.',
+                '18. This quotation is based upon and subject to the specific images and specifications provided by the customer as of the date hereof. Any alterations or deviations from the aforementioned specifications may result in adjustments to the quotation. The company reserves the right to amend this quotation upon receipt of any such changes.',
+                '19. 3 modifications are allowed in the Moodboard, post that it will be charged at 20000/- per modification.',
+                '20. 1 Modification is allowed post sending the Line Diagram and prior to approval.',
+                '21. No Changes in the Drawings will be done after the Line Diagram is approved by the Client or Architect. Per change 25000/- would be charged.',
+                '22. 1 site visit for templating is complimentary, post that 40000/- will be charged per visit.'
+            ];
+
+            yPos += 20;
+            doc.fontSize(8).fillColor('#000');
+
+            for (const term of terms) {
+                if (yPos + 15 > doc.page.height - 50) {
+                    doc.addPage({ size: 'A4', margin: 30, layout: 'landscape' });
+                    yPos = 30;
+                }
+                doc.text(term, 30, yPos, { width: pageWidth, align: 'left' });
+                yPos += 12;
             }
 
             doc.end();
@@ -842,18 +1021,25 @@ export class QuotationsService {
                         } else {
                             const fs = require('fs');
                             const imgPath = imgUrl.startsWith('/') ? `.${imgUrl}` : imgUrl;
-                            imageBuffer = fs.readFileSync(imgPath);
+                            if (fs.existsSync(imgPath)) {
+                                imageBuffer = fs.readFileSync(imgPath);
+                            } else {
+                                console.error('Excel image file does not exist:', imgPath);
+                                imageBuffer = null as any; // Skip adding image
+                            }
                         }
 
-                        const imageId = workbook.addImage({
-                            buffer: imageBuffer as any,
-                            extension: 'jpeg',
-                        });
+                        if (imageBuffer) {
+                            const imageId = workbook.addImage({
+                                buffer: imageBuffer as any,
+                                extension: 'jpeg',
+                            });
 
-                        worksheet.addImage(imageId, {
-                            tl: { col: 3, row: currentRow - 1 },
-                            ext: { width: 80, height: 60 }
-                        });
+                            worksheet.addImage(imageId, {
+                                tl: { col: 3, row: currentRow - 1 },
+                                ext: { width: 80, height: 60 }
+                            });
+                        }
                     } catch (e) {
                         console.error('Failed to add image:', e);
                     }

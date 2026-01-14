@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, Inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -80,7 +80,7 @@ import { map, startWith } from 'rxjs/operators';
             </div>
 
             <div class="price-row" *ngIf="item.get('productId')?.value">
-              <mat-form-field appearance="outline" class="dimension-field" *ngIf="getProductShape(i) === 'rectangle'">
+              <mat-form-field appearance="outline" class="dimension-field" *ngIf="getProductShape(i) === 'rectangle' && !isSofa(i)">
                 <mat-label>Width</mat-label>
                 <input matInput type="number" formControlName="customWidth" 
                   [min]="getProductDimensionMin(i, 'width')" 
@@ -88,6 +88,18 @@ import { map, startWith } from 'rxjs/operators';
                   (input)="onDimensionChange(i)">
                 <mat-hint>Range: {{getProductDimensionMin(i, 'width')}} - {{getProductDimensionMax(i, 'width')}}</mat-hint>
               </mat-form-field>
+
+              <div class="dimension-field" *ngIf="getProductShape(i) === 'rectangle' && isSofa(i)">
+                <mat-label>Width (300mm)</mat-label>
+                <input type="range"
+                  formControlName="customWidth"
+                  [min]="getProductDimensionMin(i, 'width')"
+                  [max]="getProductDimensionMax(i, 'width')"
+                  [step]="300"
+                  (input)="onDimensionChange(i)"
+                  class="sofa-slider">
+                <mat-hint>Range: {{getProductDimensionMin(i, 'width')}} - {{getProductDimensionMax(i, 'width')}} | Seats: {{calculateSeats(item.get('customWidth')?.value)}}</mat-hint>
+              </div>
 
               <mat-form-field appearance="outline" class="dimension-field" *ngIf="getProductShape(i) === 'round'">
                 <mat-label>Diameter</mat-label>
@@ -185,6 +197,8 @@ import { map, startWith } from 'rxjs/operators';
     .price-row mat-form-field { margin-bottom: 0; }
     .price-field { flex: 1; min-width: 150px; }
     .dimension-field { flex: 1; min-width: 120px; }
+    .dimension-field mat-slider { width: 100%; margin-bottom: 8px; }
+    .sofa-slider { width: 100%; margin-bottom: 8px; }
     .item-total { display: flex; flex-direction: column; align-items: flex-end; min-width: 140px; padding: 12px; background: #e3f2fd; border-radius: 4px; margin-top: 8px; }
     .item-total .label { font-size: 11px; color: #666; }
     .item-total .value { font-size: 18px; font-weight: 600; font-family: monospace; color: #1976d2; }
@@ -212,6 +226,7 @@ export class QuotationDialogComponent implements OnInit {
   form: FormGroup;
   clients: any[] = [];
   products: any[] = [];
+  categories: any[] = [];
   filteredClients: Observable<any[]>;
   selectedClient: any = null;
   selectedProducts: Map<number, any> = new Map();
@@ -238,6 +253,7 @@ export class QuotationDialogComponent implements OnInit {
   ngOnInit() {
     this.loadClients();
     this.loadProducts();
+    this.loadCategories();
     this.loadCurrencyPreferences();
     
     if (this.data?.quotation) {
@@ -432,6 +448,13 @@ export class QuotationDialogComponent implements OnInit {
     });
   }
 
+  loadCategories() {
+    this.catalogueService.getCategories().subscribe((categories: any) => {
+      this.categories = categories;
+      this.cdr.detectChanges();
+    });
+  }
+
   private _filterClients(value: string): any[] {
     const filterValue = value.toLowerCase();
     return this.clients.filter(client => 
@@ -530,6 +553,32 @@ export class QuotationDialogComponent implements OnInit {
     return product?.variations || [];
   }
 
+  getCustomWidthControl(index: number): FormControl {
+    return this.items.at(index).get('customWidth') as FormControl;
+  }
+
+  isSofa(index: number): boolean {
+    const product = this.selectedProducts.get(index);
+    return product?.categoryId === '6966a6b2cdf2abe6fa7981aa';
+  }
+
+  calculateSeats(width: number): number {
+    if (!width) return 0;
+    const rawSeats = width / 600;
+    const integerPart = Math.floor(rawSeats);
+    const decimalPart = rawSeats - integerPart;
+    
+    if (decimalPart < 0.25) {
+      return integerPart;
+    } else if (decimalPart >= 0.25 && decimalPart <= 0.50) {
+      return integerPart + 0.5;
+    } else if (decimalPart > 0.50 && decimalPart < 0.75) {
+      return integerPart + 0.5;
+    } else {
+      return integerPart + 1;
+    }
+  }
+
   getItemTotal(index: number): number {
     const item = this.items.at(index);
     const quantity = item.get('quantity')?.value || 0;
@@ -619,6 +668,8 @@ export class QuotationDialogComponent implements OnInit {
           const customDepth = item.get('customDepth')?.value;
           const customHeight = item.get('customHeight')?.value;
           const product = this.products.find(p => p._id === productId);
+          const isSofaProduct = product?.categoryId === '6966a6b2cdf2abe6fa7981aa';
+          const seats = isSofaProduct && customWidth ? this.calculateSeats(customWidth) : undefined;
           
           return {
             productId,
@@ -633,7 +684,8 @@ export class QuotationDialogComponent implements OnInit {
               width: customWidth,
               diameter: item.get('customDiameter')?.value,
               depth: customDepth,
-              height: customHeight
+              height: customHeight,
+              seats: seats
             },
             total: unitPrice * quantity
           };
