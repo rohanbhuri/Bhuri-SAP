@@ -1,17 +1,20 @@
 #!/bin/bash
 
-echo "Installing Nginx..."
-sudo apt update
-sudo apt install -y nginx
+echo "Detecting OS and installing Nginx..."
+if command -v apt &> /dev/null; then
+    sudo apt update && sudo apt install -y nginx
+elif command -v yum &> /dev/null; then
+    sudo yum install -y nginx
+elif command -v dnf &> /dev/null; then
+    sudo dnf install -y nginx
+else
+    echo "✗ Unsupported package manager. Install Nginx manually."
+    exit 1
+fi
 
 echo "Copying Nginx configuration..."
-sudo cp nginx.conf /etc/nginx/sites-available/racconti
-
-echo "Creating symbolic link..."
-sudo ln -sf /etc/nginx/sites-available/racconti /etc/nginx/sites-enabled/
-
-echo "Removing default Nginx site..."
-sudo rm -f /etc/nginx/sites-enabled/default
+sudo mkdir -p /etc/nginx/conf.d
+sudo cp nginx.conf /etc/nginx/conf.d/racconti.conf
 
 echo "Testing Nginx configuration..."
 sudo nginx -t
