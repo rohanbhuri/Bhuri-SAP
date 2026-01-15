@@ -13,8 +13,8 @@ export class ClientRequest {
   @ObjectIdColumn()
   _id: ObjectId;
 
-  @Column()
-  companyName: string;
+  @Column({ nullable: true })
+  companyName?: string;
 
   @Column()
   contactPerson: string;

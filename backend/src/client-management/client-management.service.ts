@@ -77,6 +77,11 @@ export class ClientManagementService {
   }
 
   async createClientRequest(requestData: any) {
+    // Validate required fields
+    if (!requestData.email) {
+      throw new BadRequestException('Email is required');
+    }
+
     const existing = await this.clientRequestRepository.findOne({ 
       where: { email: requestData.email } 
     });
@@ -85,11 +90,16 @@ export class ClientManagementService {
       throw new ConflictException('A request with this email already exists');
     }
 
+    // Handle both formats: contactPerson or firstName/lastName
+    const contactPerson = requestData.contactPerson || 
+      `${requestData.firstName || ''} ${requestData.lastName || ''}`.trim() || 
+      'Unknown';
+
     const clientRequest = this.clientRequestRepository.create({
-      companyName: requestData.companyName,
-      contactPerson: requestData.contactPerson,
+      companyName: requestData.companyName || 'Not Provided',
+      contactPerson,
       email: requestData.email,
-      phone: requestData.phone,
+      phone: requestData.phone || '',
       website: requestData.website,
       industry: requestData.industry,
       companySize: requestData.companySize,

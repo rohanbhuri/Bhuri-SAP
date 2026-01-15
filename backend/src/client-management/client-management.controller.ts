@@ -26,7 +26,12 @@ export class ClientManagementController {
   @Post('requests')
   @Public()
   async createClientRequest(@Body() requestData: any) {
-    return this.clientManagementService.createClientRequest(requestData);
+    try {
+      return await this.clientManagementService.createClientRequest(requestData);
+    } catch (error) {
+      // Ensure errors are properly returned as JSON, not redirects
+      throw error;
+    }
   }
 
   @Get('requests')
