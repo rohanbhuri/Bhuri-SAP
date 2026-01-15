@@ -5,6 +5,7 @@ import { PermissionsGuard } from '../guards/permissions.guard';
 import { RequireRoles } from '../decorators/permissions.decorator';
 import { RoleType } from '../entities/role.entity';
 import { ApiKeyGuard } from '../guards/api-key.guard';
+import { Public } from '../decorators/public.decorator';
 
 @Controller('client-management')
 export class ClientManagementController {
@@ -23,6 +24,7 @@ export class ClientManagementController {
   }
 
   @Post('requests')
+  @Public()
   async createClientRequest(@Body() requestData: any) {
     return this.clientManagementService.createClientRequest(requestData);
   }
@@ -133,6 +135,7 @@ export class ClientManagementController {
   }
 
   @Post('contact-us')
+  @Public()
   async createContactMessage(@Body() messageData: any) {
     return this.clientManagementService.createContactMessage(messageData);
   }
