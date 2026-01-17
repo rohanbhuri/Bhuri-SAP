@@ -4,6 +4,7 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { Response } from 'express';
 import * as fs from 'fs';
+import { Public } from '../decorators/public.decorator';
 
 @Controller('media')
 export class MediaController {
@@ -42,6 +43,7 @@ export class MediaController {
         };
     }
 
+    @Public()
     @Get(':filename')
     serveFile(@Param('filename') filename: string, @Res() res: Response) {
         const root = './uploads';

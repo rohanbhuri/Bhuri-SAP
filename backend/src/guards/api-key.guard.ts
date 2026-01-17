@@ -14,6 +14,13 @@ export class ApiKeyGuard implements CanActivate {
     ) { }
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
+        const request = context.switchToHttp().getRequest();
+
+        // Allow public access to uploads folder
+        if (request.url && (request.url.startsWith('/uploads/') || request.url.startsWith('/api/uploads/'))) {
+            return true;
+        }
+
         const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
             context.getHandler(),
             context.getClass(),
@@ -22,8 +29,6 @@ export class ApiKeyGuard implements CanActivate {
             return true;
         }
 
-        const request = context.switchToHttp().getRequest();
-        
         // Check if JWT token exists (allow authenticated users)
         const authHeader = request.headers['authorization'];
         if (authHeader && authHeader.startsWith('Bearer ')) {
