@@ -25,16 +25,22 @@ let sitemapContent = readFileSync(sitemapPath, 'utf8');
 // Replace placeholders with config data
 // Determine correct API URL based on environment
 const getApiUrl = () => {
-  if (process.env.NODE_ENV === 'production') {
-    const ipMappings = {
-      'beax-rm': '13.126.228.247:3000',
-      'true-process': '3.111.139.181:3001',
-      'raccontixrm': '68.178.171.103:3002'
-    };
-    const mapping = ipMappings[brand] || ipMappings['beax-rm'];
-    return `http://${mapping}/api`;
-  }
   return brandConfig.app.apiUrl;
+};
+
+const getCanonicalUrl = () => {
+  if (process.env.NODE_ENV === 'production') {
+    if (brand === 'raccontixrm') {
+      return 'https://xrm.racconti.in';
+    }
+    try {
+      const url = new URL(brandConfig.app.apiUrl);
+      return `http://${url.hostname}:${brandConfig.app.port}`;
+    } catch (e) {
+      return `http://localhost:${brandConfig.app.port}`;
+    }
+  }
+  return `http://localhost:${brandConfig.app.port}`;
 };
 
 const replacements = {
@@ -50,9 +56,7 @@ const replacements = {
   '{{DESCRIPTION}}': brandConfig.app.description,
   '{{APP_PORT}}': brandConfig.app.port.toString(),
   '{{API_URL}}': getApiUrl(),
-  '{{CANONICAL_URL}}': process.env.NODE_ENV === 'production'
-    ? `http://${brand === 'raccontixrm' ? '68.178.171.103' : brand === 'true-process' ? '3.111.139.181' : '13.126.228.247'}:${brandConfig.app.port}`
-    : `http://localhost:${brandConfig.app.port}`
+  '{{CANONICAL_URL}}': getCanonicalUrl()
 };
 
 Object.keys(replacements).forEach(placeholder => {

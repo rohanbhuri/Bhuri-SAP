@@ -116,7 +116,7 @@ export class BrandConfigService {
   getBrandKey(): string {
     // Extract brand key from API URL or use default
     const apiUrl = this.config.app.apiUrl;
-    if (apiUrl.includes(':3002')) return 'raccontixrm';
+    if (apiUrl.includes('racconti') || apiUrl.includes(':3002')) return 'raccontixrm';
     if (apiUrl.includes(':3001')) return 'true-process';
     return 'beax-rm';
   }

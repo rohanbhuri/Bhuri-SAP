@@ -15,11 +15,7 @@ export class UploadUrlPipe implements PipeTransform {
       return path;
     }
     
-    // For uploads, use live server in localhost to avoid 404
-    if (path.startsWith('uploads/')) {
-      return `http://68.178.171.103:3002/${path}`;
-    }
-    
+
     const apiUrl = this.brandConfig.getApiUrl();
     const baseUrl = apiUrl.replace('/api', '');
     const normalizedPath = path.startsWith('/') ? path : `/${path}`;

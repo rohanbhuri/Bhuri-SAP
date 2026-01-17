@@ -89,7 +89,7 @@ const configs = {
       version: "0.0.1",
       description: "Your Organisation's only dashboard for everything",
       port: 4202,
-      apiUrl: process.env.NODE_ENV === 'production' ? "http://68.178.171.103:3002/api" : "http://localhost:3002/api"
+      apiUrl: process.env.NODE_ENV === 'production' ? "https://xrm.racconti.in/api" : "http://localhost:3002/api"
     },
     database: {
       MONGODB_URI: 'mongodb+srv://rohanbhuri:nokiaset@bhuri-db.zg9undw.mongodb.net/racconti?retryWrites=true&w=majority&appName=bhuri-db',
