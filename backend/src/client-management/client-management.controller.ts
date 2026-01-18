@@ -24,6 +24,7 @@ export class ClientManagementController {
   }
 
   @Post('requests')
+  @Public()
   async createClientRequest(@Body() requestData: any) {
     try {
       return await this.clientManagementService.createClientRequest(requestData);
