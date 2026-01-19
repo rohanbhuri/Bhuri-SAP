@@ -45,49 +45,45 @@ X-API-Key: your_api_key_here
 GET /products
 ```
 
+**Query Parameters:**
+- `page` (number, optional): Page number (default: 1)
+- `limit` (number, optional): Records per page (default: 10)
+- `search` (string, optional): Search by name or product code
+- `categoryId` (string, optional): Filter by category ID
+- `collectionId` (string, optional): Filter by collection ID
+
 **Response:**
 ```json
-[
-  {
-    "_id": "507f1f77bcf86cd799439011",
-    "name": "Modern Sofa",
-    "productCode": "SOF001",
-    "slug": "modern-sofa",
-    "description": "A comfortable modern sofa",
-    "basePrice": 1299.99,
-    "currency": "USD",
-    "categoryId": "507f1f77bcf86cd799439012",
-    "collectionId": "507f1f77bcf86cd799439013",
-    "designerId": "507f1f77bcf86cd799439014",
-    "tags": ["furniture", "living-room"],
-    "isPublished": true,
-    "featuredImage": "/uploads/products/images/sofa-main.jpg",
-    "imageGallery": ["/uploads/products/images/sofa-1.jpg"],
-    "videos": ["/uploads/products/videos/sofa-demo.mp4"],
-    "models3d": ["/uploads/products/models/sofa.glb"],
-    "variations": [
-      {
-        "name": "Color",
-        "options": ["Red", "Blue", "Green"]
-      }
-    ],
-    "dimensionConfig": {
-      "shape": "rectangle",
-      "unit": "cm",
-      "width": { "min": 180, "max": 220, "default": 200 },
-      "height": 85,
-      "depth": 90
-    },
-    "seo": {
-      "title": "Modern Sofa - Comfortable Living Room Furniture",
-      "description": "Shop our modern sofa collection",
-      "keywords": "sofa, furniture, modern"
-    },
-    "createdAt": "2024-01-15T10:30:00Z",
-    "updatedAt": "2024-01-15T10:30:00Z"
-  }
-]
+{
+  "items": [
+    {
+      "_id": "507f1f77bcf86cd799439011",
+      "name": "Modern Sofa",
+      "productCode": "SOF001",
+      "slug": "modern-sofa",
+      "description": "A comfortable modern sofa",
+      "basePrice": 1299.99,
+      "currency": "USD",
+      "categoryId": "507f1f77bcf86cd799439012",
+      "collectionId": "507f1f77bcf86cd799439013",
+      "designerId": "507f1f77bcf86cd799439014",
+      "tags": ["furniture", "living-room"],
+      "isPublished": true,
+      "featuredImage": "/uploads/products/images/sofa-main.jpg",
+      "imageGallery": ["/uploads/products/images/sofa-1.jpg"],
+      "videos": ["/uploads/products/videos/sofa-demo.mp4"],
+      "models3d": ["/uploads/products/models/sofa.glb"],
+      "variations": [...],
+      "dimensionConfig": {...},
+      "seo": {...},
+      "createdAt": "2024-01-15T10:30:00Z",
+      "updatedAt": "2024-01-15T10:30:00Z"
+    }
+  ],
+  "total": 150
+}
 ```
+*Note: For backward compatibility, if no query parameters are provided, the API returns the direct array of products without the wrapper object.*
 
 ### Get Single Product
 ```http

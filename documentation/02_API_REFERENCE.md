@@ -1,6 +1,6 @@
 # Bhuri-SAP API Reference
 
-**Last Updated**: 2026-01-13  
+**Last Updated**: 2026-01-20  
 **Purpose**: Comprehensive documentation for all platform APIs.
 
 ---
@@ -24,13 +24,27 @@ All programmatic access requires an API Key.
 
 | Endpoint | Method | Description |
 | :--- | :--- | :--- |
-| `/products` | `GET` | List all products |
+| `/products` | `GET` | List products (paginated) |
+| `/products?page=1&limit=10` | `GET` | Paginated product list |
+| `/products?search=bed` | `GET` | Search by name or code |
+| `/products?categoryId=...` | `GET` | Filter by category |
+| `/products?collectionId=...` | `GET` | Filter by collection |
 | `/products/:id` | `GET` | Get single product |
 | `/products` | `POST` | Create a new product |
 | `/products/upload-model` | `POST` | Upload 3D model (.glb) |
 | `/categories` | `GET/POST` | Manage product categories |
 | `/collections` | `GET/POST` | Manage product collections |
 | `/analytics` | `GET` | Get catalogue statistics |
+
+#### Product List Response Structure
+The `GET /products` endpoint now returns a paginated object:
+```json
+{
+  "items": [...],
+  "total": 150
+}
+```
+*Note: For backward compatibility, requests without any query parameters return a direct array of products.*
 
 ---
 
