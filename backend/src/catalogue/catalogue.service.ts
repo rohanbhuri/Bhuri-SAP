@@ -328,15 +328,41 @@ export class CatalogueService {
     }
 
     async importProductsFromCSV(csvContent: string): Promise<{ success: number; failed: number; errors: string[] }> {
-        const lines = csvContent.split('\n').filter(line => line.trim());
-        const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
+        const lines = csvContent.split(/\r?\n/).filter(line => line.trim());
+        if (lines.length === 0) return { success: 0, failed: 0, errors: ['Empty CSV file'] };
+
+        const parseLine = (line: string) => {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                if (char === '"') {
+                    if (inQuotes && line[i + 1] === '"') {
+                        current += '"';
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            result.push(current.trim());
+            return result;
+        };
+
+        const headers = parseLine(lines[0]);
         let success = 0;
         let failed = 0;
         const errors: string[] = [];
 
         for (let i = 1; i < lines.length; i++) {
             try {
-                const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
+                const values = parseLine(lines[i]);
                 const product: any = {};
 
                 headers.forEach((header, index) => {

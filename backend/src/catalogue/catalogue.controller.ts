@@ -1,7 +1,7 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, UseInterceptors, UploadedFiles, UploadedFile, Res } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, UseInterceptors, UploadedFiles, UploadedFile, Res, BadRequestException } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor, FileFieldsInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
-import { diskStorage } from 'multer';
+import { diskStorage, memoryStorage } from 'multer';
 import { extname } from 'path';
 import { CatalogueService } from './catalogue.service';
 import { Product } from '../entities/product.entity';
@@ -279,8 +279,11 @@ export class CatalogueController {
     }
 
     @Post('import/products')
-    @UseInterceptors(FileInterceptor('file'))
+    @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
     async importProducts(@UploadedFile() file: Express.Multer.File) {
+        if (!file || !file.buffer) {
+            throw new BadRequestException('No file uploaded or file is empty');
+        }
         return this.catalogueService.importProductsFromCSV(file.buffer.toString());
     }
 }
