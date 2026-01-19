@@ -240,9 +240,9 @@ export class ProductCatalogComponent implements OnInit {
   }
 
   loadProducts() {
-    this.catalogueService.getProducts().subscribe({
-      next: (products) => {
-        this.products.set(products.filter(p => p.isPublished));
+    this.catalogueService.getProducts({ limit: 100 }).subscribe({
+      next: (result: any) => {
+        this.products.set(result.items.filter((p: any) => p.isPublished));
       },
       error: () => {
         this.snackBar.open('Failed to load products', 'Close', { duration: 3000 });

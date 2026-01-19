@@ -175,8 +175,8 @@ export class CollectionsPageComponent implements OnInit {
   }
 
   loadProducts() {
-    this.catalogueService.getProducts().subscribe(products => {
-      this.products.set(products);
+    this.catalogueService.getProducts({ limit: 1000 }).subscribe(result => {
+      this.products.set(result.items);
     });
   }
 

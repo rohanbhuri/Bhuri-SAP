@@ -21,8 +21,42 @@ export class CatalogueService {
     ) { }
 
     // Products
-    async findAllProducts(): Promise<Product[]> {
-        return this.productRepository.find();
+    async findAllProducts(query: { 
+        page?: number; 
+        limit?: number; 
+        search?: string; 
+        categoryId?: string; 
+        collectionId?: string;
+    } = {}): Promise<{ items: Product[]; total: number }> {
+        const page = Number(query.page) || 1;
+        const limit = Number(query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        const where: any = {};
+
+        if (query.search) {
+            where.$or = [
+                { name: { $regex: query.search, $options: 'i' } },
+                { productCode: { $regex: query.search, $options: 'i' } }
+            ];
+        }
+
+        if (query.categoryId) {
+            where.categoryId = query.categoryId;
+        }
+
+        if (query.collectionId) {
+            where.collectionId = query.collectionId;
+        }
+
+        const [items, total] = await this.productRepository.findAndCount({
+            where,
+            skip,
+            take: limit,
+            order: { createdAt: 'DESC' }
+        } as any);
+
+        return { items, total };
     }
 
     async checkProductCodeExists(productCode: string, excludeId?: string): Promise<boolean> {
@@ -388,52 +422,99 @@ export class CatalogueService {
                     }
                 });
 
-                // If dimensionConfig is not provided, build from legacy fields if present
-                if (!product.dimensionConfig || Object.keys(product.dimensionConfig).length === 0) {
-                    product.dimensionConfig = {
-                        shape: product.dimensionShape || 'rectangle',
-                        unit: product.dimensionUnit || 'cm',
-                        width: product.widthMin !== undefined ? { min: product.widthMin, max: product.widthMax || 0, default: product.widthDefault || 0 } : undefined,
-                        height: product.height || undefined,
-                        depth: product.depth || undefined,
-                        diameter: product.diameterMin !== undefined ? { min: product.diameterMin, max: product.diameterMax || 0, default: product.diameterDefault || 0 } : undefined
-                    };
+                // Clean up temporary fields logic helper
+                const cleanLegacyFields = (p: any) => {
+                    delete p.dimensionShape;
+                    delete p.dimensionUnit;
+                    delete p.widthMin;
+                    delete p.widthMax;
+                    delete p.widthDefault;
+                    delete p.height;
+                    delete p.depth;
+                    delete p.diameterMin;
+                    delete p.diameterMax;
+                    delete p.diameterDefault;
+                    delete p.seoTitle;
+                    delete p.seoDescription;
+                    delete p.seoKeywords;
+                };
+
+                // Check if product with this code already exists
+                let existingProduct = null;
+                if (product.productCode) {
+                    existingProduct = await this.productRepository.findOne({
+                        where: { productCode: product.productCode }
+                    } as any);
                 }
 
-                // If seo is not provided, build from legacy fields if present
-                if (!product.seo || Object.keys(product.seo).length === 0) {
-                    product.seo = {
-                        title: product.seoTitle,
-                        description: product.seoDescription,
-                        keywords: product.seoKeywords
-                    };
+                if (existingProduct) {
+                    // UPDATE EXISTING PRODUCT
+                    
+                    // Only build/merge complex objects if relevant fields are actually in the CSV for this row
+                    const hasLegacyDimension = ['dimensionShape', 'dimensionUnit', 'widthMin', 'widthMax', 'widthDefault', 'height', 'depth', 'diameterMin', 'diameterMax', 'diameterDefault'].some(k => k in product);
+                    if (hasLegacyDimension && (!product.dimensionConfig || Object.keys(product.dimensionConfig).length === 0)) {
+                        const current = existingProduct.dimensionConfig || {};
+                        product.dimensionConfig = {
+                            shape: product.dimensionShape || current.shape || 'rectangle',
+                            unit: product.dimensionUnit || current.unit || 'cm',
+                            width: product.widthMin !== undefined ? { min: product.widthMin, max: product.widthMax || 0, default: product.widthDefault || 0 } : current.width,
+                            height: product.height !== undefined ? product.height : current.height,
+                            depth: product.depth !== undefined ? product.depth : current.depth,
+                            diameter: product.diameterMin !== undefined ? { min: product.diameterMin, max: product.diameterMax || 0, default: product.diameterDefault || 0 } : current.diameter
+                        };
+                    }
+
+                    const hasLegacySeo = ['seoTitle', 'seoDescription', 'seoKeywords'].some(k => k in product);
+                    if (hasLegacySeo && (!product.seo || Object.keys(product.seo).length === 0)) {
+                        const current = existingProduct.seo || {};
+                        product.seo = {
+                            title: product.seoTitle || current.title,
+                            description: product.seoDescription || current.description,
+                            keywords: product.seoKeywords || current.keywords
+                        };
+                    }
+
+                    cleanLegacyFields(product);
+                    delete product._id;
+                    
+                    // updatedAt is handled by updateProduct
+                    await this.updateProduct(existingProduct._id.toString(), product);
+                } else {
+                    // CREATE NEW PRODUCT
+                    
+                    // If dimensionConfig is not provided, build from legacy fields or use defaults
+                    if (!product.dimensionConfig || Object.keys(product.dimensionConfig).length === 0) {
+                        product.dimensionConfig = {
+                            shape: product.dimensionShape || 'rectangle',
+                            unit: product.dimensionUnit || 'cm',
+                            width: product.widthMin !== undefined ? { min: product.widthMin, max: product.widthMax || 0, default: product.widthDefault || 0 } : undefined,
+                            height: product.height || undefined,
+                            depth: product.depth || undefined,
+                            diameter: product.diameterMin !== undefined ? { min: product.diameterMin, max: product.diameterMax || 0, default: product.diameterDefault || 0 } : undefined
+                        };
+                    }
+
+                    if (!product.seo || Object.keys(product.seo).length === 0) {
+                        product.seo = {
+                            title: product.seoTitle,
+                            description: product.seoDescription,
+                            keywords: product.seoKeywords
+                        };
+                    }
+
+                    cleanLegacyFields(product);
+
+                    // Set defaults for new products
+                    product.imageGallery = product.imageGallery || [];
+                    product.videos = product.videos || [];
+                    product.models3d = product.models3d || [];
+                    product.tags = product.tags || [];
+                    product.variations = product.variations || [];
+                    product.attributes = product.attributes || {};
+                    product.seo = product.seo || {};
+
+                    await this.createProduct(product);
                 }
-
-                // Clean up temporary fields
-                delete product.dimensionShape;
-                delete product.dimensionUnit;
-                delete product.widthMin;
-                delete product.widthMax;
-                delete product.widthDefault;
-                delete product.height;
-                delete product.depth;
-                delete product.diameterMin;
-                delete product.diameterMax;
-                delete product.diameterDefault;
-                delete product.seoTitle;
-                delete product.seoDescription;
-                delete product.seoKeywords;
-
-                // Set defaults for arrays if not provided
-                product.imageGallery = product.imageGallery || [];
-                product.videos = product.videos || [];
-                product.models3d = product.models3d || [];
-                product.tags = product.tags || [];
-                product.variations = product.variations || [];
-                product.attributes = product.attributes || {};
-                product.seo = product.seo || {};
-
-                await this.createProduct(product);
                 success++;
             } catch (error) {
                 failed++;

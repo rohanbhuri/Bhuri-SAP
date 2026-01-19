@@ -7,6 +7,11 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { FormsModule } from '@angular/forms';
 import { CatalogueService } from '../catalogue.service';
 import { ProductDialogComponent } from '../dialogs/product-dialog.component';
 import { UploadUrlPipe } from '../../../pipes/upload-url.pipe';
@@ -21,6 +26,11 @@ import { UploadUrlPipe } from '../../../pipes/upload-url.pipe';
     MatIconModule,
     MatMenuModule,
     MatChipsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatPaginatorModule,
+    FormsModule,
     UploadUrlPipe
   ],
   template: `
@@ -52,6 +62,36 @@ import { UploadUrlPipe } from '../../../pipes/upload-url.pipe';
             Add Product
           </button>
         </div>
+      </div>
+
+      <div class="filters-container">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Search by name or code</mat-label>
+          <input matInput [(ngModel)]="searchQuery" (ngModelChange)="onFilterChange()" placeholder="Enter name or code...">
+          <mat-icon matPrefix>search</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Category</mat-label>
+          <mat-select [(ngModel)]="selectedCategoryId" (selectionChange)="onFilterChange()">
+            <mat-option value="">All Categories</mat-option>
+            <mat-option *ngFor="let category of categories()" [value]="category._id">
+              {{ category.name }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Collection</mat-label>
+          <mat-select [(ngModel)]="selectedCollectionId" (selectionChange)="onFilterChange()">
+            <mat-option value="">All Collections</mat-option>
+            <mat-option *ngFor="let collection of collections()" [value]="collection._id">
+              {{ collection.name }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <button mat-stroked-button (click)="resetFilters()">Reset</button>
       </div>
       
       <div class="table-container">
@@ -138,12 +178,34 @@ import { UploadUrlPipe } from '../../../pipes/upload-url.pipe';
           <tr mat-header-row *matHeaderRowDef="productColumns"></tr>
           <tr mat-row *matRowDef="let row; columns: productColumns"></tr>
         </table>
+        
+        <mat-paginator
+          [length]="totalProducts()"
+          [pageSize]="pageSize()"
+          [pageSizeOptions]="[10, 25, 50, 100]"
+          (page)="onPageChange($event)"
+          aria-label="Select page">
+        </mat-paginator>
       </div>
     </div>
   `,
   styles: [`
     .tab-content {
       padding: 1.5rem;
+    }
+    .filters-container {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .filters-container mat-form-field {
+      min-width: 200px;
+    }
+    .search-field {
+      flex: 1;
+      min-width: 300px !important;
     }
     .tab-header {
       display: flex;
@@ -222,6 +284,14 @@ export class ProductsPageComponent implements OnInit {
   private snackBar = inject(MatSnackBar);
 
   products = signal<any[]>([]);
+  totalProducts = signal<number>(0);
+  pageSize = signal<number>(10);
+  pageIndex = signal<number>(0);
+  
+  searchQuery = '';
+  selectedCategoryId = '';
+  selectedCollectionId = '';
+
   categories = signal<any[]>([]);
   collections = signal<any[]>([]);
   designers = signal<any[]>([]);
@@ -235,9 +305,37 @@ export class ProductsPageComponent implements OnInit {
   }
 
   loadProducts() {
-    this.catalogueService.getProducts().subscribe(products => {
-      this.products.set(products);
+    const params = {
+      page: this.pageIndex() + 1,
+      limit: this.pageSize(),
+      search: this.searchQuery,
+      categoryId: this.selectedCategoryId,
+      collectionId: this.selectedCollectionId
+    };
+
+    this.catalogueService.getProducts(params).subscribe(result => {
+      this.products.set(result.items);
+      this.totalProducts.set(result.total);
     });
+  }
+
+  onFilterChange() {
+    this.pageIndex.set(0);
+    this.loadProducts();
+  }
+
+  onPageChange(event: PageEvent) {
+    this.pageIndex.set(event.pageIndex);
+    this.pageSize.set(event.pageSize);
+    this.loadProducts();
+  }
+
+  resetFilters() {
+    this.searchQuery = '';
+    this.selectedCategoryId = '';
+    this.selectedCollectionId = '';
+    this.pageIndex.set(0);
+    this.loadProducts();
   }
 
   loadCategories() {

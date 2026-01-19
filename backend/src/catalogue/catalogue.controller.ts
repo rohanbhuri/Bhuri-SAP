@@ -73,8 +73,8 @@ export class CatalogueController {
 
     // Products
     @Get('products')
-    async getAllProducts() {
-        return this.catalogueService.findAllProducts();
+    async getAllProducts(@Query() query: any) {
+        return this.catalogueService.findAllProducts(query);
     }
 
     @Get('products/check-code/:code')

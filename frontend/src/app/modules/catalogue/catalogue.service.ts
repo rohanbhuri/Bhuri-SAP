@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { getBrandConfig } from '../../brand.config';
 
 @Injectable({
@@ -14,8 +14,15 @@ export class CatalogueService {
     constructor(private http: HttpClient) { }
 
     // Products
-    getProducts(): Observable<any[]> {
-        return this.http.get<any[]>(`${this.apiUrl}/products`);
+    getProducts(params: any = {}): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/products`, { params }).pipe(
+            map(res => {
+                if (res && res.items && Array.isArray(res.items) && Object.keys(params).length === 0) {
+                    return res.items;
+                }
+                return res;
+            })
+        );
     }
 
     getProduct(id: string): Observable<any> {
