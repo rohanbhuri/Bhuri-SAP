@@ -11,6 +11,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { QuotationsService } from '../../quotations.service';
 import { QuotationDialogComponent } from '../../dialogs/quotation-dialog.component';
+import { PreferencesService } from '../../../../services/preferences.service';
 
 @Component({
   selector: 'app-quotation-list',
@@ -45,7 +46,7 @@ import { QuotationDialogComponent } from '../../dialogs/quotation-dialog.compone
 
           <ng-container matColumnDef="total">
             <th mat-header-cell *matHeaderCellDef>Total</th>
-            <td mat-cell *matCellDef="let quote">{{ quote.grandTotal | currency:quote.currency }}</td>
+            <td mat-cell *matCellDef="let quote">{{ quote.grandTotal | currency:userCurrency() }}</td>
           </ng-container>
 
           <ng-container matColumnDef="status">
@@ -142,14 +143,25 @@ import { QuotationDialogComponent } from '../../dialogs/quotation-dialog.compone
 })
 export class QuotationListComponent implements OnInit {
   private quotationsService = inject(QuotationsService);
+  private preferencesService = inject(PreferencesService);
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
 
   quotes = signal<any[]>([]);
+  userCurrency = signal<string>('INR');
   displayedColumns = ['quotationNumber', 'client', 'total', 'status', 'date', 'actions'];
 
   ngOnInit() {
     this.loadQuotations();
+    this.loadPreferences();
+  }
+
+  loadPreferences() {
+    this.preferencesService.getUserPreferences().subscribe(prefs => {
+      if (prefs?.currency) {
+        this.userCurrency.set(prefs.currency);
+      }
+    });
   }
 
   openDialog() {

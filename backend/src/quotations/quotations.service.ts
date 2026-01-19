@@ -533,42 +533,6 @@ export class QuotationsService {
         thankYouSlide.addText('Thank You', { x: 3, y: 2.5, w: 4, h: 0.6, fontSize: 36, bold: true, align: 'center', color: '000000' });
         thankYouSlide.addText('We look forward to working with you', { x: 2.5, y: 3.3, w: 5, h: 0.3, fontSize: 18, align: 'center', color: '666666' });
 
-        // Terms and Conditions slide
-        const termsSlide = pptx.addSlide();
-        termsSlide.background = { color: 'FFFFFF' };
-
-        // Add brand logo (top right)
-        try {
-            termsSlide.addImage({ path: '../configs/assets/raccontixrm/icons/logo-racconti.png', x: 8.555, y: 0.4, w: 0.945, h: 0.1 });
-        } catch (error) {
-            console.error('Failed to load brand logo');
-        }
-
-        termsSlide.addText('Terms and Conditions', { x: 0.2, y: 0.2, w: 4, h: 0.3, fontSize: 18, bold: true, color: '000000' });
-
-        // Key terms (summarized for slide format)
-        const keyTerms = [
-            '• Delivery: 16 weeks from fabric payment & mood board selection',
-            '• Payment: 50% advance, 50% before delivery',
-            '• GST & transportation charges extra at actual',
-            '• Material payment: 100% before delivery period starts',
-            '• Fabrics/Leather: Cost extra after selection',
-            '• Hydraulic beds: ₹35,000 extra per bed',
-            '• Installation: First visit included, subsequent visits charged',
-            '• Validity: 30 days from quotation date',
-            '• Modifications: Limited free changes, additional charged'
-        ];
-
-        let yPos = 0.8;
-        keyTerms.forEach(term => {
-            if (yPos < 5) {
-                termsSlide.addText(term, { x: 0.2, y: yPos, w: 9.5, h: 0.2, fontSize: 10, color: '333333' });
-                yPos += 0.25;
-            }
-        });
-
-        termsSlide.addText('For complete terms, please refer to the quotation PDF', { x: 0.2, y: 5.2, w: 9.5, h: 0.2, fontSize: 10, italic: true, color: '666666' });
-
         return pptx.write({ outputType: 'nodebuffer' }) as Promise<Buffer>;
     }
 

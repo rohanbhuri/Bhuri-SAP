@@ -230,8 +230,8 @@ export class QuotationDialogComponent implements OnInit {
   filteredClients: Observable<any[]>;
   selectedClient: any = null;
   selectedProducts: Map<number, any> = new Map();
-  currencySymbol = '$';
-  currency = 'USD';
+  currencySymbol = '₹';
+  currency = 'INR';
   isEditMode = false;
   quotationId?: string;
 
@@ -274,8 +274,8 @@ export class QuotationDialogComponent implements OnInit {
     this.preferencesService.getUserPreferences().subscribe({
       next: (prefs) => {
         if (prefs) {
-          this.currency = prefs.currency || 'USD';
-          this.currencySymbol = prefs.currencySymbol || '$';
+          this.currency = prefs.currency || 'INR';
+          this.currencySymbol = prefs.currencySymbol || '₹';
           this.cdr.detectChanges();
         }
       },
