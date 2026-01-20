@@ -8,10 +8,11 @@ import { Category } from '../entities/category.entity';
 import { Collection } from '../entities/collection.entity';
 import { Designer } from '../entities/designer.entity';
 import { ApiKeyModule } from '../guards/api-key.module';
+import { Enquiry } from '../entities/enquiry.entity';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([Product, Category, Collection, Designer]),
+        TypeOrmModule.forFeature([Product, Category, Collection, Designer, Enquiry]),
         ApiKeyModule,
         MulterModule.register({
             dest: './uploads/products'

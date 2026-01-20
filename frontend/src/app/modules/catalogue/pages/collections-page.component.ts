@@ -65,9 +65,20 @@ import { UploadUrlPipe } from '../../../pipes/upload-url.pipe';
           <ng-container matColumnDef="status">
             <th mat-header-cell *matHeaderCellDef>Status</th>
             <td mat-cell *matCellDef="let collection">
-              <mat-chip [color]="collection.isActive ? 'primary' : 'warn'">
-                {{ collection.isActive ? 'Active' : 'Inactive' }}
-              </mat-chip>
+              <div class="status-chips">
+                <mat-chip [color]="collection.isActive ? 'primary' : 'warn'">
+                  {{ collection.isActive ? 'Active' : 'Inactive' }}
+                </mat-chip>
+                <mat-chip *ngIf="collection.isExclusive" class="exclusive-chip">
+                  Exclusive
+                </mat-chip>
+                <mat-chip *ngIf="collection.isAppointmentRequired" class="appointment-chip">
+                  Appt Req
+                </mat-chip>
+                <mat-chip *ngIf="collection.isFeatured" class="featured-chip">
+                  Featured
+                </mat-chip>
+              </div>
             </td>
           </ng-container>
 
@@ -85,6 +96,18 @@ import { UploadUrlPipe } from '../../../pipes/upload-url.pipe';
                 <button mat-menu-item (click)="toggleActive(collection)">
                   <mat-icon>{{ collection.isActive ? 'visibility_off' : 'visibility' }}</mat-icon>
                   <span>{{ collection.isActive ? 'Deactivate' : 'Activate' }}</span>
+                </button>
+                <button mat-menu-item (click)="toggleExclusive(collection)">
+                  <mat-icon>{{ collection.isExclusive ? 'star_outline' : 'star' }}</mat-icon>
+                  <span>{{ collection.isExclusive ? 'Remove Exclusive' : 'Make Exclusive' }}</span>
+                </button>
+                <button mat-menu-item (click)="toggleAppointment(collection)">
+                  <mat-icon>{{ collection.isAppointmentRequired ? 'event_busy' : 'event_available' }}</mat-icon>
+                  <span>{{ collection.isAppointmentRequired ? 'No Appointment' : 'Need Appointment' }}</span>
+                </button>
+                <button mat-menu-item (click)="toggleFeatured(collection)">
+                  <mat-icon>{{ collection.isFeatured ? 'auto_awesome_motion' : 'auto_awesome' }}</mat-icon>
+                  <span>{{ collection.isFeatured ? 'Unfeature' : 'Feature' }}</span>
                 </button>
                 <button mat-menu-item (click)="deleteCollection(collection._id)" class="text-red-600">
                   <mat-icon>delete</mat-icon>
@@ -148,6 +171,23 @@ import { UploadUrlPipe } from '../../../pipes/upload-url.pipe';
     .collection-slug {
       font-size: 0.875rem;
       color: #666;
+    }
+    .status-chips {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    .exclusive-chip {
+      background-color: #ffd700 !important;
+      color: #000 !important;
+    }
+    .appointment-chip {
+      background-color: #e91e63 !important;
+      color: #fff !important;
+    }
+    .featured-chip {
+      background-color: #9c27b0 !important;
+      color: #fff !important;
     }
   `]
 })
@@ -217,6 +257,30 @@ export class CollectionsPageComponent implements OnInit {
   toggleActive(collection: any) {
     this.catalogueService.updateCollection(collection._id, { 
       isActive: !collection.isActive 
+    }).subscribe(() => {
+      this.loadCollections();
+    });
+  }
+
+  toggleExclusive(collection: any) {
+    this.catalogueService.updateCollection(collection._id, { 
+      isExclusive: !collection.isExclusive 
+    }).subscribe(() => {
+      this.loadCollections();
+    });
+  }
+
+  toggleAppointment(collection: any) {
+    this.catalogueService.updateCollection(collection._id, { 
+      isAppointmentRequired: !collection.isAppointmentRequired 
+    }).subscribe(() => {
+      this.loadCollections();
+    });
+  }
+
+  toggleFeatured(collection: any) {
+    this.catalogueService.updateCollection(collection._id, { 
+      isFeatured: !collection.isFeatured 
     }).subscribe(() => {
       this.loadCollections();
     });

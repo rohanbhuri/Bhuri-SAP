@@ -109,6 +109,10 @@ export class CatalogueService {
         return this.http.get(`${this.apiUrl}/export/collections`, { responseType: 'blob' });
     }
 
+    exportDesigners(): Observable<Blob> {
+        return this.http.get(`${this.apiUrl}/export/designers`, { responseType: 'blob' });
+    }
+
     exportAll(): Observable<Blob> {
         return this.http.get(`${this.apiUrl}/export/all`, { responseType: 'blob' });
     }

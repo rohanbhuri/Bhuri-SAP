@@ -5,6 +5,7 @@ import { Product } from '../entities/product.entity';
 import { Category } from '../entities/category.entity';
 import { Collection } from '../entities/collection.entity';
 import { Designer } from '../entities/designer.entity';
+import { Enquiry } from '../entities/enquiry.entity';
 import { ObjectId } from 'mongodb';
 
 @Injectable()
@@ -18,6 +19,8 @@ export class CatalogueService {
         private collectionRepository: MongoRepository<Collection>,
         @InjectRepository(Designer)
         private designerRepository: MongoRepository<Designer>,
+        @InjectRepository(Enquiry)
+        private enquiryRepository: MongoRepository<Enquiry>,
     ) { }
 
     // Products
@@ -27,6 +30,9 @@ export class CatalogueService {
         search?: string; 
         categoryId?: string; 
         collectionId?: string;
+        designerId?: string;
+        isExclusive?: string | boolean;
+        isPublished?: string | boolean;
     } = {}): Promise<{ items: Product[]; total: number }> {
         const page = Number(query.page) || 1;
         const limit = Number(query.limit) || 10;
@@ -47,6 +53,18 @@ export class CatalogueService {
 
         if (query.collectionId) {
             where.collectionId = query.collectionId;
+        }
+
+        if (query.designerId) {
+            where.designerId = query.designerId;
+        }
+
+        if (query.isExclusive !== undefined) {
+            where.isExclusive = query.isExclusive === 'true' || query.isExclusive === true;
+        }
+
+        if (query.isPublished !== undefined) {
+            where.isPublished = query.isPublished === 'true' || query.isPublished === true;
         }
 
         const [items, total] = await this.productRepository.findAndCount({
@@ -243,6 +261,30 @@ export class CatalogueService {
             designers: designers.filter(d => d.updatedAt && new Date(d.updatedAt) >= sevenDaysAgo).length
         };
 
+        // Product Popularity (based on enquiries)
+        const enquiries = await this.enquiryRepository.find();
+        const productPopularityMap = new Map();
+        enquiries.forEach(enq => {
+            enq.items?.forEach(item => {
+                if (item.productId) {
+                    const count = productPopularityMap.get(item.productId) || 0;
+                    productPopularityMap.set(item.productId, count + 1);
+                }
+            });
+        });
+
+        const productMap = new Map();
+        products.forEach(p => productMap.set(p._id.toString(), p.name));
+
+        const popularProducts = Array.from(productPopularityMap.entries())
+            .map(([productId, count]) => ({
+                id: productId,
+                name: productMap.get(productId) || 'Unknown Product',
+                count
+            }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 5);
+
         return {
             totalProducts: products.length,
             publishedProducts: products.filter(p => p.isPublished).length,
@@ -264,6 +306,7 @@ export class CatalogueService {
                 name: collectionMap.get(id) || 'No Collection',
                 count
             })),
+            popularProducts,
             priceRange: {
                 min: prices.length ? Math.min(...prices) : 0,
                 avg: prices.length ? (prices.reduce((a, b) => a + b, 0) / prices.length).toFixed(2) : 0,
@@ -326,15 +369,35 @@ export class CatalogueService {
         return [headers, ...rows].map(row => row.join(',')).join('\n');
     }
 
+    async exportDesignersCSV(): Promise<string> {
+        const designers = await this.designerRepository.find();
+        const headers = ['ID', 'Name', 'Bio', 'Description', 'Email', 'Phone', 'Website', 'Active', 'Profile Image'];
+        const rows = designers.map(d => [
+            d._id.toString(),
+            d.name,
+            d.bio || '',
+            d.description || '',
+            d.email || '',
+            d.phone || '',
+            d.website || '',
+            d.isActive ? 'Yes' : 'No',
+            d.profileImage || ''
+        ]);
+        return [headers, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+    }
+
     async exportCollectionsCSV(): Promise<string> {
         const collections = await this.collectionRepository.find();
-        const headers = ['ID', 'Name', 'Slug', 'Description', 'Active', 'Image'];
+        const headers = ['ID', 'Name', 'Slug', 'Description', 'Active', 'Exclusive', 'Appointment Required', 'Featured', 'Image'];
         const rows = collections.map(c => [
             c._id.toString(),
             c.name,
             c.slug,
             c.description || '',
             c.isActive ? 'Yes' : 'No',
+            c.isExclusive ? 'Yes' : 'No',
+            c.isAppointmentRequired ? 'Yes' : 'No',
+            c.isFeatured ? 'Yes' : 'No',
             c.image || ''
         ]);
         return [headers, ...rows].map(row => row.join(',')).join('\n');
@@ -347,6 +410,7 @@ export class CatalogueService {
         zip.addFile('products.csv', Buffer.from(await this.exportProductsCSV()));
         zip.addFile('categories.csv', Buffer.from(await this.exportCategoriesCSV()));
         zip.addFile('collections.csv', Buffer.from(await this.exportCollectionsCSV()));
+        zip.addFile('designers.csv', Buffer.from(await this.exportDesignersCSV()));
         
         return zip.toBuffer();
     }
@@ -406,7 +470,7 @@ export class CatalogueService {
                             product[header] = value.split(';').map(v => v.trim()).filter(v => v);
                         } else if (header === 'basePrice' || header === 'widthMin' || header === 'widthMax' || header === 'widthDefault' || header === 'height' || header === 'depth' || header === 'diameterMin' || header === 'diameterMax' || header === 'diameterDefault') {
                             product[header] = parseFloat(value) || 0;
-                        } else if (header === 'isPublished' || header === 'isExclusive') {
+                        } else if (header === 'isPublished' || header === 'isExclusive' || header === 'isAppointmentRequired' || header === 'isFeatured') {
                             product[header] = value.toLowerCase() === 'true';
                         } else if (header === 'dimensionConfig' || header === 'variations' || header === 'attributes' || header === 'seo') {
                             try {

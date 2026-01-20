@@ -103,6 +103,12 @@ import { PreferencesService } from '../../../services/preferences.service';
               <span class="stat-detail">{{ analytics().activeDesigners }} active</span>
             </div>
           </mat-card-content>
+          <mat-card-actions>
+            <button mat-button (click)="exportDesigners()">
+              <mat-icon>download</mat-icon>
+              Export
+            </button>
+          </mat-card-actions>
         </mat-card>
 
         <mat-card class="stat-card">
@@ -204,6 +210,28 @@ import { PreferencesService } from '../../../services/preferences.service';
                   <div class="bar" [style.width.%]="(col.count / analytics().totalProducts) * 100"></div>
                 </div>
                 <span class="count">{{ col.count }}</span>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <div class="detailed-analytics mt-6" *ngIf="!loading()">
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>Popular Products (by Enquiries)</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="category-breakdown">
+              <div *ngFor="let prod of analytics().popularProducts" class="breakdown-item">
+                <span class="label">{{ prod.name }}</span>
+                <div class="bar-container">
+                  <div class="bar" [style.width.%]="(prod.count / (analytics().popularProducts[0]?.count || 1)) * 100"></div>
+                </div>
+                <span class="count">{{ prod.count }} enquiries</span>
+              </div>
+              <div *ngIf="analytics().popularProducts.length === 0" class="empty-state">
+                <p>No popularity data available yet.</p>
               </div>
             </div>
           </mat-card-content>
@@ -551,7 +579,8 @@ export class AnalyticsPageComponent implements OnInit {
     productsByCollection: [] as any[],
     priceRange: { min: 0, avg: 0, max: 0 },
     mediaAssets: { images: 0, videos: 0, models3d: 0 },
-    recentChanges: { products: 0, categories: 0, collections: 0, designers: 0 }
+    recentChanges: { products: 0, categories: 0, collections: 0, designers: 0 },
+    popularProducts: [] as any[]
   });
 
   ngOnInit() {
@@ -604,6 +633,12 @@ export class AnalyticsPageComponent implements OnInit {
   exportCollections() {
     this.catalogueService.exportCollections().subscribe(blob => {
       this.downloadFile(blob, 'collections.csv');
+    });
+  }
+
+  exportDesigners() {
+    this.catalogueService.exportDesigners().subscribe(blob => {
+      this.downloadFile(blob, 'designers.csv');
     });
   }
 

@@ -262,6 +262,14 @@ export class CatalogueController {
         res.send(csv);
     }
 
+    @Get('export/designers')
+    async exportDesigners(@Res() res: Response) {
+        const csv = await this.catalogueService.exportDesignersCSV();
+        res.header('Content-Type', 'text/csv');
+        res.header('Content-Disposition', 'attachment; filename=designers.csv');
+        res.send(csv);
+    }
+
     @Get('export/all')
     async exportAll(@Res() res: Response) {
         const zip = await this.catalogueService.exportAllZIP();

@@ -80,8 +80,11 @@ import { UploadUrlPipe } from '../../../pipes/upload-url.pipe';
           </mat-form-field>
         </div>
 
-        <div class="form-row">
+        <div class="form-row flags-row">
           <mat-checkbox formControlName="isActive">Active</mat-checkbox>
+          <mat-checkbox formControlName="isExclusive">Exclusive</mat-checkbox>
+          <mat-checkbox formControlName="isAppointmentRequired">Appointment Required</mat-checkbox>
+          <mat-checkbox formControlName="isFeatured">Featured</mat-checkbox>
         </div>
 
         <div class="form-section">
@@ -167,6 +170,12 @@ import { UploadUrlPipe } from '../../../pipes/upload-url.pipe';
     .image-error mat-icon {
       margin-bottom: 0.5rem;
     }
+    .flags-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
   `]
 })
 export class CollectionDialogComponent implements OnInit {
@@ -188,6 +197,9 @@ export class CollectionDialogComponent implements OnInit {
       slug: ['', Validators.required],
       description: [''],
       isActive: [true],
+      isExclusive: [false],
+      isAppointmentRequired: [false],
+      isFeatured: [false],
       seoTitle: [''],
       seoDescription: [''],
       seoKeywords: ['']
@@ -202,6 +214,9 @@ export class CollectionDialogComponent implements OnInit {
         slug: collection.slug,
         description: collection.description,
         isActive: collection.isActive,
+        isExclusive: collection.isExclusive || false,
+        isAppointmentRequired: collection.isAppointmentRequired || false,
+        isFeatured: collection.isFeatured || false,
         seoTitle: collection.seo?.title || '',
         seoDescription: collection.seo?.description || '',
         seoKeywords: collection.seo?.keywords || ''

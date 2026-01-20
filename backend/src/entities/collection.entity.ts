@@ -20,6 +20,15 @@ export class Collection {
     @Column()
     isActive: boolean;
 
+    @Column({ default: false })
+    isExclusive: boolean;
+
+    @Column({ default: false })
+    isAppointmentRequired: boolean;
+
+    @Column({ default: false })
+    isFeatured: boolean;
+
     @Column('array')
     productIds: string[];
 
@@ -38,6 +47,9 @@ export class Collection {
 
     constructor() {
         this.isActive = true;
+        this.isExclusive = false;
+        this.isAppointmentRequired = false;
+        this.isFeatured = false;
         this.productIds = [];
         this.createdAt = new Date();
     }

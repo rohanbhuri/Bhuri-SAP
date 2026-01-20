@@ -91,6 +91,34 @@ import { UploadUrlPipe } from '../../../pipes/upload-url.pipe';
           </mat-select>
         </mat-form-field>
 
+        <mat-form-field appearance="outline">
+          <mat-label>Designer</mat-label>
+          <mat-select [(ngModel)]="selectedDesignerId" (selectionChange)="onFilterChange()">
+            <mat-option value="">All Designers</mat-option>
+            <mat-option *ngFor="let designer of designers()" [value]="designer._id">
+              {{ designer.name }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Exclusivity</mat-label>
+          <mat-select [(ngModel)]="selectedIsExclusive" (selectionChange)="onFilterChange()">
+            <mat-option [value]="null">All Products</mat-option>
+            <mat-option [value]="true">Exclusive Only</mat-option>
+            <mat-option [value]="false">Non-Exclusive Only</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Status</mat-label>
+          <mat-select [(ngModel)]="selectedIsPublished" (selectionChange)="onFilterChange()">
+            <mat-option [value]="null">All Status</mat-option>
+            <mat-option [value]="true">Published</mat-option>
+            <mat-option [value]="false">Draft</mat-option>
+          </mat-select>
+        </mat-form-field>
+
         <button mat-stroked-button (click)="resetFilters()">Reset</button>
       </div>
       
@@ -291,6 +319,9 @@ export class ProductsPageComponent implements OnInit {
   searchQuery = '';
   selectedCategoryId = '';
   selectedCollectionId = '';
+  selectedDesignerId = '';
+  selectedIsExclusive: boolean | null = null;
+  selectedIsPublished: boolean | null = null;
 
   categories = signal<any[]>([]);
   collections = signal<any[]>([]);
@@ -305,13 +336,21 @@ export class ProductsPageComponent implements OnInit {
   }
 
   loadProducts() {
-    const params = {
+    const params: any = {
       page: this.pageIndex() + 1,
       limit: this.pageSize(),
       search: this.searchQuery,
       categoryId: this.selectedCategoryId,
-      collectionId: this.selectedCollectionId
+      collectionId: this.selectedCollectionId,
+      designerId: this.selectedDesignerId
     };
+
+    if (this.selectedIsExclusive !== null) {
+      params.isExclusive = this.selectedIsExclusive;
+    }
+    if (this.selectedIsPublished !== null) {
+      params.isPublished = this.selectedIsPublished;
+    }
 
     this.catalogueService.getProducts(params).subscribe(result => {
       this.products.set(result.items);
@@ -334,6 +373,9 @@ export class ProductsPageComponent implements OnInit {
     this.searchQuery = '';
     this.selectedCategoryId = '';
     this.selectedCollectionId = '';
+    this.selectedDesignerId = '';
+    this.selectedIsExclusive = null;
+    this.selectedIsPublished = null;
     this.pageIndex.set(0);
     this.loadProducts();
   }
