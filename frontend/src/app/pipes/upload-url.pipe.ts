@@ -11,14 +11,21 @@ export class UploadUrlPipe implements PipeTransform {
   transform(path: string | undefined | null): string {
     if (!path) return '';
     
-    if (path.startsWith('http://') || path.startsWith('https://')) {
-      return path;
+    // Trim any whitespace
+    const trimmedPath = path.trim();
+    if (!trimmedPath) return '';
+    
+    // Handle external URLs, protocol-relative URLs, and data URLs
+    if (trimmedPath.startsWith('http://') || 
+        trimmedPath.startsWith('https://') || 
+        trimmedPath.startsWith('//') || 
+        trimmedPath.startsWith('data:image/')) {
+      return trimmedPath;
     }
     
-
     const apiUrl = this.brandConfig.getApiUrl();
     const baseUrl = apiUrl.replace('/api', '');
-    const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+    const normalizedPath = trimmedPath.startsWith('/') ? trimmedPath : `/${trimmedPath}`;
     
     return `${baseUrl}${normalizedPath}`;
   }

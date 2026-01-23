@@ -141,8 +141,8 @@ import { UploadUrlPipe } from '../../../pipes/upload-url.pipe';
             <th mat-header-cell *matHeaderCellDef>Image</th>
             <td mat-cell *matCellDef="let product">
               <div class="product-image-cell">
-                <img *ngIf="product.imageGallery?.length" [src]="product.imageGallery[0] | uploadUrl" [alt]="product.name">
-                <mat-icon *ngIf="!product.imageGallery?.length">image</mat-icon>
+                <img *ngIf="getProductImage(product)" [src]="getProductImage(product) | uploadUrl" [alt]="product.name">
+                <mat-icon *ngIf="!getProductImage(product)">image</mat-icon>
               </div>
             </td>
           </ng-container>
@@ -435,6 +435,16 @@ export class ProductsPageComponent implements OnInit {
   getCollectionName(collectionId: string): string {
     const collection = this.collections().find(c => c._id === collectionId);
     return collection?.name || '';
+  }
+
+  getProductImage(product: any): string | null {
+    if (product.featuredImage && product.featuredImage.trim() !== '') {
+      return product.featuredImage;
+    }
+    if (product.imageGallery && product.imageGallery.length > 0 && product.imageGallery[0]?.trim() !== '') {
+      return product.imageGallery[0];
+    }
+    return null;
   }
 
   openProductDialog() {

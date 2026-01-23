@@ -179,7 +179,10 @@ import Quill from 'quill';
               </p>
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Or paste image URLs (comma separated)</mat-label>
-                <input matInput [(ngModel)]="imageUrls" placeholder="https://...">
+                <input matInput [(ngModel)]="imageUrls" (keyup.enter)="addExternalImageUrls()" placeholder="https://...">
+                <button mat-icon-button matSuffix (click)="addExternalImageUrls()" *ngIf="imageUrls.trim()" title="Add Links">
+                  <mat-icon>add_link</mat-icon>
+                </button>
               </mat-form-field>
             </div>
 
@@ -785,9 +788,16 @@ export class ProductDialogComponent implements OnInit, AfterViewInit {
       });
       
       if (p.tags) this.tags.set(p.tags);
-      if (p.imageGallery) this.uploadedImages.set(p.imageGallery);
-      if (p.featuredImage && p.imageGallery) {
-        const index = p.imageGallery.indexOf(p.featuredImage);
+      
+      // Initialize images: ensuring featuredImage is visible even if not in gallery
+      let initialImages = [...(p.imageGallery || [])];
+      if (p.featuredImage && p.featuredImage.trim() !== '' && !initialImages.includes(p.featuredImage)) {
+        initialImages = [p.featuredImage, ...initialImages];
+      }
+      this.uploadedImages.set(initialImages);
+      
+      if (p.featuredImage) {
+        const index = initialImages.indexOf(p.featuredImage);
         if (index !== -1) this.featuredImageIndex.set(index);
       }
       if (p.videos) this.videoUrls = p.videos.join(', ');
@@ -966,6 +976,17 @@ export class ProductDialogComponent implements OnInit, AfterViewInit {
     }
   }
 
+  addExternalImageUrls() {
+    if (this.imageUrls && this.imageUrls.trim()) {
+      const urls = this.imageUrls.split(',').map(u => u.trim()).filter(u => u);
+      if (urls.length > 0) {
+        this.uploadedImages.update(imgs => [...imgs, ...urls]);
+        this.imageUrls = '';
+        this.snackBar.open(`${urls.length} image(s) added to gallery`, 'Close', { duration: 2000 });
+      }
+    }
+  }
+
   onVideoSelect(event: any) {
     const file = event.target.files[0];
     if (file) {
@@ -1094,10 +1115,14 @@ export class ProductDialogComponent implements OnInit, AfterViewInit {
     if (this.productForm.valid) {
       this.saving.set(true);
       
-      const allImages = [
-        ...this.uploadedImages(),
-        ...(this.imageUrls ? this.imageUrls.split(',').map(u => u.trim()) : [])
-      ];
+      // Add any remaining URLs from the input field
+      if (this.imageUrls && this.imageUrls.trim()) {
+        const urls = this.imageUrls.split(',').map(u => u.trim()).filter(u => u);
+        this.uploadedImages.update(imgs => [...imgs, ...urls]);
+        this.imageUrls = '';
+      }
+      
+      const allImages = this.uploadedImages();
       
       const featuredImage = this.featuredImageIndex() >= 0 ? allImages[this.featuredImageIndex()] : (allImages[0] || '');
       
