@@ -7,6 +7,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDialog } from '@angular/material/dialog';
+import { FormsModule } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { ClientManagementService } from '../services/client-management.service';
 import { CreateClientLoginDialogComponent } from './create-client-login-dialog.component';
 
@@ -20,7 +23,10 @@ import { CreateClientLoginDialogComponent } from './create-client-login-dialog.c
     MatButtonModule,
     MatIconModule,
     MatChipsModule,
-    MatMenuModule
+    MatMenuModule,
+    MatFormFieldModule,
+    MatInputModule,
+    FormsModule
   ],
   template: `
     <div class="clients-container">
@@ -32,15 +38,30 @@ import { CreateClientLoginDialogComponent } from './create-client-login-dialog.c
         </button>
       </div>
 
+      <div class="filters-section">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Search by Name</mat-label>
+          <input matInput [(ngModel)]="searchName" (ngModelChange)="filterClients()" placeholder="Enter name">
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Search by Email</mat-label>
+          <input matInput [(ngModel)]="searchEmail" (ngModelChange)="filterClients()" placeholder="Enter email">
+          <mat-icon matSuffix>email</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Search by Phone</mat-label>
+          <input matInput [(ngModel)]="searchPhone" (ngModelChange)="filterClients()" placeholder="Enter phone">
+          <mat-icon matSuffix>phone</mat-icon>
+        </mat-form-field>
+      </div>
+
       <div class="table-container">
         <table mat-table [dataSource]="clients" class="data-table">
-          <ng-container matColumnDef="company">
-            <th mat-header-cell *matHeaderCellDef>COMPANY</th>
-            <td mat-cell *matCellDef="let client">{{ client.companyName }}</td>
-          </ng-container>
-
           <ng-container matColumnDef="contact">
-            <th mat-header-cell *matHeaderCellDef>CONTACT PERSON</th>
+            <th mat-header-cell *matHeaderCellDef>CLIENT NAME</th>
             <td mat-cell *matCellDef="let client">{{ client.contactPerson }}</td>
           </ng-container>
 
@@ -54,10 +75,6 @@ import { CreateClientLoginDialogComponent } from './create-client-login-dialog.c
             <td mat-cell *matCellDef="let client">{{ client.phone }}</td>
           </ng-container>
 
-          <ng-container matColumnDef="industry">
-            <th mat-header-cell *matHeaderCellDef>INDUSTRY</th>
-            <td mat-cell *matCellDef="let client">{{ client.industry || '-' }}</td>
-          </ng-container>
 
           <ng-container matColumnDef="status">
             <th mat-header-cell *matHeaderCellDef>STATUS</th>
@@ -103,6 +120,18 @@ import { CreateClientLoginDialogComponent } from './create-client-login-dialog.c
       justify-content: space-between;
       align-items: center;
       margin-bottom: 24px;
+    }
+
+    .filters-section {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .search-field {
+      flex: 1;
+      min-width: 200px;
     }
 
     .section-title {
@@ -157,8 +186,13 @@ import { CreateClientLoginDialogComponent } from './create-client-login-dialog.c
   `]
 })
 export class ClientsListComponent implements OnInit {
+  allClients: any[] = [];
   clients: any[] = [];
-  displayedColumns = ['company', 'contact', 'email', 'phone', 'industry', 'status', 'actions'];
+  displayedColumns = ['contact', 'email', 'phone', 'status', 'actions'];
+
+  searchName: string = '';
+  searchEmail: string = '';
+  searchPhone: string = '';
 
   constructor(
     private clientManagementService: ClientManagementService,
@@ -173,11 +207,27 @@ export class ClientsListComponent implements OnInit {
   loadClients() {
     this.clientManagementService.getAllClients().subscribe({
       next: (data) => {
-        this.clients = data;
-        this.cdr.detectChanges();
+        this.allClients = data;
+        this.filterClients();
       },
       error: (err) => console.error('Failed to load clients', err)
     });
+  }
+
+  filterClients() {
+    const nameTerm = this.searchName.toLowerCase().trim();
+    const emailTerm = this.searchEmail.toLowerCase().trim();
+    const phoneTerm = this.searchPhone.toLowerCase().trim();
+
+    this.clients = this.allClients.filter(client => {
+      const matchName = !nameTerm || (client.contactPerson && client.contactPerson.toLowerCase().includes(nameTerm));
+      const matchEmail = !emailTerm || (client.email && client.email.toLowerCase().includes(emailTerm));
+      const matchPhone = !phoneTerm || (client.phone && client.phone.toLowerCase().includes(phoneTerm));
+      
+      return matchName && matchEmail && matchPhone;
+    });
+    
+    this.cdr.detectChanges();
   }
 
   toggleStatus(clientId: string, isActive: boolean) {

@@ -606,10 +606,7 @@ export class CreateClientLoginDialogComponent implements OnInit {
   onSubmit() {
     if (!this.isFormValid()) return;
 
-    setTimeout(() => {
-      this.loading = true;
-      this.cdr.detectChanges();
-    });
+    this.loading = true;
 
     const conversionData = {
       ...this.basicForm.value,

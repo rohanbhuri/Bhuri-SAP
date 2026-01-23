@@ -97,8 +97,8 @@ export class CatalogueService {
     }
 
     // Export
-    exportProducts(): Observable<Blob> {
-        return this.http.get(`${this.apiUrl}/export/products`, { responseType: 'blob' });
+    exportProducts(params: any = {}): Observable<Blob> {
+        return this.http.get(`${this.apiUrl}/export/products`, { params, responseType: 'blob' });
     }
 
     exportCategories(): Observable<Blob> {

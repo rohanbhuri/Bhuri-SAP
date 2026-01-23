@@ -147,6 +147,7 @@ import Quill from 'quill';
               <div class="form-row">
                 <mat-checkbox formControlName="isPublished">Published</mat-checkbox>
                 <mat-checkbox formControlName="isExclusive">Exclusive (Login Required)</mat-checkbox>
+                <mat-checkbox formControlName="isFeatured">Featured</mat-checkbox>
               </div>
             </form>
           </div>
@@ -721,6 +722,7 @@ export class ProductDialogComponent implements OnInit, AfterViewInit {
       designerId: [''],
       isPublished: [false],
       isExclusive: [false],
+      isFeatured: [false],
       dimensionShape: ['rectangle'],
       dimensionUnit: ['cm'],
       widthMin: [0],
@@ -766,6 +768,7 @@ export class ProductDialogComponent implements OnInit, AfterViewInit {
         designerId: p.designerId,
         isPublished: p.isPublished,
         isExclusive: p.isExclusive || false,
+        isFeatured: p.isFeatured || false,
         dimensionShape: p.dimensionConfig?.shape || 'rectangle',
         dimensionUnit: p.dimensionConfig?.unit || 'cm',
         widthMin: p.dimensionConfig?.width?.min || 0,

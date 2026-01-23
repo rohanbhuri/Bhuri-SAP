@@ -53,7 +53,7 @@ import { UploadUrlPipe } from '../../../pipes/upload-url.pipe';
             </button>
             <button mat-menu-item (click)="exportProducts()">
               <mat-icon>file_download</mat-icon>
-              <span>Export Products</span>
+              <span>Export All Products</span>
             </button>
           </mat-menu>
           <input #fileInput type="file" accept=".csv" (change)="onFileSelected($event)" style="display:none">
@@ -111,6 +111,15 @@ import { UploadUrlPipe } from '../../../pipes/upload-url.pipe';
         </mat-form-field>
 
         <mat-form-field appearance="outline">
+          <mat-label>Featured</mat-label>
+          <mat-select [(ngModel)]="selectedIsFeatured" (selectionChange)="onFilterChange()">
+            <mat-option [value]="null">All Products</mat-option>
+            <mat-option [value]="true">Featured Only</mat-option>
+            <mat-option [value]="false">Non-Featured Only</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
           <mat-label>Status</mat-label>
           <mat-select [(ngModel)]="selectedIsPublished" (selectionChange)="onFilterChange()">
             <mat-option [value]="null">All Status</mat-option>
@@ -120,6 +129,10 @@ import { UploadUrlPipe } from '../../../pipes/upload-url.pipe';
         </mat-form-field>
 
         <button mat-stroked-button (click)="resetFilters()">Reset</button>
+        <button mat-stroked-button color="primary" [disabled]="!hasActiveFilters" (click)="exportFilteredProducts()">
+          <mat-icon>download</mat-icon>
+          Export products from filter
+        </button>
       </div>
       
       <div class="table-container">
@@ -170,9 +183,12 @@ import { UploadUrlPipe } from '../../../pipes/upload-url.pipe';
           <ng-container matColumnDef="status">
             <th mat-header-cell *matHeaderCellDef>Status</th>
             <td mat-cell *matCellDef="let product">
-              <mat-chip [color]="product.isPublished ? 'primary' : 'warn'">
-                {{ product.isPublished ? 'Published' : 'Draft' }}
-              </mat-chip>
+              <div class="status-cell">
+                <mat-chip [color]="product.isPublished ? 'primary' : 'warn'">
+                  {{ product.isPublished ? 'Published' : 'Draft' }}
+                </mat-chip>
+                <mat-icon *ngIf="product.isFeatured" class="featured-icon" title="Featured Product">star</mat-icon>
+              </div>
             </td>
           </ng-container>
 
@@ -304,6 +320,14 @@ import { UploadUrlPipe } from '../../../pipes/upload-url.pipe';
       font-size: 0.75rem;
       color: #666;
     }
+    .status-cell {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .featured-icon {
+      color: #ffd700;
+    }
   `]
 })
 export class ProductsPageComponent implements OnInit {
@@ -321,6 +345,7 @@ export class ProductsPageComponent implements OnInit {
   selectedCollectionId = '';
   selectedDesignerId = '';
   selectedIsExclusive: boolean | null = null;
+  selectedIsFeatured: boolean | null = null;
   selectedIsPublished: boolean | null = null;
 
   categories = signal<any[]>([]);
@@ -347,6 +372,9 @@ export class ProductsPageComponent implements OnInit {
 
     if (this.selectedIsExclusive !== null) {
       params.isExclusive = this.selectedIsExclusive;
+    }
+    if (this.selectedIsFeatured !== null) {
+      params.isFeatured = this.selectedIsFeatured;
     }
     if (this.selectedIsPublished !== null) {
       params.isPublished = this.selectedIsPublished;
@@ -375,6 +403,7 @@ export class ProductsPageComponent implements OnInit {
     this.selectedCollectionId = '';
     this.selectedDesignerId = '';
     this.selectedIsExclusive = null;
+    this.selectedIsFeatured = null;
     this.selectedIsPublished = null;
     this.pageIndex.set(0);
     this.loadProducts();
@@ -503,6 +532,46 @@ export class ProductsPageComponent implements OnInit {
       });
     }
     event.target.value = '';
+  }
+
+  get hasActiveFilters(): boolean {
+    return !!(
+      this.searchQuery ||
+      this.selectedCategoryId ||
+      this.selectedCollectionId ||
+      this.selectedDesignerId ||
+      this.selectedIsExclusive !== null ||
+      this.selectedIsFeatured !== null ||
+      this.selectedIsPublished !== null
+    );
+  }
+
+  exportFilteredProducts() {
+    const params: any = {
+      search: this.searchQuery,
+      categoryId: this.selectedCategoryId,
+      collectionId: this.selectedCollectionId,
+      designerId: this.selectedDesignerId
+    };
+
+    if (this.selectedIsExclusive !== null) {
+      params.isExclusive = this.selectedIsExclusive;
+    }
+    if (this.selectedIsFeatured !== null) {
+      params.isFeatured = this.selectedIsFeatured;
+    }
+    if (this.selectedIsPublished !== null) {
+      params.isPublished = this.selectedIsPublished;
+    }
+
+    this.catalogueService.exportProducts(params).subscribe(blob => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'filtered_products.csv';
+      a.click();
+      window.URL.revokeObjectURL(url);
+    });
   }
 
   exportProducts() {

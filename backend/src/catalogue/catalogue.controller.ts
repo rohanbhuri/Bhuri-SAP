@@ -239,8 +239,8 @@ export class CatalogueController {
 
     // Export
     @Get('export/products')
-    async exportProducts(@Res() res: Response) {
-        const csv = await this.catalogueService.exportProductsCSV();
+    async exportProducts(@Res() res: Response, @Query() query: any) {
+        const csv = await this.catalogueService.exportProductsCSV(query);
         res.header('Content-Type', 'text/csv');
         res.header('Content-Disposition', 'attachment; filename=products.csv');
         res.send(csv);

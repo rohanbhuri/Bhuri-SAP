@@ -92,7 +92,7 @@ export class QuotationsService {
         const quotation = await this.quotationRepository.save({
             quotationNumber: `Q-${Date.now()}`,
             clientId: enquiry.clientId,
-            clientName: client?.companyName || enquiry.customerName,
+            clientName: client?.contactPerson || enquiry.customerName,
             clientEmail: client?.email || enquiry.customerEmail,
             enquiryId,
             items: quotationItems,
@@ -352,6 +352,18 @@ export class QuotationsService {
         const presentation = await this.findPresentation(id);
         if (!presentation) throw new NotFoundException('Presentation not found');
 
+        let displayClientName = presentation.clientName || 'Client';
+        if (presentation.clientId) {
+            try {
+                const client = await this.clientRepository.findOneBy({ _id: new ObjectId(presentation.clientId) });
+                if (client && client.contactPerson) {
+                    displayClientName = client.contactPerson;
+                }
+            } catch (e) {
+                console.error('Error fetching client for PPTX generation:', e);
+            }
+        }
+
         const pptx = new PptxGenJS();
         pptx.layout = 'LAYOUT_WIDE';
         pptx.defineLayout({ name: 'CUSTOM', width: 10, height: 5.625 });
@@ -397,7 +409,7 @@ export class QuotationsService {
 
         const textColor = presentation.textColor?.replace('#', '') || 'FFFFFF';
         coverSlide.addText('Design Concept For', { x: 3.5, y: 2.5, w: 3, h: 0.3, fontSize: 18, align: 'center', color: textColor });
-        coverSlide.addText(presentation.clientName || 'Client', { x: 3.5, y: 2.9, w: 3, h: 0.4, fontSize: 24, bold: true, align: 'center', color: textColor });
+        coverSlide.addText(displayClientName, { x: 3.5, y: 2.9, w: 3, h: 0.4, fontSize: 24, bold: true, align: 'center', color: textColor });
 
         // Layout slide (Slide 2)
         if (presentation.layoutImage) {
@@ -584,7 +596,7 @@ export class QuotationsService {
         if (!quotation) throw new NotFoundException('Quotation not found');
 
         const client = await this.clientRepository.findOneBy({ _id: new ObjectId(quotation.clientId) });
-        const clientName = client ? `${client.companyName} - ${client.contactPerson}` : quotation.clientName;
+        const clientName = client ? client.contactPerson : quotation.clientName;
 
         // Helper function to download image from URL
         const downloadImage = (url: string): Promise<Buffer> => {

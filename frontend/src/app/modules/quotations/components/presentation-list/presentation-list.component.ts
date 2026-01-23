@@ -58,7 +58,7 @@ import { QuotationDialogComponent } from '../../dialogs/quotation-dialog.compone
           <td mat-cell *matCellDef="let p">
             <button mat-icon-button [disabled]="p.status !== 'draft'" (click)="editPresentation(p)" matTooltip="Edit (Draft only)"><mat-icon>edit</mat-icon></button>
             <button mat-icon-button [disabled]="p.status !== 'draft'" (click)="markAsFinal(p)" matTooltip="Mark as Final"><mat-icon>check_circle</mat-icon></button>
-            <button mat-icon-button [disabled]="p.status !== 'final'" (click)="sendToClient(p)" matTooltip="Send to Client"><mat-icon>send</mat-icon></button>
+
             <button mat-icon-button [disabled]="p.status === 'draft'" (click)="convertToQuotation(p)" [matTooltip]="p.quotationId ? 'Go to Quotation' : 'Convert to Quotation (Final/Sent only)'"><mat-icon>{{p.quotationId ? 'open_in_new' : 'request_quote'}}</mat-icon></button>
             <button mat-icon-button (click)="downloadPresentation(p._id)"><mat-icon>download</mat-icon></button>
             <button mat-icon-button color="warn" (click)="deletePresentation(p._id)"><mat-icon>delete</mat-icon></button>
@@ -187,17 +187,7 @@ export class PresentationListComponent implements OnInit {
     }
   }
 
-  sendToClient(presentation: any) {
-    if (confirm('Send this presentation to client?')) {
-      this.quotationsService.sendPresentationToClient(presentation._id).subscribe({
-        next: () => {
-          this.snackBar.open('Presentation sent to client', 'Close', { duration: 3000 });
-          this.loadPresentations();
-        },
-        error: (err) => this.snackBar.open(err.error?.message || 'Failed to send to client', 'Close', { duration: 3000 })
-      });
-    }
-  }
+
 
   getStatusColor(status: string): string {
     switch (status) {

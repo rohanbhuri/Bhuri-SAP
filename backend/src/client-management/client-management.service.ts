@@ -51,7 +51,7 @@ export class ClientManagementService {
     const payload = {
       email: user.email,
       sub: user._id.toString(),
-      organizationId: user.organizationId?.toString() || user.organizationIds[0]?.toString(),
+      organizationId: user.organizationId?.toString() || user.organizationIds?.[0]?.toString(),
       roles: roles.map(r => r.type)
     };
 
@@ -167,15 +167,7 @@ export class ClientManagementService {
         throw new ConflictException('User with this email already exists');
       }
 
-      const organization = this.organizationRepository.create({
-        name: conversionData.companyName || request.companyName,
-        code: (conversionData.companyName || request.companyName).toLowerCase().replace(/\s+/g, '-'),
-        description: conversionData.industry || request.industry || '',
-        isPublic: false,
-        memberCount: 1,
-        activeModuleIds: []
-      });
-      const savedOrg = await this.organizationRepository.save(organization);
+
 
       let clientRole = await this.roleRepository.findOne({ 
         where: { type: RoleType.CLIENT } 
@@ -201,15 +193,14 @@ export class ClientManagementService {
         firstName: conversionData.firstName || request.contactPerson.split(' ')[0],
         lastName: conversionData.lastName || request.contactPerson.split(' ').slice(1).join(' '),
         isActive: true,
-        organizationId: savedOrg._id,
-        organizationIds: [savedOrg._id],
+        organizationIds: [],
         roleIds: [clientRole._id]
       } as any);
       const savedUser = await this.userRepository.save(user) as unknown as User;
 
       const client = this.clientRepository.create({
+        _id: savedUser._id,
         userId: savedUser._id,
-        organizationId: savedOrg._id,
         companyName: conversionData.companyName || request.companyName,
         contactPerson: `${conversionData.firstName} ${conversionData.lastName}`,
         email: conversionData.email || request.email,
@@ -239,7 +230,7 @@ export class ClientManagementService {
 
       request.status = ClientRequestStatus.CONVERTED;
       request.convertedUserId = (savedUser as any)._id;
-      request.convertedOrganizationId = savedOrg._id;
+      // request.convertedOrganizationId = savedOrg._id;
       request.reviewedBy = new ObjectId(adminUserId);
       request.reviewedAt = new Date();
       await this.clientRequestRepository.save(request);
@@ -247,7 +238,7 @@ export class ClientManagementService {
       return {
         client: savedClient,
         user: { ...(savedUser as any), password: undefined },
-        organization: savedOrg,
+        organization: null,
         credentials: { email: (savedUser as any).email, password }
       };
     } catch (error) {
@@ -379,7 +370,7 @@ export class ClientManagementService {
         lastName: credentialData.lastName || client.contactPerson.split(' ').slice(1).join(' '),
         isActive: true,
         organizationId: client.organizationId,
-        organizationIds: [client.organizationId],
+        organizationIds: client.organizationId ? [client.organizationId] : [],
         roleIds: [clientRole._id],
         forcePasswordChange: true
       } as any);

@@ -9,8 +9,8 @@ export class Client {
   @Column()
   userId: ObjectId;
 
-  @Column()
-  organizationId: ObjectId;
+  @Column({ nullable: true })
+  organizationId?: ObjectId;
 
   @Column()
   companyName: string;

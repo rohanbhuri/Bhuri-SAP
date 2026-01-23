@@ -91,16 +91,7 @@ import { PreferencesService } from '../../../../services/preferences.service';
                   <mat-icon>check_circle</mat-icon>
                   Approve
                 </button>
-                <button mat-menu-item (click)="sendQuotation(quote._id, 'email')" 
-                        [disabled]="quote.status !== 'approved'">
-                  <mat-icon>email</mat-icon>
-                  Send via Email
-                </button>
-                <button mat-menu-item (click)="sendQuotation(quote._id, 'whatsapp')" 
-                        [disabled]="quote.status !== 'approved'">
-                  <mat-icon>chat</mat-icon>
-                  Send via WhatsApp
-                </button>
+
                 <button mat-menu-item (click)="deleteQuotation(quote._id)" 
                         [disabled]="quote.status !== 'draft'">
                   <mat-icon>delete</mat-icon>
@@ -209,14 +200,7 @@ export class QuotationListComponent implements OnInit {
     });
   }
 
-  sendQuotation(id: string, via: 'email' | 'whatsapp') {
-    this.quotationsService.sendQuotation(id, via).subscribe({
-      next: () => {
-        this.snackBar.open(`Quotation sent via ${via}`, 'Close', { duration: 3000 });
-        this.loadQuotations();
-      }
-    });
-  }
+
 
   deleteQuotation(id: string) {
     if (confirm('Are you sure you want to delete this quotation?')) {

@@ -8,6 +8,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
 import { MatRadioModule } from '@angular/material/radio';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatChipsModule } from '@angular/material/chips';
+import { Observable } from 'rxjs';
+import { map, startWith, debounceTime } from 'rxjs/operators';
+import { FormControl, AbstractControl } from '@angular/forms';
 import { QuotationsService } from '../quotations.service';
 import { CatalogueService } from '../../catalogue/catalogue.service';
 import { ClientManagementService } from '../../client-management/services/client-management.service';
@@ -19,7 +24,8 @@ import { getBrandConfig } from '../../../brand.config';
   standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, MatDialogModule, MatFormFieldModule,
-    MatInputModule, MatButtonModule, MatSelectModule, MatIconModule, MatRadioModule
+    MatInputModule, MatButtonModule, MatSelectModule, MatIconModule, MatRadioModule,
+    MatAutocompleteModule, MatChipsModule
   ],
   template: `
     <h2 mat-dialog-title>{{data ? 'Edit' : 'Create'}} Presentation</h2>
@@ -34,7 +40,7 @@ import { getBrandConfig } from '../../../brand.config';
           <mat-label>Client</mat-label>
           <mat-select formControlName="clientId" required (selectionChange)="onClientChange($event)">
             <mat-option *ngFor="let client of clients" [value]="client._id">
-              {{client.companyName}} - {{client.contactPerson}}
+              {{client.contactPerson}}
             </mat-option>
           </mat-select>
         </mat-form-field>
@@ -104,10 +110,22 @@ import { getBrandConfig } from '../../../brand.config';
             </mat-radio-group>
 
             <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Products</mat-label>
-              <mat-select formControlName="productIds" multiple required>
-                <mat-option *ngFor="let product of products" [value]="product._id">{{product.name}}</mat-option>
-              </mat-select>
+              <mat-label>Search Products (Name or Code)</mat-label>
+              <mat-chip-grid #chipGrid aria-label="Product selection">
+                <mat-chip-row *ngFor="let prodId of slide.get('productIds')?.value" (removed)="removeProduct(i, prodId)">
+                  {{getProductName(prodId)}}
+                  <button matChipRemove [attr.aria-label]="'remove ' + getProductName(prodId)">
+                    <mat-icon>cancel</mat-icon>
+                  </button>
+                </mat-chip-row>
+              </mat-chip-grid>
+              <input placeholder="Type to search..." #productInput [formControl]="getSearchControl(i)"
+                 [matChipInputFor]="chipGrid" [matAutocomplete]="auto">
+              <mat-autocomplete #auto="matAutocomplete" (optionSelected)="onProductSelected(i, $event); productInput.value=''">
+                <mat-option *ngFor="let product of getSearchOptions(slide.get('searchControl')) | async" [value]="product._id">
+                  {{product.name}} ({{product.productCode}})
+                </mat-option>
+              </mat-autocomplete>
             </mat-form-field>
 
             <button mat-icon-button color="warn" (click)="removeSlide(i)">
@@ -169,6 +187,9 @@ export class PresentationDialogComponent implements OnInit {
       slides: this.fb.array([])
     });
   }
+  
+  // Cache for search options observables
+  searchOptionsMap = new Map<AbstractControl, Observable<any[]>>();
 
   ngOnInit() {
     this.loadClients();
@@ -189,12 +210,17 @@ export class PresentationDialogComponent implements OnInit {
           ? this.data.layoutImage 
           : `${apiUrl}${this.data.layoutImage}`;
       }
+       
+      // No parallel init needed anymore
+
+      
       this.data.slides?.forEach((slide: any) => {
         this.slides.push(this.fb.group({
           slideNumber: [slide.slideNumber],
           layout: [slide.layout],
           productIds: [slide.productIds],
-          slideTitle: [slide.slideTitle || '']
+          slideTitle: [slide.slideTitle || ''],
+          searchControl: ['']
         }));
       });
     }
@@ -219,17 +245,165 @@ export class PresentationDialogComponent implements OnInit {
   }
 
   loadProducts() {
-    this.catalogueService.getProducts().subscribe(data => {
-      this.products = data;
+    console.log('PresentationDialog: Requesting products with limit 1000, isPublished=true');
+    this.catalogueService.getProducts({ limit: 1000, isPublished: true }).subscribe(data => {
+      console.log('PresentationDialog: Raw API response:', data);
+      
+      if (data && data.items) {
+        this.products = data.items;
+        console.log('PresentationDialog: Encapsulated items found. Total products:', this.products.length);
+      } else if (Array.isArray(data)) {
+        this.products = data;
+        console.log('PresentationDialog: Array response. Total products:', this.products.length);
+      } else {
+        console.warn('PresentationDialog: Unexpected response format', data);
+      }
+
+      
+      
+      // Update validity of all search controls in the slides FormArray
+      this.slides.controls.forEach(slideGroup => {
+          const control = slideGroup.get('searchControl');
+          if (control) {
+            control.updateValueAndValidity({ emitEvent: true });
+          }
+      });
+      
       this.cdr.detectChanges();
     });
+  }
+
+  // Helper to safely get the FormControl for search
+  getSearchControl(index: number): FormControl {
+    return this.slides.at(index).get('searchControl') as FormControl;
+  }
+
+  // Helper to get or create the filtered options observable for a specific control
+  getSearchOptions(control: AbstractControl | null): Observable<any[]> {
+    if (!control) return new Observable(); // Should not happen
+    
+    if (!this.searchOptionsMap.has(control)) {
+      const options$ = control.valueChanges.pipe(
+        startWith(''),
+        debounceTime(300),
+        map(value => this._filterProducts(value || ''))
+      );
+      this.searchOptionsMap.set(control, options$);
+    }
+    
+    return this.searchOptionsMap.get(control)!;
+  }
+  
+  // Clean up cache when removing slides (optional, but good practice)
+  private clearSearchOptionCache(control: AbstractControl) {
+      this.searchOptionsMap.delete(control);
+  }
+
+  // Removed unused methods: getFilteredProducts, getProductSearchControl
+
+
+  private _filterProducts(value: string): any[] {
+    if (!this.products) {
+        console.warn('PresentationDialog: Products not yet loaded');
+        return [];
+    }
+    
+    // Trim and lower case the search term
+    const filterValue = (value || '').toLowerCase().trim();
+    
+    // If empty search, return all products (or maybe slice for performance if needed, but previously we wanted all)
+    // However, mat-autocomplete usually needs ALL options to be available for initial display correctly.
+    // If no filter, just return products.
+    if (!filterValue) {
+        return this.products;
+    }
+
+    const result = this.products.filter(product => {
+      // Safely access properties and ensure they adhere to string type
+      const name = (product.name || '').toLowerCase();
+      const code = (product.productCode || '').toLowerCase();
+      
+      return name.includes(filterValue) || code.includes(filterValue);
+    });
+
+    // Sort to prioritize better matches
+    result.sort((a, b) => {
+      const aName = a.name?.toLowerCase() || '';
+      const bName = b.name?.toLowerCase() || '';
+      const aCode = a.productCode?.toLowerCase() || '';
+      const bCode = b.productCode?.toLowerCase() || '';
+
+      // 1. Exact match works best
+      if (aCode === filterValue) return -1;
+      if (bCode === filterValue) return 1;
+      if (aName === filterValue) return -1;
+      if (bName === filterValue) return 1;
+
+      // 2. Starts with serves better than just includes
+      const aStarts = aName.startsWith(filterValue) || aCode.startsWith(filterValue);
+      const bStarts = bName.startsWith(filterValue) || bCode.startsWith(filterValue);
+      if (aStarts && !bStarts) return -1;
+      if (!aStarts && bStarts) return 1;
+
+      return 0;
+    });
+    
+    console.log(`PresentationDialog: Search "${value}" yielded ${result.length} results from ${this.products.length} products`);
+    return result;
+  }
+
+  getProductName(id: string): string {
+    const product = this.products.find(p => p._id === id);
+    return product ? `${product.name} (${product.productCode})` : 'Unknown Product';
+  }
+
+  onProductSelected(slideIndex: number, event: any) {
+    const productId = event.option.value;
+    const slide = this.slides.at(slideIndex);
+    const currentProducts = slide.get('productIds')?.value || [];
+    
+    const layout = slide.get('layout')?.value;
+
+    if (layout === 'single') {
+      // Replace existing with new one
+      slide.patchValue({
+         productIds: [productId]
+      });
+    } else {
+      // Multiple mode
+      if (!currentProducts.includes(productId)) {
+        slide.patchValue({
+          productIds: [...currentProducts, productId]
+        });
+      }
+    }
+    
+    // Reset search input
+    const control = this.slides.at(slideIndex).get('searchControl');
+    if (control) {
+        control.setValue('');
+    }
+  }
+
+  removeProduct(slideIndex: number, productId: string) {
+    const slide = this.slides.at(slideIndex);
+    const currentProducts = slide.get('productIds')?.value || [];
+    const index = currentProducts.indexOf(productId);
+
+    if (index >= 0) {
+      const newProducts = [...currentProducts];
+      newProducts.splice(index, 1);
+      slide.patchValue({
+        productIds: newProducts
+      });
+    }
   }
 
   onClientChange(event: any) {
     const client = this.clients.find(c => c._id === event.value);
     if (client) {
       this.form.patchValue({ 
-        clientName: `${client.companyName} - ${client.contactPerson}`
+        clientName: client.contactPerson
       });
     }
   }
@@ -239,11 +413,16 @@ export class PresentationDialogComponent implements OnInit {
       slideNumber: [this.slides.length + 3],
       layout: ['single'],
       productIds: [[], Validators.required],
-      slideTitle: ['']
+      slideTitle: [''],
+      searchControl: ['']
     }));
   }
 
   removeSlide(index: number) {
+    const control = this.slides.at(index).get('searchControl');
+    if (control) {
+        this.clearSearchOptionCache(control);
+    }
     this.slides.removeAt(index);
   }
 
@@ -303,7 +482,15 @@ export class PresentationDialogComponent implements OnInit {
 
   async save() {
     if (this.form.valid) {
-      let formData = this.form.value;
+      const formValue = this.form.value;
+      
+      // Clean up searchControl from slides before saving
+      const slides = formValue.slides.map((slide: any) => {
+          const { searchControl, ...rest } = slide;
+          return rest;
+      });
+      
+      let formData = { ...formValue, slides };
       
       if (this.coverImageFile) {
         const uploadedUrl = await this.uploadCoverImage();

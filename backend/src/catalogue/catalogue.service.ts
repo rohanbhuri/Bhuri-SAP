@@ -32,6 +32,7 @@ export class CatalogueService {
         collectionId?: string;
         designerId?: string;
         isExclusive?: string | boolean;
+        isFeatured?: string | boolean;
         isPublished?: string | boolean;
     } = {}): Promise<{ items: Product[]; total: number }> {
         const page = Number(query.page) || 1;
@@ -57,6 +58,10 @@ export class CatalogueService {
 
         if (query.designerId) {
             where.designerId = query.designerId;
+        }
+
+        if (query.isFeatured !== undefined) {
+            where.isFeatured = query.isFeatured === 'true' || query.isFeatured === true;
         }
 
         if (query.isExclusive !== undefined) {
@@ -318,12 +323,56 @@ export class CatalogueService {
     }
 
     // Export
-    async exportProductsCSV(): Promise<string> {
-        const products = await this.productRepository.find();
+    async exportProductsCSV(query: { 
+        search?: string; 
+        categoryId?: string; 
+        collectionId?: string;
+        designerId?: string;
+        isExclusive?: string | boolean;
+        isFeatured?: string | boolean;
+        isPublished?: string | boolean;
+    } = {}): Promise<string> {
+        const where: any = {};
+
+        if (query.search) {
+            where.$or = [
+                { name: { $regex: query.search, $options: 'i' } },
+                { productCode: { $regex: query.search, $options: 'i' } }
+            ];
+        }
+
+        if (query.categoryId) {
+            where.categoryId = query.categoryId;
+        }
+
+        if (query.collectionId) {
+            where.collectionId = query.collectionId;
+        }
+
+        if (query.designerId) {
+            where.designerId = query.designerId;
+        }
+
+        if (query.isFeatured !== undefined) {
+             where.isFeatured = query.isFeatured === 'true' || query.isFeatured === true;
+        }
+
+        if (query.isExclusive !== undefined) {
+            where.isExclusive = query.isExclusive === 'true' || query.isExclusive === true;
+        }
+
+        if (query.isPublished !== undefined) {
+            where.isPublished = query.isPublished === 'true' || query.isPublished === true;
+        }
+
+        const products = await this.productRepository.find({
+            where,
+            order: { createdAt: 'DESC' }
+        } as any);
         const headers = [
             '_id', 'name', 'productCode', 'slug', 'description', 'descriptionHtml',
             'basePrice', 'currency', 'featuredImage', 'imageGallery', 'videos', 'models3d',
-            'categoryId', 'collectionId', 'designerId', 'tags', 'isPublished', 'isExclusive',
+            'categoryId', 'collectionId', 'designerId', 'tags', 'isPublished', 'isExclusive', 'isFeatured',
             'dimensionConfig', 'variations', 'attributes', 'seo', 'createdAt', 'updatedAt'
         ];
         const rows = products.map(p => [
@@ -345,6 +394,7 @@ export class CatalogueService {
             p.tags?.join('; ') || '',
             p.isPublished ? 'true' : 'false',
             p.isExclusive ? 'true' : 'false',
+            p.isFeatured ? 'true' : 'false',
             JSON.stringify(p.dimensionConfig),
             JSON.stringify(p.variations),
             JSON.stringify(p.attributes),
@@ -419,7 +469,7 @@ export class CatalogueService {
         const headers = [
             '_id', 'name', 'productCode', 'slug', 'description', 'descriptionHtml',
             'basePrice', 'currency', 'featuredImage', 'imageGallery', 'videos', 'models3d',
-            'categoryId', 'collectionId', 'designerId', 'tags', 'isPublished', 'isExclusive',
+            'categoryId', 'collectionId', 'designerId', 'tags', 'isPublished', 'isExclusive', 'isFeatured',
             'dimensionConfig', 'variations', 'attributes', 'seo', 'createdAt', 'updatedAt'
         ];
         return headers.map(h => `"${h}"`).join(',');

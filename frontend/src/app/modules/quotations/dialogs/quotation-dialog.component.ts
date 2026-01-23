@@ -14,7 +14,7 @@ import { ClientManagementService } from '../../client-management/services/client
 import { CatalogueService } from '../../catalogue/catalogue.service';
 import { PreferencesService } from '../../../services/preferences.service';
 import { Observable } from 'rxjs';
-import { map, startWith } from 'rxjs/operators';
+import { map, startWith, debounceTime } from 'rxjs/operators';
 
 @Component({
   selector: 'app-quotation-dialog',
@@ -40,7 +40,7 @@ import { map, startWith } from 'rxjs/operators';
           <input matInput formControlName="clientSearch" [matAutocomplete]="autoClient" placeholder="Type to search...">
           <mat-autocomplete #autoClient="matAutocomplete" (optionSelected)="onClientSelected($event)" [displayWith]="displayClient">
             <mat-option *ngFor="let client of filteredClients | async" [value]="client">
-              {{ client.companyName }} - {{ client.contactPerson }}
+              {{ client.contactPerson }}
             </mat-option>
           </mat-autocomplete>
         </mat-form-field>
@@ -54,7 +54,7 @@ import { map, startWith } from 'rxjs/operators';
                 <input matInput formControlName="productSearch" [matAutocomplete]="autoProduct" placeholder="Type to search...">
                 <mat-autocomplete #autoProduct="matAutocomplete" (optionSelected)="onProductSelected(i, $event)" [displayWith]="displayProduct">
                   <mat-option *ngFor="let product of getFilteredProducts(i) | async" [value]="product">
-                    {{ product.name }} - {{currencySymbol}}{{ product.basePrice }}
+                    {{ product.name }} ({{ product.productCode }})
                   </mat-option>
                 </mat-autocomplete>
               </mat-form-field>
@@ -185,6 +185,7 @@ import { map, startWith } from 'rxjs/operators';
     </mat-dialog-actions>
   `,
   styles: [`
+    mat-dialog-content { max-height: 70vh; overflow-y: auto; }
     .full-width { width: 100%; margin-bottom: 16px; }
     .item-card { border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px; margin-bottom: 16px; background: #fafafa; }
     .item-row { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px; }
@@ -442,8 +443,20 @@ export class QuotationDialogComponent implements OnInit {
   }
 
   loadProducts() {
-    this.catalogueService.getProducts().subscribe((products: any) => {
-      this.products = products;
+    console.log('QuotationDialog: Requesting products with limit 1000, isPublished=true');
+    this.catalogueService.getProducts({ limit: 1000, isPublished: true }).subscribe((data: any) => {
+      console.log('QuotationDialog: Raw API response:', data);
+      
+      if (data && data.items) {
+        this.products = data.items;
+        console.log('QuotationDialog: Encapsulated items found. Total products:', this.products.length);
+      } else if (Array.isArray(data)) {
+        this.products = data;
+        console.log('QuotationDialog: Array response. Total products:', this.products.length);
+      } else {
+        console.warn('QuotationDialog: Unexpected response format', data);
+      }
+      
       this.cdr.detectChanges();
     });
   }
@@ -465,23 +478,50 @@ export class QuotationDialogComponent implements OnInit {
   }
 
   private _filterProducts(value: string): any[] {
-    const filterValue = value.toLowerCase();
-    return this.products.filter(product => 
+    if (!this.products) {
+        console.warn('QuotationDialog: Products not yet loaded');
+        return [];
+    }
+    
+    const filterValue = value.toLowerCase().trim();
+    
+    if (!filterValue) {
+        return this.products;
+    }
+    
+    const result = this.products.filter(product => 
       product.name?.toLowerCase().includes(filterValue) ||
       product.productCode?.toLowerCase().includes(filterValue)
-    ).slice(0, 50);
+    );
+    
+    console.log(`QuotationDialog: Search "${value}" yielded ${result.length} results from ${this.products.length} products`);
+    return result;
   }
 
   getFilteredProducts(index: number): Observable<any[]> {
     const item = this.items.at(index);
-    return item.get('productSearch')!.valueChanges.pipe(
-      startWith(''),
-      map(value => this._filterProducts(typeof value === 'string' ? value : value?.name || ''))
+    const control = item.get('productSearch')!;
+    
+    return control.valueChanges.pipe(
+      startWith(control.value || ''),
+      map(value => {
+        // Extract string from value - could be string, object, or empty
+        let searchTerm = '';
+        if (typeof value === 'string') {
+          searchTerm = value;
+        } else if (value && typeof value === 'object') {
+          // If it's an object (selected product), use its name for display but don't filter
+          searchTerm = value.name || '';
+        }
+        
+        console.log(`QuotationDialog: Filtering products for item ${index}, search term: "${searchTerm}"`);
+        return this._filterProducts(searchTerm);
+      })
     );
   }
 
   displayClient(client: any): string {
-    return client ? `${client.companyName} - ${client.contactPerson}` : '';
+    return client ? client.contactPerson : '';
   }
 
   displayProduct(product: any): string {
@@ -697,7 +737,7 @@ export class QuotationDialogComponent implements OnInit {
 
       const quotation = {
         clientId: this.selectedClient._id,
-        clientName: this.selectedClient.companyName,
+        clientName: this.selectedClient.contactPerson,
         clientEmail: this.selectedClient.email,
         items: quotationItems,
         subtotal,

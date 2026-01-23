@@ -58,6 +58,9 @@ export class Product {
     @Column({ default: false })
     isExclusive: boolean;
 
+    @Column({ default: false })
+    isFeatured: boolean;
+
     // Dimension configuration (flexible for different product types)
     @Column({ type: 'json', default: {} })
     dimensionConfig: {
@@ -121,6 +124,7 @@ export class Product {
         this.seo = {};
         this.isPublished = false;
         this.isExclusive = false;
+        this.isFeatured = false;
         this.createdAt = new Date();
     }
 }
