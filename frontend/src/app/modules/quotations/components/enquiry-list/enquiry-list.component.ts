@@ -8,7 +8,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { QuotationsService } from '../../quotations.service';
-import { ClientManagementService } from '../../../client-management/services/client-management.service';
+
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { EnquiryDialogComponent } from '../../dialogs/enquiry-dialog.component';
 import { QuotationDialogComponent } from '../../dialogs/quotation-dialog.component';
@@ -70,16 +70,7 @@ import { PresentationDialogComponent } from '../../dialogs/presentation-dialog.c
           <th mat-header-cell *matHeaderCellDef>Actions</th>
           <td mat-cell *matCellDef="let enquiry">
             <div class="action-buttons">
-              <!-- Client Button -->
-              <button 
-                *ngIf="!enquiry.clientId" 
-                mat-raised-button 
-                color="accent"
-                (click)="createClient(enquiry._id, enquiry)"
-                class="btn-create-client"
-                matTooltip="Create client from enquiry">
-                <mat-icon>person_add</mat-icon>
-              </button>
+
 
               <!-- Presentation Buttons -->
               <button 
@@ -193,10 +184,7 @@ import { PresentationDialogComponent } from '../../dialogs/presentation-dialog.c
       height: 36px;
     }
 
-    .btn-create-client {
-      background-color: #ff9800 !important;
-      color: white !important;
-    }
+
 
     .btn-presentation {
       background-color: #2196f3 !important;
@@ -222,7 +210,7 @@ import { PresentationDialogComponent } from '../../dialogs/presentation-dialog.c
 })
 export class EnquiryListComponent implements OnInit {
   private quotationsService = inject(QuotationsService);
-  private clientService = inject(ClientManagementService);
+
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
 
@@ -317,30 +305,7 @@ export class EnquiryListComponent implements OnInit {
     });
   }
 
-  /**
-   * Create a new client from the enquiry data
-   */
-  createClient(enquiryId: string, enquiry: any) {
-    const clientData = {
-      name: enquiry.customerName,
-      email: enquiry.customerEmail,
-      phone: enquiry.customerPhone,
-      company: enquiry.company,
-      enquiryId: enquiryId
-    };
 
-    this.clientService.convertToClient(enquiryId, clientData).subscribe({
-      next: (response) => {
-        this.snackBar.open('Client created successfully', 'Close', { duration: 3000 });
-        enquiry.clientId = response.clientId;
-        this.enquiries.set([...this.enquiries()]);
-      },
-      error: (err) => {
-        this.snackBar.open('Failed to create client', 'Close', { duration: 3000 });
-        console.error('Error creating client:', err);
-      }
-    });
-  }
 
   /**
    * View presentation details (navigate or open modal)
