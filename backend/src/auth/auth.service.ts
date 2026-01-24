@@ -30,10 +30,18 @@ export class AuthService {
     return null;
   }
 
-  async login(email: string, password: string) {
-    const user = await this.validateUser(email, password);
-    if (!user) {
+  async login(email: string, password: string, deviceId?: string, userAgent?: string) {
+    const user = await this.userRepository.findOne({ where: { email } });
+    if (!user || !(await bcrypt.compare(password, user.password))) {
       throw new UnauthorizedException('Invalid credentials');
+    }
+
+    if (!user.isActive) {
+      throw new UnauthorizedException('User account is inactive');
+    }
+
+    if (deviceId) {
+      await this.handleSession(user, deviceId, userAgent);
     }
 
     const roles = await this.roleRepository.find({
@@ -43,14 +51,54 @@ export class AuthService {
     const payload = { 
       email: user.email, 
       sub: user._id.toString(), 
-      organizationId: user.organizationId?.toString() || user.organizationIds[0]?.toString(),
-      roles: roles.map(r => r.type)
+      organizationId: user.organizationId?.toString() || user.organizationIds?.[0]?.toString(),
+      roles: roles.map(r => r.type),
+      deviceId
     };
 
+    const { password: _, ...userWithoutPassword } = user;
     return {
       access_token: this.jwtService.sign(payload),
-      user,
+      user: userWithoutPassword,
     };
+  }
+
+  private async handleSession(user: User, deviceId: string, userAgent?: string) {
+    if (!user.activeDevices) {
+      user.activeDevices = [];
+    }
+
+    const existingDeviceIndex = user.activeDevices.findIndex(d => d.deviceId === deviceId);
+
+    if (existingDeviceIndex !== -1) {
+      user.activeDevices[existingDeviceIndex].lastActive = new Date();
+      user.activeDevices[existingDeviceIndex].userAgent = userAgent;
+    } else {
+      if (user.maxDevices && user.activeDevices.length >= user.maxDevices) {
+        throw new UnauthorizedException(`Maximum device limit reached (${user.maxDevices}). Please logout from another device.`);
+      }
+      user.activeDevices.push({
+        deviceId,
+        lastActive: new Date(),
+        userAgent
+      });
+    }
+
+    await this.userRepository.save(user);
+  }
+
+  async logout(userId: string, deviceId?: string) {
+    const user = await this.userRepository.findOne({ where: { _id: new ObjectId(userId) } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (deviceId && user.activeDevices) {
+      user.activeDevices = user.activeDevices.filter(d => d.deviceId !== deviceId);
+      await this.userRepository.save(user);
+    }
+
+    return { success: true, message: 'Logged out successfully' };
   }
 
   async getProfile(userId: string) {

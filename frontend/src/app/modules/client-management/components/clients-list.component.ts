@@ -92,6 +92,10 @@ import { CreateClientLoginDialogComponent } from './create-client-login-dialog.c
                 <mat-icon>more_vert</mat-icon>
               </button>
               <mat-menu #menu="matMenu">
+                <button mat-menu-item (click)="editClient(client)">
+                  <mat-icon>edit</mat-icon>
+                  <span>Edit</span>
+                </button>
                 <button mat-menu-item (click)="toggleStatus(client._id, !client.isActive)">
                   <mat-icon>{{ client.isActive ? 'block' : 'check_circle' }}</mat-icon>
                   <span>{{ client.isActive ? 'Deactivate' : 'Activate' }}</span>
@@ -250,6 +254,20 @@ export class ClientsListComponent implements OnInit {
     const dialogRef = this.dialog.open(CreateClientLoginDialogComponent, {
       width: '800px',
       data: null,
+      disableClose: true
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loadClients();
+      }
+    });
+  }
+
+  editClient(client: any) {
+    const dialogRef = this.dialog.open(CreateClientLoginDialogComponent, {
+      width: '800px',
+      data: client,
       disableClose: true
     });
 

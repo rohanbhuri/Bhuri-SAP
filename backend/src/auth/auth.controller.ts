@@ -4,7 +4,7 @@ import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { Public } from '../decorators/public.decorator';
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsString, MinLength, IsOptional } from 'class-validator';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 
@@ -15,6 +15,10 @@ class LoginDto {
   @IsString()
   @MinLength(6)
   password: string;
+
+  @IsString()
+  @IsOptional()
+  deviceId?: string;
 }
 
 class SignupDto {
@@ -49,8 +53,15 @@ export class AuthController {
 
   @Public()
   @Post('login')
-  async login(@Body() loginDto: LoginDto) {
-    return this.authService.login(loginDto.email, loginDto.password);
+  async login(@Body() loginDto: LoginDto, @Request() req) {
+    const userAgent = req.headers['user-agent'];
+    return this.authService.login(loginDto.email, loginDto.password, loginDto.deviceId, userAgent);
+  }
+
+  @Post('logout')
+  @UseGuards(JwtAuthGuard)
+  async logout(@Request() req, @Body() body: { deviceId?: string }) {
+    return this.authService.logout(req.user.sub, body.deviceId || req.user.deviceId);
   }
 
   @Public()

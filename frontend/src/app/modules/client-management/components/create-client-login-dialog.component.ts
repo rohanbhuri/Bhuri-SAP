@@ -35,7 +35,7 @@ import { ClientManagementService } from '../services/client-management.service';
   template: `
     <div class="dialog-container">
       <div class="dialog-header">
-        <h2>{{ data ? 'Create Client Login' : 'Add New Client' }}</h2>
+        <h2>{{ isEditMode ? 'Edit Client' : (data ? 'Create Client Login' : 'Add New Client') }}</h2>
         <button mat-icon-button (click)="onCancel()" [disabled]="loading">
           <mat-icon>close</mat-icon>
         </button>
@@ -90,7 +90,7 @@ import { ClientManagementService } from '../services/client-management.service';
                 </div>
               </div>
 
-              <div class="form-section">
+              <div class="form-section" *ngIf="!isEditMode">
                 <h3 class="section-title">Login Credentials</h3>
                 <div class="form-row">
                   <mat-form-field appearance="outline">
@@ -310,7 +310,7 @@ import { ClientManagementService } from '../services/client-management.service';
           (click)="onSubmit()" 
           [disabled]="loading || !isFormValid()">
           <mat-icon *ngIf="loading">hourglass_empty</mat-icon>
-          {{ loading ? (data ? 'Converting...' : 'Creating...') : (data ? 'Create Login' : 'Add Client') }}
+          {{ loading ? (isEditMode ? 'Updating...' : (data ? 'Converting...' : 'Creating...')) : (isEditMode ? 'Update Client' : (data ? 'Create Login' : 'Add Client')) }}
         </button>
       </div>
     </div>
@@ -519,6 +519,7 @@ export class CreateClientLoginDialogComponent implements OnInit {
   credentials: any = null;
   hidePassword = true;
   hideConfirmPassword = true;
+  isEditMode = false;
 
   constructor(
     private fb: FormBuilder,
@@ -530,8 +531,9 @@ export class CreateClientLoginDialogComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    this.isEditMode = !!(this.data && (this.data.userId || this.data._id && !this.data.status));
     this.initForms();
-    this.populateFromRequest();
+    this.populateData();
   }
 
   initForms() {
@@ -566,7 +568,7 @@ export class CreateClientLoginDialogComponent implements OnInit {
     });
   }
 
-  populateFromRequest() {
+  populateData() {
     if (this.data) {
       const nameParts = this.data.contactPerson?.split(' ') || [];
       this.basicForm.patchValue({
@@ -584,7 +586,17 @@ export class CreateClientLoginDialogComponent implements OnInit {
         address: this.data.address,
         city: this.data.city,
         country: this.data.country,
-        notes: this.data.message
+        taxId: this.data.taxId,
+        billingAddress: this.data.billingAddress,
+        notes: this.data.notes || this.data.message,
+        maxDevices: this.data.maxDevices || 3,
+        sessionTimeout: this.data.sessionTimeout || 60,
+        expiryDate: this.data.expiryDate,
+        ipWhitelist: this.data.ipWhitelist,
+        requireTwoFactor: this.data.requireTwoFactor || false,
+        forcePasswordChange: this.data.forcePasswordChange || false,
+        restrictToBusinessHours: this.data.restrictToBusinessHours || false,
+        allowApiAccess: this.data.allowApiAccess || false
       });
     }
   }
@@ -613,7 +625,28 @@ export class CreateClientLoginDialogComponent implements OnInit {
       ...this.additionalForm.value
     };
 
-    if (this.data?._id) {
+    if (this.isEditMode) {
+      const updateData = {
+        ...this.additionalForm.value,
+        firstName: conversionData.firstName,
+        lastName: conversionData.lastName,
+        contactPerson: `${conversionData.firstName} ${conversionData.lastName}`,
+        email: conversionData.email,
+        phone: conversionData.phone,
+      };
+
+      this.clientService.updateClient(this.data._id, updateData).subscribe({
+        next: () => {
+          this.loading = false;
+          this.snackBar.open('Client updated successfully!', 'Close', { duration: 3000 });
+          this.dialogRef.close(true);
+        },
+        error: (err) => {
+          this.loading = false;
+          this.snackBar.open(err.error?.message || 'Failed to update client', 'Close', { duration: 3000 });
+        }
+      });
+    } else if (this.data?._id) {
       this.clientService.convertToClient(this.data._id, conversionData).subscribe({
         next: (result) => {
           this.credentials = result.credentials;

@@ -313,8 +313,16 @@ export class UsersComponent {
           firstName: user.firstName,
           lastName: user.lastName,
           roles: user.roles || [],
+          roleIds: user.roleIds || [],
           isActive: user.isActive,
           organizationId: user.organizationId,
+          forcePasswordChange: user.forcePasswordChange,
+          requireTwoFactor: user.requireTwoFactor,
+          restrictToBusinessHours: user.restrictToBusinessHours,
+          allowApiAccess: user.allowApiAccess,
+          sessionTimeout: user.sessionTimeout,
+          maxDevices: user.maxDevices,
+          ipWhitelist: user.ipWhitelist,
         }));
         this.totalUsers = this.allUsers.length;
         this.updatePaginatedData();
@@ -347,8 +355,16 @@ export class UsersComponent {
           firstName: user.firstName,
           lastName: user.lastName,
           roles: user.roles || [],
+          roleIds: user.roleIds || [],
           isActive: user.isActive,
           organizationId: user.organizationId,
+          forcePasswordChange: user.forcePasswordChange,
+          requireTwoFactor: user.requireTwoFactor,
+          restrictToBusinessHours: user.restrictToBusinessHours,
+          allowApiAccess: user.allowApiAccess,
+          sessionTimeout: user.sessionTimeout,
+          maxDevices: user.maxDevices,
+          ipWhitelist: user.ipWhitelist,
         }));
         this.totalUsers = this.allUsers.length;
         this.updatePaginatedData();

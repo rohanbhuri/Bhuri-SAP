@@ -95,7 +95,7 @@ export class CatalogueService {
         return this.productRepository.findOneBy({ _id: new ObjectId(id) });
     }
 
-    async createProduct(data: Partial<Product>): Promise<Product> {
+    async createProduct(data: Partial<Product>, userId?: string): Promise<Product> {
         // Check if product code already exists
         if (data.productCode) {
             const exists = await this.checkProductCodeExists(data.productCode);
@@ -107,12 +107,15 @@ export class CatalogueService {
         const product = this.productRepository.create({
             ...data,
             createdAt: new Date(),
-            updatedAt: new Date()
+            updatedAt: new Date(),
+            createdBy: userId,
+            updatedBy: userId,
+            changeLog: userId ? [{ userId, action: 'created', timestamp: new Date() }] : []
         });
         return this.productRepository.save(product);
     }
 
-    async updateProduct(id: string, data: Partial<Product>): Promise<Product> {
+    async updateProduct(id: string, data: Partial<Product>, userId?: string): Promise<Product> {
         // Check if product code already exists (excluding current product)
         if (data.productCode) {
             const exists = await this.checkProductCodeExists(data.productCode, id);
@@ -121,9 +124,17 @@ export class CatalogueService {
             }
         }
         
+        const current = await this.findOneProduct(id);
+        const changeLog = current?.changeLog || [];
+        if (userId) {
+            changeLog.push({ userId, action: 'updated', timestamp: new Date() });
+        }
+
         await this.productRepository.update(id, {
             ...data,
-            updatedAt: new Date()
+            updatedAt: new Date(),
+            updatedBy: userId,
+            changeLog
         });
         return this.findOneProduct(id);
     }
@@ -141,19 +152,30 @@ export class CatalogueService {
         return this.categoryRepository.findOneBy({ _id: new ObjectId(id) });
     }
 
-    async createCategory(data: Partial<Category>): Promise<Category> {
+    async createCategory(data: Partial<Category>, userId?: string): Promise<Category> {
         const category = this.categoryRepository.create({
             ...data,
             createdAt: new Date(),
-            updatedAt: new Date()
+            updatedAt: new Date(),
+            createdBy: userId,
+            updatedBy: userId,
+            changeLog: userId ? [{ userId, action: 'created', timestamp: new Date() }] : []
         });
         return this.categoryRepository.save(category);
     }
 
-    async updateCategory(id: string, data: Partial<Category>): Promise<Category> {
+    async updateCategory(id: string, data: Partial<Category>, userId?: string): Promise<Category> {
+        const current = await this.findOneCategory(id);
+        const changeLog = current?.changeLog || [];
+        if (userId) {
+            changeLog.push({ userId, action: 'updated', timestamp: new Date() });
+        }
+
         await this.categoryRepository.update(id, {
             ...data,
-            updatedAt: new Date()
+            updatedAt: new Date(),
+            updatedBy: userId,
+            changeLog
         });
         return this.findOneCategory(id);
     }
@@ -171,19 +193,30 @@ export class CatalogueService {
         return this.collectionRepository.findOneBy({ _id: new ObjectId(id) });
     }
 
-    async createCollection(data: Partial<Collection>): Promise<Collection> {
+    async createCollection(data: Partial<Collection>, userId?: string): Promise<Collection> {
         const collection = this.collectionRepository.create({
             ...data,
             createdAt: new Date(),
-            updatedAt: new Date()
+            updatedAt: new Date(),
+            createdBy: userId,
+            updatedBy: userId,
+            changeLog: userId ? [{ userId, action: 'created', timestamp: new Date() }] : []
         });
         return this.collectionRepository.save(collection);
     }
 
-    async updateCollection(id: string, data: Partial<Collection>): Promise<Collection> {
+    async updateCollection(id: string, data: Partial<Collection>, userId?: string): Promise<Collection> {
+        const current = await this.findOneCollection(id);
+        const changeLog = current?.changeLog || [];
+        if (userId) {
+            changeLog.push({ userId, action: 'updated', timestamp: new Date() });
+        }
+
         await this.collectionRepository.update(id, {
             ...data,
-            updatedAt: new Date()
+            updatedAt: new Date(),
+            updatedBy: userId,
+            changeLog
         });
         return this.findOneCollection(id);
     }
@@ -201,19 +234,30 @@ export class CatalogueService {
         return this.designerRepository.findOneBy({ _id: new ObjectId(id) });
     }
 
-    async createDesigner(data: Partial<Designer>): Promise<Designer> {
+    async createDesigner(data: Partial<Designer>, userId?: string): Promise<Designer> {
         const designer = this.designerRepository.create({
             ...data,
             createdAt: new Date(),
-            updatedAt: new Date()
+            updatedAt: new Date(),
+            createdBy: userId,
+            updatedBy: userId,
+            changeLog: userId ? [{ userId, action: 'created', timestamp: new Date() }] : []
         });
         return this.designerRepository.save(designer);
     }
 
-    async updateDesigner(id: string, data: Partial<Designer>): Promise<Designer> {
+    async updateDesigner(id: string, data: Partial<Designer>, userId?: string): Promise<Designer> {
+        const current = await this.findOneDesigner(id);
+        const changeLog = current?.changeLog || [];
+        if (userId) {
+            changeLog.push({ userId, action: 'updated', timestamp: new Date() });
+        }
+
         await this.designerRepository.update(id, {
             ...data,
-            updatedAt: new Date()
+            updatedAt: new Date(),
+            updatedBy: userId,
+            changeLog
         });
         return this.findOneDesigner(id);
     }
@@ -475,7 +519,7 @@ export class CatalogueService {
         return headers.map(h => `"${h}"`).join(',');
     }
 
-    async importProductsFromCSV(csvContent: string): Promise<{ success: number; failed: number; errors: string[] }> {
+    async importProductsFromCSV(csvContent: string, userId?: string): Promise<{ success: number; failed: number; errors: string[] }> {
         const lines = csvContent.split(/\r?\n/).filter(line => line.trim());
         if (lines.length === 0) return { success: 0, failed: 0, errors: ['Empty CSV file'] };
 
@@ -587,12 +631,17 @@ export class CatalogueService {
                             keywords: product.seoKeywords || current.keywords
                         };
                     }
+                    const changeLog = existingProduct.changeLog || [];
+                    if (userId) {
+                        changeLog.push({ userId, action: 'imported-updated', timestamp: new Date() });
+                    }
+                    product.changeLog = changeLog;
 
                     cleanLegacyFields(product);
                     delete product._id;
                     
                     // updatedAt is handled by updateProduct
-                    await this.updateProduct(existingProduct._id.toString(), product);
+                    await this.updateProduct(existingProduct._id.toString(), product, userId);
                 } else {
                     // CREATE NEW PRODUCT
                     
@@ -627,7 +676,7 @@ export class CatalogueService {
                     product.attributes = product.attributes || {};
                     product.seo = product.seo || {};
 
-                    await this.createProduct(product);
+                    await this.createProduct(product, userId);
                 }
                 success++;
             } catch (error) {

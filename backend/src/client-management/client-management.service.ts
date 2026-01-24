@@ -29,7 +29,7 @@ export class ClientManagementService {
     private jwtService: JwtService,
   ) {}
 
-  async apiLogin(email: string, password: string) {
+  async apiLogin(email: string, password: string, deviceId?: string, userAgent?: string) {
     const user = await this.userRepository.findOne({ where: { email } });
     if (!user || !(await bcrypt.compare(password, user.password))) {
       throw new UnauthorizedException('Invalid credentials');
@@ -44,6 +44,10 @@ export class ClientManagementService {
       throw new UnauthorizedException('Client account is inactive');
     }
 
+    if (deviceId) {
+      await this.handleSession(user, deviceId, userAgent);
+    }
+
     const roles = await this.roleRepository.find({
       where: { _id: { $in: user.roleIds } }
     });
@@ -52,7 +56,8 @@ export class ClientManagementService {
       email: user.email,
       sub: user._id.toString(),
       organizationId: user.organizationId?.toString() || user.organizationIds?.[0]?.toString(),
-      roles: roles.map(r => r.type)
+      roles: roles.map(r => r.type),
+      deviceId
     };
 
     const { password: _, ...userWithoutPassword } = user;
@@ -68,11 +73,44 @@ export class ClientManagementService {
     };
   }
 
-  async apiLogout(clientId: string) {
+  private async handleSession(user: User, deviceId: string, userAgent?: string) {
+    if (!user.activeDevices) {
+      user.activeDevices = [];
+    }
+
+    const existingDeviceIndex = user.activeDevices.findIndex(d => d.deviceId === deviceId);
+
+    if (existingDeviceIndex !== -1) {
+      user.activeDevices[existingDeviceIndex].lastActive = new Date();
+      user.activeDevices[existingDeviceIndex].userAgent = userAgent;
+    } else {
+      if (user.maxDevices && user.activeDevices.length >= user.maxDevices) {
+        throw new UnauthorizedException(`Maximum device limit reached (${user.maxDevices}). Please logout from another device.`);
+      }
+      user.activeDevices.push({
+        deviceId,
+        lastActive: new Date(),
+        userAgent
+      });
+    }
+
+    await this.userRepository.save(user);
+  }
+
+  async apiLogout(clientId: string, deviceId?: string) {
     const client = await this.clientRepository.findOne({ where: { _id: new ObjectId(clientId) } });
     if (!client) {
       throw new NotFoundException('Client not found');
     }
+
+    if (deviceId && client.userId) {
+      const user = await this.userRepository.findOne({ where: { _id: client.userId } });
+      if (user && user.activeDevices) {
+        user.activeDevices = user.activeDevices.filter(d => d.deviceId !== deviceId);
+        await this.userRepository.save(user);
+      }
+    }
+
     return { success: true, message: 'Logged out successfully' };
   }
 
@@ -194,7 +232,9 @@ export class ClientManagementService {
         lastName: conversionData.lastName || request.contactPerson.split(' ').slice(1).join(' '),
         isActive: true,
         organizationIds: [],
-        roleIds: [clientRole._id]
+        roleIds: [clientRole._id],
+        currency: 'INR',
+        currencySymbol: '₹',
       } as any);
       const savedUser = await this.userRepository.save(user) as unknown as User;
 
@@ -285,14 +325,23 @@ export class ClientManagementService {
       throw new NotFoundException('Client not found');
     }
 
+    // Capture old userId before data update if it's being changed (though it shouldn't be)
+    const userId = client.userId;
+
     Object.assign(client, updateData);
     const updatedClient = await this.clientRepository.save(client);
 
-    if (client.userId) {
+    if (userId) {
       const user = await this.userRepository.findOne({ 
-        where: { _id: client.userId } 
+        where: { _id: userId } 
       });
       if (user) {
+        // Sync name and email if they were passed
+        if (updateData.firstName) user.firstName = updateData.firstName;
+        if (updateData.lastName) user.lastName = updateData.lastName;
+        if (updateData.email) user.email = updateData.email;
+        
+        await this.userRepository.save(user);
         await this.syncClientSecurityToUser(updatedClient, user);
       }
     }
@@ -394,6 +443,7 @@ export class ClientManagementService {
 
   private async syncClientSecurityToUser(client: Client, user: User): Promise<void> {
     try {
+      user.forcePasswordChange = client.forcePasswordChange;
       user.requireTwoFactor = client.requireTwoFactor;
       user.sessionTimeout = client.sessionTimeout;
       user.restrictToBusinessHours = client.restrictToBusinessHours;

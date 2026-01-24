@@ -9,6 +9,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { CatalogueService } from '../catalogue.service';
 import { DesignerDialogComponent } from '../dialogs/designer-dialog.component';
 import { UploadUrlPipe } from '../../../pipes/upload-url.pipe';
+import { UserManagementService } from '../../user-management/user-management.service';
 
 @Component({
   selector: 'app-designers-page',
@@ -74,6 +75,50 @@ import { UploadUrlPipe } from '../../../pipes/upload-url.pipe';
               <mat-chip [color]="designer.isActive ? 'primary' : 'warn'">
                 {{ designer.isActive ? 'Active' : 'Inactive' }}
               </mat-chip>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="tracking">
+            <th mat-header-cell *matHeaderCellDef>History</th>
+            <td mat-cell *matCellDef="let designer">
+              <div class="tracking-info" [matMenuTriggerFor]="historyMenu" style="cursor: pointer;">
+                <div class="tracking-item" title="Created At: {{ designer.createdAt | date:'medium' }}">
+                  <mat-icon class="tracking-icon">add_circle_outline</mat-icon>
+                  <span>{{ getUserName(designer.createdBy) || 'System' }}</span>
+                  <small>{{ designer.createdAt | date:'shortDate' }}</small>
+                </div>
+                <div class="tracking-item" *ngIf="designer.changeLog?.length > 1" title="Total Changes: {{ designer.changeLog.length }}">
+                  <mat-icon class="tracking-icon">history</mat-icon>
+                  <span>{{ designer.changeLog.length }} edits</span>
+                  <small>{{ designer.updatedAt | date:'shortDate' }}</small>
+                </div>
+                <div class="tracking-item" *ngIf="!designer.changeLog?.length && designer.updatedAt" title="Updated At: {{ designer.updatedAt | date:'medium' }}">
+                  <mat-icon class="tracking-icon">edit_note</mat-icon>
+                  <span>{{ getUserName(designer.updatedBy) || 'System' }}</span>
+                  <small>{{ designer.updatedAt | date:'shortDate' }}</small>
+                </div>
+              </div>
+              <mat-menu #historyMenu="matMenu">
+                <div class="history-menu-container" (click)="$event.stopPropagation()">
+                  <div class="history-header">
+                    <mat-icon>history</mat-icon>
+                    <span>Change History</span>
+                  </div>
+                  <div class="history-list">
+                    <div *ngIf="!designer.changeLog?.length" class="no-history">No detailed history available</div>
+                    <div *ngFor="let log of designer.changeLog" class="history-item-detail">
+                      <div class="history-marker"></div>
+                      <div class="history-content">
+                        <div class="history-user">{{ getUserName(log.userId) || 'System' }}</div>
+                        <div class="history-meta">
+                          <span class="history-action">{{ log.action }}</span>
+                          <span class="history-time">{{ log.timestamp | date:'medium' }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </mat-menu>
             </td>
           </ng-container>
 
@@ -162,23 +207,137 @@ import { UploadUrlPipe } from '../../../pipes/upload-url.pipe';
       white-space: nowrap;
       color: #666;
     }
+    .tracking-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.75rem;
+      color: #757575;
+    }
+    .tracking-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .tracking-icon {
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
+      color: #9e9e9e;
+    }
+    .tracking-item span {
+      font-weight: 500;
+      max-width: 80px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .tracking-item small {
+      color: #bdbdbd;
+    }
+    .history-menu-container {
+      padding: 1rem;
+      min-width: 300px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .history-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #eee;
+    }
+    .history-header mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .history-item-detail {
+      display: flex;
+      gap: 1rem;
+      position: relative;
+    }
+    .history-marker {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #e0e0e0;
+      margin-top: 4px;
+      flex-shrink: 0;
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 1px #e0e0e0;
+    }
+    .history-content {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .history-user {
+      font-weight: 500;
+      font-size: 0.9rem;
+      color: #333;
+    }
+    .history-meta {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      font-size: 0.75rem;
+      color: #757575;
+    }
+    .history-action {
+      text-transform: capitalize;
+      padding: 2px 6px;
+      background: #f5f5f5;
+      border-radius: 4px;
+    }
+    .no-history {
+      padding: 1rem;
+      text-align: center;
+      color: #999;
+      font-style: italic;
+    }
   `]
 })
 export class DesignersPageComponent implements OnInit {
   private dialog = inject(MatDialog);
   private catalogueService = inject(CatalogueService);
+  private userService = inject(UserManagementService);
 
   designers = signal<any[]>([]);
-  designerColumns = ['image', 'name', 'bio', 'portfolio', 'status', 'actions'];
+  users = signal<any[]>([]);
+  designerColumns = ['image', 'name', 'bio', 'portfolio', 'status', 'tracking', 'actions'];
 
   ngOnInit() {
     this.loadDesigners();
+    this.loadUsers();
   }
 
   loadDesigners() {
     this.catalogueService.getDesigners().subscribe(designers => {
       this.designers.set(designers);
     });
+  }
+
+  loadUsers() {
+    this.userService.getUsers().subscribe(users => {
+      this.users.set(users);
+    });
+  }
+
+  getUserName(userId: string): string {
+    if (!userId) return '';
+    const user = this.users().find(u => u._id === userId || u.id === userId);
+    if (!user) return 'Unknown User';
+    return `${user.firstName} ${user.lastName}`;
   }
 
   openDesignerDialog() {

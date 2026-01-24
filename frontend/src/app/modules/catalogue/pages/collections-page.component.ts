@@ -9,6 +9,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { CatalogueService } from '../catalogue.service';
 import { CollectionDialogComponent } from '../dialogs/collection-dialog.component';
 import { UploadUrlPipe } from '../../../pipes/upload-url.pipe';
+import { UserManagementService } from '../../user-management/user-management.service';
 
 @Component({
   selector: 'app-collections-page',
@@ -79,6 +80,50 @@ import { UploadUrlPipe } from '../../../pipes/upload-url.pipe';
                   Featured
                 </mat-chip>
               </div>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="tracking">
+            <th mat-header-cell *matHeaderCellDef>History</th>
+            <td mat-cell *matCellDef="let collection">
+              <div class="tracking-info" [matMenuTriggerFor]="historyMenu" style="cursor: pointer;">
+                <div class="tracking-item" title="Created At: {{ collection.createdAt | date:'medium' }}">
+                  <mat-icon class="tracking-icon">add_circle_outline</mat-icon>
+                  <span>{{ getUserName(collection.createdBy) || 'System' }}</span>
+                  <small>{{ collection.createdAt | date:'shortDate' }}</small>
+                </div>
+                <div class="tracking-item" *ngIf="collection.changeLog?.length > 1" title="Total Changes: {{ collection.changeLog.length }}">
+                  <mat-icon class="tracking-icon">history</mat-icon>
+                  <span>{{ collection.changeLog.length }} edits</span>
+                  <small>{{ collection.updatedAt | date:'shortDate' }}</small>
+                </div>
+                <div class="tracking-item" *ngIf="!collection.changeLog?.length && collection.updatedAt" title="Updated At: {{ collection.updatedAt | date:'medium' }}">
+                  <mat-icon class="tracking-icon">edit_note</mat-icon>
+                  <span>{{ getUserName(collection.updatedBy) || 'System' }}</span>
+                  <small>{{ collection.updatedAt | date:'shortDate' }}</small>
+                </div>
+              </div>
+              <mat-menu #historyMenu="matMenu">
+                <div class="history-menu-container" (click)="$event.stopPropagation()">
+                  <div class="history-header">
+                    <mat-icon>history</mat-icon>
+                    <span>Change History</span>
+                  </div>
+                  <div class="history-list">
+                    <div *ngIf="!collection.changeLog?.length" class="no-history">No detailed history available</div>
+                    <div *ngFor="let log of collection.changeLog" class="history-item-detail">
+                      <div class="history-marker"></div>
+                      <div class="history-content">
+                        <div class="history-user">{{ getUserName(log.userId) || 'System' }}</div>
+                        <div class="history-meta">
+                          <span class="history-action">{{ log.action }}</span>
+                          <span class="history-time">{{ log.timestamp | date:'medium' }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </mat-menu>
             </td>
           </ng-container>
 
@@ -189,19 +234,120 @@ import { UploadUrlPipe } from '../../../pipes/upload-url.pipe';
       background-color: #9c27b0 !important;
       color: #fff !important;
     }
+    .tracking-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.75rem;
+      color: #757575;
+    }
+    .tracking-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .tracking-icon {
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
+      color: #9e9e9e;
+    }
+    .tracking-item span {
+      font-weight: 500;
+      max-width: 80px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .tracking-item small {
+      color: #bdbdbd;
+    }
+    .history-menu-container {
+      padding: 1rem;
+      min-width: 300px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .history-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #eee;
+    }
+    .history-header mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .history-item-detail {
+      display: flex;
+      gap: 1rem;
+      position: relative;
+    }
+    .history-marker {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #e0e0e0;
+      margin-top: 4px;
+      flex-shrink: 0;
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 1px #e0e0e0;
+    }
+    .history-content {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .history-user {
+      font-weight: 500;
+      font-size: 0.9rem;
+      color: #333;
+    }
+    .history-meta {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      font-size: 0.75rem;
+      color: #757575;
+    }
+    .history-action {
+      text-transform: capitalize;
+      padding: 2px 6px;
+      background: #f5f5f5;
+      border-radius: 4px;
+    }
+    .no-history {
+      padding: 1rem;
+      text-align: center;
+      color: #999;
+      font-style: italic;
+    }
   `]
 })
 export class CollectionsPageComponent implements OnInit {
   private dialog = inject(MatDialog);
   private catalogueService = inject(CatalogueService);
+  private userService = inject(UserManagementService);
 
   collections = signal<any[]>([]);
   products = signal<any[]>([]);
-  collectionColumns = ['image', 'name', 'products', 'status', 'actions'];
+  users = signal<any[]>([]);
+  collectionColumns = ['image', 'name', 'products', 'status', 'tracking', 'actions'];
 
   ngOnInit() {
     this.loadCollections();
     this.loadProducts();
+    this.loadUsers();
   }
 
   loadCollections() {
@@ -298,6 +444,19 @@ export class CollectionsPageComponent implements OnInit {
         this.loadCollections();
       });
     }
+  }
+
+  loadUsers() {
+    this.userService.getUsers().subscribe(users => {
+      this.users.set(users);
+    });
+  }
+
+  getUserName(userId: string): string {
+    if (!userId) return '';
+    const user = this.users().find(u => u._id === userId || u.id === userId);
+    if (!user) return 'Unknown User';
+    return `${user.firstName} ${user.lastName}`;
   }
 
   onImageError(collection: any) {

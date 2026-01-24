@@ -71,6 +71,9 @@ export class User {
   @Column({ nullable: true })
   maxDevices?: number;
 
+  @Column('array')
+  activeDevices: { deviceId: string; lastActive: Date; userAgent?: string }[];
+
   @Column()
   createdAt: Date;
 
@@ -78,6 +81,7 @@ export class User {
     this.isActive = true;
     this.organizationIds = [];
     this.roleIds = [];
+    this.activeDevices = [];
     this.createdAt = new Date();
     this.isOnline = false;
   }

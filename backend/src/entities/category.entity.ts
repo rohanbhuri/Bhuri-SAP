@@ -36,8 +36,22 @@ export class Category {
     @Column({ nullable: true })
     updatedAt: Date;
 
+    @Column({ nullable: true })
+    createdBy?: string;
+
+    @Column({ nullable: true })
+    updatedBy?: string;
+
+    @Column({ type: 'json', default: [] })
+    changeLog: Array<{
+        userId: string;
+        action: string;
+        timestamp: Date;
+    }>;
+
     constructor() {
         this.isActive = true;
         this.createdAt = new Date();
+        this.changeLog = [];
     }
 }

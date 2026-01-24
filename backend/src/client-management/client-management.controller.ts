@@ -13,14 +13,15 @@ export class ClientManagementController {
 
   @Post('login')
   @UseGuards(ApiKeyGuard)
-  async apiLogin(@Body() body: { email: string; password: string }) {
-    return this.clientManagementService.apiLogin(body.email, body.password);
+  async apiLogin(@Body() body: { email: string; password: string; deviceId?: string }, @Request() req) {
+    const userAgent = req.headers['user-agent'];
+    return this.clientManagementService.apiLogin(body.email, body.password, body.deviceId, userAgent);
   }
 
   @Post('logout')
   @UseGuards(ApiKeyGuard)
-  async apiLogout(@Body() body: { clientId: string }) {
-    return this.clientManagementService.apiLogout(body.clientId);
+  async apiLogout(@Body() body: { clientId: string; deviceId?: string }) {
+    return this.clientManagementService.apiLogout(body.clientId, body.deviceId);
   }
 
   @Post('requests')

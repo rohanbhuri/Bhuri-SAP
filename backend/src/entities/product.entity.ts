@@ -112,6 +112,19 @@ export class Product {
     @Column({ nullable: true })
     updatedAt: Date;
 
+    @Column({ nullable: true })
+    createdBy?: string;
+
+    @Column({ nullable: true })
+    updatedBy?: string;
+
+    @Column({ type: 'json', default: [] })
+    changeLog: Array<{
+        userId: string;
+        action: string;
+        timestamp: Date;
+    }>;
+
     constructor() {
         this.currency = 'USD';
         this.imageGallery = [];
@@ -126,5 +139,6 @@ export class Product {
         this.isExclusive = false;
         this.isFeatured = false;
         this.createdAt = new Date();
+        this.changeLog = [];
     }
 }

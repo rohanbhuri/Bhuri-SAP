@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, UseInterceptors, UploadedFiles, UploadedFile, Res, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, UseInterceptors, UploadedFiles, UploadedFile, Res, Request, BadRequestException } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor, FileFieldsInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 import { diskStorage, memoryStorage } from 'multer';
@@ -9,6 +9,10 @@ import { Category } from '../entities/category.entity';
 import { Collection } from '../entities/collection.entity';
 import { Designer } from '../entities/designer.entity';
 import { ApiKeyGuard } from '../guards/api-key.guard';
+import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { PermissionsGuard } from '../guards/permissions.guard';
+import { RequireRoles } from '../decorators/permissions.decorator';
+import { RoleType } from '../entities/role.entity';
 
 const imageStorage = diskStorage({
     destination: './uploads/products/images',
@@ -89,8 +93,8 @@ export class CatalogueController {
     }
 
     @Post('products')
-    async createProduct(@Body() data: Partial<Product>) {
-        return this.catalogueService.createProduct(data);
+    async createProduct(@Body() data: Partial<Product>, @Request() req) {
+        return this.catalogueService.createProduct(data, req.user?.userId);
     }
 
     @Post('products/upload-images')
@@ -119,8 +123,8 @@ export class CatalogueController {
     }
 
     @Put('products/:id')
-    async updateProduct(@Param('id') id: string, @Body() data: Partial<Product>) {
-        return this.catalogueService.updateProduct(id, data);
+    async updateProduct(@Param('id') id: string, @Body() data: Partial<Product>, @Request() req) {
+        return this.catalogueService.updateProduct(id, data, req.user?.userId);
     }
 
     @Delete('products/:id')
@@ -140,8 +144,8 @@ export class CatalogueController {
     }
 
     @Post('categories')
-    async createCategory(@Body() data: Partial<Category>) {
-        return this.catalogueService.createCategory(data);
+    async createCategory(@Body() data: Partial<Category>, @Request() req) {
+        return this.catalogueService.createCategory(data, req.user?.userId);
     }
 
     @Post('categories/upload-image')
@@ -151,8 +155,8 @@ export class CatalogueController {
     }
 
     @Put('categories/:id')
-    async updateCategory(@Param('id') id: string, @Body() data: Partial<Category>) {
-        return this.catalogueService.updateCategory(id, data);
+    async updateCategory(@Param('id') id: string, @Body() data: Partial<Category>, @Request() req) {
+        return this.catalogueService.updateCategory(id, data, req.user?.userId);
     }
 
     @Delete('categories/:id')
@@ -172,8 +176,8 @@ export class CatalogueController {
     }
 
     @Post('collections')
-    async createCollection(@Body() data: Partial<Collection>) {
-        return this.catalogueService.createCollection(data);
+    async createCollection(@Body() data: Partial<Collection>, @Request() req) {
+        return this.catalogueService.createCollection(data, req.user?.userId);
     }
 
     @Post('collections/upload-image')
@@ -183,8 +187,8 @@ export class CatalogueController {
     }
 
     @Put('collections/:id')
-    async updateCollection(@Param('id') id: string, @Body() data: Partial<Collection>) {
-        return this.catalogueService.updateCollection(id, data);
+    async updateCollection(@Param('id') id: string, @Body() data: Partial<Collection>, @Request() req) {
+        return this.catalogueService.updateCollection(id, data, req.user?.userId);
     }
 
     @Delete('collections/:id')
@@ -204,8 +208,8 @@ export class CatalogueController {
     }
 
     @Post('designers')
-    async createDesigner(@Body() data: Partial<Designer>) {
-        return this.catalogueService.createDesigner(data);
+    async createDesigner(@Body() data: Partial<Designer>, @Request() req) {
+        return this.catalogueService.createDesigner(data, req.user?.userId);
     }
 
     @Post('designers/upload-profile')
@@ -222,8 +226,8 @@ export class CatalogueController {
     }
 
     @Put('designers/:id')
-    async updateDesigner(@Param('id') id: string, @Body() data: Partial<Designer>) {
-        return this.catalogueService.updateDesigner(id, data);
+    async updateDesigner(@Param('id') id: string, @Body() data: Partial<Designer>, @Request() req) {
+        return this.catalogueService.updateDesigner(id, data, req.user?.userId);
     }
 
     @Delete('designers/:id')
@@ -279,6 +283,8 @@ export class CatalogueController {
     }
 
     @Get('template/products')
+    @UseGuards(JwtAuthGuard, PermissionsGuard)
+    @RequireRoles(RoleType.SUPER_ADMIN)
     async downloadProductTemplate(@Res() res: Response) {
         const csv = await this.catalogueService.getProductTemplate();
         res.header('Content-Type', 'text/csv');
@@ -287,11 +293,13 @@ export class CatalogueController {
     }
 
     @Post('import/products')
+    @UseGuards(JwtAuthGuard, PermissionsGuard)
+    @RequireRoles(RoleType.SUPER_ADMIN)
     @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
-    async importProducts(@UploadedFile() file: Express.Multer.File) {
+    async importProducts(@UploadedFile() file: Express.Multer.File, @Request() req) {
         if (!file || !file.buffer) {
             throw new BadRequestException('No file uploaded or file is empty');
         }
-        return this.catalogueService.importProductsFromCSV(file.buffer.toString());
+        return this.catalogueService.importProductsFromCSV(file.buffer.toString(), req.user?.userId);
     }
 }
