@@ -93,6 +93,7 @@ export class CatalogueController {
     }
 
     @Post('products')
+    @UseGuards(JwtAuthGuard)
     async createProduct(@Body() data: Partial<Product>, @Request() req) {
         return this.catalogueService.createProduct(data, req.user?.userId);
     }
@@ -123,11 +124,13 @@ export class CatalogueController {
     }
 
     @Put('products/:id')
+    @UseGuards(JwtAuthGuard)
     async updateProduct(@Param('id') id: string, @Body() data: Partial<Product>, @Request() req) {
         return this.catalogueService.updateProduct(id, data, req.user?.userId);
     }
 
     @Delete('products/:id')
+    @UseGuards(JwtAuthGuard)
     async deleteProduct(@Param('id') id: string) {
         return this.catalogueService.deleteProduct(id);
     }
@@ -144,6 +147,7 @@ export class CatalogueController {
     }
 
     @Post('categories')
+    @UseGuards(JwtAuthGuard)
     async createCategory(@Body() data: Partial<Category>, @Request() req) {
         return this.catalogueService.createCategory(data, req.user?.userId);
     }
@@ -155,11 +159,13 @@ export class CatalogueController {
     }
 
     @Put('categories/:id')
+    @UseGuards(JwtAuthGuard)
     async updateCategory(@Param('id') id: string, @Body() data: Partial<Category>, @Request() req) {
         return this.catalogueService.updateCategory(id, data, req.user?.userId);
     }
 
     @Delete('categories/:id')
+    @UseGuards(JwtAuthGuard)
     async deleteCategory(@Param('id') id: string) {
         return this.catalogueService.deleteCategory(id);
     }
@@ -176,6 +182,7 @@ export class CatalogueController {
     }
 
     @Post('collections')
+    @UseGuards(JwtAuthGuard)
     async createCollection(@Body() data: Partial<Collection>, @Request() req) {
         return this.catalogueService.createCollection(data, req.user?.userId);
     }
@@ -187,11 +194,13 @@ export class CatalogueController {
     }
 
     @Put('collections/:id')
+    @UseGuards(JwtAuthGuard)
     async updateCollection(@Param('id') id: string, @Body() data: Partial<Collection>, @Request() req) {
         return this.catalogueService.updateCollection(id, data, req.user?.userId);
     }
 
     @Delete('collections/:id')
+    @UseGuards(JwtAuthGuard)
     async deleteCollection(@Param('id') id: string) {
         return this.catalogueService.deleteCollection(id);
     }
@@ -208,6 +217,7 @@ export class CatalogueController {
     }
 
     @Post('designers')
+    @UseGuards(JwtAuthGuard)
     async createDesigner(@Body() data: Partial<Designer>, @Request() req) {
         return this.catalogueService.createDesigner(data, req.user?.userId);
     }
@@ -226,11 +236,13 @@ export class CatalogueController {
     }
 
     @Put('designers/:id')
+    @UseGuards(JwtAuthGuard)
     async updateDesigner(@Param('id') id: string, @Body() data: Partial<Designer>, @Request() req) {
         return this.catalogueService.updateDesigner(id, data, req.user?.userId);
     }
 
     @Delete('designers/:id')
+    @UseGuards(JwtAuthGuard)
     async deleteDesigner(@Param('id') id: string) {
         return this.catalogueService.deleteDesigner(id);
     }

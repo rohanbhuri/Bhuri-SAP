@@ -110,7 +110,7 @@ export class CatalogueService {
             updatedAt: new Date(),
             createdBy: userId,
             updatedBy: userId,
-            changeLog: userId ? [{ userId, action: 'created', timestamp: new Date() }] : []
+            changeLog: userId ? [{ userId, action: 'created', timestamp: new Date(), details: 'Initial creation' }] : []
         });
         return this.productRepository.save(product);
     }
@@ -126,8 +126,35 @@ export class CatalogueService {
         
         const current = await this.findOneProduct(id);
         const changeLog = current?.changeLog || [];
+        
         if (userId) {
-            changeLog.push({ userId, action: 'updated', timestamp: new Date() });
+            const changes = [];
+            const skipFields = ['updatedAt', 'updatedBy', 'changeLog', '_id'];
+            
+            for (const key in data) {
+                if (skipFields.includes(key)) continue;
+                
+                const oldValue = current[key];
+                const newValue = data[key];
+                
+                if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) {
+                    // Check if it's a known complex object or array for better description
+                    if (key === 'variations') {
+                        const oldLen = oldValue?.length || 0;
+                        const newLen = newValue?.length || 0;
+                        changes.push(`variations (${oldLen} -> ${newLen})`);
+                    } else if (key === 'imageGallery') {
+                        changes.push('images updated');
+                    } else if (Array.isArray(newValue)) {
+                        changes.push(`${key} (array)`);
+                    } else {
+                        changes.push(key);
+                    }
+                }
+            }
+            
+            const details = changes.length > 0 ? `Updated: ${changes.join(', ')}` : 'No significant changes';
+            changeLog.push({ userId, action: 'updated', timestamp: new Date(), details });
         }
 
         await this.productRepository.update(id, {

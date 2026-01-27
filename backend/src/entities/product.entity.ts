@@ -123,6 +123,7 @@ export class Product {
         userId: string;
         action: string;
         timestamp: Date;
+        details?: string;
     }>;
 
     constructor() {

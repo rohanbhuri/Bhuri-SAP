@@ -150,11 +150,23 @@ export class AuthService {
     this.router.navigate(['/login']);
   }
 
+  private isSessionTimeoutDialogOpen = false;
+
   showSessionTimeout(): void {
-    this.dialog.open(SessionTimeoutDialogComponent, {
+    if (this.isSessionTimeoutDialogOpen) {
+      return;
+    }
+
+    this.isSessionTimeoutDialogOpen = true;
+    const dialogRef = this.dialog.open(SessionTimeoutDialogComponent, {
       disableClose: true,
       width: '400px'
     });
+
+    dialogRef.afterClosed().subscribe(() => {
+      this.isSessionTimeoutDialogOpen = false;
+    });
+
     this.logout();
   }
 
