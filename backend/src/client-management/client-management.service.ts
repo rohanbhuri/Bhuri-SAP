@@ -29,7 +29,7 @@ export class ClientManagementService {
     private jwtService: JwtService,
   ) {}
 
-  async apiLogin(email: string, password: string, deviceId?: string, userAgent?: string) {
+  async apiLogin(email: string, password: string, deviceId?: string, userAgent?: string, ip?: string) {
     const user = await this.userRepository.findOne({ where: { email } });
     if (!user || !(await bcrypt.compare(password, user.password))) {
       throw new UnauthorizedException('Invalid credentials');
@@ -44,9 +44,28 @@ export class ClientManagementService {
       throw new UnauthorizedException('Client account is inactive');
     }
 
-    if (deviceId) {
-      await this.handleSession(user, deviceId, userAgent);
+    // IP Whitelist check
+    if (user.ipWhitelist && user.ipWhitelist.trim() !== '') {
+      const allowedIps = user.ipWhitelist.split(',').map(i => i.trim());
+      if (ip && !allowedIps.includes(ip) && !allowedIps.includes('127.0.0.1') && !allowedIps.includes('::1')) {
+        throw new UnauthorizedException(`Access from IP ${ip} is not allowed.`);
+      }
     }
+
+    // Business hours restriction (9:00 AM - 6:00 PM)
+    if (user.restrictToBusinessHours) {
+      const now = new Date();
+      const hours = now.getHours();
+      const minutes = now.getMinutes();
+      const currentTime = hours + minutes / 60;
+
+      if (currentTime < 9 || currentTime >= 18) {
+        throw new UnauthorizedException('Login is restricted to business hours (9:00 AM - 6:00 PM).');
+      }
+    }
+
+    // Always handle session to enforce maxDevices
+    await this.handleSession(user, deviceId || `agent-${Buffer.from(userAgent || 'unknown').toString('base64').substring(0, 16)}`, userAgent);
 
     const roles = await this.roleRepository.find({
       where: { _id: { $in: user.roleIds } }
@@ -61,8 +80,15 @@ export class ClientManagementService {
     };
 
     const { password: _, ...userWithoutPassword } = user;
+    
+    // JWT options with dynamic expiration if sessionTimeout is set
+    const signOptions: any = {};
+    if (user.sessionTimeout) {
+      signOptions.expiresIn = `${user.sessionTimeout}m`;
+    }
+
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token: this.jwtService.sign(payload, signOptions),
       user: userWithoutPassword,
       client: {
         id: client._id.toString(),

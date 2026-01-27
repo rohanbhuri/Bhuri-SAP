@@ -15,7 +15,8 @@ export class ClientManagementController {
   @UseGuards(ApiKeyGuard)
   async apiLogin(@Body() body: { email: string; password: string; deviceId?: string }, @Request() req) {
     const userAgent = req.headers['user-agent'];
-    return this.clientManagementService.apiLogin(body.email, body.password, body.deviceId, userAgent);
+    const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    return this.clientManagementService.apiLogin(body.email, body.password, body.deviceId, userAgent, ip);
   }
 
   @Post('logout')

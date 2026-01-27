@@ -55,7 +55,8 @@ export class AuthController {
   @Post('login')
   async login(@Body() loginDto: LoginDto, @Request() req) {
     const userAgent = req.headers['user-agent'];
-    return this.authService.login(loginDto.email, loginDto.password, loginDto.deviceId, userAgent);
+    const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    return this.authService.login(loginDto.email, loginDto.password, loginDto.deviceId, userAgent, ip);
   }
 
   @Post('logout')

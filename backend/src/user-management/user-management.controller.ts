@@ -12,14 +12,16 @@ export class UserManagementController {
 
   @Post('login')
   @UseGuards(ApiKeyGuard)
-  async apiLogin(@Body() body: { email: string; password: string }) {
-    return this.userManagementService.apiLogin(body.email, body.password);
+  async apiLogin(@Body() body: { email: string; password: string; deviceId?: string }, @Request() req) {
+    const userAgent = req.headers['user-agent'];
+    const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    return this.userManagementService.apiLogin(body.email, body.password, body.deviceId, userAgent, ip);
   }
 
   @Post('logout')
   @UseGuards(ApiKeyGuard)
-  async apiLogout(@Body() body: { userId: string }) {
-    return this.userManagementService.apiLogout(body.userId);
+  async apiLogout(@Body() body: { userId: string; deviceId?: string }) {
+    return this.userManagementService.apiLogout(body.userId, body.deviceId);
   }
 
   @Get('users')
