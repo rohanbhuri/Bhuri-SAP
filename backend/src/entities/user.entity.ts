@@ -20,10 +20,10 @@ export class User {
   @Column({ nullable: true })
   avatar?: string;
 
-  @Column({ default: 'USD' })
+  @Column({ default: 'INR' })
   currency: string;
 
-  @Column({ default: '$' })
+  @Column({ default: '₹' })
   currencySymbol: string;
 
   @Column()
@@ -73,6 +73,23 @@ export class User {
 
   @Column('array')
   activeDevices: { deviceId: string; lastActive: Date; userAgent?: string }[];
+
+  @Column({ default: false })
+  isDeleted: boolean;
+
+  @Column({ nullable: true })
+  deletedAt: Date;
+
+  @Column({ nullable: true })
+  deletedBy: string;
+
+  @Column({ type: 'json', default: [] })
+  changeLog: Array<{
+    userId: string;
+    action: string;
+    timestamp: Date;
+    details?: string;
+  }>;
 
   @Column()
   createdAt: Date;

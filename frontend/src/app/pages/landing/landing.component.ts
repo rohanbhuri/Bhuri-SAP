@@ -1086,7 +1086,7 @@ export class LandingComponent implements OnInit {
         offers: {
           '@type': 'Offer',
           price: '0',
-          priceCurrency: 'USD',
+          pricecurrency: 'INR',
         },
       }
     );

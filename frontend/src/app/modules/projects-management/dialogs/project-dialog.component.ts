@@ -109,10 +109,10 @@ import { Project } from '../projects-management.service';
           <mat-form-field appearance="outline">
             <mat-label>Currency</mat-label>
             <mat-select formControlName="currency">
+              <mat-option value="INR">INR</mat-option>
               <mat-option value="USD">USD</mat-option>
               <mat-option value="EUR">EUR</mat-option>
               <mat-option value="GBP">GBP</mat-option>
-              <mat-option value="INR">INR</mat-option>
             </mat-select>
           </mat-form-field>
         </div>

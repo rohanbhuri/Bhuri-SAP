@@ -110,7 +110,7 @@ export class Order {
   @Column({ type: 'double' })
   totalAmount: number;
 
-  @Column({ default: 'USD' })
+  @Column({ default: 'INR' })
   currency?: string;
 
   @Column({ type: 'enum', enum: OrderStatus, default: OrderStatus.PENDING })
@@ -176,7 +176,7 @@ export class Order {
     this.paymentStatus = PaymentStatus.PENDING;
     this.deliveryStatus = DeliveryStatus.PENDING;
     this.priority = OrderPriority.MEDIUM;
-    this.currency = 'USD';
+    this.currency = 'INR';
     this.tags = [];
     this.createdAt = new Date();
   }

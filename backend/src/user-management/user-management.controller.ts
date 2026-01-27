@@ -49,8 +49,8 @@ export class UserManagementController {
   @Delete('users/:userId')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequireRoles(RoleType.SUPER_ADMIN)
-  async deleteUser(@Param('userId') userId: string) {
-    return this.userManagementService.deleteUser(userId);
+  async deleteUser(@Param('userId') userId: string, @Request() req) {
+    return this.userManagementService.deleteUser(userId, req.user?.userId);
   }
 
   @Put('users/:userId/status')
@@ -104,42 +104,42 @@ export class UserManagementController {
   @Post('roles')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequireRoles(RoleType.SUPER_ADMIN)
-  async createRole(@Body() roleData: any) {
-    return this.userManagementService.createRole(roleData);
+  async createRole(@Body() roleData: any, @Request() req) {
+    return this.userManagementService.createRole(roleData, req.user?.userId);
   }
 
   @Put('roles/:roleId')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequireRoles(RoleType.SUPER_ADMIN)
-  async updateRole(@Param('roleId') roleId: string, @Body() roleData: any) {
-    return this.userManagementService.updateRole(roleId, roleData);
+  async updateRole(@Param('roleId') roleId: string, @Body() roleData: any, @Request() req) {
+    return this.userManagementService.updateRole(roleId, roleData, req.user?.userId);
   }
 
   @Post('permissions')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequireRoles(RoleType.SUPER_ADMIN)
-  async createPermission(@Body() permissionData: any) {
-    return this.userManagementService.createPermission(permissionData);
+  async createPermission(@Body() permissionData: any, @Request() req) {
+    return this.userManagementService.createPermission(permissionData, req.user?.userId);
   }
 
   @Put('permissions/:permissionId')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequireRoles(RoleType.SUPER_ADMIN)
-  async updatePermission(@Param('permissionId') permissionId: string, @Body() permissionData: any) {
-    return this.userManagementService.updatePermission(permissionId, permissionData);
+  async updatePermission(@Param('permissionId') permissionId: string, @Body() permissionData: any, @Request() req) {
+    return this.userManagementService.updatePermission(permissionId, permissionData, req.user?.userId);
   }
 
   @Delete('permissions/:permissionId')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequireRoles(RoleType.SUPER_ADMIN)
-  async deletePermission(@Param('permissionId') permissionId: string) {
-    return this.userManagementService.deletePermission(permissionId);
+  async deletePermission(@Param('permissionId') permissionId: string, @Request() req) {
+    return this.userManagementService.deletePermission(permissionId, req.user?.userId);
   }
 
   @Delete('roles/:roleId')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequireRoles(RoleType.SUPER_ADMIN)
-  async deleteRole(@Param('roleId') roleId: string) {
-    return this.userManagementService.deleteRole(roleId);
+  async deleteRole(@Param('roleId') roleId: string, @Request() req) {
+    return this.userManagementService.deleteRole(roleId, req.user?.userId);
   }
 }

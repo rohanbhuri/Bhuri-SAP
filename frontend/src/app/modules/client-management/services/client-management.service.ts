@@ -54,4 +54,20 @@ export class ClientManagementService {
   toggleClientStatus(clientId: string, isActive: boolean): Observable<any> {
     return this.http.put(`${this.apiUrl}/client-management/clients/${clientId}/status`, { isActive });
   }
+
+  getAnalytics(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/client-management/analytics`);
+  }
+
+  exportRequests(): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/client-management/export/requests`, { responseType: 'blob' });
+  }
+
+  exportClients(): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/client-management/export/clients`, { responseType: 'blob' });
+  }
+
+  exportContactMessages(): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/client-management/export/contact-us`, { responseType: 'blob' });
+  }
 }

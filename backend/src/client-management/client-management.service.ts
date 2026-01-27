@@ -39,7 +39,7 @@ export class ClientManagementService {
       throw new UnauthorizedException('User account is inactive');
     }
 
-    const client = await this.clientRepository.findOne({ where: { userId: user._id } });
+    const client = await this.clientRepository.findOne({ where: { userId: user._id, isDeleted: { $ne: true } } } as any);
     if (!client || !client.isActive) {
       throw new UnauthorizedException('Client account is inactive');
     }
@@ -152,7 +152,10 @@ export class ClientManagementService {
   }
 
   async getAllClientRequests() {
-    return this.clientRequestRepository.find({ order: { createdAt: -1 } });
+    return this.clientRequestRepository.find({ 
+      where: { isDeleted: { $ne: true } } as any,
+      order: { createdAt: -1 } 
+    });
   }
 
   async getClientRequestById(requestId: string) {
@@ -176,9 +179,23 @@ export class ClientManagementService {
       throw new NotFoundException('Client request not found');
     }
 
+    const changeLog = request.changeLog || [];
+    const changes = [];
+    const skipFields = ['updatedAt', 'reviewedAt', 'reviewedBy', 'changeLog', '_id'];
+    for (const key in updateData) {
+        if (skipFields.includes(key)) continue;
+        if (JSON.stringify(request[key]) !== JSON.stringify(updateData[key])) {
+            changes.push(key);
+        }
+    }
+    if (changes.length > 0) {
+        changeLog.push({ userId, action: 'updated', timestamp: new Date(), details: `Updated: ${changes.join(', ')}` });
+    }
+
     Object.assign(request, updateData);
     request.reviewedBy = new ObjectId(userId);
     request.reviewedAt = new Date();
+    request.changeLog = changeLog;
 
     return this.clientRequestRepository.save(request);
   }
@@ -262,7 +279,8 @@ export class ClientManagementService {
         requireTwoFactor: conversionData.requireTwoFactor || false,
         forcePasswordChange: conversionData.forcePasswordChange || false,
         restrictToBusinessHours: conversionData.restrictToBusinessHours || false,
-        allowApiAccess: conversionData.allowApiAccess || false
+        allowApiAccess: conversionData.allowApiAccess || false,
+        changeLog: [{ userId: adminUserId, action: 'created', timestamp: new Date(), details: 'Client created from request' }]
       });
       const savedClient = await this.clientRepository.save(client);
 
@@ -287,7 +305,7 @@ export class ClientManagementService {
     }
   }
 
-  async deleteClientRequest(requestId: string) {
+  async deleteClientRequest(requestId: string, userId?: string) {
     const request = await this.clientRequestRepository.findOne({ 
       where: { _id: new ObjectId(requestId) } 
     });
@@ -296,12 +314,28 @@ export class ClientManagementService {
       throw new NotFoundException('Client request not found');
     }
 
-    await this.clientRequestRepository.delete(requestId);
+    const changeLog = request.changeLog || [];
+    if (userId) {
+      changeLog.push({ userId, action: 'deleted', timestamp: new Date(), details: 'Client request soft-deleted' });
+    }
+
+    await this.clientRequestRepository.update(
+      { _id: new ObjectId(requestId) },
+      { 
+        isDeleted: true, 
+        deletedAt: new Date(), 
+        deletedBy: userId,
+        changeLog
+      }
+    );
     return { message: 'Client request deleted successfully' };
   }
 
   async getAllClients() {
-    return this.clientRepository.find({ order: { createdAt: -1 } });
+    return this.clientRepository.find({ 
+      where: { isDeleted: { $ne: true } } as any,
+      order: { createdAt: -1 } 
+    });
   }
 
   async getClientById(clientId: string) {
@@ -316,7 +350,7 @@ export class ClientManagementService {
     return client;
   }
 
-  async updateClient(clientId: string, updateData: any) {
+  async updateClient(clientId: string, updateData: any, userId?: string) {
     const client = await this.clientRepository.findOne({ 
       where: { _id: new ObjectId(clientId) } 
     });
@@ -325,13 +359,29 @@ export class ClientManagementService {
       throw new NotFoundException('Client not found');
     }
 
+    const changeLog = client.changeLog || [];
+    if (userId) {
+        const changes = [];
+        const skipFields = ['updatedAt', 'changeLog', '_id', 'userId'];
+        for (const key in updateData) {
+            if (skipFields.includes(key)) continue;
+            if (JSON.stringify(client[key]) !== JSON.stringify(updateData[key])) {
+                changes.push(key);
+            }
+        }
+        if (changes.length > 0) {
+            changeLog.push({ userId, action: 'updated', timestamp: new Date(), details: `Updated: ${changes.join(', ')}` });
+        }
+    }
+
     // Capture old userId before data update if it's being changed (though it shouldn't be)
-    const userId = client.userId;
+    const existingUserId = client.userId;
 
     Object.assign(client, updateData);
+    client.changeLog = changeLog;
     const updatedClient = await this.clientRepository.save(client);
 
-    if (userId) {
+    if (existingUserId) {
       const user = await this.userRepository.findOne({ 
         where: { _id: userId } 
       });
@@ -349,7 +399,7 @@ export class ClientManagementService {
     return updatedClient;
   }
 
-  async deleteClient(clientId: string) {
+  async deleteClient(clientId: string, deletedBy?: string) {
     const client = await this.clientRepository.findOne({ 
       where: { _id: new ObjectId(clientId) } 
     });
@@ -358,7 +408,29 @@ export class ClientManagementService {
       throw new NotFoundException('Client not found');
     }
 
-    await this.clientRepository.delete({ _id: new ObjectId(clientId) });
+    const changeLog = client.changeLog || [];
+    if (deletedBy) {
+      changeLog.push({ userId: deletedBy, action: 'deleted', timestamp: new Date(), details: 'Client account soft-deleted' });
+    }
+
+    await this.clientRepository.update(
+      { _id: new ObjectId(clientId) },
+      { 
+        isDeleted: true, 
+        isActive: false, 
+        deletedAt: new Date(),
+        deletedBy: deletedBy,
+        changeLog
+      }
+    );
+
+    if (client.userId) {
+      await this.userRepository.update(
+        { _id: client.userId },
+        { isActive: false, isDeleted: true, deletedAt: new Date(), deletedBy: deletedBy }
+      );
+    }
+
     return { success: true, message: 'Client deleted successfully' };
   }
 
@@ -529,7 +601,7 @@ export class ClientManagementService {
       query.organizationId = organizationId;
     }
     return this.contactUsRepository.find({
-      where: query,
+      where: { ...query, isDeleted: { $ne: true } } as any,
       order: { createdAt: -1 }
     });
   }
@@ -547,14 +619,30 @@ export class ClientManagementService {
   async markContactMessageAsRead(messageId: string) {
     const message = await this.getContactMessageById(messageId);
     message.isRead = true;
+    message.readAt = new Date();
     return this.contactUsRepository.save(message);
   }
 
-  async deleteContactMessage(messageId: string) {
-    const result = await this.contactUsRepository.delete({ _id: new ObjectId(messageId) });
-    if (result.affected === 0) {
+  async deleteContactMessage(messageId: string, userId?: string) {
+    const message = await this.contactUsRepository.findOne({ where: { _id: new ObjectId(messageId) } });
+    if (!message) {
       throw new NotFoundException('Message not found');
     }
+
+    const changeLog = message.changeLog || [];
+    if (userId) {
+      changeLog.push({ userId, action: 'deleted', timestamp: new Date(), details: 'Contact message soft-deleted' });
+    }
+
+    await this.contactUsRepository.update(
+      { _id: new ObjectId(messageId) },
+      { 
+        isDeleted: true, 
+        deletedAt: new Date(), 
+        deletedBy: userId,
+        changeLog
+      }
+    );
     return { success: true, message: 'Message deleted successfully' };
   }
 
@@ -563,6 +651,151 @@ export class ClientManagementService {
     if (organizationId) {
       query.organizationId = organizationId;
     }
-    return this.contactUsRepository.count({ where: query });
+    return this.contactUsRepository.count({ where: { ...query, isDeleted: { $ne: true } } } as any);
+  }
+
+  async getAnalytics() {
+    const requests = await this.clientRequestRepository.find({ where: { isDeleted: { $ne: true } } } as any);
+    const clients = await this.clientRepository.find({ where: { isDeleted: { $ne: true } } } as any);
+    const contactMessages = await this.contactUsRepository.find({ where: { isDeleted: { $ne: true } } } as any);
+
+    // Request Stats
+    const totalRequests = requests.length;
+    const pendingRequests = requests.filter(r => r.status === ClientRequestStatus.PENDING).length;
+    const approvedRequests = requests.filter(r => r.status === ClientRequestStatus.APPROVED).length;
+    const convertedRequests = requests.filter(r => r.status === ClientRequestStatus.CONVERTED).length;
+
+    // Contact Us Stats
+    const totalContact = contactMessages.length;
+    const unreadContact = contactMessages.filter(m => !m.isRead).length;
+
+    // Derived Data: average contact us read time
+    const readMessages = contactMessages.filter(m => m.isRead && m.readAt);
+    let avgReadTime = 0;
+    if (readMessages.length > 0) {
+      const totalReadTime = readMessages.reduce((sum, m) => {
+        const diff = new Date(m.readAt).getTime() - new Date(m.createdAt).getTime();
+        return sum + diff;
+      }, 0);
+      avgReadTime = totalReadTime / readMessages.length;
+    }
+
+    // Derived Data: client request to login creation time (conversion time)
+    const convertedReqs = requests.filter(r => r.status === ClientRequestStatus.CONVERTED && r.reviewedAt);
+    let avgConversionTime = 0;
+    if (convertedReqs.length > 0) {
+      const totalConversionTime = convertedReqs.reduce((sum, r) => {
+        const diff = new Date(r.reviewedAt).getTime() - new Date(r.createdAt).getTime();
+        return sum + diff;
+      }, 0);
+      avgConversionTime = totalConversionTime / convertedReqs.length;
+    }
+
+    // Recent Changes (Last 7 Days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const recentChanges = {
+      requests: requests.filter(r => r.createdAt && new Date(r.createdAt) >= sevenDaysAgo).length,
+      clients: clients.filter(c => c.createdAt && new Date(c.createdAt) >= sevenDaysAgo).length,
+      contactMessages: contactMessages.filter(m => m.createdAt && new Date(m.createdAt) >= sevenDaysAgo).length
+    };
+
+    // Requests by Country
+    const requestsByCountry: Record<string, number> = {};
+    const requestsByIndustry: Record<string, number> = {};
+    const requestsByCompanySize: Record<string, number> = {};
+    
+    requests.forEach(r => {
+      const country = r.country || 'Unknown';
+      requestsByCountry[country] = (requestsByCountry[country] || 0) + 1;
+      
+      const industry = r.industry || 'Other';
+      requestsByIndustry[industry] = (requestsByIndustry[industry] || 0) + 1;
+      
+      const size = r.companySize || 'Unknown';
+      requestsByCompanySize[size] = (requestsByCompanySize[size] || 0) + 1;
+    });
+
+    // Clients by Industry
+    const clientsByIndustry: Record<string, number> = {};
+    clients.forEach(c => {
+      const industry = c.industry || 'Other';
+      clientsByIndustry[industry] = (clientsByIndustry[industry] || 0) + 1;
+    });
+
+    return {
+      totalRequests,
+      pendingRequests,
+      approvedRequests,
+      convertedRequests,
+      totalClients: clients.length,
+      activeClients: clients.filter(c => c.isActive).length,
+      totalContact,
+      unreadContact,
+      avgReadTime: this.formatDuration(avgReadTime),
+      avgConversionTime: this.formatDuration(avgConversionTime),
+      recentChanges,
+      requestsByCountry: Object.entries(requestsByCountry).map(([name, count]) => ({ name, count })),
+      requestsByIndustry: Object.entries(requestsByIndustry).map(([name, count]) => ({ name, count })),
+      requestsByCompanySize: Object.entries(requestsByCompanySize).map(([name, count]) => ({ name, count })),
+      clientsByIndustry: Object.entries(clientsByIndustry).map(([name, count]) => ({ name, count }))
+    };
+  }
+
+  private formatDuration(ms: number): string {
+    if (ms <= 0) return '0h';
+    const hours = Math.floor(ms / (1000 * 60 * 60));
+    const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+    if (hours > 0) return `${hours}h ${minutes}m`;
+    return `${minutes}m`;
+  }
+
+  async exportRequestsCSV(): Promise<string> {
+    const requests = await this.clientRequestRepository.find({ where: { isDeleted: { $ne: true } } } as any);
+    const headers = ['ID', 'Company', 'Contact', 'Email', 'Phone', 'Industry', 'Status', 'Message', 'Created At'];
+    const rows = requests.map(r => [
+      r._id.toString(),
+      r.companyName || '',
+      r.contactPerson,
+      r.email,
+      r.phone,
+      r.industry || '',
+      r.status,
+      (r.message || '').replace(/\n/g, ' '),
+      r.createdAt.toISOString()
+    ]);
+    return [headers.join(','), ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))].join('\n');
+  }
+
+  async exportClientsCSV(): Promise<string> {
+    const clients = await this.clientRepository.find({ where: { isDeleted: { $ne: true } } } as any);
+    const headers = ['ID', 'Company', 'Contact', 'Email', 'Phone', 'Industry', 'Active', 'Created At'];
+    const rows = clients.map(c => [
+      c._id.toString(),
+      c.companyName,
+      c.contactPerson,
+      c.email,
+      c.phone,
+      c.industry || '',
+      c.isActive ? 'Yes' : 'No',
+      c.createdAt.toISOString()
+    ]);
+    return [headers.join(','), ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))].join('\n');
+  }
+
+  async exportContactMessagesCSV(): Promise<string> {
+    const messages = await this.contactUsRepository.find({ where: { isDeleted: { $ne: true } } } as any);
+    const headers = ['ID', 'Name', 'Email', 'Subject', 'Message', 'Read', 'Created At'];
+    const rows = messages.map(m => [
+      m._id.toString(),
+      m.name,
+      m.email,
+      m.subject,
+      (m.message || '').replace(/\n/g, ' '),
+      m.isRead ? 'Yes' : 'No',
+      m.createdAt.toISOString()
+    ]);
+    return [headers.join(','), ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))].join('\n');
   }
 }

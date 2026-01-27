@@ -87,12 +87,14 @@ import { UserManagementService } from '../../user-management/user-management.ser
                   <span>{{ getUserName(designer.createdBy) || 'System' }}</span>
                   <small>{{ designer.createdAt | date:'shortDate' }}</small>
                 </div>
-                <div class="tracking-item" *ngIf="designer.changeLog?.length > 1" title="Total Changes: {{ designer.changeLog.length }}">
+                <!-- Show last update if it exists and is different from creation -->
+                <div class="tracking-item" *ngIf="designer.changeLog?.length > 1" title="Last Updated At: {{ designer.updatedAt | date:'medium' }}">
                   <mat-icon class="tracking-icon">history</mat-icon>
-                  <span>{{ designer.changeLog.length }} edits</span>
+                  <span>{{ getUserName(designer.updatedBy) || 'System' }}</span>
                   <small>{{ designer.updatedAt | date:'shortDate' }}</small>
                 </div>
-                <div class="tracking-item" *ngIf="!designer.changeLog?.length && designer.updatedAt" title="Updated At: {{ designer.updatedAt | date:'medium' }}">
+                <!-- Fallback for old data without changeLog but with updatedAt -->
+                <div class="tracking-item" *ngIf="(!designer.changeLog || designer.changeLog.length <= 1) && designer.updatedBy && designer.updatedBy !== designer.createdBy" title="Updated At: {{ designer.updatedAt | date:'medium' }}">
                   <mat-icon class="tracking-icon">edit_note</mat-icon>
                   <span>{{ getUserName(designer.updatedBy) || 'System' }}</span>
                   <small>{{ designer.updatedAt | date:'shortDate' }}</small>
@@ -106,14 +108,15 @@ import { UserManagementService } from '../../user-management/user-management.ser
                   </div>
                   <div class="history-list">
                     <div *ngIf="!designer.changeLog?.length" class="no-history">No detailed history available</div>
-                    <div *ngFor="let log of designer.changeLog" class="history-item-detail">
-                      <div class="history-marker"></div>
+                    <div *ngFor="let log of designer.changeLog?.slice()?.reverse()" class="history-item-detail">
+                      <div class="history-marker" [class.created]="log.action === 'created'"></div>
                       <div class="history-content">
                         <div class="history-user">{{ getUserName(log.userId) || 'System' }}</div>
                         <div class="history-meta">
-                          <span class="history-action">{{ log.action }}</span>
+                          <span class="history-action" [class.action-created]="log.action === 'created'">{{ log.action }}</span>
                           <span class="history-time">{{ log.timestamp | date:'medium' }}</span>
                         </div>
+                        <div class="history-details" *ngIf="log.details">{{ log.details }}</div>
                       </div>
                     </div>
                   </div>
@@ -291,13 +294,30 @@ import { UserManagementService } from '../../user-management/user-management.ser
       gap: 0.5rem;
       align-items: center;
       font-size: 0.75rem;
-      color: #757575;
+      color: #9e9e9e;
+    }
+    .history-details {
+      font-size: 0.75rem;
+      color: #666;
+      background: #fdfdfd;
+      padding: 4px 8px;
+      border-radius: 4px;
+      margin-top: 4px;
+      border-left: 2px solid #eee;
     }
     .history-action {
       text-transform: capitalize;
       padding: 2px 6px;
       background: #f5f5f5;
       border-radius: 4px;
+    }
+    .history-action.action-created {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+    .history-marker.created {
+      background: #4caf50;
+      box-shadow: 0 0 0 1px #4caf50;
     }
     .no-history {
       padding: 1rem;
@@ -335,9 +355,8 @@ export class DesignersPageComponent implements OnInit {
 
   getUserName(userId: string): string {
     if (!userId) return '';
-    const user = this.users().find(u => u._id === userId || u.id === userId);
-    if (!user) return 'Unknown User';
-    return `${user.firstName} ${user.lastName}`;
+    const user = this.users().find(u => u._id === userId || u.id === userId || (u._id && u._id.toString() === userId));
+    return user ? `${user.firstName} ${user.lastName}` : '';
   }
 
   openDesignerDialog() {

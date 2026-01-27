@@ -74,8 +74,8 @@ export class ClientManagementController {
   @Delete('requests/:requestId')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
-  async deleteClientRequest(@Param('requestId') requestId: string) {
-    return this.clientManagementService.deleteClientRequest(requestId);
+  async deleteClientRequest(@Param('requestId') requestId: string, @Request() req) {
+    return this.clientManagementService.deleteClientRequest(requestId, req.user?.userId);
   }
 
   @Get('clients')
@@ -95,15 +95,15 @@ export class ClientManagementController {
   @Put('clients/:clientId')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
-  async updateClient(@Param('clientId') clientId: string, @Body() updateData: any) {
-    return this.clientManagementService.updateClient(clientId, updateData);
+  async updateClient(@Param('clientId') clientId: string, @Body() updateData: any, @Request() req) {
+    return this.clientManagementService.updateClient(clientId, updateData, req.user?.userId);
   }
 
   @Delete('clients/:clientId')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequireRoles(RoleType.SUPER_ADMIN)
-  async deleteClient(@Param('clientId') clientId: string) {
-    return this.clientManagementService.deleteClient(clientId);
+  async deleteClient(@Param('clientId') clientId: string, @Request() req) {
+    return this.clientManagementService.deleteClient(clientId, req.user?.userId);
   }
 
   @Put('clients/:clientId/status')
@@ -178,7 +178,35 @@ export class ClientManagementController {
   @Delete('contact-us/:messageId')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
-  async deleteContactMessage(@Param('messageId') messageId: string) {
-    return this.clientManagementService.deleteContactMessage(messageId);
+  async deleteContactMessage(@Param('messageId') messageId: string, @Request() req) {
+    return this.clientManagementService.deleteContactMessage(messageId, req.user?.userId);
+  }
+
+  @Get('analytics')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
+  async getAnalytics() {
+    return this.clientManagementService.getAnalytics();
+  }
+
+  @Get('export/requests')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
+  async exportRequests() {
+    return this.clientManagementService.exportRequestsCSV();
+  }
+
+  @Get('export/clients')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
+  async exportClients() {
+    return this.clientManagementService.exportClientsCSV();
+  }
+
+  @Get('export/contact-us')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequireRoles(RoleType.SUPER_ADMIN, RoleType.ADMIN)
+  async exportContactMessages() {
+    return this.clientManagementService.exportContactMessagesCSV();
   }
 }

@@ -537,7 +537,7 @@ fetch(`${BASE_URL}/products`, {
     name: 'New Product',
     productCode: 'PRD001',
     basePrice: 999.99,
-    currency: 'USD',
+    currency: 'INR',
     isPublished: true
   })
 })
@@ -565,7 +565,7 @@ data = {
     'name': 'New Product',
     'productCode': 'PRD001',
     'basePrice': 999.99,
-    'currency': 'USD',
+    'currency': 'INR',
     'isPublished': True
 }
 response = requests.post(f'{BASE_URL}/products', headers=headers, json=data)

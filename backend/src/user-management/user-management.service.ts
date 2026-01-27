@@ -27,7 +27,7 @@ export class UserManagementService {
   ) {}
 
   async apiLogin(email: string, password: string) {
-    const user = await this.userRepository.findOne({ where: { email } });
+    const user = await this.userRepository.findOne({ where: { email, isDeleted: { $ne: true } } } as any);
     if (!user || !(await bcrypt.compare(password, user.password))) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -64,7 +64,7 @@ export class UserManagementService {
   }
 
   async getAllUsers(currentUser?: any) {
-    let users = await this.userRepository.find();
+    let users = await this.userRepository.find({ where: { isDeleted: { $ne: true } } } as any);
     
     if (currentUser) {
       const user = await this.userRepository.findOne({
@@ -94,7 +94,7 @@ export class UserManagementService {
 
   async searchUsers(query: string, currentUser?: any) {
     const searchRegex = new RegExp(query, 'i');
-    let users = await this.userRepository.find();
+    let users = await this.userRepository.find({ where: { isDeleted: { $ne: true } } } as any);
     
     users = users.filter(u => 
       searchRegex.test(u.firstName) || 
@@ -130,13 +130,13 @@ export class UserManagementService {
 
   async searchRoles(query: string) {
     const searchRegex = new RegExp(query, 'i');
-    const roles = await this.roleRepository.find();
+    const roles = await this.roleRepository.find({ where: { isDeleted: { $ne: true } } } as any);
     return roles.filter(r => searchRegex.test(r.name) || searchRegex.test(r.type));
   }
 
   async searchPermissions(query: string) {
     const searchRegex = new RegExp(query, 'i');
-    const permissions = await this.permissionRepository.find();
+    const permissions = await this.permissionRepository.find({ where: { isDeleted: { $ne: true } } } as any);
     return permissions.filter(p => 
       searchRegex.test(p.module) || 
       searchRegex.test(p.action) || 
@@ -162,7 +162,7 @@ export class UserManagementService {
   }
 
   async createUser(userData: any) {
-    const existingUser = await this.userRepository.findOne({ where: { email: userData.email } });
+    const existingUser = await this.userRepository.findOne({ where: { email: userData.email, isDeleted: { $ne: true } } } as any);
     if (existingUser) {
       throw new ConflictException('User with this email already exists');
     }
@@ -178,8 +178,8 @@ export class UserManagementService {
       organizationId: userData.organizationId ? new ObjectId(userData.organizationId) : null,
       organizationIds: userData.organizationId ? [new ObjectId(userData.organizationId)] : [],
       roleIds: userData.roleIds?.map(id => new ObjectId(id)) || [],
-      currency: userData.currency || 'USD',
-      currencySymbol: userData.currencySymbol || '$',
+      currency: userData.currency || 'INR',
+      currencySymbol: userData.currencySymbol || '₹',
       forcePasswordChange: userData.forcePasswordChange || false,
       requireTwoFactor: userData.requireTwoFactor || false,
       restrictToBusinessHours: userData.restrictToBusinessHours || false,
@@ -237,13 +237,27 @@ export class UserManagementService {
     return userWithoutPassword;
   }
 
-  async deleteUser(userId: string) {
+  async deleteUser(userId: string, deletedBy?: string) {
     const user = await this.userRepository.findOne({ where: { _id: new ObjectId(userId) } });
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    await this.userRepository.delete({ _id: new ObjectId(userId) });
+    const changeLog = user.changeLog || [];
+    if (deletedBy) {
+      changeLog.push({ userId: deletedBy, action: 'deleted', timestamp: new Date(), details: 'User soft-deleted' });
+    }
+
+    await this.userRepository.update(
+      { _id: new ObjectId(userId) },
+      { 
+        isDeleted: true, 
+        isActive: false, 
+        deletedAt: new Date(),
+        deletedBy: deletedBy,
+        changeLog: changeLog
+      }
+    );
     return { success: true, message: 'User deleted successfully' };
   }
 
@@ -260,11 +274,11 @@ export class UserManagementService {
   }
 
   async getAllRoles() {
-    return this.roleRepository.find();
+    return this.roleRepository.find({ where: { isDeleted: { $ne: true } } } as any);
   }
 
-  async createRole(roleData: any) {
-    const existingRole = await this.roleRepository.findOne({ where: { name: roleData.name } });
+  async createRole(roleData: any, userId?: string) {
+    const existingRole = await this.roleRepository.findOne({ where: { name: roleData.name, isDeleted: { $ne: true } } } as any);
     if (existingRole) {
       throw new ConflictException('Role with this name already exists');
     }
@@ -274,22 +288,38 @@ export class UserManagementService {
       type: roleData.type,
       description: roleData.description || '',
       hierarchyLevel: roleData.hierarchyLevel || 0,
-      permissionIds: roleData.permissionIds?.map(id => new ObjectId(id)) || []
+      permissionIds: roleData.permissionIds?.map(id => new ObjectId(id)) || [],
+      changeLog: userId ? [{ userId, action: 'created', timestamp: new Date(), details: 'Role created' }] : []
     });
 
     return this.roleRepository.save(role);
   }
 
-  async updateRole(roleId: string, roleData: any) {
+  async updateRole(roleId: string, roleData: any, userId?: string) {
     const role = await this.roleRepository.findOne({ where: { _id: new ObjectId(roleId) } });
     if (!role) {
       throw new NotFoundException('Role not found');
     }
 
     if (roleData.name && roleData.name !== role.name) {
-      const existingRole = await this.roleRepository.findOne({ where: { name: roleData.name } });
+      const existingRole = await this.roleRepository.findOne({ where: { name: roleData.name, isDeleted: { $ne: true } } } as any);
       if (existingRole) {
         throw new ConflictException('Role with this name already exists');
+      }
+    }
+
+    const changeLog = role.changeLog || [];
+    if (userId) {
+      const changes = [];
+      const skipFields = ['updatedAt', 'changeLog', '_id'];
+      for (const key in roleData) {
+        if (skipFields.includes(key)) continue;
+        if (JSON.stringify(role[key]) !== JSON.stringify(roleData[key])) {
+          changes.push(key);
+        }
+      }
+      if (changes.length > 0) {
+        changeLog.push({ userId, action: 'updated', timestamp: new Date(), details: `Updated: ${changes.join(', ')}` });
       }
     }
 
@@ -298,27 +328,41 @@ export class UserManagementService {
     if (roleData.description !== undefined) role.description = roleData.description;
     if (roleData.hierarchyLevel !== undefined) role.hierarchyLevel = roleData.hierarchyLevel;
     if (roleData.permissionIds) role.permissionIds = roleData.permissionIds.map(id => new ObjectId(id));
-
+    
+    role.changeLog = changeLog;
     return this.roleRepository.save(role);
   }
 
-  async deleteRole(roleId: string) {
+  async deleteRole(roleId: string, userId?: string) {
     const role = await this.roleRepository.findOne({ where: { _id: new ObjectId(roleId) } });
     if (!role) {
       throw new NotFoundException('Role not found');
     }
 
-    await this.roleRepository.delete({ _id: new ObjectId(roleId) });
+    const changeLog = role.changeLog || [];
+    if (userId) {
+      changeLog.push({ userId, action: 'deleted', timestamp: new Date(), details: 'Role soft-deleted' });
+    }
+
+    await this.roleRepository.update(
+      { _id: new ObjectId(roleId) },
+      { 
+        isDeleted: true, 
+        deletedAt: new Date(),
+        deletedBy: userId,
+        changeLog
+      }
+    );
     return { success: true, message: 'Role deleted successfully' };
   }
 
   async getAllPermissions() {
-    return this.permissionRepository.find();
+    return this.permissionRepository.find({ where: { isDeleted: { $ne: true } } } as any);
   }
 
-  async createPermission(permissionData: any) {
+  async createPermission(permissionData: any, userId?: string) {
     const existingPermission = await this.permissionRepository.findOne({
-      where: { module: permissionData.module, action: permissionData.action, resource: permissionData.resource }
+      where: { module: permissionData.module, action: permissionData.action, resource: permissionData.resource, isDeleted: { $ne: true } } as any
     });
     if (existingPermission) {
       throw new ConflictException('Permission already exists');
@@ -328,16 +372,32 @@ export class UserManagementService {
       module: permissionData.module,
       action: permissionData.action,
       resource: permissionData.resource,
-      description: permissionData.description || ''
+      description: permissionData.description || '',
+      changeLog: userId ? [{ userId, action: 'created', timestamp: new Date(), details: 'Permission created' }] : []
     });
 
     return this.permissionRepository.save(permission);
   }
 
-  async updatePermission(permissionId: string, permissionData: any) {
+  async updatePermission(permissionId: string, permissionData: any, userId?: string) {
     const permission = await this.permissionRepository.findOne({ where: { _id: new ObjectId(permissionId) } });
     if (!permission) {
       throw new NotFoundException('Permission not found');
+    }
+
+    const changeLog = permission.changeLog || [];
+    if (userId) {
+      const changes = [];
+      const skipFields = ['updatedAt', 'changeLog', '_id'];
+      for (const key in permissionData) {
+        if (skipFields.includes(key)) continue;
+        if (JSON.stringify(permission[key]) !== JSON.stringify(permissionData[key])) {
+          changes.push(key);
+        }
+      }
+      if (changes.length > 0) {
+        changeLog.push({ userId, action: 'updated', timestamp: new Date(), details: `Updated: ${changes.join(', ')}` });
+      }
     }
 
     if (permissionData.module) permission.module = permissionData.module;
@@ -345,16 +405,30 @@ export class UserManagementService {
     if (permissionData.resource) permission.resource = permissionData.resource;
     if (permissionData.description !== undefined) permission.description = permissionData.description;
 
+    permission.changeLog = changeLog;
     return this.permissionRepository.save(permission);
   }
 
-  async deletePermission(permissionId: string) {
+  async deletePermission(permissionId: string, userId?: string) {
     const permission = await this.permissionRepository.findOne({ where: { _id: new ObjectId(permissionId) } });
     if (!permission) {
       throw new NotFoundException('Permission not found');
     }
 
-    await this.permissionRepository.delete({ _id: new ObjectId(permissionId) });
+    const changeLog = permission.changeLog || [];
+    if (userId) {
+      changeLog.push({ userId, action: 'deleted', timestamp: new Date(), details: 'Permission soft-deleted' });
+    }
+
+    await this.permissionRepository.update(
+      { _id: new ObjectId(permissionId) },
+      { 
+        isDeleted: true, 
+        deletedAt: new Date(),
+        deletedBy: userId,
+        changeLog
+      }
+    );
     return { success: true, message: 'Permission deleted successfully' };
   }
 

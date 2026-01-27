@@ -197,7 +197,7 @@ fetch('http://localhost:3002/api/catalogue/products', {
     name: 'New Product',
     productCode: 'PRD001',
     basePrice: 999.99,
-    currency: 'USD',
+    currency: 'INR',
     isPublished: true
   })
 })

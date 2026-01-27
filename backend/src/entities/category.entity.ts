@@ -47,7 +47,17 @@ export class Category {
         userId: string;
         action: string;
         timestamp: Date;
+        details?: string;
     }>;
+
+    @Column({ default: false })
+    isDeleted: boolean;
+
+    @Column({ nullable: true })
+    deletedAt: Date;
+
+    @Column({ nullable: true })
+    deletedBy: string;
 
     constructor() {
         this.isActive = true;

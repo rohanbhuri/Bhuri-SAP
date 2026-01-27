@@ -90,7 +90,24 @@ export class Enquiry {
     createdAt: Date;
 
     @Column({ nullable: true })
-    updatedAt: Date;
+    updatedAt?: Date;
+
+    @Column({ default: false })
+    isDeleted: boolean;
+
+    @Column({ nullable: true })
+    deletedAt: Date;
+
+    @Column({ nullable: true })
+    deletedBy: string;
+
+    @Column({ type: 'json', default: [] })
+    changeLog: Array<{
+        userId: string;
+        action: string;
+        timestamp: Date;
+        details?: string;
+    }>;
 
     constructor() {
         this.items = [];

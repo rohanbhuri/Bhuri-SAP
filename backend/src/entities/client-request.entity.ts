@@ -69,4 +69,21 @@ export class ClientRequest {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @Column({ default: false })
+  isDeleted: boolean;
+
+  @Column({ nullable: true })
+  deletedAt: Date;
+
+  @Column({ nullable: true })
+  deletedBy: string;
+
+  @Column({ type: 'json', default: [] })
+  changeLog: Array<{
+    userId: string;
+    action: string;
+    timestamp: Date;
+    details?: string;
+  }>;
 }

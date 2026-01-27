@@ -131,8 +131,8 @@ export class CatalogueController {
 
     @Delete('products/:id')
     @UseGuards(JwtAuthGuard)
-    async deleteProduct(@Param('id') id: string) {
-        return this.catalogueService.deleteProduct(id);
+    async deleteProduct(@Param('id') id: string, @Request() req) {
+        return this.catalogueService.deleteProduct(id, req.user?.userId);
     }
 
     // Categories
@@ -166,8 +166,8 @@ export class CatalogueController {
 
     @Delete('categories/:id')
     @UseGuards(JwtAuthGuard)
-    async deleteCategory(@Param('id') id: string) {
-        return this.catalogueService.deleteCategory(id);
+    async deleteCategory(@Param('id') id: string, @Request() req) {
+        return this.catalogueService.deleteCategory(id, req.user?.userId);
     }
 
     // Collections
@@ -201,8 +201,8 @@ export class CatalogueController {
 
     @Delete('collections/:id')
     @UseGuards(JwtAuthGuard)
-    async deleteCollection(@Param('id') id: string) {
-        return this.catalogueService.deleteCollection(id);
+    async deleteCollection(@Param('id') id: string, @Request() req) {
+        return this.catalogueService.deleteCollection(id, req.user?.userId);
     }
 
     // Designers
@@ -243,8 +243,8 @@ export class CatalogueController {
 
     @Delete('designers/:id')
     @UseGuards(JwtAuthGuard)
-    async deleteDesigner(@Param('id') id: string) {
-        return this.catalogueService.deleteDesigner(id);
+    async deleteDesigner(@Param('id') id: string, @Request() req) {
+        return this.catalogueService.deleteDesigner(id, req.user?.userId);
     }
 
     // Analytics

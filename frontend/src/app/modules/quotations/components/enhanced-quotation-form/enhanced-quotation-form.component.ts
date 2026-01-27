@@ -198,8 +198,8 @@ import { PreferencesService } from '../../../../services/preferences.service';
 })
 export class EnhancedQuotationFormComponent implements OnInit {
     quoteForm: FormGroup;
-    currencySymbol = '$';
-    currency = 'USD';
+    currencySymbol = '₹';
+    currency = 'INR';
 
     constructor(
         private fb: FormBuilder,
@@ -226,8 +226,8 @@ export class EnhancedQuotationFormComponent implements OnInit {
         this.preferencesService.getUserPreferences().subscribe({
             next: (prefs) => {
                 if (prefs) {
-                    this.currency = prefs.currency || 'USD';
-                    this.currencySymbol = prefs.currencySymbol || '$';
+                    this.currency = prefs.currency || 'INR';
+                    this.currencySymbol = prefs.currencySymbol || '₹';
                     this.quoteForm.patchValue({ currency: this.currency });
                 }
             },

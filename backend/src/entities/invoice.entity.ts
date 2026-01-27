@@ -76,7 +76,7 @@ export class Invoice {
   @Column()
   totalAmount: number;
 
-  @Column({ default: 'USD' })
+  @Column({ default: 'INR' })
   currency: string;
 
   @Column('array')
@@ -105,7 +105,7 @@ export class Invoice {
 
   constructor() {
     this.status = InvoiceStatus.DRAFT;
-    this.currency = 'USD';
+    this.currency = 'INR';
     this.items = [];
     this.tags = [];
     this.customFields = {};
@@ -136,7 +136,7 @@ export class Receipt {
   @Column()
   amount: number;
 
-  @Column({ default: 'USD' })
+  @Column({ default: 'INR' })
   currency: string;
 
   @Column()
@@ -158,7 +158,7 @@ export class Receipt {
   createdAt: Date;
 
   constructor() {
-    this.currency = 'USD';
+    this.currency = 'INR';
     this.attachments = [];
     this.createdAt = new Date();
   }

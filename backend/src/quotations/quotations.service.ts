@@ -15,6 +15,7 @@ import * as PDFDocument from 'pdfkit';
 import * as https from 'https';
 import * as http from 'http';
 import * as ExcelJS from 'exceljs';
+import * as fs from 'fs';
 const PptxGenJS = require('pptxgenjs');
 
 @Injectable()
@@ -41,7 +42,7 @@ export class QuotationsService {
 
     // Quotations
     async findAll(organizationId: string): Promise<Quotation[]> {
-        return this.quotationRepository.find({ where: { organizationId } });
+        return this.quotationRepository.find({ where: { organizationId, isDeleted: { $ne: true } } as any });
     }
 
     async findOne(id: string): Promise<Quotation> {
@@ -49,7 +50,7 @@ export class QuotationsService {
     }
 
     async findByClient(clientId: string): Promise<Quotation[]> {
-        return this.quotationRepository.find({ where: { clientId } });
+        return this.quotationRepository.find({ where: { clientId, isDeleted: { $ne: true } } as any });
     }
 
     async create(data: Partial<Quotation>, organizationId: string): Promise<Quotation> {
@@ -57,7 +58,8 @@ export class QuotationsService {
             ...data,
             organizationId,
             quotationNumber: `Q-${Date.now()}`,
-            createdAt: new Date()
+            createdAt: new Date(),
+            changeLog: []
         });
         return this.quotationRepository.save(quotation);
     }
@@ -100,7 +102,7 @@ export class QuotationsService {
             taxTotal,
             discountTotal: 0,
             grandTotal,
-            currency: 'USD',
+            currency: 'INR',
             status: QuotationStatus.DRAFT,
             validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
             organizationId: enquiry.organizationId,
@@ -116,8 +118,29 @@ export class QuotationsService {
         return quotation;
     }
 
-    async update(id: string, data: Partial<Quotation>): Promise<Quotation> {
-        await this.quotationRepository.update({ _id: new ObjectId(id) }, { ...data, updatedAt: new Date() });
+    async update(id: string, data: Partial<Quotation>, userId?: string): Promise<Quotation> {
+        const current = await this.findOne(id);
+        const changeLog = current?.changeLog || [];
+        
+        if (userId) {
+            const changes = [];
+            const skipFields = ['updatedAt', 'updatedBy', 'changeLog', '_id'];
+            for (const key in data) {
+                if (skipFields.includes(key)) continue;
+                if (JSON.stringify(current[key]) !== JSON.stringify(data[key])) {
+                    changes.push(key);
+                }
+            }
+            if (changes.length > 0) {
+                changeLog.push({ userId, action: 'updated', timestamp: new Date(), details: `Updated: ${changes.join(', ')}` });
+            }
+        }
+
+        await this.quotationRepository.update({ _id: new ObjectId(id) }, { 
+            ...data, 
+            updatedAt: new Date(),
+            changeLog
+        } as any);
         return this.findOne(id);
     }
 
@@ -201,7 +224,7 @@ export class QuotationsService {
         });
     }
 
-    async delete(id: string): Promise<void> {
+    async delete(id: string, userId?: string): Promise<void> {
         const quotation = await this.findOne(id);
         if (quotation?.presentationId) {
             await this.presentationRepository.update(
@@ -209,12 +232,26 @@ export class QuotationsService {
                 { quotationId: null, updatedAt: new Date() }
             );
         }
-        await this.quotationRepository.delete({ _id: new ObjectId(id) });
+        
+        const changeLog = quotation?.changeLog || [];
+        if (userId) {
+            changeLog.push({ userId, action: 'deleted', timestamp: new Date(), details: 'Quotation soft-deleted' });
+        }
+
+        await this.quotationRepository.update(
+            { _id: new ObjectId(id) },
+            { 
+                isDeleted: true, 
+                deletedAt: new Date(), 
+                deletedBy: userId,
+                changeLog: changeLog
+            } as any
+        );
     }
 
     // Enquiries
     async findAllEnquiries(organizationId: string): Promise<Enquiry[]> {
-        return this.enquiryRepository.find({ where: { organizationId } });
+        return this.enquiryRepository.find({ where: { organizationId, isDeleted: { $ne: true } } as any });
     }
 
     async findEnquiry(id: string): Promise<Enquiry> {
@@ -226,7 +263,8 @@ export class QuotationsService {
             ...data,
             organizationId,
             enquiryNumber: `ENQ-${Date.now()}`,
-            createdAt: new Date()
+            createdAt: new Date(),
+            changeLog: []
         });
         return this.enquiryRepository.save(enquiry);
     }
@@ -254,13 +292,48 @@ export class QuotationsService {
         return this.createEnquiry(enquiryData, organizationId);
     }
 
-    async updateEnquiry(id: string, data: Partial<Enquiry>): Promise<Enquiry> {
-        await this.enquiryRepository.update({ _id: new ObjectId(id) }, { ...data, updatedAt: new Date() });
+    async updateEnquiry(id: string, data: Partial<Enquiry>, userId?: string): Promise<Enquiry> {
+        const current = await this.findEnquiry(id);
+        const changeLog = current?.changeLog || [];
+        
+        if (userId) {
+            const changes = [];
+            const skipFields = ['updatedAt', 'updatedBy', 'changeLog', '_id'];
+            for (const key in data) {
+                if (skipFields.includes(key)) continue;
+                if (JSON.stringify(current[key]) !== JSON.stringify(data[key])) {
+                    changes.push(key);
+                }
+            }
+            if (changes.length > 0) {
+                changeLog.push({ userId, action: 'updated', timestamp: new Date(), details: `Updated: ${changes.join(', ')}` });
+            }
+        }
+
+        await this.enquiryRepository.update({ _id: new ObjectId(id) }, { 
+            ...data, 
+            updatedAt: new Date(),
+            changeLog
+        } as any);
         return this.findEnquiry(id);
     }
 
-    async deleteEnquiry(id: string): Promise<void> {
-        await this.enquiryRepository.delete({ _id: new ObjectId(id) });
+    async deleteEnquiry(id: string, userId?: string): Promise<void> {
+        const enquiry = await this.findEnquiry(id);
+        const changeLog = enquiry?.changeLog || [];
+        if (userId) {
+            changeLog.push({ userId, action: 'deleted', timestamp: new Date(), details: 'Enquiry soft-deleted' });
+        }
+
+        await this.enquiryRepository.update(
+            { _id: new ObjectId(id) },
+            { 
+                isDeleted: true, 
+                deletedAt: new Date(), 
+                deletedBy: userId,
+                changeLog: changeLog
+            } as any
+        );
     }
 
     // Email Templates
@@ -275,7 +348,7 @@ export class QuotationsService {
 
     // Presentations
     async findAllPresentations(organizationId: string): Promise<Presentation[]> {
-        return this.presentationRepository.find({ where: { organizationId } });
+        return this.presentationRepository.find({ where: { organizationId, isDeleted: { $ne: true } } as any });
     }
 
     async findPresentation(id: string): Promise<Presentation> {
@@ -289,12 +362,13 @@ export class QuotationsService {
             presentationNumber: `PRES-${Date.now()}`,
             createdBy: userId,
             createdAt: new Date(),
-            status: PresentationStatus.DRAFT
+            status: PresentationStatus.DRAFT,
+            changeLog: [{ userId, action: 'created', timestamp: new Date(), details: 'Presentation created' }]
         });
         return this.presentationRepository.save(presentation);
     }
 
-    async updatePresentation(id: string, data: Partial<Presentation>): Promise<Presentation> {
+    async updatePresentation(id: string, data: Partial<Presentation>, userId?: string): Promise<Presentation> {
         const presentation = await this.findPresentation(id);
         if (!presentation) throw new NotFoundException('Presentation not found');
 
@@ -302,7 +376,26 @@ export class QuotationsService {
             throw new Error('Only draft presentations can be edited');
         }
 
-        await this.presentationRepository.update({ _id: new ObjectId(id) }, { ...data, updatedAt: new Date() });
+        const changeLog = presentation?.changeLog || [];
+        if (userId) {
+            const changes = [];
+            const skipFields = ['updatedAt', 'updatedBy', 'changeLog', '_id'];
+            for (const key in data) {
+                if (skipFields.includes(key)) continue;
+                if (JSON.stringify(presentation[key]) !== JSON.stringify(data[key])) {
+                    changes.push(key);
+                }
+            }
+            if (changes.length > 0) {
+                changeLog.push({ userId, action: 'updated', timestamp: new Date(), details: `Updated: ${changes.join(', ')}` });
+            }
+        }
+
+        await this.presentationRepository.update({ _id: new ObjectId(id) }, { 
+            ...data, 
+            updatedAt: new Date(),
+            changeLog
+        } as any);
         return this.findPresentation(id);
     }
 
@@ -336,8 +429,22 @@ export class QuotationsService {
         return this.findPresentation(id);
     }
 
-    async deletePresentation(id: string): Promise<void> {
-        await this.presentationRepository.delete({ _id: new ObjectId(id) });
+    async deletePresentation(id: string, userId?: string): Promise<void> {
+        const presentation = await this.findPresentation(id);
+        const changeLog = presentation?.changeLog || [];
+        if (userId) {
+            changeLog.push({ userId, action: 'deleted', timestamp: new Date(), details: 'Presentation soft-deleted' });
+        }
+
+        await this.presentationRepository.update(
+            { _id: new ObjectId(id) },
+            { 
+                isDeleted: true, 
+                deletedAt: new Date(), 
+                deletedBy: userId,
+                changeLog: changeLog
+            } as any
+        );
     }
 
     async linkQuotationToPresentation(presentationId: string, quotationId: string): Promise<Presentation> {
@@ -346,6 +453,52 @@ export class QuotationsService {
             { quotationId, updatedAt: new Date() }
         );
         return this.findPresentation(presentationId);
+    }
+
+    private downloadImage(url: string): Promise<Buffer> {
+        return new Promise((resolve, reject) => {
+            const protocol = url.startsWith('https') ? https : http;
+            protocol.get(url, (response) => {
+                if (response.statusCode !== 200) {
+                    reject(new Error(`Failed to download image: ${response.statusCode}`));
+                    return;
+                }
+                const chunks: Buffer[] = [];
+                response.on('data', (chunk) => chunks.push(chunk));
+                response.on('end', () => resolve(Buffer.concat(chunks)));
+                response.on('error', reject);
+            }).on('error', reject);
+        });
+    }
+
+    private async getProductImageSource(product: Product): Promise<{ path?: string; data?: string } | null> {
+        const candidates = [product.featuredImage, ...(product.imageGallery || [])];
+        for (const candidate of candidates) {
+            if (!candidate) continue;
+            if (candidate.startsWith('http')) {
+                try {
+                    const buffer = await this.downloadImage(candidate);
+                    return { data: buffer.toString('base64') };
+                } catch (e) {
+                    console.error(`Failed to download product image: ${candidate}`, e.message);
+                    continue;
+                }
+            } else {
+                const imgPath = candidate.startsWith('/') ? `.${candidate}` : candidate;
+                if (fs.existsSync(imgPath)) {
+                    return { path: imgPath };
+                }
+            }
+        }
+        return null;
+    }
+
+    private resolveImagePath(imagePath: string): string | null {
+        if (!imagePath) return null;
+        if (imagePath.startsWith('http')) return imagePath;
+        const localPath = imagePath.startsWith('/') ? `.${imagePath}` : imagePath;
+        if (fs.existsSync(localPath)) return localPath;
+        return null;
     }
 
     async generatePPTX(id: string): Promise<Buffer> {
@@ -372,18 +525,14 @@ export class QuotationsService {
         // Cover slide
         const coverSlide = pptx.addSlide();
         if (presentation.coverBackground) {
-            const imagePath = presentation.coverBackground.startsWith('/')
-                ? `.${presentation.coverBackground}`
-                : presentation.coverBackground;
-            const fs = require('fs');
-            if (fs.existsSync(imagePath)) {
+            const imagePath = this.resolveImagePath(presentation.coverBackground);
+            if (imagePath) {
                 try {
                     coverSlide.addImage({ path: imagePath, x: 0, y: 0, w: '100%', h: '100%', sizing: { type: 'cover', w: '100%', h: '100%' } });
                 } catch (error) {
                     coverSlide.background = { color: 'FFFFFF' };
                 }
             } else {
-                console.error('Cover background file does not exist:', imagePath);
                 coverSlide.background = { color: 'FFFFFF' };
             }
         } else {
@@ -427,18 +576,13 @@ export class QuotationsService {
             layoutSlide.addText('Layout', { x: 0.2, y: 0.2, w: 2, h: 0.3, fontSize: 14, bold: true, color: '000000' });
 
             // Add layout image
-            const layoutImagePath = presentation.layoutImage.startsWith('/')
-                ? `.${presentation.layoutImage}`
-                : presentation.layoutImage;
-            const fs = require('fs');
-            if (fs.existsSync(layoutImagePath)) {
+            const layoutImagePath = this.resolveImagePath(presentation.layoutImage);
+            if (layoutImagePath) {
                 try {
                     layoutSlide.addImage({ path: layoutImagePath, x: 0.5, y: 0.8 });
                 } catch (error) {
                     console.error('Failed to load layout image:', error);
                 }
-            } else {
-                console.error('Layout image file does not exist:', layoutImagePath);
             }
         }
 
@@ -464,19 +608,13 @@ export class QuotationsService {
                 }
 
                 const product = products[0];
-                const productImage = product.featuredImage || product.imageGallery?.[0];
+                const imageSource = await this.getProductImageSource(product);
 
-                if (productImage) {
-                    const imgPath = productImage.startsWith('/') ? `.${productImage}` : productImage;
-                    const fs = require('fs');
-                    if (fs.existsSync(imgPath)) {
-                        try {
-                            productSlide.addImage({ path: imgPath, x: 0.5, y: 1 });
-                        } catch (error) {
-                            console.error('Failed to load image:', imgPath);
-                        }
-                    } else {
-                        console.error('Image file does not exist:', imgPath);
+                if (imageSource) {
+                    try {
+                        productSlide.addImage({ ...imageSource, x: 0.5, y: 1 });
+                    } catch (error) {
+                        console.error('Failed to load product image:', product.name, error.message);
                     }
                 }
 
@@ -506,27 +644,21 @@ export class QuotationsService {
                     }
 
                     let yPos = 0.5;
-                    chunk.forEach((product) => {
-                        const productImage = product.featuredImage || product.imageGallery?.[0];
+                    for (const product of chunk) {
+                        const imageSource = await this.getProductImageSource(product);
 
-                        if (productImage) {
-                            const imgPath = productImage.startsWith('/') ? `.${productImage}` : productImage;
-                            const fs = require('fs');
-                            if (fs.existsSync(imgPath)) {
-                                try {
-                                    productSlide.addImage({ path: imgPath, x: 1, y: yPos });
-                                } catch (error) {
-                                    console.error('Failed to load image:', imgPath);
-                                }
-                            } else {
-                                console.error('Image file does not exist:', imgPath);
+                        if (imageSource) {
+                            try {
+                                productSlide.addImage({ ...imageSource, x: 1, y: yPos });
+                            } catch (error) {
+                                console.error('Failed to load product image:', product.name, error.message);
                             }
                         }
 
                         productSlide.addText(product.name, { x: 4.5, y: yPos, w: 5, h: 0.3, fontSize: 16, bold: true });
                         productSlide.addText(`Code: ${product.productCode}`, { x: 4.5, y: yPos + 0.4, w: 5, h: 0.2, fontSize: 12, color: '666666' });
                         yPos += 2.5;
-                    });
+                    }
                 }
             }
         }
@@ -587,283 +719,10 @@ export class QuotationsService {
             subtotal,
             discountTotal: 0,
             grandTotal: subtotal,
-            currency: 'USD'
+            currency: 'INR'
         };
     }
 
-    async generateQuotationPDF(id: string): Promise<Buffer> {
-        const quotation = await this.findOne(id);
-        if (!quotation) throw new NotFoundException('Quotation not found');
-
-        const client = await this.clientRepository.findOneBy({ _id: new ObjectId(quotation.clientId) });
-        const clientName = client ? client.contactPerson : quotation.clientName;
-
-        // Helper function to download image from URL
-        const downloadImage = (url: string): Promise<Buffer> => {
-            return new Promise((resolve, reject) => {
-                const protocol = url.startsWith('https') ? https : http;
-                protocol.get(url, (response) => {
-                    const chunks: Buffer[] = [];
-                    response.on('data', (chunk) => chunks.push(chunk));
-                    response.on('end', () => resolve(Buffer.concat(chunks)));
-                    response.on('error', reject);
-                }).on('error', reject);
-            });
-        };
-
-        return new Promise(async (resolve, reject) => {
-            const doc = new PDFDocument({ size: 'A4', margin: 30, layout: 'landscape' });
-            const chunks: Buffer[] = [];
-
-            doc.on('data', (chunk) => chunks.push(chunk));
-            doc.on('end', () => resolve(Buffer.concat(chunks)));
-            doc.on('error', reject);
-
-            const pageWidth = doc.page.width - 60;
-            const startY = 100;
-
-            // Header with dark background
-            doc.rect(30, 30, pageWidth, 40).fill('#2c3e50');
-            doc.fontSize(18).fillColor('#f1c40f').text(`BOQ-${clientName?.toUpperCase() || 'CLIENT'}`, 40, 45, { width: pageWidth - 20, align: 'center' });
-
-            // Build dynamic columns based on available data
-            const columns: any[] = [
-                { header: 'S.NO', width: 35, field: 'sno' },
-                { header: 'PRODUCT CODE', width: 80, field: 'productCode' },
-                { header: 'PRODUCT NAME', width: 100, field: 'productName' },
-                { header: 'REF. IMAGE', width: 80, field: 'image' },
-                { header: 'QTY', width: 40, field: 'quantity' },
-                { header: 'SEATER', width: 50, field: 'seater' },
-                { header: 'MEASUREMENTS', width: 90, field: 'measurements' },
-                { header: 'PRICE PER PIECE', width: 80, field: 'unitPrice' }
-            ];
-
-            // Check if discount exists and add discount columns
-            if (quotation.discount || quotation.discountTotal > 0) {
-                const discountLabel = quotation.discount?.type === 'percentage'
-                    ? `DISCOUNTED PRICE PER PIECE @ ${quotation.discount.value}%`
-                    : 'DISCOUNTED PRICE PER PIECE';
-                columns.push({ header: discountLabel, width: 100, field: 'discountedUnitPrice' });
-            }
-
-            columns.push({ header: 'PRICE', width: 70, field: 'total' });
-
-            if (quotation.discount || quotation.discountTotal > 0) {
-                const discountLabel = quotation.discount?.type === 'percentage'
-                    ? `DISCOUNTED PRICE @ ${quotation.discount.value}%`
-                    : 'DISCOUNTED PRICE';
-                columns.push({ header: discountLabel, width: 90, field: 'discountedTotal' });
-            }
-
-            columns.push({ header: 'SPECIFICATION', width: 120, field: 'specification' });
-
-            const colWidths = columns.map(c => c.width);
-            let xPos = 30;
-            let yPos = startY;
-
-            // Draw header row
-            doc.rect(30, yPos, pageWidth, 30).fill('#2c3e50');
-            xPos = 30;
-            columns.forEach((col, i) => {
-                doc.fontSize(7).fillColor('#f1c40f').text(col.header, xPos + 2, yPos + 10, { width: colWidths[i] - 4, align: 'center' });
-                xPos += colWidths[i];
-            });
-
-            yPos += 30;
-
-            // Group items by tags (area) if tags exist
-            const groupedItems: any = {};
-            for (const item of quotation.items) {
-                const product = await this.productRepository.findOneBy({ _id: new ObjectId(item.productId) });
-                const area = product?.tags?.[0] || 'ITEMS';
-                if (!groupedItems[area]) groupedItems[area] = [];
-                groupedItems[area].push({ ...item, product });
-            }
-
-            let sno = 1;
-            for (const [area, items] of Object.entries(groupedItems)) {
-                // Area header
-                doc.rect(30, yPos, pageWidth, 20).fill('#34495e');
-                doc.fontSize(9).fillColor('#f1c40f').text(area.toUpperCase(), 35, yPos + 5);
-                yPos += 20;
-
-                // Items
-                for (const item of items as any[]) {
-                    const rowHeight = 80;
-
-                    if (yPos + rowHeight > doc.page.height - 50) {
-                        doc.addPage({ size: 'A4', margin: 30, layout: 'landscape' });
-                        yPos = 30;
-                    }
-
-                    doc.rect(30, yPos, pageWidth, rowHeight).stroke('#ddd');
-
-                    xPos = 30;
-                    const product = item.product;
-
-                    // Render each column
-                    for (const col of columns) {
-                        if (col.field === 'sno') {
-                            doc.fontSize(8).fillColor('#000').text(sno.toString(), xPos + 2, yPos + 35, { width: col.width - 4, align: 'center' });
-                        } else if (col.field === 'productCode') {
-                            doc.fontSize(7).text(item.productCode || product?.productCode || '', xPos + 2, yPos + 35, { width: col.width - 4, align: 'center' });
-                        } else if (col.field === 'productName') {
-                            doc.fontSize(7).text(item.productName || '', xPos + 2, yPos + 30, { width: col.width - 4, align: 'center' });
-                        } else if (col.field === 'image') {
-                            if (product?.featuredImage || product?.imageGallery?.[0]) {
-                                try {
-                                    const imgUrl = product.featuredImage || product.imageGallery[0];
-                                    if (imgUrl.startsWith('http://') || imgUrl.startsWith('https://')) {
-                                        const imageBuffer = await downloadImage(imgUrl);
-                                        doc.image(imageBuffer, xPos + 10, yPos + 10, { width: 60, height: 60, fit: [60, 60] });
-                                    } else {
-                                        const imgPath = imgUrl.startsWith('/') ? `.${imgUrl}` : imgUrl;
-                                        const fs = require('fs');
-                                        if (fs.existsSync(imgPath)) {
-                                            doc.image(imgPath, xPos + 10, yPos + 10, { width: 60, height: 60, fit: [60, 60] });
-                                        } else {
-                                            console.error('PDF image file does not exist:', imgPath);
-                                        }
-                                    }
-                                } catch (e) { }
-                            }
-                        } else if (col.field === 'quantity') {
-                            doc.fontSize(8).text(item.quantity.toString(), xPos + 2, yPos + 35, { width: col.width - 4, align: 'center' });
-                        } else if (col.field === 'seater') {
-                            let seaterValue = '';
-                            if (item.customDimensions?.seats) {
-                                seaterValue = item.customDimensions.seats.toString();
-                            } else if (product?.attributes?.seater) {
-                                seaterValue = product.attributes.seater;
-                            } else if (item.customDimensions?.width && product?.categoryId === '6966a6b2cdf2abe6fa7981aa') {
-                                // Calculate seats for sofas with custom width
-                                const width = item.customDimensions.width;
-                                const rawSeats = width / 600;
-                                const integerPart = Math.floor(rawSeats);
-                                const decimalPart = rawSeats - integerPart;
-                                
-                                let seats: number;
-                                if (decimalPart < 0.25) {
-                                    seats = integerPart;
-                                } else if (decimalPart >= 0.25 && decimalPart <= 0.50) {
-                                    seats = integerPart + 0.5;
-                                } else if (decimalPart > 0.50 && decimalPart < 0.75) {
-                                    seats = integerPart + 0.5;
-                                } else {
-                                    seats = integerPart + 1;
-                                }
-                                seaterValue = seats.toString();
-                            }
-                            doc.fontSize(7).text(seaterValue, xPos + 2, yPos + 35, { width: col.width - 4, align: 'center' });
-                        } else if (col.field === 'measurements') {
-                            const shape = product?.dimensionConfig?.shape || 'rectangle';
-                            const unit = product?.dimensionConfig?.unit || 'cm';
-                            const width = shape === 'rectangle'
-                                ? (item.customDimensions?.width || product?.dimensionConfig?.width?.default || '')
-                                : (item.customDimensions?.diameter || product?.dimensionConfig?.diameter?.default || '');
-                            const depth = item.customDimensions?.depth || product?.dimensionConfig?.depth || '';
-                            const height = item.customDimensions?.height || product?.dimensionConfig?.height || '';
-                            const label = shape === 'rectangle' ? 'W' : 'D';
-                            const measureText = `${label}:${width} D:${depth}\nH:${height} (${unit})`;
-                            doc.fontSize(6).text(measureText, xPos + 2, yPos + 28, { width: col.width - 4, align: 'center' });
-                        } else if (col.field === 'unitPrice') {
-                            doc.fontSize(8).text(item.unitPrice.toFixed(0), xPos + 2, yPos + 35, { width: col.width - 4, align: 'center' });
-                        } else if (col.field === 'discountedUnitPrice') {
-                            const discountedPrice = quotation.discount?.type === 'percentage'
-                                ? item.unitPrice * (1 - quotation.discount.value / 100)
-                                : item.unitPrice;
-                            doc.fontSize(8).text(discountedPrice.toFixed(0), xPos + 2, yPos + 35, { width: col.width - 4, align: 'center' });
-                        } else if (col.field === 'total') {
-                            doc.fontSize(8).text(item.total.toFixed(0), xPos + 2, yPos + 35, { width: col.width - 4, align: 'center' });
-                        } else if (col.field === 'discountedTotal') {
-                            const discountedPrice = item.discountedPrice || (item.total * (1 - (quotation.discount?.value || 0) / 100));
-                            doc.fontSize(8).text(discountedPrice.toFixed(0), xPos + 2, yPos + 35, { width: col.width - 4, align: 'center' });
-                        } else if (col.field === 'specification') {
-                            doc.fontSize(6).text(item.description || item.specifications || '', xPos + 2, yPos + 30, { width: col.width - 4, align: 'center' });
-                        }
-                        xPos += col.width;
-                    }
-
-                    yPos += rowHeight;
-                    sno++;
-                }
-            }
-
-            // Add footer with totals and terms & conditions
-            // Check if we need a new page for footer
-            if (yPos + 200 > doc.page.height - 50) {
-                doc.addPage({ size: 'A4', margin: 30, layout: 'landscape' });
-                yPos = 30;
-            }
-
-            // Totals section
-            yPos += 20;
-            doc.fontSize(10).fillColor('#000').text('TOTAL', 30, yPos, { width: 50, align: 'left' });
-            doc.text('8', 80, yPos, { width: 40, align: 'center' });
-            doc.text('0', 120, yPos, { width: 40, align: 'center' });
-            doc.text('0', 160, yPos, { width: 40, align: 'center' });
-
-            yPos += 15;
-            doc.fontSize(9).text('PACKING & TRANSPORTATION CHARGES', 30, yPos, { width: 200, align: 'left' });
-            doc.text('EXTRA AS ACTUAL', 230, yPos, { width: 150, align: 'left' });
-
-            yPos += 15;
-            doc.fontSize(9).text('GST @ 18%', 30, yPos, { width: 200, align: 'left' });
-            doc.text('0', 230, yPos, { width: 150, align: 'left' });
-
-            yPos += 15;
-            doc.fontSize(9).text('NET VALUE', 30, yPos, { width: 200, align: 'left' });
-            doc.text('0', 230, yPos, { width: 150, align: 'left' });
-
-            // Terms and Conditions section
-            yPos += 30;
-            doc.fontSize(12).fillColor('#2c3e50').text('Other Terms and Condition', 30, yPos);
-
-            const terms = [
-                '1. The above amount is subject to discount, which is applicable on above prices depends on final quantity of furniture.',
-                '2. Delivery Period will be 16 weeks from the date of payment of the fabric and selection of Mood Board.',
-                '3. Payment terms',
-                '   50 % Advance against order',
-                '   50% before delivery',
-                '4. GST, Any other Taxes, Packing, unloading and Transportation charges will be extra at actual',
-                '5. After selection of the material, 100% payment of material is to be done (Only after making the payment delivery period term will start)',
-                '6. Fabrics, leather and leatherite cost will be extra after selection the material 100% payment is to be done',
-                '7. Bed Hydraulic Charges will be Rs. 35000/- extra per bed.',
-                '8. Embroidery, quilting and accent cushions charges will be extra',
-                '9. Veneer cost is considered as Rs. 200 Per SQFT if any other veneer will be selected cost will change accordingly',
-                '10. The Parties agree that the cost of marble shall be considered an additional charge. Upon the Client\'s selection of the material, full payment for the chosen marble is required to proceed.',
-                '11. The Client acknowledges that the consideration of Matt/Gloss Gold as the PVD (Physical Vapor Deposition) color for the products is integral to the pricing, and understands that any deviation in PVD color selection may result in corresponding adjustments to the product cost. Black PVD cost would be additional.',
-                '12. Above mention prices are provided as per above mention sizes. If size will change, prices may vary.',
-                '13. Furniture installation charges for the FIRST VISIT will be included in the price. However, Due to any circumstances our team is not given workflow on the site and for any reason they must return the second visit will be chargeable.',
-                '14. Any other Visit besides the installation will be chargeable on per visit per day basis.',
-                '15. Quotation will be valid for 30 days',
-                '16. In Case of Upholstery:- If leather is selected price will increase as follows',
-                '   A. Sofa 6000 per Seat',
-                '   B. Dinning Chair 10000 per pcs',
-                '   C. Arm Chair 15000 per pcs',
-                '17. In the event that the client fails to collect the order on the mutually agreed upon date, the buyer shall be held responsible for bearing the warehousing charges which can amount up to 40,000 Indian Rupees per day. Alternatively, the discount rate previously agreed upon shall be deducted from the payment owed to the buyer.',
-                '18. This quotation is based upon and subject to the specific images and specifications provided by the customer as of the date hereof. Any alterations or deviations from the aforementioned specifications may result in adjustments to the quotation. The company reserves the right to amend this quotation upon receipt of any such changes.',
-                '19. 3 modifications are allowed in the Moodboard, post that it will be charged at 20000/- per modification.',
-                '20. 1 Modification is allowed post sending the Line Diagram and prior to approval.',
-                '21. No Changes in the Drawings will be done after the Line Diagram is approved by the Client or Architect. Per change 25000/- would be charged.',
-                '22. 1 site visit for templating is complimentary, post that 40000/- will be charged per visit.'
-            ];
-
-            yPos += 20;
-            doc.fontSize(8).fillColor('#000');
-
-            for (const term of terms) {
-                if (yPos + 15 > doc.page.height - 50) {
-                    doc.addPage({ size: 'A4', margin: 30, layout: 'landscape' });
-                    yPos = 30;
-                }
-                doc.text(term, 30, yPos, { width: pageWidth, align: 'left' });
-                yPos += 12;
-            }
-
-            doc.end();
-        });
-    }
 
     async generateQuotationExcel(id: string): Promise<Buffer> {
         const quotation = await this.findOne(id);

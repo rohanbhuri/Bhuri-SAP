@@ -32,7 +32,7 @@ const getReq = http.request(getOptions, (res) => {
   res.on('end', () => {
     console.log('Status:', res.statusCode);
     console.log('Response:', data);
-    
+
     if (res.statusCode === 200) {
       console.log('\n✓ GET preferences successful');
       testPost();
@@ -53,8 +53,8 @@ function testPost() {
   const postData = JSON.stringify({
     theme: 'dark',
     primaryColor: '#3B82F6',
-    currency: 'USD',
-    currencySymbol: '$'
+    currency: 'INR',
+    currencySymbol: '₹'
   });
 
   const postOptions = {
@@ -76,7 +76,7 @@ function testPost() {
     res.on('end', () => {
       console.log('Status:', res.statusCode);
       console.log('Response:', data);
-      
+
       if (res.statusCode === 200 || res.statusCode === 201) {
         console.log('\n✓ POST preferences successful');
       } else {

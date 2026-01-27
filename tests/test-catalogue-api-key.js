@@ -80,7 +80,7 @@ async function testApiKeyAuth() {
             slug: `api-test-product-${Date.now()}`,
             description: 'Product created via API for testing',
             basePrice: 99.99,
-            currency: 'USD',
+            currency: 'INR',
             isPublished: false,
             tags: ['test', 'api']
         };

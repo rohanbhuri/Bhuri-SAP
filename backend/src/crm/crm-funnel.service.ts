@@ -283,7 +283,7 @@ export class CrmFunnelService {
       taxTotal: quotationData.taxTotal || 0,
       discountTotal: quotationData.discountTotal || 0,
       grandTotal: quotationData.grandTotal,
-      currency: quotationData.currency || 'USD',
+      currency: quotationData.currency || 'INR',
       status: QuotationStatus.DRAFT,
       notes: quotationData.notes,
       terms: quotationData.terms,

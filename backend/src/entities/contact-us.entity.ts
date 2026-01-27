@@ -23,8 +23,28 @@ export class ContactUs {
   @Column({ default: false })
   isRead: boolean;
 
+  @Column({ nullable: true })
+  readAt?: Date;
+
   @Column()
   createdAt: Date;
+
+  @Column({ default: false })
+  isDeleted: boolean;
+
+  @Column({ nullable: true })
+  deletedAt: Date;
+
+  @Column({ nullable: true })
+  deletedBy: string;
+
+  @Column({ type: 'json', default: [] })
+  changeLog: Array<{
+    userId: string;
+    action: string;
+    timestamp: Date;
+    details?: string;
+  }>;
 
   constructor() {
     this.isRead = false;

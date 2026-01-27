@@ -39,7 +39,7 @@ export class CatalogueService {
         const limit = Number(query.limit) || 10;
         const skip = (page - 1) * limit;
 
-        const where: any = {};
+        const where: any = { isDeleted: { $ne: true } };
 
         if (query.search) {
             where.$or = [
@@ -166,13 +166,24 @@ export class CatalogueService {
         return this.findOneProduct(id);
     }
 
-    async deleteProduct(id: string): Promise<void> {
-        await this.productRepository.delete(id);
+    async deleteProduct(id: string, userId?: string): Promise<void> {
+        const current = await this.findOneProduct(id);
+        const changeLog = current?.changeLog || [];
+        if (userId) {
+            changeLog.push({ userId, action: 'deleted', timestamp: new Date(), details: 'Product soft-deleted' });
+        }
+        await this.productRepository.update(id, {
+            isDeleted: true,
+            isPublished: false,
+            deletedAt: new Date(),
+            deletedBy: userId,
+            changeLog
+        } as any);
     }
 
     // Categories
     async findAllCategories(): Promise<Category[]> {
-        return this.categoryRepository.find();
+        return this.categoryRepository.find({ where: { isDeleted: { $ne: true } } } as any);
     }
 
     async findOneCategory(id: string): Promise<Category> {
@@ -186,7 +197,7 @@ export class CatalogueService {
             updatedAt: new Date(),
             createdBy: userId,
             updatedBy: userId,
-            changeLog: userId ? [{ userId, action: 'created', timestamp: new Date() }] : []
+            changeLog: userId ? [{ userId, action: 'created', timestamp: new Date(), details: 'Initial creation' }] : []
         });
         return this.categoryRepository.save(category);
     }
@@ -194,8 +205,20 @@ export class CatalogueService {
     async updateCategory(id: string, data: Partial<Category>, userId?: string): Promise<Category> {
         const current = await this.findOneCategory(id);
         const changeLog = current?.changeLog || [];
+        
         if (userId) {
-            changeLog.push({ userId, action: 'updated', timestamp: new Date() });
+            const changes = [];
+            const skipFields = ['updatedAt', 'updatedBy', 'changeLog', '_id'];
+            
+            for (const key in data) {
+                if (skipFields.includes(key)) continue;
+                if (JSON.stringify(current[key]) !== JSON.stringify(data[key])) {
+                    changes.push(key);
+                }
+            }
+            
+            const details = changes.length > 0 ? `Updated: ${changes.join(', ')}` : 'No significant changes';
+            changeLog.push({ userId, action: 'updated', timestamp: new Date(), details });
         }
 
         await this.categoryRepository.update(id, {
@@ -207,13 +230,24 @@ export class CatalogueService {
         return this.findOneCategory(id);
     }
 
-    async deleteCategory(id: string): Promise<void> {
-        await this.categoryRepository.delete(id);
+    async deleteCategory(id: string, userId?: string): Promise<void> {
+        const current = await this.findOneCategory(id);
+        const changeLog = current?.changeLog || [];
+        if (userId) {
+            changeLog.push({ userId, action: 'deleted', timestamp: new Date(), details: 'Category soft-deleted' });
+        }
+        await this.categoryRepository.update(id, {
+            isDeleted: true,
+            isActive: false,
+            deletedAt: new Date(),
+            deletedBy: userId,
+            changeLog
+        } as any);
     }
 
     // Collections
     async findAllCollections(): Promise<Collection[]> {
-        return this.collectionRepository.find();
+        return this.collectionRepository.find({ where: { isDeleted: { $ne: true } } } as any);
     }
 
     async findOneCollection(id: string): Promise<Collection> {
@@ -227,7 +261,7 @@ export class CatalogueService {
             updatedAt: new Date(),
             createdBy: userId,
             updatedBy: userId,
-            changeLog: userId ? [{ userId, action: 'created', timestamp: new Date() }] : []
+            changeLog: userId ? [{ userId, action: 'created', timestamp: new Date(), details: 'Initial creation' }] : []
         });
         return this.collectionRepository.save(collection);
     }
@@ -235,8 +269,20 @@ export class CatalogueService {
     async updateCollection(id: string, data: Partial<Collection>, userId?: string): Promise<Collection> {
         const current = await this.findOneCollection(id);
         const changeLog = current?.changeLog || [];
+        
         if (userId) {
-            changeLog.push({ userId, action: 'updated', timestamp: new Date() });
+            const changes = [];
+            const skipFields = ['updatedAt', 'updatedBy', 'changeLog', '_id'];
+            
+            for (const key in data) {
+                if (skipFields.includes(key)) continue;
+                if (JSON.stringify(current[key]) !== JSON.stringify(data[key])) {
+                    changes.push(key);
+                }
+            }
+            
+            const details = changes.length > 0 ? `Updated: ${changes.join(', ')}` : 'No significant changes';
+            changeLog.push({ userId, action: 'updated', timestamp: new Date(), details });
         }
 
         await this.collectionRepository.update(id, {
@@ -248,13 +294,24 @@ export class CatalogueService {
         return this.findOneCollection(id);
     }
 
-    async deleteCollection(id: string): Promise<void> {
-        await this.collectionRepository.delete(id);
+    async deleteCollection(id: string, userId?: string): Promise<void> {
+        const current = await this.findOneCollection(id);
+        const changeLog = current?.changeLog || [];
+        if (userId) {
+            changeLog.push({ userId, action: 'deleted', timestamp: new Date(), details: 'Collection soft-deleted' });
+        }
+        await this.collectionRepository.update(id, {
+            isDeleted: true,
+            isActive: false,
+            deletedAt: new Date(),
+            deletedBy: userId,
+            changeLog
+        } as any);
     }
 
     // Designers
     async findAllDesigners(): Promise<Designer[]> {
-        return this.designerRepository.find();
+        return this.designerRepository.find({ where: { isDeleted: { $ne: true } } } as any);
     }
 
     async findOneDesigner(id: string): Promise<Designer> {
@@ -268,7 +325,7 @@ export class CatalogueService {
             updatedAt: new Date(),
             createdBy: userId,
             updatedBy: userId,
-            changeLog: userId ? [{ userId, action: 'created', timestamp: new Date() }] : []
+            changeLog: userId ? [{ userId, action: 'created', timestamp: new Date(), details: 'Initial creation' }] : []
         });
         return this.designerRepository.save(designer);
     }
@@ -276,8 +333,20 @@ export class CatalogueService {
     async updateDesigner(id: string, data: Partial<Designer>, userId?: string): Promise<Designer> {
         const current = await this.findOneDesigner(id);
         const changeLog = current?.changeLog || [];
+        
         if (userId) {
-            changeLog.push({ userId, action: 'updated', timestamp: new Date() });
+            const changes = [];
+            const skipFields = ['updatedAt', 'updatedBy', 'changeLog', '_id'];
+            
+            for (const key in data) {
+                if (skipFields.includes(key)) continue;
+                if (JSON.stringify(current[key]) !== JSON.stringify(data[key])) {
+                    changes.push(key);
+                }
+            }
+            
+            const details = changes.length > 0 ? `Updated: ${changes.join(', ')}` : 'No significant changes';
+            changeLog.push({ userId, action: 'updated', timestamp: new Date(), details });
         }
 
         await this.designerRepository.update(id, {
@@ -289,8 +358,19 @@ export class CatalogueService {
         return this.findOneDesigner(id);
     }
 
-    async deleteDesigner(id: string): Promise<void> {
-        await this.designerRepository.delete(id);
+    async deleteDesigner(id: string, userId?: string): Promise<void> {
+        const current = await this.findOneDesigner(id);
+        const changeLog = current?.changeLog || [];
+        if (userId) {
+            changeLog.push({ userId, action: 'deleted', timestamp: new Date(), details: 'Designer soft-deleted' });
+        }
+        await this.designerRepository.update(id, {
+            isDeleted: true,
+            isActive: false,
+            deletedAt: new Date(),
+            deletedBy: userId,
+            changeLog
+        } as any);
     }
 
     // Analytics
@@ -403,7 +483,7 @@ export class CatalogueService {
         isFeatured?: string | boolean;
         isPublished?: string | boolean;
     } = {}): Promise<string> {
-        const where: any = {};
+        const where: any = { isDeleted: { $ne: true } };
 
         if (query.search) {
             where.$or = [

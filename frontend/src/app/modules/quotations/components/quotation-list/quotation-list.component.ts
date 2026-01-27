@@ -73,10 +73,6 @@ import { PreferencesService } from '../../../../services/preferences.service';
                   <mat-icon>edit</mat-icon>
                   Edit
                 </button>
-                <button mat-menu-item (click)="downloadPDF(quote._id)">
-                  <mat-icon>picture_as_pdf</mat-icon>
-                  Download PDF
-                </button>
                 <button mat-menu-item (click)="downloadExcel(quote._id)">
                   <mat-icon>table_chart</mat-icon>
                   Download Excel
@@ -213,20 +209,7 @@ export class QuotationListComponent implements OnInit {
     }
   }
 
-  downloadPDF(id: string) {
-    this.quotationsService.downloadQuotationPDF(id).subscribe({
-      next: (blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `quotation-${id}.pdf`;
-        a.click();
-        window.URL.revokeObjectURL(url);
-        this.snackBar.open('PDF downloaded', 'Close', { duration: 3000 });
-      },
-      error: () => this.snackBar.open('Failed to download PDF', 'Close', { duration: 3000 })
-    });
-  }
+
 
   downloadExcel(id: string) {
     this.quotationsService.downloadQuotationExcel(id).subscribe({

@@ -32,9 +32,9 @@ export class UserPreferences {
     }[];
   };
 
-  @Column({ default: 'USD' })
+  @Column({ default: 'INR' })
   currency: string;
 
-  @Column({ default: '$' })
+  @Column({ default: '₹' })
   currencySymbol: string;
 }

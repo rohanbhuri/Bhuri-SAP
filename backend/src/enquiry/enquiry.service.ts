@@ -74,7 +74,7 @@ export class EnquiryService {
             subtotal,
             taxTotal,
             grandTotal,
-            currency: 'USD',
+            currency: 'INR',
             status: QuotationStatus.DRAFT,
             validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
             createdBy: approvedBy,

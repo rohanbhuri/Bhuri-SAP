@@ -126,8 +126,17 @@ export class Product {
         details?: string;
     }>;
 
+    @Column({ default: false })
+    isDeleted: boolean;
+
+    @Column({ nullable: true })
+    deletedAt: Date;
+
+    @Column({ nullable: true })
+    deletedBy: string;
+
     constructor() {
-        this.currency = 'USD';
+        this.currency = 'INR';
         this.imageGallery = [];
         this.videos = [];
         this.models3d = [];

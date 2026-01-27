@@ -17,11 +17,11 @@ class DemoSeeder {
     try {
       this.client = new MongoClient(this.config.database.MONGODB_URI);
       await this.client.connect();
-      
+
       // Extract database name from URI
       const dbName = this.config.database.MONGODB_URI.split('/')[3].split('?')[0];
       this.db = this.client.db(dbName);
-      
+
       console.log(`✅ Connected to ${this.projectName} database: ${dbName}`);
     } catch (error) {
       console.error('❌ Database connection failed:', error.message);
@@ -38,7 +38,7 @@ class DemoSeeder {
 
   async clearCollections() {
     const collections = ['users', 'organizations', 'roles', 'permissions', 'modules', 'departments', 'projects', 'contacts', 'leads', 'deals', 'tasks', 'employees', 'conversations', 'messages', 'attendance', 'leaverequests', 'goals', 'payrollruns', 'complianceitems', 'complianceevents', 'documentrecords', 'assets'];
-    
+
     for (const collectionName of collections) {
       try {
         await this.db.collection(collectionName).deleteMany({});
@@ -51,7 +51,7 @@ class DemoSeeder {
 
   async seedPermissions() {
     const permissions = this.getPermissionsForProject();
-    
+
     if (permissions.length > 0) {
       await this.db.collection('permissions').insertMany(permissions);
       console.log(`📋 Seeded ${permissions.length} permissions`);
@@ -60,7 +60,7 @@ class DemoSeeder {
 
   async seedRoles() {
     const roles = this.getRolesForProject();
-    
+
     if (roles.length > 0) {
       await this.db.collection('roles').insertMany(roles);
       console.log(`👥 Seeded ${roles.length} roles`);
@@ -69,7 +69,7 @@ class DemoSeeder {
 
   async seedModules() {
     const modules = this.getModulesForProject();
-    
+
     if (modules.length > 0) {
       await this.db.collection('modules').insertMany(modules);
       console.log(`🧩 Seeded ${modules.length} modules`);
@@ -78,7 +78,7 @@ class DemoSeeder {
 
   async seedOrganizations() {
     const organizations = this.getOrganizationsForProject();
-    
+
     if (organizations.length > 0) {
       await this.db.collection('organizations').insertMany(organizations);
       console.log(`🏢 Seeded ${organizations.length} organizations`);
@@ -87,7 +87,7 @@ class DemoSeeder {
 
   async seedUsers() {
     const users = await this.getUsersForProject();
-    
+
     if (users.length > 0) {
       await this.db.collection('users').insertMany(users);
       console.log(`👤 Seeded ${users.length} users`);
@@ -96,7 +96,7 @@ class DemoSeeder {
 
   async seedDepartments() {
     const departments = this.getDepartmentsForProject();
-    
+
     if (departments.length > 0) {
       await this.db.collection('departments').insertMany(departments);
       console.log(`🏛️ Seeded ${departments.length} departments`);
@@ -116,32 +116,32 @@ class DemoSeeder {
   async activateModulesForSuperAdmins() {
     const modules = await this.db.collection('modules').find({}).toArray();
     const moduleIds = modules.map(m => m._id);
-    
-    const superAdminRoles = await this.db.collection('roles').find({ 
-      type: 'super_admin' 
+
+    const superAdminRoles = await this.db.collection('roles').find({
+      type: 'super_admin'
     }).toArray();
-    
+
     const superAdminRoleIds = superAdminRoles.map(r => r._id);
-    
+
     // Activate modules for super admin users
     await this.db.collection('users').updateMany(
       { roleIds: { $in: superAdminRoleIds } },
       { $set: { activeModuleIds: moduleIds } }
     );
-    
+
     // Activate modules for all organizations
     await this.db.collection('organizations').updateMany(
       {},
       { $set: { activeModuleIds: moduleIds } }
     );
-    
+
     console.log(`🔓 Activated all modules for super admins and organizations`);
   }
 
   async seedContacts() {
     const organizations = await this.db.collection('organizations').find({}).toArray();
     const contacts = [];
-    
+
     const fakeContacts = [
       { firstName: 'John', lastName: 'Smith', email: 'john.smith@example.com', phone: '+1-555-1001', company: 'Tech Solutions Inc', position: 'CEO' },
       { firstName: 'Sarah', lastName: 'Johnson', email: 'sarah.johnson@example.com', phone: '+1-555-1002', company: 'Digital Innovations', position: 'CTO' },
@@ -149,7 +149,7 @@ class DemoSeeder {
       { firstName: 'Emily', lastName: 'Davis', email: 'emily.davis@example.com', phone: '+1-555-1004', company: 'Enterprise Corp', position: 'VP Sales' },
       { firstName: 'David', lastName: 'Wilson', email: 'david.wilson@example.com', phone: '+1-555-1005', company: 'Global Systems', position: 'Director' }
     ];
-    
+
     for (const org of organizations) {
       for (let i = 0; i < fakeContacts.length; i++) {
         const contact = fakeContacts[i];
@@ -165,7 +165,7 @@ class DemoSeeder {
         });
       }
     }
-    
+
     if (contacts.length > 0) {
       await this.db.collection('contacts').insertMany(contacts);
       console.log(`📞 Seeded ${contacts.length} contacts`);
@@ -177,7 +177,7 @@ class DemoSeeder {
     const users = await this.db.collection('users').find({}).toArray();
     const contacts = await this.db.collection('contacts').find({}).toArray();
     const projects = [];
-    
+
     const projectTemplates = [
       { name: 'Website Redesign', description: 'Complete website overhaul with modern design', budget: 50000, status: 'active' },
       { name: 'Mobile App Development', description: 'Native mobile application for iOS and Android', budget: 75000, status: 'planning' },
@@ -185,13 +185,13 @@ class DemoSeeder {
       { name: 'Data Migration', description: 'Migrate legacy data to new platform', budget: 25000, status: 'on-hold' },
       { name: 'Security Audit', description: 'Comprehensive security assessment', budget: 15000, status: 'active' }
     ];
-    
+
     for (const org of organizations) {
       for (let i = 0; i < projectTemplates.length; i++) {
         const template = projectTemplates[i];
         const manager = users.find(u => u.organizationIds.includes(org._id));
         const client = contacts.find(c => c.organizationId.equals(org._id));
-        
+
         projects.push({
           _id: new ObjectId(),
           organizationId: org._id,
@@ -205,7 +205,7 @@ class DemoSeeder {
           startDate: new Date(Date.now() - Math.random() * 90 * 24 * 60 * 60 * 1000),
           endDate: new Date(Date.now() + Math.random() * 180 * 24 * 60 * 60 * 1000),
           budget: template.budget,
-          currency: 'USD',
+          currency: 'INR',
           spent: Math.floor(template.budget * Math.random() * 0.7),
           billingType: 'fixed',
           managerId: manager?._id,
@@ -220,7 +220,7 @@ class DemoSeeder {
         });
       }
     }
-    
+
     if (projects.length > 0) {
       await this.db.collection('projects').insertMany(projects);
       console.log(`📁 Seeded ${projects.length} projects`);
@@ -232,7 +232,7 @@ class DemoSeeder {
     const contacts = await this.db.collection('contacts').find({}).toArray();
     const users = await this.db.collection('users').find({}).toArray();
     const leads = [];
-    
+
     const leadTemplates = [
       { title: 'Enterprise Software Solution', estimatedValue: 100000, source: 'Website' },
       { title: 'Digital Transformation Project', estimatedValue: 150000, source: 'Referral' },
@@ -240,12 +240,12 @@ class DemoSeeder {
       { title: 'Custom Application Development', estimatedValue: 120000, source: 'Trade Show' },
       { title: 'IT Consulting Services', estimatedValue: 60000, source: 'LinkedIn' }
     ];
-    
+
     for (const org of organizations) {
       for (const template of leadTemplates) {
         const contact = contacts.find(c => c.organizationId.equals(org._id));
         const assignedUser = users.find(u => u.organizationIds.includes(org._id));
-        
+
         leads.push({
           _id: new ObjectId(),
           title: template.title,
@@ -262,7 +262,7 @@ class DemoSeeder {
         });
       }
     }
-    
+
     if (leads.length > 0) {
       await this.db.collection('leads').insertMany(leads);
       console.log(`🎯 Seeded ${leads.length} leads`);
@@ -275,7 +275,7 @@ class DemoSeeder {
     const leads = await this.db.collection('leads').find({}).toArray();
     const users = await this.db.collection('users').find({}).toArray();
     const deals = [];
-    
+
     const dealTemplates = [
       { title: 'Enterprise Software License', value: 250000, stage: 'proposal', probability: 75 },
       { title: 'Cloud Infrastructure Setup', value: 180000, stage: 'negotiation', probability: 60 },
@@ -286,13 +286,13 @@ class DemoSeeder {
       { title: 'Mobile App Development', value: 120000, stage: 'proposal', probability: 70 },
       { title: 'Security Audit Services', value: 75000, stage: 'negotiation', probability: 80 }
     ];
-    
+
     for (const org of organizations) {
       for (const template of dealTemplates) {
         const contact = contacts.find(c => c.organizationId.equals(org._id));
         const lead = leads.find(l => l.organizationId.equals(org._id));
         const assignedUser = users.find(u => u.organizationIds.includes(org._id));
-        
+
         deals.push({
           _id: new ObjectId(),
           title: template.title,
@@ -311,7 +311,7 @@ class DemoSeeder {
         });
       }
     }
-    
+
     if (deals.length > 0) {
       await this.db.collection('deals').insertMany(deals);
       console.log(`🤝 Seeded ${deals.length} deals`);
@@ -323,7 +323,7 @@ class DemoSeeder {
     const users = await this.db.collection('users').find({}).toArray();
     const deals = await this.db.collection('deals').find({}).toArray();
     const tasks = [];
-    
+
     const taskTemplates = [
       { title: 'Requirements Analysis', description: 'Analyze and document requirements', type: 'crm' },
       { title: 'Design Mockups', description: 'Create design mockups and wireframes', type: 'crm' },
@@ -335,13 +335,13 @@ class DemoSeeder {
       { title: 'Prepare proposal', description: 'Create detailed project proposal', type: 'crm' },
       { title: 'Contract negotiation', description: 'Negotiate contract terms and conditions', type: 'crm' }
     ];
-    
+
     // Project tasks
     for (const project of projects) {
       for (let i = 0; i < Math.min(6, taskTemplates.length); i++) {
         const template = taskTemplates[i];
         const assignee = users.find(u => project.teamMemberIds.includes(u._id));
-        
+
         tasks.push({
           _id: new ObjectId(),
           title: template.title,
@@ -361,13 +361,13 @@ class DemoSeeder {
         });
       }
     }
-    
+
     // CRM tasks
     for (const deal of deals) {
       const crmTasks = taskTemplates.filter(t => t.type === 'crm').slice(0, 3);
       for (const template of crmTasks) {
         const assignee = users.find(u => u.organizationIds.some(id => id.equals(deal.organizationId)));
-        
+
         tasks.push({
           _id: new ObjectId(),
           title: template.title,
@@ -387,7 +387,7 @@ class DemoSeeder {
         });
       }
     }
-    
+
     if (tasks.length > 0) {
       await this.db.collection('tasks').insertMany(tasks);
       console.log(`✅ Seeded ${tasks.length} tasks`);
@@ -397,7 +397,7 @@ class DemoSeeder {
   async seedMessages() {
     const organizations = await this.db.collection('organizations').find({}).toArray();
     const users = await this.db.collection('users').find({}).toArray();
-    
+
     if (organizations.length === 0 || users.length < 2) {
       console.log('⚠️ Not enough organizations or users for messages seeding');
       return;
@@ -408,7 +408,7 @@ class DemoSeeder {
 
     for (const org of organizations) {
       const orgUsers = users.filter(u => u.organizationIds.some(id => id.equals(org._id)));
-      
+
       if (orgUsers.length < 2) continue;
 
       // Create DM conversations between users
@@ -416,7 +416,7 @@ class DemoSeeder {
         for (let j = i + 1; j < Math.min(i + 3, orgUsers.length); j++) {
           const user1 = orgUsers[i];
           const user2 = orgUsers[j];
-          
+
           const conversationId = new ObjectId();
           conversations.push({
             _id: conversationId,
@@ -438,7 +438,7 @@ class DemoSeeder {
           for (let k = 0; k < sampleMessages.length; k++) {
             const msgData = sampleMessages[k];
             const messageId = new ObjectId();
-            
+
             messages.push({
               _id: messageId,
               conversationId: conversationId,
@@ -465,7 +465,7 @@ class DemoSeeder {
       if (orgUsers.length >= 3) {
         const groupConversationId = new ObjectId();
         const groupMembers = orgUsers.slice(0, Math.min(5, orgUsers.length));
-        
+
         conversations.push({
           _id: groupConversationId,
           organizationId: org._id,
@@ -486,7 +486,7 @@ class DemoSeeder {
         for (let k = 0; k < groupMessages.length; k++) {
           const msgData = groupMessages[k];
           const messageId = new ObjectId();
-          
+
           messages.push({
             _id: messageId,
             conversationId: groupConversationId,
@@ -535,7 +535,7 @@ class DemoSeeder {
     const organizations = await this.db.collection('organizations').find({}).toArray();
     const departments = await this.db.collection('departments').find({}).toArray();
     const employees = [];
-    
+
     const employeeTemplates = [
       { firstName: 'Alice', lastName: 'Johnson', email: 'alice.johnson@company.com', position: 'Software Engineer', salary: 85000, status: 'active' },
       { firstName: 'Bob', lastName: 'Smith', email: 'bob.smith@company.com', position: 'Product Manager', salary: 95000, status: 'active' },
@@ -546,14 +546,14 @@ class DemoSeeder {
       { firstName: 'Grace', lastName: 'Taylor', email: 'grace.taylor@company.com', position: 'HR Specialist', salary: 65000, status: 'active' },
       { firstName: 'Henry', lastName: 'Anderson', email: 'henry.anderson@company.com', position: 'Marketing Manager', salary: 78000, status: 'active' }
     ];
-    
+
     for (const org of organizations) {
       const orgDepartments = departments.filter(d => d.organizationId?.equals(org._id) || !d.organizationId);
-      
+
       for (let i = 0; i < employeeTemplates.length; i++) {
         const template = employeeTemplates[i];
         const department = orgDepartments[i % orgDepartments.length];
-        
+
         employees.push({
           _id: new ObjectId(),
           employeeId: `EMP${String(i + 1).padStart(3, '0')}`,
@@ -571,7 +571,7 @@ class DemoSeeder {
         });
       }
     }
-    
+
     if (employees.length > 0) {
       await this.db.collection('employees').insertMany(employees);
       console.log(`👥 Seeded ${employees.length} employees`);
@@ -581,25 +581,25 @@ class DemoSeeder {
   async seedAttendanceRecords() {
     const employees = await this.db.collection('employees').find({ status: 'active' }).toArray();
     const attendanceRecords = [];
-    
+
     for (const employee of employees) {
       // Generate attendance for last 45 days, including recent weekdays
       for (let i = 0; i < 45; i++) {
         const date = new Date();
         date.setDate(date.getDate() - i);
-        
+
         // Skip weekends
         if (date.getDay() === 0 || date.getDay() === 6) continue;
-        
+
         const workDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
         const checkInTime = new Date(date);
         checkInTime.setHours(8 + Math.floor(Math.random() * 2), Math.floor(Math.random() * 60));
-        
+
         const checkOutTime = new Date(checkInTime);
         checkOutTime.setHours(checkInTime.getHours() + 8 + Math.floor(Math.random() * 2), Math.floor(Math.random() * 60));
-        
+
         const totalHours = (checkOutTime - checkInTime) / (1000 * 60 * 60);
-        
+
         attendanceRecords.push({
           _id: new ObjectId(),
           employeeId: employee._id,
@@ -622,7 +622,7 @@ class DemoSeeder {
         });
       }
     }
-    
+
     if (attendanceRecords.length > 0) {
       await this.db.collection('attendance').insertMany(attendanceRecords);
       console.log(`⏰ Seeded ${attendanceRecords.length} attendance records`);
@@ -632,18 +632,18 @@ class DemoSeeder {
   async seedLeaveRequests() {
     const employees = await this.db.collection('employees').find({ status: 'active' }).toArray();
     const leaveRequests = [];
-    
+
     const leaveTypes = ['casual', 'sick', 'earned'];
     const statuses = ['pending', 'approved', 'rejected'];
-    
+
     for (const employee of employees) {
       // Generate 2-4 leave requests per employee
       const numRequests = 2 + Math.floor(Math.random() * 3);
-      
+
       for (let i = 0; i < numRequests; i++) {
         const startDate = new Date(Date.now() + Math.random() * 90 * 24 * 60 * 60 * 1000);
         const endDate = new Date(startDate.getTime() + (1 + Math.floor(Math.random() * 4)) * 24 * 60 * 60 * 1000);
-        
+
         leaveRequests.push({
           _id: new ObjectId(),
           employeeId: employee.employeeId,
@@ -658,7 +658,7 @@ class DemoSeeder {
         });
       }
     }
-    
+
     if (leaveRequests.length > 0) {
       await this.db.collection('leaverequests').insertMany(leaveRequests);
       console.log(`🏖️ Seeded ${leaveRequests.length} leave requests`);
@@ -668,7 +668,7 @@ class DemoSeeder {
   async seedGoals() {
     const employees = await this.db.collection('employees').find({ status: 'active' }).toArray();
     const goals = [];
-    
+
     const goalTemplates = [
       'Complete React certification',
       'Improve code review turnaround time',
@@ -679,11 +679,11 @@ class DemoSeeder {
       'Learn new technology stack',
       'Improve customer satisfaction scores'
     ];
-    
+
     for (const employee of employees) {
       // Generate 2-3 goals per employee
       const numGoals = 2 + Math.floor(Math.random() * 2);
-      
+
       for (let i = 0; i < numGoals; i++) {
         goals.push({
           _id: new ObjectId(),
@@ -696,7 +696,7 @@ class DemoSeeder {
         });
       }
     }
-    
+
     if (goals.length > 0) {
       await this.db.collection('goals').insertMany(goals);
       console.log(`🎯 Seeded ${goals.length} performance goals`);
@@ -707,22 +707,22 @@ class DemoSeeder {
     const organizations = await this.db.collection('organizations').find({}).toArray();
     const employees = await this.db.collection('employees').find({ status: 'active' }).toArray();
     const payrollRuns = [];
-    
+
     for (const org of organizations) {
       const orgEmployees = employees.filter(e => e.organizationId.equals(org._id));
-      
+
       // Generate payroll runs for last 6 months
       for (let i = 0; i < 6; i++) {
         const date = new Date();
         date.setMonth(date.getMonth() - i);
-        
+
         const items = orgEmployees.map(emp => ({
           employeeId: emp.employeeId,
           grossPay: emp.salary / 12,
           deductions: emp.salary / 12 * 0.2,
           netPay: emp.salary / 12 * 0.8
         }));
-        
+
         payrollRuns.push({
           _id: new ObjectId(),
           organizationId: org._id,
@@ -734,7 +734,7 @@ class DemoSeeder {
         });
       }
     }
-    
+
     if (payrollRuns.length > 0) {
       await this.db.collection('payrollruns').insertMany(payrollRuns);
       console.log(`💰 Seeded ${payrollRuns.length} payroll runs`);
@@ -745,7 +745,7 @@ class DemoSeeder {
     const organizations = await this.db.collection('organizations').find({}).toArray();
     const complianceItems = [];
     const complianceEvents = [];
-    
+
     const itemTemplates = [
       'Annual Safety Training',
       'Data Privacy Compliance Review',
@@ -756,21 +756,21 @@ class DemoSeeder {
       'Tax Filing Requirements',
       'Insurance Policy Review'
     ];
-    
+
     for (const org of organizations) {
       for (const itemName of itemTemplates) {
         const itemId = new ObjectId();
-        
+
         complianceItems.push({
           _id: itemId,
           name: itemName,
           organizationId: org._id,
           createdAt: new Date()
         });
-        
+
         // Create compliance events for each item
         const dueDate = new Date(Date.now() + Math.random() * 180 * 24 * 60 * 60 * 1000);
-        
+
         complianceEvents.push({
           _id: new ObjectId(),
           itemId: itemId,
@@ -781,12 +781,12 @@ class DemoSeeder {
         });
       }
     }
-    
+
     if (complianceItems.length > 0) {
       await this.db.collection('complianceitems').insertMany(complianceItems);
       console.log(`📋 Seeded ${complianceItems.length} compliance items`);
     }
-    
+
     if (complianceEvents.length > 0) {
       await this.db.collection('complianceevents').insertMany(complianceEvents);
       console.log(`📅 Seeded ${complianceEvents.length} compliance events`);
@@ -796,16 +796,16 @@ class DemoSeeder {
   async seedDocumentRecords() {
     const employees = await this.db.collection('employees').find({}).toArray();
     const documentRecords = [];
-    
+
     const documentTypes = ['Contract', 'ID Copy', 'Resume', 'Certificate', 'Performance Review', 'Training Record'];
-    
+
     for (const employee of employees) {
       // Generate 2-4 documents per employee
       const numDocs = 2 + Math.floor(Math.random() * 3);
-      
+
       for (let i = 0; i < numDocs; i++) {
         const docType = documentTypes[Math.floor(Math.random() * documentTypes.length)];
-        
+
         documentRecords.push({
           _id: new ObjectId(),
           name: `${employee.firstName} ${employee.lastName} - ${docType}`,
@@ -818,7 +818,7 @@ class DemoSeeder {
         });
       }
     }
-    
+
     if (documentRecords.length > 0) {
       await this.db.collection('documentrecords').insertMany(documentRecords);
       console.log(`📄 Seeded ${documentRecords.length} document records`);
@@ -828,7 +828,7 @@ class DemoSeeder {
   async seedAssets() {
     const organizations = await this.db.collection('organizations').find({}).toArray();
     const assets = [];
-    
+
     const assetTemplates = [
       { name: 'MacBook Pro 16"', category: 'IT Equipment', serialNumber: 'MBP2023001' },
       { name: 'Dell Monitor 27"', category: 'IT Equipment', serialNumber: 'DM27001' },
@@ -839,11 +839,11 @@ class DemoSeeder {
       { name: 'Conference Table', category: 'Furniture', serialNumber: 'CT001' },
       { name: 'Projector', category: 'IT Equipment', serialNumber: 'PROJ001' }
     ];
-    
+
     for (const org of organizations) {
       for (let i = 0; i < assetTemplates.length; i++) {
         const template = assetTemplates[i];
-        
+
         assets.push({
           _id: new ObjectId(),
           name: template.name,
@@ -855,7 +855,7 @@ class DemoSeeder {
         });
       }
     }
-    
+
     if (assets.length > 0) {
       await this.db.collection('assets').insertMany(assets);
       console.log(`🏢 Seeded ${assets.length} assets`);
@@ -977,32 +977,32 @@ class DemoSeeder {
         { name: 'My Organizations', description: 'View and join public organizations', isActive: true, icon: 'groups', route: '/modules/my-organizations', category: 'Core', permissionType: 'public' },
         { name: 'CRM', description: 'Customer relationship management', isActive: true, icon: 'business_center', route: '/modules/crm', category: 'Sales', permissionType: 'admin' },
         { name: 'Client Management', description: 'Manage client requests and accounts', isActive: true, icon: 'people_outline', route: '/modules/client-management', category: 'Core', permissionType: 'admin' },
-        
+
         // HR Modules
         { name: 'HR Management', description: 'Human resources management', isActive: true, icon: 'people', route: '/modules/hr-management', category: 'HR', permissionType: 'admin' },
         { name: 'Staff Management', description: 'Manage staff records and information', isActive: true, icon: 'badge', route: '/modules/staff-management', category: 'HR', permissionType: 'admin' },
         { name: 'Payroll Management', description: 'Manage employee payroll and compensation', isActive: true, icon: 'payments', route: '/modules/payroll-management', category: 'HR', permissionType: 'admin' },
-        
+
         // Business Operations
         { name: 'Dashboard Analytics', description: 'Business intelligence and analytics dashboard', isActive: true, icon: 'analytics', route: '/modules/dashboard-analytics', category: 'Analytics', permissionType: 'admin' },
         { name: 'Projects Management', description: 'Manage projects and deliverables', isActive: true, icon: 'work', route: '/modules/projects-management', category: 'Project', permissionType: 'admin' },
         { name: 'Tasks Management', description: 'Manage tasks and assignments', isActive: true, icon: 'task', route: '/modules/tasks-management', category: 'Project', permissionType: 'admin' },
         { name: 'Order Management', description: 'Manage orders, track status, and monitor fulfillment', isActive: true, icon: 'shopping_cart', route: '/modules/order-management', category: 'Operations', permissionType: 'admin' },
         { name: 'Finance Management', description: 'Manage invoices, receipts, and payments', isActive: true, icon: 'account_balance_wallet', route: '/modules/finance', category: 'Finance', permissionType: 'admin' },
-        
+
         // Sales & Marketing
         { name: 'Leads Management', description: 'Manage sales leads and prospects', isActive: true, icon: 'person_add', route: '/modules/leads-management', category: 'Sales', permissionType: 'admin' },
         { name: 'Sales Management', description: 'Manage sales processes and pipeline', isActive: true, icon: 'trending_up', route: '/modules/sales-management', category: 'Sales', permissionType: 'admin' },
         { name: 'Deal Management', description: 'Manage deals and opportunities', isActive: true, icon: 'handshake', route: '/modules/deal-management', category: 'Sales', permissionType: 'admin' },
-        
+
         // Operations
         { name: 'Inventory Management', description: 'Manage inventory and stock levels', isActive: true, icon: 'inventory', route: '/modules/inventory-management', category: 'Operations', permissionType: 'admin' },
         { name: 'Asset Management', description: 'Manage company assets and equipment', isActive: true, icon: 'devices', route: '/modules/asset-management', category: 'Operations', permissionType: 'admin' },
-        
+
         // Reporting
         { name: 'Reports & Analytics', description: 'Generate comprehensive business reports', isActive: true, icon: 'assessment', route: '/modules/reports-analytics', category: 'Analytics', permissionType: 'admin' },
         { name: 'Performance Tracking', description: 'Track KPIs and performance metrics', isActive: true, icon: 'track_changes', route: '/modules/performance-tracking', category: 'Analytics', permissionType: 'admin' },
-        
+
         // Racconti XRM Specific
         { name: 'Catalogue Management', description: 'Manage product catalogue with 3D models', isActive: true, icon: 'view_in_ar', route: '/modules/catalogue', category: 'Catalogue', permissionType: 'admin' },
         { name: 'CMS Management', description: 'Content management system for pages and blogs', isActive: true, icon: 'article', route: '/modules/cms', category: 'Content', permissionType: 'admin' },
@@ -1015,28 +1015,28 @@ class DemoSeeder {
         { name: 'Organization Management', description: 'Manage organizations and membership requests', isActive: true, icon: 'business', route: '/modules/organization-management', category: 'Core', permissionType: 'super_admin' },
         { name: 'My Organizations', description: 'View and join public organizations', isActive: true, icon: 'groups', route: '/modules/my-organizations', category: 'Core', permissionType: 'public' },
         { name: 'CRM', description: 'Customer relationship management', isActive: true, icon: 'business_center', route: '/modules/crm', category: 'Sales', permissionType: 'admin' },
-        
+
         // HR Modules
         { name: 'HR Management', description: 'Human resources management', isActive: true, icon: 'people', route: '/modules/hr-management', category: 'HR', permissionType: 'admin' },
         { name: 'Staff Management', description: 'Manage staff records and information', isActive: false, icon: 'badge', route: '/modules/staff-management', category: 'HR', permissionType: 'admin' },
         { name: 'Payroll Management', description: 'Manage employee payroll and compensation', isActive: false, icon: 'payments', route: '/modules/payroll-management', category: 'HR', permissionType: 'admin' },
         { name: 'Role Assignment', description: 'Assign roles and responsibilities', isActive: false, icon: 'assignment_ind', route: '/modules/assigning-roles', category: 'HR', permissionType: 'admin' },
-        
+
         // Project Management
         { name: 'Tasks Management', description: 'Manage tasks and assignments', isActive: false, icon: 'task', route: '/modules/tasks-management', category: 'Project', permissionType: 'admin' },
         { name: 'Projects Management', description: 'Manage projects and deliverables', isActive: true, icon: 'work', route: '/modules/projects-management', category: 'Project', permissionType: 'admin' },
         { name: 'Project Tracking', description: 'Track project progress and milestones', isActive: true, icon: 'track_changes', route: '/modules/project-tracking', category: 'Project', permissionType: 'admin' },
         { name: 'Project Timesheet', description: 'Track time spent on projects', isActive: true, icon: 'schedule', route: '/modules/project-timesheet', category: 'Project', permissionType: 'admin' },
-        
+
         // Sales & CRM
         { name: 'Leads Management', description: 'Manage sales leads and prospects', isActive: false, icon: 'person_add', route: '/modules/leads-management', category: 'Sales', permissionType: 'admin' },
         { name: 'Sales Management', description: 'Manage sales processes and pipeline', isActive: false, icon: 'trending_up', route: '/modules/sales-management', category: 'Sales', permissionType: 'admin' },
         { name: 'Deal Management', description: 'Manage deals and opportunities', isActive: false, icon: 'handshake', route: '/modules/deal-management', category: 'Sales', permissionType: 'admin' },
-        
+
         // Operations
         { name: 'Inventory Management', description: 'Manage inventory and stock levels', isActive: false, icon: 'inventory', route: '/modules/inventory-management', category: 'Operations', permissionType: 'admin' },
         { name: 'Item Management', description: 'Manage items and products', isActive: false, icon: 'category', route: '/modules/item-management', category: 'Operations', permissionType: 'admin' },
-        
+
         // Finance
         { name: 'Budget Planner', description: 'Plan and manage budgets', isActive: false, icon: 'account_balance', route: '/modules/budget-planner', category: 'Finance', permissionType: 'admin' },
         { name: 'Estimates Management', description: 'Create and manage estimates', isActive: false, icon: 'receipt', route: '/modules/estimates-management', category: 'Finance', permissionType: 'admin' },
@@ -1051,17 +1051,17 @@ class DemoSeeder {
         { name: 'Organization Management', description: 'Manage organizations and membership requests', isActive: true, icon: 'business', route: '/modules/organization-management', category: 'Core', permissionType: 'super_admin' },
         { name: 'My Organizations', description: 'View and join public organizations', isActive: true, icon: 'groups', route: '/modules/my-organizations', category: 'Core', permissionType: 'public' },
         { name: 'CRM', description: 'Customer relationship management', isActive: true, icon: 'business_center', route: '/modules/crm', category: 'Sales', permissionType: 'admin' },
-        
+
         // HR Modules
         { name: 'HR Management', description: 'Human resources management', isActive: true, icon: 'people', route: '/modules/hr-management', category: 'HR', permissionType: 'admin' },
         { name: 'Payroll Management', description: 'Manage employee payroll and compensation', isActive: false, icon: 'payments', route: '/modules/payroll-management', category: 'HR', permissionType: 'admin' },
-        
+
         // Project Management
         { name: 'Tasks Management', description: 'Manage tasks and assignments', isActive: false, icon: 'task', route: '/modules/tasks-management', category: 'Project', permissionType: 'admin' },
         { name: 'Projects Management', description: 'Manage projects and deliverables', isActive: true, icon: 'work', route: '/modules/projects-management', category: 'Project', permissionType: 'admin' },
         { name: 'Project Tracking', description: 'Track project progress and milestones', isActive: true, icon: 'track_changes', route: '/modules/project-tracking', category: 'Project', permissionType: 'admin' },
         { name: 'Project Timesheet', description: 'Track time spent on projects', isActive: true, icon: 'schedule', route: '/modules/project-timesheet', category: 'Project', permissionType: 'admin' },
-        
+
         // Sales & Operations
         { name: 'Sales Management', description: 'Manage sales processes and pipeline', isActive: false, icon: 'trending_up', route: '/modules/sales-management', category: 'Sales', permissionType: 'admin' },
         { name: 'Inventory Management', description: 'Manage inventory and stock levels', isActive: false, icon: 'inventory', route: '/modules/inventory-management', category: 'Operations', permissionType: 'admin' },
@@ -1168,7 +1168,7 @@ class DemoSeeder {
     const organizations = await this.db.collection('organizations').find({}).toArray();
     const roles = await this.db.collection('roles').find({}).toArray();
     const users = [];
-    
+
     const hashedPassword = await bcrypt.hash('admin123', 10);
 
     if (this.projectName === 'beax-rm') {
@@ -1182,7 +1182,7 @@ class DemoSeeder {
         { email: 'dev2@beax.com', firstName: 'Jane', lastName: 'Developer', roleName: 'Staff' },
         { email: 'client@beax.com', firstName: 'Client', lastName: 'User', roleName: 'Client' }
       ];
-      
+
       for (const org of organizations) {
         for (const template of userTemplates) {
           const role = roles.find(r => r.name === template.roleName);
@@ -1211,7 +1211,7 @@ class DemoSeeder {
         { email: 'lead@trueprocess.com', firstName: 'Team', lastName: 'Lead', roleName: 'Staff' },
         { email: 'executor@trueprocess.com', firstName: 'Process', lastName: 'Executor', roleName: 'Staff' }
       ];
-      
+
       for (const org of organizations) {
         for (const template of userTemplates) {
           const role = roles.find(r => r.name === template.roleName);
@@ -1242,7 +1242,7 @@ class DemoSeeder {
         { email: 'coordinator@racconti.com', firstName: 'Project', lastName: 'Coordinator', roleName: 'Staff' },
         { email: 'client@racconti.com', firstName: 'Client', lastName: 'User', roleName: 'Client' }
       ];
-      
+
       for (const org of organizations) {
         for (const template of userTemplates) {
           const role = roles.find(r => r.name === template.roleName);
@@ -1295,10 +1295,10 @@ class DemoSeeder {
     try {
       console.log(`🌱 Starting demo seed for ${this.projectName}...`);
       console.log(`📊 Using config: ${this.config.app.name}`);
-      
+
       await this.connect();
       await this.clearCollections();
-      
+
       await this.seedPermissions();
       await this.seedRoles();
       await this.seedModules();
@@ -1307,7 +1307,7 @@ class DemoSeeder {
       await this.seedDepartments();
       await this.seedFakeData();
       await this.activateModulesForSuperAdmins();
-      
+
       console.log(`✅ Demo seed completed successfully for ${this.projectName}!`);
     } catch (error) {
       console.error('❌ Seed failed:', error.message);
@@ -1321,9 +1321,9 @@ class DemoSeeder {
 // Run the seeder
 async function main() {
   const projectName = process.argv[2] || 'beax-rm';
-  
+
   console.log(`🚀 Running demo seed for project: ${projectName}`);
-  
+
   const seeder = new DemoSeeder(projectName);
   await seeder.run();
 }

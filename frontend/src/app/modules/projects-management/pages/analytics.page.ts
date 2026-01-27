@@ -138,15 +138,15 @@ import { ProjectsManagementService, Project, ProjectStats } from '../projects-ma
           <div class="budget-stats">
             <div class="budget-stat">
               <div class="budget-label">Total Budget</div>
-              <div class="budget-value">{{ budgetAnalysis().totalBudget | currency:'USD' }}</div>
+              <div class="budget-value">{{ budgetAnalysis().totalBudget | currency:'INR' }}</div>
             </div>
             <div class="budget-stat">
               <div class="budget-label">Total Spent</div>
-              <div class="budget-value">{{ budgetAnalysis().totalSpent | currency:'USD' }}</div>
+              <div class="budget-value">{{ budgetAnalysis().totalSpent | currency:'INR' }}</div>
             </div>
             <div class="budget-stat">
               <div class="budget-label">Remaining</div>
-              <div class="budget-value">{{ budgetAnalysis().remaining | currency:'USD' }}</div>
+              <div class="budget-value">{{ budgetAnalysis().remaining | currency:'INR' }}</div>
             </div>
             <div class="budget-stat">
               <div class="budget-label">Utilization</div>

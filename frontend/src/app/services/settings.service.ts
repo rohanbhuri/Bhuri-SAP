@@ -161,8 +161,8 @@ export class SettingsService {
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       dateFormat: 'MM/dd/yyyy',
       timeFormat: '12h',
-      currency: 'USD',
-      currencySymbol: '$',
+      currency: 'INR',
+      currencySymbol: '₹',
       notifications: {
         email: true,
         push: true,

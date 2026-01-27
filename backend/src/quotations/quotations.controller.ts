@@ -45,8 +45,8 @@ export class QuotationsController {
 
     @Put(':id')
     @UseGuards(JwtAuthGuard, ApiKeyGuard)
-    async updateQuotation(@Param('id') id: string, @Body() data: Partial<Quotation>) {
-        return this.quotationsService.update(id, data);
+    async updateQuotation(@Param('id') id: string, @Body() data: Partial<Quotation>, @Request() req) {
+        return this.quotationsService.update(id, data, req.user?.userId);
     }
 
     @Post(':id/submit-approval')
@@ -69,8 +69,8 @@ export class QuotationsController {
 
     @Delete(':id')
     @UseGuards(JwtAuthGuard, ApiKeyGuard)
-    async deleteQuotation(@Param('id') id: string) {
-        return this.quotationsService.delete(id);
+    async deleteQuotation(@Param('id') id: string, @Request() req) {
+        return this.quotationsService.delete(id, req.user?.userId);
     }
 
     // Website Cart API
@@ -101,14 +101,14 @@ export class QuotationsController {
 
     @Put('enquiries/:id')
     @UseGuards(JwtAuthGuard, ApiKeyGuard)
-    async updateEnquiry(@Param('id') id: string, @Body() data: Partial<Enquiry>) {
-        return this.quotationsService.updateEnquiry(id, data);
+    async updateEnquiry(@Param('id') id: string, @Body() data: Partial<Enquiry>, @Request() req) {
+        return this.quotationsService.updateEnquiry(id, data, req.user?.userId);
     }
 
     @Delete('enquiries/:id')
     @UseGuards(JwtAuthGuard, ApiKeyGuard)
-    async deleteEnquiry(@Param('id') id: string) {
-        return this.quotationsService.deleteEnquiry(id);
+    async deleteEnquiry(@Param('id') id: string, @Request() req) {
+        return this.quotationsService.deleteEnquiry(id, req.user?.userId);
     }
 
     // Email Templates
@@ -145,8 +145,8 @@ export class QuotationsController {
 
     @Put('presentations/:id')
     @UseGuards(JwtAuthGuard, ApiKeyGuard)
-    async updatePresentation(@Param('id') id: string, @Body() data: Partial<Presentation>) {
-        return this.quotationsService.updatePresentation(id, data);
+    async updatePresentation(@Param('id') id: string, @Body() data: Partial<Presentation>, @Request() req) {
+        return this.quotationsService.updatePresentation(id, data, req.user?.userId);
     }
 
     @Post('presentations/:id/mark-final')
@@ -163,8 +163,8 @@ export class QuotationsController {
 
     @Delete('presentations/:id')
     @UseGuards(JwtAuthGuard, ApiKeyGuard)
-    async deletePresentation(@Param('id') id: string) {
-        return this.quotationsService.deletePresentation(id);
+    async deletePresentation(@Param('id') id: string, @Request() req) {
+        return this.quotationsService.deletePresentation(id, req.user?.userId);
     }
 
     @Post('presentations/:id/generate')
@@ -188,14 +188,6 @@ export class QuotationsController {
         return this.quotationsService.linkQuotationToPresentation(id, body.quotationId);
     }
 
-    @Get(':id/download-pdf')
-    @UseGuards(JwtAuthGuard, ApiKeyGuard)
-    async downloadQuotationPDF(@Param('id') id: string, @Res() res: Response) {
-        const buffer = await this.quotationsService.generateQuotationPDF(id);
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename=quotation-${id}.pdf`);
-        res.send(buffer);
-    }
 
     @Get(':id/download-excel')
     @UseGuards(JwtAuthGuard, ApiKeyGuard)

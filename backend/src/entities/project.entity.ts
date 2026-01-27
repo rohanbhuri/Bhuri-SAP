@@ -57,7 +57,7 @@ export class Project {
   @Column()
   budget: number;
 
-  @Column({ default: 'USD' })
+  @Column({ default: 'INR' })
   currency: string;
 
   @Column({ default: 0 })
@@ -107,7 +107,7 @@ export class Project {
     this.spent = 0;
     this.progress = 0;
     this.health = 'green';
-    this.currency = 'USD';
+    this.currency = 'INR';
     this.teamMemberIds = [];
     this.tags = [];
     this.customFields = {};

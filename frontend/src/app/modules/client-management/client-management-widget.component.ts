@@ -22,27 +22,32 @@ import { ClientManagementService } from './services/client-management.service';
           <p>Manage client accounts & requests</p>
         </div>
       </div>
-      
-      <div class="metrics-container">
-        <div class="metric-card primary">
-          <div class="metric-header">
-            <mat-icon>schedule</mat-icon>
-            <span class="metric-title">Pending Requests</span>
+
+      <div class="widget-body-content">
+        <div class="widget-stats">
+          <div class="stat-item primary">
+            <mat-icon>person_add</mat-icon>
+            <div class="stat-info">
+              <span class="stat-number">{{ pendingRequests() }}</span>
+              <span class="stat-label">Requests</span>
+              <span class="stat-detail">{{ convertedRequests() }} converted</span>
+            </div>
           </div>
-          <div class="metric-value">{{ pendingRequests() }}</div>
-          <div class="metric-footer">
-            <span class="metric-change">Awaiting review</span>
+          <div class="stat-item success">
+            <mat-icon>business</mat-icon>
+            <div class="stat-info">
+              <span class="stat-number">{{ activeClients() }}</span>
+              <span class="stat-label">Clients</span>
+              <span class="stat-detail">{{ totalClients() }} total</span>
+            </div>
           </div>
-        </div>
-        
-        <div class="metric-card success">
-          <div class="metric-header">
-            <mat-icon>check_circle</mat-icon>
-            <span class="metric-title">Active Clients</span>
-          </div>
-          <div class="metric-value">{{ activeClients() }}</div>
-          <div class="metric-footer">
-            <span class="metric-change">{{ totalClients() }} total</span>
+          <div class="stat-item info">
+            <mat-icon>mail</mat-icon>
+            <div class="stat-info">
+              <span class="stat-number">{{ unreadContact() }}</span>
+              <span class="stat-label">Inquiries</span>
+              <span class="stat-detail">{{ totalContact() }} messages</span>
+            </div>
           </div>
         </div>
       </div>
@@ -51,35 +56,31 @@ import { ClientManagementService } from './services/client-management.service';
         <div class="stat-row">
           <span class="stat-label">
             <mat-icon>trending_up</mat-icon>
-            New This Month
+            New Clients This Month
           </span>
           <mat-chip class="stat-chip success">+{{ newThisMonth() }}</mat-chip>
         </div>
-        <div class="stat-row">
-          <span class="stat-label">
-            <mat-icon>block</mat-icon>
-            Inactive
-          </span>
-          <mat-chip class="stat-chip warning">{{ inactiveClients() }}</mat-chip>
-        </div>
-        <div class="stat-row">
-          <span class="stat-label">
-            <mat-icon>security</mat-icon>
-            With 2FA
-          </span>
-          <mat-chip class="stat-chip info">{{ clientsWith2FA() }}</mat-chip>
-        </div>
       </div>
       
-      <div class="widget-actions">
-        <button mat-stroked-button (click)="openRequests()">
-          <mat-icon>inbox</mat-icon>
-          View Requests
-        </button>
-        <button mat-raised-button color="primary" (click)="openClientManagement()">
-          <mat-icon>settings</mat-icon>
-          Manage
-        </button>
+      <div class="widget-footer-actions">
+        <div class="cta-grid">
+          <button mat-flat-button class="cta-btn" (click)="openRequests()">
+            <mat-icon>person_add</mat-icon>
+            <span>Requests</span>
+          </button>
+          <button mat-flat-button class="cta-btn" (click)="openClientManagement()">
+            <mat-icon>business</mat-icon>
+            <span>Clients</span>
+          </button>
+          <button mat-flat-button class="cta-btn" (click)="openContactUs()">
+            <mat-icon>mail</mat-icon>
+            <span>Contact Us</span>
+          </button>
+          <button mat-flat-button class="cta-btn" (click)="openAnalytics()">
+            <mat-icon>analytics</mat-icon>
+            <span>Analytics</span>
+          </button>
+        </div>
       </div>
     </div>
   `,
@@ -131,96 +132,85 @@ import { ClientManagementService } from './services/client-management.service';
     }
     
     .metrics-container {
+      display: none;
+    }
+    
+    .widget-stats {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
-    }
-    
-    .metric-card {
       padding: 16px;
-      border-radius: 10px;
-      border: 1px solid color-mix(in srgb, var(--theme-on-surface) 8%, transparent);
-      transition: transform 0.2s, box-shadow 0.2s;
     }
     
-    .metric-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    :host-context([data-view="expanded"]) .widget-stats {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      padding: 24px;
     }
     
-    .metric-card.primary {
-      background: transparent;
-      border-color: color-mix(in srgb, var(--theme-primary) 20%, transparent);
-    }
-    
-    .metric-card.success {
-      background: transparent;
-      border-color: color-mix(in srgb, var(--theme-success) 20%, transparent);
-    }
-    
-    .metric-header {
+    .stat-item {
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin-bottom: 12px;
+      gap: 12px;
+      padding: 12px;
+      background: color-mix(in srgb, var(--theme-surface) 96%, var(--theme-primary));
+      border: 1px solid color-mix(in srgb, var(--theme-primary) 8%, transparent);
+      border-radius: 12px;
+      transition: all 0.2s ease-in-out;
     }
     
-    .metric-card.primary .metric-header mat-icon {
-      color: #d97706;
-      font-size: 20px;
-      width: 20px;
-      height: 20px;
+    .stat-item:hover {
+      transform: translateY(-2px);
+      background: color-mix(in srgb, var(--theme-surface) 92%, var(--theme-primary));
+      border-color: color-mix(in srgb, var(--theme-primary) 20%, transparent);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
     
-    .metric-card.success .metric-header mat-icon {
-      color: #059669;
-      font-size: 20px;
-      width: 20px;
-      height: 20px;
+    :host-context([data-view="expanded"]) .stat-item {
+      padding: 20px;
+      border-radius: 16px;
+    }
+
+    .stat-item mat-icon {
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+      color: var(--theme-primary);
+      opacity: 0.8;
     }
     
-    .metric-title {
-      font-size: 0.75rem;
+    .stat-info {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .stat-number {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--theme-primary);
+      line-height: 1.1;
+      letter-spacing: -0.5px;
+    }
+    
+    .stat-label {
+      font-size: 11px;
       font-weight: 600;
+      color: color-mix(in srgb, var(--theme-on-surface) 60%, transparent);
+      margin-top: 2px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
     
-    .metric-card.primary .metric-title {
-      color: #92400e;
+    .stat-detail {
+      font-size: 10px;
+      color: color-mix(in srgb, var(--theme-on-surface) 40%, transparent);
+      margin-top: 1px;
     }
-    
-    .metric-card.success .metric-title {
-      color: #065f46;
-    }
-    
-    .metric-value {
-      font-size: 2.25rem;
-      font-weight: 700;
-      line-height: 1;
-      margin-bottom: 8px;
-    }
-    
-    .metric-card.primary .metric-value {
-      color: #d97706;
-    }
-    
-    .metric-card.success .metric-value {
-      color: #059669;
-    }
-    
-    .metric-footer {
-      font-size: 0.75rem;
-    }
-    
-    .metric-card.primary .metric-footer {
-      color: #92400e;
-    }
-    
-    .metric-card.success .metric-footer {
-      color: #065f46;
-    }
-    
+
+    .stat-item.primary { border-left: 3px solid var(--theme-primary); }
+    .stat-item.success { border-left: 3px solid #059669; }
+    .stat-item.info { border-left: 3px solid #0284c7; }
+
     .quick-stats {
       display: flex;
       flex-direction: column;
@@ -274,25 +264,75 @@ import { ClientManagementService } from './services/client-management.service';
       color: #1e40af;
     }
     
-    .widget-actions {
+    .widget-footer-actions {
+      padding: 16px;
+      margin-top: auto;
+      border-top: 1px solid color-mix(in srgb, var(--theme-on-surface) 5%, transparent);
+    }
+    
+    .cta-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
-      margin-top: auto;
     }
     
-    .widget-actions button {
-      height: 40px;
-      border-radius: 8px;
-      font-weight: 500;
-      font-size: 0.875rem;
+    :host-context([data-view="expanded"]) .cta-grid {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
     }
-    
-    .widget-actions button mat-icon {
-      font-size: 18px;
-      width: 18px;
-      height: 18px;
-      margin-right: 4px;
+
+    .cta-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: auto;
+      padding: 14px 10px;
+      background: color-mix(in srgb, var(--theme-primary) 12%, var(--theme-surface)) !important;
+      color: var(--theme-primary) !important;
+      border-radius: 14px;
+      min-width: 0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid color-mix(in srgb, var(--theme-primary) 25%, transparent) !important;
+      box-shadow: 0 4px 6px -1px color-mix(in srgb, var(--theme-on-surface) 5%, transparent);
+    }
+
+    .cta-btn mat-icon {
+      margin: 0;
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+      transition: transform 0.3s ease;
+    }
+
+    .cta-btn span {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .analytics-btn {
+      grid-column: span 2;
+      background: color-mix(in srgb, var(--theme-primary) 18%, var(--theme-surface)) !important;
+      border-color: color-mix(in srgb, var(--theme-primary) 40%, transparent) !important;
+    }
+
+    :host-context([data-view="expanded"]) .analytics-btn {
+      grid-column: auto;
+    }
+
+    .cta-btn:hover {
+      background: var(--theme-primary) !important;
+      color: var(--theme-on-primary) !important;
+      border-color: var(--theme-primary) !important;
+      transform: translateY(-4px);
+      box-shadow: 0 10px 15px -3px color-mix(in srgb, var(--theme-primary) 30%, transparent);
+    }
+
+    .cta-btn:hover mat-icon {
+      transform: scale(1.1);
     }
   `]
 })
@@ -301,45 +341,30 @@ export class ClientManagementWidgetComponent implements OnInit {
   private clientService = inject(ClientManagementService);
 
   pendingRequests = signal(0);
+  convertedRequests = signal(0);
   activeClients = signal(0);
   totalClients = signal(0);
-  inactiveClients = signal(0);
+  unreadContact = signal(0);
+  totalContact = signal(0);
   newThisMonth = signal(0);
-  clientsWith2FA = signal(0);
 
   ngOnInit() {
     this.loadStats();
   }
 
   loadStats() {
-    this.clientService.getAllClientRequests().subscribe({
-      next: (requests) => {
-        this.pendingRequests.set(requests.filter(r => r.status === 'PENDING').length);
-      },
-      error: () => this.pendingRequests.set(0)
-    });
-
-    this.clientService.getAllClients().subscribe({
-      next: (clients) => {
-        this.totalClients.set(clients.length);
-        this.activeClients.set(clients.filter(c => c.isActive).length);
-        this.inactiveClients.set(clients.filter(c => !c.isActive).length);
-        this.clientsWith2FA.set(clients.filter(c => c.requireTwoFactor).length);
-
-        const now = new Date();
-        const thisMonth = clients.filter(c => {
-          const created = new Date(c.createdAt);
-          return created.getMonth() === now.getMonth() &&
-            created.getFullYear() === now.getFullYear();
-        });
-        this.newThisMonth.set(thisMonth.length);
+    this.clientService.getAnalytics().subscribe({
+      next: (analytics) => {
+        this.pendingRequests.set(analytics.pendingRequests);
+        this.convertedRequests.set(analytics.convertedRequests);
+        this.totalClients.set(analytics.totalClients);
+        this.activeClients.set(analytics.activeClients);
+        this.unreadContact.set(analytics.unreadContact);
+        this.totalContact.set(analytics.totalContact);
+        this.newThisMonth.set(analytics.recentChanges.clients);
       },
       error: () => {
-        this.totalClients.set(0);
-        this.activeClients.set(0);
-        this.inactiveClients.set(0);
-        this.newThisMonth.set(0);
-        this.clientsWith2FA.set(0);
+        // Fallback to old loading if needed
       }
     });
   }
@@ -350,5 +375,13 @@ export class ClientManagementWidgetComponent implements OnInit {
 
   openClientManagement() {
     this.router.navigate(['/modules/client-management'], { queryParams: { tab: 'clients' } });
+  }
+
+  openContactUs() {
+    this.router.navigate(['/modules/client-management'], { queryParams: { tab: 'contact-us' } });
+  }
+
+  openAnalytics() {
+    this.router.navigate(['/modules/client-management'], { queryParams: { tab: 'analytics' } });
   }
 }

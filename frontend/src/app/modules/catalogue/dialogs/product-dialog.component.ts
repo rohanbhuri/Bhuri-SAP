@@ -696,8 +696,8 @@ export class ProductDialogComponent implements OnInit, AfterViewInit {
   variationProductCodes = signal<Map<number, Map<number, string>>>(new Map());
   saving = signal(false);
   productCodeChecking = signal(false);
-  currency = signal('USD');
-  currencySymbol = signal('$');
+  currency = signal('INR');
+  currencySymbol = signal('₹');
   separatorKeysCodes: number[] = [ENTER, COMMA];
   imageUrls = '';
   videoUrls = '';
@@ -719,7 +719,7 @@ export class ProductDialogComponent implements OnInit, AfterViewInit {
       description: [''],
       descriptionHtml: [''],
       basePrice: [0, [Validators.min(0)]],
-      currency: ['USD'],
+      currency: ['INR'],
       categoryId: [''],
       collectionId: [''],
       designerId: [''],
@@ -750,9 +750,9 @@ export class ProductDialogComponent implements OnInit, AfterViewInit {
   ngOnInit() {
     this.preferencesService.getUserPreferences().subscribe(prefs => {
       if (prefs) {
-        this.currency.set(prefs.currency || 'USD');
-        this.currencySymbol.set(prefs.currencySymbol || '$');
-        this.productForm.patchValue({ currency: prefs.currency || 'USD' });
+        this.currency.set(prefs.currency || 'INR');
+        this.currencySymbol.set(prefs.currencySymbol || '₹');
+        this.productForm.patchValue({ currency: prefs.currency || 'INR' });
       }
     });
 

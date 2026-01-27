@@ -112,10 +112,27 @@ export class Quotation {
     @Column({ nullable: true })
     createdBy: string;
 
+    @Column({ default: false })
+    isDeleted: boolean;
+
+    @Column({ nullable: true })
+    deletedAt: Date;
+
+    @Column({ nullable: true })
+    deletedBy: string;
+
+    @Column({ type: 'json', default: [] })
+    changeLog: Array<{
+        userId: string;
+        action: string;
+        timestamp: Date;
+        details?: string;
+    }>;
+
     constructor() {
         this.items = [];
         this.status = QuotationStatus.DRAFT;
-        this.currency = 'USD';
+        this.currency = 'INR';
         this.createdAt = new Date();
     }
 }

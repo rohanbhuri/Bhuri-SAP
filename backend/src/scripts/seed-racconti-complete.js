@@ -9,7 +9,7 @@ async function seedRaccontiComplete() {
   console.log('🚀 Starting Racconti XRM Complete seeding...');
 
   let uri = config.database?.MONGODB_URI || 'mongodb://localhost:27017/bhuri-sap';
-  
+
   if (uri.includes('?')) {
     uri = uri.replace(/\/[^/?]+\?/, '/racconti?');
   } else {
@@ -108,7 +108,7 @@ async function seedRaccontiComplete() {
         description: 'Elegant marble coffee table with brass accents',
         descriptionHtml: '<p>An <strong>elegant</strong> marble coffee table featuring premium materials and exquisite craftsmanship.</p>',
         basePrice: 1200.00,
-        currency: 'USD',
+        currency: 'INR',
         featuredImage: 'https://images.unsplash.com/photo-1565191999001-551c187427bb?w=800',
         imageGallery: [
           'https://images.unsplash.com/photo-1565191999001-551c187427bb?w=800',
@@ -197,7 +197,7 @@ async function seedRaccontiComplete() {
         description: 'Modern cylindrical side table',
         descriptionHtml: '<p>A <strong>modern</strong> cylindrical side table perfect for any space.</p>',
         basePrice: 450.00,
-        currency: 'USD',
+        currency: 'INR',
         featuredImage: 'https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=800',
         imageGallery: [
           'https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=800'
@@ -327,13 +327,13 @@ async function seedRaccontiComplete() {
       { module: 'user-management', action: 'create', resource: 'organizations', description: 'Create organizations' },
       { module: 'user-management', action: 'update', resource: 'organizations', description: 'Update organizations' },
       { module: 'user-management', action: 'read', resource: 'modules', description: 'View modules' },
-      
+
       // CRM - Racconti only
       { module: 'crm', action: 'read', resource: 'organization', description: 'View CRM' },
       { module: 'crm', action: 'create', resource: 'organization', description: 'Create CRM records' },
       { module: 'crm', action: 'update', resource: 'organization', description: 'Update CRM records' },
       { module: 'crm', action: 'delete', resource: 'organization', description: 'Delete CRM records' },
-      
+
       // Client Management - Racconti only
       { module: 'client-management', action: 'read', resource: 'organization', description: 'View clients' },
       { module: 'client-management', action: 'create', resource: 'organization', description: 'Create clients' },
@@ -342,30 +342,30 @@ async function seedRaccontiComplete() {
       { module: 'client-management', action: 'read', resource: 'contact-us', description: 'View contact messages' },
       { module: 'client-management', action: 'update', resource: 'contact-us', description: 'Mark contact messages as read' },
       { module: 'client-management', action: 'delete', resource: 'contact-us', description: 'Delete contact messages' },
-      
+
       // Reports & Analytics - Racconti only
       { module: 'reports', action: 'read', resource: 'organization', description: 'View reports' },
       { module: 'reports', action: 'create', resource: 'organization', description: 'Create reports' },
       { module: 'reports', action: 'update', resource: 'organization', description: 'Update reports' },
-      
+
       // Catalogue Management - Racconti only
       { module: 'catalogue', action: 'read', resource: 'organization', description: 'View catalogue' },
       { module: 'catalogue', action: 'create', resource: 'organization', description: 'Create catalogue items' },
       { module: 'catalogue', action: 'update', resource: 'organization', description: 'Update catalogue items' },
       { module: 'catalogue', action: 'delete', resource: 'organization', description: 'Delete catalogue items' },
-      
+
       // CMS Management - Racconti only
       { module: 'cms', action: 'read', resource: 'organization', description: 'View CMS' },
       { module: 'cms', action: 'create', resource: 'organization', description: 'Create CMS content' },
       { module: 'cms', action: 'update', resource: 'organization', description: 'Update CMS content' },
       { module: 'cms', action: 'delete', resource: 'organization', description: 'Delete CMS content' },
-      
+
       // Quotations - Racconti only
       { module: 'quotations', action: 'read', resource: 'organization', description: 'View quotations' },
       { module: 'quotations', action: 'create', resource: 'organization', description: 'Create quotations' },
       { module: 'quotations', action: 'update', resource: 'organization', description: 'Update quotations' },
       { module: 'quotations', action: 'delete', resource: 'organization', description: 'Delete quotations' },
-      
+
       // Dashboard
       { module: 'dashboard', action: 'read', resource: 'organization', description: 'View dashboard' }
     ];
@@ -475,7 +475,7 @@ async function seedRaccontiComplete() {
     await usersCollection.deleteMany({});
 
     const hashedPassword = await bcrypt.hash('password123', 10);
-    
+
     const roleIds = Object.values(insertedRoles.insertedIds);
     const superAdminRole = roleIds[0];
     const adminRole = roleIds[1];
@@ -578,7 +578,7 @@ async function seedRaccontiComplete() {
         createdAt: new Date()
       }
     ];
-    
+
     await usersCollection.insertMany(users);
     console.log(`👤 Seeded ${users.length} users with roles`);
 
@@ -593,8 +593,8 @@ async function seedRaccontiComplete() {
         primaryColor: '#10B981',
         accentColor: '#EF4444',
         secondaryColor: '#374151',
-        currency: 'USD',
-        currencySymbol: '$',
+        currency: 'INR',
+        currencySymbol: '₹',
         pinnedModules: [],
         dashboardPreferences: {}
       }

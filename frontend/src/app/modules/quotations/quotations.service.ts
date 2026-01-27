@@ -135,9 +135,6 @@ export class QuotationsService {
         return this.http.post<any>(`${this.apiUrl}/presentations/${id}/send-to-client`, {});
     }
 
-    downloadQuotationPDF(id: string): Observable<Blob> {
-        return this.http.get(`${this.apiUrl}/${id}/download-pdf`, { responseType: 'blob' });
-    }
 
     downloadQuotationExcel(id: string): Observable<Blob> {
         return this.http.get(`${this.apiUrl}/${id}/download-excel`, { responseType: 'blob' });

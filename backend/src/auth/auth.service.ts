@@ -31,7 +31,7 @@ export class AuthService {
   }
 
   async login(email: string, password: string, deviceId?: string, userAgent?: string) {
-    const user = await this.userRepository.findOne({ where: { email } });
+    const user = await this.userRepository.findOne({ where: { email, isDeleted: { $ne: true } } } as any);
     if (!user || !(await bcrypt.compare(password, user.password))) {
       throw new UnauthorizedException('Invalid credentials');
     }

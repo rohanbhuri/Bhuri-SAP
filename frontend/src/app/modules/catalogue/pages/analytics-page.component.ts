@@ -563,7 +563,7 @@ export class AnalyticsPageComponent implements OnInit {
   
   loading = signal(true);
   exporting = signal(false);
-  currencySymbol = signal('$');
+  currencySymbol = signal('₹');
   analytics = signal({
     totalProducts: 0,
     publishedProducts: 0,
@@ -597,7 +597,7 @@ export class AnalyticsPageComponent implements OnInit {
       },
       error: () => {
         // Use default currency symbol
-        this.currencySymbol.set('$');
+        this.currencySymbol.set('₹');
       }
     });
   }
