@@ -91,6 +91,9 @@ export class User {
     details?: string;
   }>;
 
+  @Column({ default: false })
+  enableEmailNotifications: boolean;
+
   @Column()
   createdAt: Date;
 
@@ -101,5 +104,6 @@ export class User {
     this.activeDevices = [];
     this.createdAt = new Date();
     this.isOnline = false;
+    this.enableEmailNotifications = false;
   }
 }

@@ -73,6 +73,13 @@ import { filter } from 'rxjs/operators';
             Permissions
           </ng-template>
         </mat-tab>
+
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon>analytics</mat-icon>
+            Analytics
+          </ng-template>
+        </mat-tab>
       </mat-tab-group>
 
       <div class="tab-content">
@@ -171,13 +178,15 @@ export class UserManagementLayoutComponent {
       this.selectedTab = 1;
     } else if (url.includes('/permissions')) {
       this.selectedTab = 2;
+    } else if (url.includes('/analytics')) {
+      this.selectedTab = 3;
     } else {
       this.selectedTab = 0;
     }
   }
 
   onTabChange(index: number) {
-    const routes = ['users', 'roles', 'permissions'];
+    const routes = ['users', 'roles', 'permissions', 'analytics'];
     if (routes[index]) {
       this.router.navigate(['/modules/user-management', routes[index]]);
     }

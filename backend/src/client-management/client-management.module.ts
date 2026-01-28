@@ -12,11 +12,13 @@ import { Permission } from '../entities/permission.entity';
 import { ApiKey } from '../entities/api-key.entity';
 import { ContactUs } from '../entities/contact-us.entity';
 import { AuthModule } from '../auth/auth.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([ClientRequest, Client, User, Organization, Role, Permission, ApiKey, ContactUs]),
     AuthModule,
+    NotificationsModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'rohanbhuri',
       signOptions: { expiresIn: '1h' },

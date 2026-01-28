@@ -1,5 +1,6 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -45,11 +46,11 @@ import { UserManagementService } from '../../user-management/user-management.ser
             Import/Export
           </button>
           <mat-menu #importMenu="matMenu">
-            <button mat-menu-item (click)="downloadTemplate()" *ngIf="isSuperAdmin()">
+            <button mat-menu-item (click)="downloadTemplate()">
               <mat-icon>download</mat-icon>
               <span>Download CSV Template</span>
             </button>
-            <button mat-menu-item (click)="fileInput.click()" *ngIf="isSuperAdmin()">
+            <button mat-menu-item (click)="fileInput.click()">
               <mat-icon>upload_file</mat-icon>
               <span>Import Products</span>
             </button>
@@ -501,7 +502,11 @@ export class ProductsPageComponent implements OnInit {
   private authService = inject(AuthService);
   private userService = inject(UserManagementService);
 
-  isSuperAdmin = signal<boolean>(this.authService.hasRole('super_admin'));
+  currentUser = toSignal(this.authService.currentUser$);
+  isSuperAdmin = computed(() => {
+    const user = this.currentUser();
+    return user?.roles?.some((r: any) => r.type === 'super_admin') || false;
+  });
 
   products = signal<any[]>([]);
   totalProducts = signal<number>(0);

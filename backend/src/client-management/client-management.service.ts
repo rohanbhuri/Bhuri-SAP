@@ -10,6 +10,7 @@ import { Role, RoleType } from '../entities/role.entity';
 import { ContactUs } from '../entities/contact-us.entity';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { MailService } from '../notifications/mail.service';
 
 @Injectable()
 export class ClientManagementService {
@@ -27,6 +28,7 @@ export class ClientManagementService {
     @InjectRepository(ContactUs)
     private contactUsRepository: MongoRepository<ContactUs>,
     private jwtService: JwtService,
+    private mailService: MailService,
   ) {}
 
   async apiLogin(email: string, password: string, deviceId?: string, userAgent?: string, ip?: string) {
@@ -174,7 +176,17 @@ export class ClientManagementService {
       status: ClientRequestStatus.PENDING
     });
 
-    return this.clientRequestRepository.save(clientRequest);
+    const savedRequest = await this.clientRequestRepository.save(clientRequest);
+
+    // Send email notification to admins
+    this.mailService.sendCredentialRequestNotification({
+      companyName: savedRequest.companyName,
+      contactPerson: savedRequest.contactPerson,
+      email: savedRequest.email,
+      phone: savedRequest.phone
+    }).catch(err => console.error('Failed to send credential request email:', err));
+
+    return savedRequest;
   }
 
   async getAllClientRequests() {
@@ -618,7 +630,17 @@ export class ClientManagementService {
       message: messageData.message,
       organizationId: messageData.organizationId?.toString() || '',
     } as any);
-    return this.contactUsRepository.save(contactUs);
+    const savedContact = await this.contactUsRepository.save(contactUs) as any;
+
+    // Send email notification to admins
+    this.mailService.sendContactUsNotification({
+      name: savedContact.name,
+      email: savedContact.email,
+      subject: savedContact.subject || 'No Subject',
+      message: savedContact.message
+    }).catch(err => console.error('Failed to send contact us email:', err));
+
+    return savedContact;
   }
 
   async getAllContactMessages(organizationId?: string) {

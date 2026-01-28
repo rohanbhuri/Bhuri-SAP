@@ -101,6 +101,7 @@ import { PasswordDialogComponent } from './password-dialog.component';
           <mat-checkbox formControlName="requireTwoFactor">Require Two Factor</mat-checkbox>
           <mat-checkbox formControlName="restrictToBusinessHours">Restrict to Business Hours</mat-checkbox>
           <mat-checkbox formControlName="allowApiAccess">Allow API Access</mat-checkbox>
+          <mat-checkbox formControlName="enableEmailNotifications">Enable email notifications for this user</mat-checkbox>
         </div>
 
         <div class="form-row">
@@ -234,7 +235,8 @@ export class UserDialogComponent implements OnInit {
         allowApiAccess: [false],
         sessionTimeout: [null],
         maxDevices: [null],
-        ipWhitelist: ['']
+        ipWhitelist: [''],
+        enableEmailNotifications: [false]
       });
     } else {
       return this.fb.group({
@@ -251,7 +253,8 @@ export class UserDialogComponent implements OnInit {
         allowApiAccess: [false],
         sessionTimeout: [null],
         maxDevices: [null],
-        ipWhitelist: ['']
+        ipWhitelist: [''],
+        enableEmailNotifications: [false]
       });
     }
   }
@@ -270,7 +273,8 @@ export class UserDialogComponent implements OnInit {
       allowApiAccess: user.allowApiAccess || false,
       sessionTimeout: user.sessionTimeout || null,
       maxDevices: user.maxDevices || null,
-      ipWhitelist: user.ipWhitelist || ''
+      ipWhitelist: user.ipWhitelist || '',
+      enableEmailNotifications: user.enableEmailNotifications || false
     });
   }
 
@@ -308,7 +312,8 @@ export class UserDialogComponent implements OnInit {
         allowApiAccess: formValue.allowApiAccess,
         sessionTimeout: formValue.sessionTimeout,
         maxDevices: formValue.maxDevices,
-        ipWhitelist: formValue.ipWhitelist
+        ipWhitelist: formValue.ipWhitelist,
+        enableEmailNotifications: formValue.enableEmailNotifications
       };
 
       if (!this.isEdit && formValue.password) {

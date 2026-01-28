@@ -1,4 +1,5 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -8,233 +9,279 @@ import { UserManagementService } from './user-management.service';
 @Component({
   selector: 'app-user-management-widget',
   standalone: true,
-  imports: [MatCardModule, MatButtonModule, MatIconModule],
+  imports: [CommonModule, MatCardModule, MatButtonModule, MatIconModule],
   template: `
     <div class="user-widget">
-      <div class="header">
-        <div class="icon-container">
-          <mat-icon>people</mat-icon>
-        </div>
-        <div class="title-section">
-          <span class="subtitle">Active users & roles</span>
-        </div>
+      <div class="widget-header-content">
+        <p class="subtitle">Manage users, roles & permissions</p>
       </div>
       
-      <div class="metrics-grid">
-        <div class="metric-card primary">
-          <div class="metric-value">{{ totalUsers() }}</div>
-          <div class="metric-label">Total Users</div>
-          <div class="metric-trend">+{{ Math.floor(totalUsers() * 0.12) }} this month</div>
-        </div>
-        
-        <div class="metric-card secondary">
-          <div class="metric-value">{{ activeUsers() }}</div>
-          <div class="metric-label">Active Now</div>
-          <div class="progress-bar">
-            <div class="progress-fill" [style.width.%]="(activeUsers() / totalUsers()) * 100"></div>
+      <div class="widget-body-content">
+        <div class="widget-stats">
+          <div class="stat-item primary">
+            <mat-icon>people</mat-icon>
+            <div class="stat-info">
+              <span class="stat-number">{{ stats().totalUsers }}</span>
+              <span class="stat-label">Users</span>
+              <span class="stat-detail">{{ stats().activeUsers }} active</span>
+            </div>
+          </div>
+          
+          <div class="stat-item secondary">
+            <mat-icon>admin_panel_settings</mat-icon>
+            <div class="stat-info">
+              <span class="stat-number">{{ stats().totalRoles }}</span>
+              <span class="stat-label">Roles</span>
+              <span class="stat-detail">Defined roles</span>
+            </div>
+          </div>
+          
+          <div class="stat-item tertiary">
+            <mat-icon>security</mat-icon>
+            <div class="stat-info">
+              <span class="stat-number">{{ stats().totalPermissions }}</span>
+              <span class="stat-label">Permissions</span>
+              <span class="stat-detail">Access controls</span>
+            </div>
+          </div>
+          
+          <div class="stat-item security">
+            <mat-icon>verified_user</mat-icon>
+            <div class="stat-info">
+              <span class="stat-number">{{ stats().mfaAdoption }}</span>
+              <span class="stat-label">MFA Enabled</span>
+              <span class="stat-detail">Secure accounts</span>
+            </div>
           </div>
         </div>
       </div>
       
-      <div class="action-section">
-        <button mat-flat-button color="primary" (click)="openUserManagement()">
-          <mat-icon>settings</mat-icon>
-          Manage Users
-        </button>
+      <div class="widget-footer-actions">
+        <div class="cta-grid">
+          <button mat-flat-button class="cta-btn" (click)="navigateToTab('users')">
+            <mat-icon>people</mat-icon>
+            <span>Users</span>
+          </button>
+          
+          <button mat-flat-button class="cta-btn" (click)="navigateToTab('roles')">
+            <mat-icon>admin_panel_settings</mat-icon>
+            <span>Roles</span>
+          </button>
+          
+          <button mat-flat-button class="cta-btn" (click)="navigateToTab('permissions')">
+            <mat-icon>security</mat-icon>
+            <span>Permissions</span>
+          </button>
+          
+          <button mat-flat-button class="cta-btn analytics-btn" (click)="navigateToTab('analytics')">
+            <mat-icon>analytics</mat-icon>
+            <span>Analytics</span>
+          </button>
+        </div>
       </div>
     </div>
   `,
   styles: [`
     .user-widget {
-      padding: 20px;
       height: 100%;
       display: flex;
       flex-direction: column;
-      gap: 16px;
-    }
-    
-    /* Expanded view styles */
-    :host-context([data-view="expanded"]) .user-widget {
-      padding: 32px;
-      gap: 24px;
-    }
-    
-    .header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    
-    :host-context([data-view="expanded"]) .header {
-      gap: 20px;
-    }
-    
-    .icon-container {
-      width: 48px;
-      height: 48px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, var(--theme-primary), color-mix(in srgb, var(--theme-primary) 80%, #fff));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-    }
-    
-    :host-context([data-view="expanded"]) .icon-container {
-      width: 64px;
-      height: 64px;
-      border-radius: 16px;
-    }
-    
-    :host-context([data-view="expanded"]) .icon-container mat-icon {
-      font-size: 32px;
-      width: 32px;
-      height: 32px;
+      background: transparent;
     }
     
     .subtitle {
-      font-size: 0.9rem;
       color: color-mix(in srgb, var(--theme-on-surface) 70%, transparent);
-      font-weight: 500;
+      padding: 0 16px;
+      font-size: 0.9rem;
+      margin-top: 4px;
     }
     
-    :host-context([data-view="expanded"]) .subtitle {
-      font-size: 1.2rem;
-    }
-    
-    .metrics-grid {
+    .widget-stats {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
-      flex: 1;
-
-      @media (max-width: 480px) {
-        grid-template-columns: 1fr;
-      }
-    }
-    
-    :host-context([data-view="expanded"]) .metrics-grid {
-      gap: 20px;
-      grid-template-columns: 1fr 1fr;
-
-      @media (max-width: 600px) {
-        grid-template-columns: 1fr;
-      }
-    }
-    
-    .metric-card {
       padding: 16px;
-      border-radius: 12px;
-      background: transparent;
-      border: 1px solid color-mix(in srgb, var(--theme-on-surface) 8%, transparent);
     }
     
-    :host-context([data-view="expanded"]) .metric-card {
+    :host-context([data-view="expanded"]) .widget-stats {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
       padding: 24px;
+    }
+    
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: color-mix(in srgb, var(--theme-surface) 96%, var(--theme-primary));
+      border: 1px solid color-mix(in srgb, var(--theme-primary) 8%, transparent);
+      border-radius: 12px;
+      transition: all 0.2s ease-in-out;
+    }
+    
+    .stat-item:hover {
+      transform: translateY(-2px);
+      background: color-mix(in srgb, var(--theme-surface) 92%, var(--theme-primary));
+      border-color: color-mix(in srgb, var(--theme-primary) 20%, transparent);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    
+    :host-context([data-view="expanded"]) .stat-item {
+      padding: 20px;
       border-radius: 16px;
     }
-    
-    .metric-value {
-      font-size: 2rem;
-      font-weight: 700;
+
+    .stat-item mat-icon {
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
       color: var(--theme-primary);
-      line-height: 1;
+      opacity: 0.8;
     }
     
-    :host-context([data-view="expanded"]) .metric-value {
-      font-size: 3rem;
+    .stat-info {
+      display: flex;
+      flex-direction: column;
     }
     
-    .metric-label {
-      font-size: 0.8rem;
-      color: color-mix(in srgb, var(--theme-on-surface) 70%, transparent);
-      margin: 4px 0;
+    .stat-number {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--theme-primary);
+      line-height: 1.1;
+      letter-spacing: -0.5px;
     }
     
-    :host-context([data-view="expanded"]) .metric-label {
-      font-size: 1rem;
-      margin: 8px 0;
+    .stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: color-mix(in srgb, var(--theme-on-surface) 60%, transparent);
+      margin-top: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
     
-    .metric-trend {
-      font-size: 0.75rem;
-      color: var(--theme-success);
-      font-weight: 500;
+    .stat-detail {
+      font-size: 10px;
+      color: color-mix(in srgb, var(--theme-on-surface) 40%, transparent);
+      margin-top: 1px;
     }
-    
-    :host-context([data-view="expanded"]) .metric-trend {
-      font-size: 0.9rem;
-    }
-    
-    .progress-bar {
-      height: 4px;
-      background: color-mix(in srgb, var(--theme-on-surface) 10%, transparent);
-      border-radius: 2px;
-      overflow: hidden;
-      margin-top: 8px;
-    }
-    
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--theme-primary), var(--theme-accent));
-      transition: width 0.3s ease;
-    }
-    
-    .action-section {
+
+    /* Stat item specific colors */
+    .stat-item.primary { border-left: 3px solid var(--theme-primary); }
+    .stat-item.secondary { border-left: 3px solid #673ab7; }
+    .stat-item.tertiary { border-left: 3px solid #009688; }
+    .stat-item.security { border-left: 3px solid #ff9800; }
+
+    .widget-footer-actions {
+      padding: 16px;
       margin-top: auto;
+      border-top: 1px solid color-mix(in srgb, var(--theme-on-surface) 5%, transparent);
     }
     
-    .action-section button {
-      width: 100%;
-      height: 40px;
-      border-radius: 8px;
-      font-weight: 500;
+    .cta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
     }
     
-    :host-context([data-view="expanded"]) .action-section button {
-      height: 56px;
-      font-size: 1.1rem;
-      border-radius: 12px;
+    :host-context([data-view="expanded"]) .cta-grid {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
     }
-    
-    :host-context([data-view="expanded"]) .action-section button mat-icon {
+
+    .cta-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: auto;
+      padding: 14px 10px;
+      background: color-mix(in srgb, var(--theme-primary) 12%, var(--theme-surface)) !important;
+      color: var(--theme-primary) !important;
+      border-radius: 14px;
+      min-width: 0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid color-mix(in srgb, var(--theme-primary) 25%, transparent) !important;
+      box-shadow: 0 4px 6px -1px color-mix(in srgb, var(--theme-on-surface) 5%, transparent);
+    }
+
+    .cta-btn mat-icon {
+      margin: 0;
       font-size: 24px;
       width: 24px;
       height: 24px;
+      transition: transform 0.3s ease;
+    }
+
+    .cta-btn span {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .analytics-btn {
+      background: color-mix(in srgb, var(--theme-primary) 18%, var(--theme-surface)) !important;
+      border-color: color-mix(in srgb, var(--theme-primary) 40%, transparent) !important;
+    }
+
+    .cta-btn:hover {
+      background: var(--theme-primary) !important;
+      color: var(--theme-on-primary) !important;
+      border-color: var(--theme-primary) !important;
+      transform: translateY(-4px);
+      box-shadow: 0 10px 15px -3px color-mix(in srgb, var(--theme-primary) 30%, transparent);
+    }
+    
+    .cta-btn:hover mat-icon {
+      transform: scale(1.1);
     }
   `],
 })
 export class UserManagementWidgetComponent implements OnInit {
   private router = inject(Router);
   private userService = inject(UserManagementService);
-  protected Math = Math;
 
-  totalUsers = signal(0);
-  activeUsers = signal(0);
+  stats = signal({
+    totalUsers: 0,
+    activeUsers: 0,
+    totalRoles: 0,
+    totalPermissions: 0,
+    mfaAdoption: 0
+  });
 
   ngOnInit() {
     this.loadStats();
   }
 
   loadStats() {
-    this.userService.getUsers().subscribe({
-      next: (users) => {
-        this.totalUsers.set(users.length);
-        this.activeUsers.set(users.filter((u) => u.isActive).length);
+    this.userService.getAnalytics().subscribe({
+      next: (analytics) => {
+        this.stats.set({
+          totalUsers: analytics.totalUsers || 0,
+          activeUsers: analytics.activeUsers || 0,
+          totalRoles: analytics.totalRoles || 0,
+          totalPermissions: analytics.totalPermissions || 0,
+          mfaAdoption: analytics.mfaAdoption || 0
+        });
       },
       error: () => {
-        // Fallback to mock data
-        this.totalUsers.set(0);
-        this.activeUsers.set(0);
+        // Fallback to basic user count if analytics fails
+        this.userService.getUsers().subscribe(users => {
+          this.stats.update(s => ({
+            ...s,
+            totalUsers: users.length,
+            activeUsers: users.filter(u => u.isActive).length
+          }));
+        });
       },
     });
   }
 
-  openUserManagement() {
-    console.log('Navigating to user management...');
-    this.router.navigate(['/modules/user-management']).then(
-      (success) => console.log('Navigation success:', success),
-      (error) => console.error('Navigation error:', error)
-    );
+  navigateToTab(tabName: string) {
+    this.router.navigate(['/modules/user-management/' + tabName]);
   }
 }

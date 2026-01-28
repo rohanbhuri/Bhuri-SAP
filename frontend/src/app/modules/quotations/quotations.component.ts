@@ -10,6 +10,7 @@ import { BottomNavbarComponent } from '../../components/bottom-navbar.component'
 import { QuotationListComponent } from './components/quotation-list/quotation-list.component';
 import { EnquiryListComponent } from './components/enquiry-list/enquiry-list.component';
 import { PresentationListComponent } from './components/presentation-list/presentation-list.component';
+import { QuotationAnalyticsPageComponent } from './pages/quotation-analytics-page.component';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -25,7 +26,8 @@ import { AuthService } from '../../services/auth.service';
     BottomNavbarComponent,
     QuotationListComponent,
     EnquiryListComponent,
-    PresentationListComponent
+    PresentationListComponent,
+    QuotationAnalyticsPageComponent
   ],
   template: `
     <app-navbar></app-navbar>
@@ -63,6 +65,9 @@ import { AuthService } from '../../services/auth.service';
         <mat-tab label="Quotations">
           <app-quotation-list></app-quotation-list>
         </mat-tab>
+        <mat-tab label="Analytics">
+          <app-quotation-analytics-page></app-quotation-analytics-page>
+        </mat-tab>
       </mat-tab-group>
     </div>
     <app-bottom-navbar></app-bottom-navbar>
@@ -75,7 +80,7 @@ export class QuotationsComponent implements OnInit {
   private authService = inject(AuthService);
   
   selectedTabIndex = 0;
-  private tabs = ['enquiries', 'presentations', 'quotations'];
+  private tabs = ['enquiries', 'presentations', 'quotations', 'analytics'];
 
   canAccessApi(): boolean {
     return this.authService.getCurrentUser()?.allowApiAccess ?? false;

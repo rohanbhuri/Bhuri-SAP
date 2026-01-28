@@ -26,6 +26,10 @@ export const userManagementRoutes: Routes = [
       {
         path: 'api-doc',
         loadComponent: () => import('./pages/api-docs-page.component').then(m => m.UserManagementApiDocsComponent)
+      },
+      {
+        path: 'analytics',
+        loadComponent: () => import('./pages/analytics-page.component').then(m => m.UserAnalyticsPageComponent)
       }
     ]
   }

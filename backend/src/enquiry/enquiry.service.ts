@@ -5,6 +5,7 @@ import { Enquiry, EnquiryStatus } from '../entities/enquiry.entity';
 import { Quotation, QuotationStatus } from '../entities/quotation.entity';
 import { Product } from '../entities/product.entity';
 import { ObjectId } from 'mongodb';
+import { MailService } from '../notifications/mail.service';
 
 @Injectable()
 export class EnquiryService {
@@ -15,6 +16,7 @@ export class EnquiryService {
         private quotationRepository: MongoRepository<Quotation>,
         @InjectRepository(Product)
         private productRepository: MongoRepository<Product>,
+        private mailService: MailService,
     ) {}
 
     async createEnquiry(data: Partial<Enquiry>): Promise<Enquiry> {
@@ -23,7 +25,18 @@ export class EnquiryService {
             enquiryNumber: `ENQ-${Date.now()}`,
             createdAt: new Date()
         });
-        return this.enquiryRepository.save(enquiry);
+        const savedEnquiry = await this.enquiryRepository.save(enquiry);
+
+        // Send email notification to admins
+        this.mailService.sendEnquiryNotification({
+            enquiryNumber: savedEnquiry.enquiryNumber,
+            customerName: savedEnquiry.customerName,
+            customerEmail: savedEnquiry.customerEmail,
+            itemsCount: savedEnquiry.items?.length || 0,
+            message: savedEnquiry.message
+        }).catch(err => console.error('Failed to send enquiry email:', err));
+
+        return savedEnquiry;
     }
 
     async findAll(): Promise<Enquiry[]> {
