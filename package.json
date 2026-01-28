@@ -5,7 +5,7 @@
   "main": "start.js",
   "scripts": {
     "start": "node start.js",
-    "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "install-all": "npm install --legacy-peer-deps && cd backend && npm install --legacy-peer-deps && cd ../frontend && npm install --legacy-peer-deps",
     "dev": "node start.js beax-rm",
     "start:beax-rm": "node start.js beax-rm",
     "start:true-process": "node start.js true-process",
