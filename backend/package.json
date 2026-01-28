@@ -32,6 +32,11 @@
     "multer": "^2.0.2",
     "multer-gridfs-storage": "^5.0.2",
     "nodemailer": "^7.0.13",
+    "@types/nodemailer": "^7.0.9",
+    "@types/bcrypt": "^5.0.0",
+    "@types/passport-jwt": "^3.0.9",
+    "@types/passport-local": "^1.0.35",
+    "@types/socket.io": "^3.0.1",
     "passport": "^0.6.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
@@ -44,12 +49,7 @@
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
-    "@types/bcrypt": "^5.0.0",
     "@types/node": "^20.0.0",
-    "@types/nodemailer": "^7.0.9",
-    "@types/passport-jwt": "^3.0.9",
-    "@types/passport-local": "^1.0.35",
-    "@types/socket.io": "^3.0.1",
     "typescript": "^5.0.0"
   }
 }
