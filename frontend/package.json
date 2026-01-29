@@ -46,6 +46,9 @@
     "socket.io-client": "^4.8.1",
     "tslib": "^2.3.0"
   },
+  "optionalDependencies": {
+    "@esbuild/linux-x64": "0.25.9"
+  },
   "devDependencies": {
     "@angular-eslint/builder": "21.0.1",
     "@angular/build": "^20.1.5",
