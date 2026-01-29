@@ -1,10 +1,11 @@
 import { Routes } from '@angular/router';
-import { roleGuard } from '../../guards/role.guard';
+import { authGuard } from '../../guards/auth.guard';
 
 export const userManagementRoutes: Routes = [
   {
     path: '',
     loadComponent: () => import('./user-management-layout.component').then(m => m.UserManagementLayoutComponent),
+    canActivate: [authGuard],
     children: [
       {
         path: '',
