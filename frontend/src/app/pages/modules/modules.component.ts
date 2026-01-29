@@ -23,7 +23,7 @@ import { FormsModule } from '@angular/forms';
 import { SeoService } from '../../services/seo.service';
 import { BrandConfigService } from '../../services/brand-config.service';
 import { ThemeService } from '../../services/theme.service';
-import { getModuleById } from '../../modules/module-registry';
+import { getModuleById, MODULE_REGISTRY, getModulesByBrand } from '../../modules/module-registry';
 
 @Component({
   selector: 'app-modules',
@@ -103,7 +103,12 @@ import { getModuleById } from '../../modules/module-registry';
                         {{ getModuleDisplayName(module) }}
                       </h3>
                       <div class="module-status">
-                        @if (module.isActive) {
+                        @if (module.isActive && !canAccessModule(module)) {
+                        <mat-chip class="status-chip restricted">
+                          <mat-icon>lock</mat-icon>
+                          Restricted
+                        </mat-chip>
+                        } @else if (module.isActive) {
                         <mat-chip class="status-chip active">
                           <mat-icon>check_circle</mat-icon>
                           Active
@@ -140,6 +145,7 @@ import { getModuleById } from '../../modules/module-registry';
                       mat-raised-button
                       color="primary"
                       (click)="openModule(module)"
+                      [disabled]="!canAccessModule(module)"
                     >
                       <mat-icon>open_in_new</mat-icon>
                       Open
@@ -655,13 +661,21 @@ import { getModuleById } from '../../modules/module-registry';
           
           &[color="primary"] {
             flex: 1;
-            background-color: var(--theme-primary);
-            color: var(--theme-on-primary);
             
-            &:hover {
-              background-color: color-mix(in srgb, var(--theme-primary) 85%, black);
-              transform: translateY(-1px);
-              box-shadow: 0 6px 20px color-mix(in srgb, var(--theme-primary) 25%, transparent);
+            &:disabled {
+              background-color: color-mix(in srgb, var(--theme-on-surface) 12%, transparent) !important;
+              color: color-mix(in srgb, var(--theme-on-surface) 38%, transparent) !important;
+            }
+            
+            &:not(:disabled) {
+              background-color: var(--theme-primary);
+              color: var(--theme-on-primary);
+              
+              &:hover {
+                background-color: color-mix(in srgb, var(--theme-primary) 85%, black);
+                transform: translateY(-1px);
+                box-shadow: 0 6px 20px color-mix(in srgb, var(--theme-primary) 25%, transparent);
+              }
             }
           }
           
@@ -1143,6 +1157,7 @@ export class ModulesComponent implements OnInit {
 
   modules = signal<AppModuleInfo[]>([]);
   filteredModules = signal<AppModuleInfo[]>([]);
+  accessibleModules = signal<Set<string>>(new Set());
   pendingRequests = signal<ModuleRequest[]>([]);
   approvedRequests = signal<ModuleRequest[]>([]);
   rejectedRequests = signal<ModuleRequest[]>([]);
@@ -1158,8 +1173,20 @@ export class ModulesComponent implements OnInit {
     this.loadModules();
     this.loadPendingRequests();
     this.loadPinnedModules();
+    // Initialize accessible modules cache for permission checks
+    this.initializeAccessibleModules();
     // Apply module-specific theme for modules page
     this.themeService.applyModuleTheme('user-management');
+  }
+
+  private async initializeAccessibleModules() {
+    try {
+      const accessibleModules = await this.authService.getUserAccessibleModules(this.modulesService);
+      const moduleIds = new Set(accessibleModules.map(m => m.id || m.name).filter(Boolean));
+      this.accessibleModules.set(moduleIds);
+    } catch (error) {
+      console.error('Failed to initialize accessible modules:', error);
+    }
   }
 
   private setupSEO() {
@@ -1177,9 +1204,12 @@ export class ModulesComponent implements OnInit {
 
   loadModules() {
     this.loading.set(true);
+    
+    // Load all available modules (not permission-filtered)
+    // Permission checks are applied when opening modules
     this.modulesService.getAvailable().subscribe({
       next: (modules) => {
-        console.log('Loaded modules:', modules);
+        console.log('Loaded available modules:', modules);
         this.modules.set(modules);
         this.filteredModules.set(modules);
         this.loading.set(false);
@@ -1320,6 +1350,14 @@ export class ModulesComponent implements OnInit {
   }
 
   openModule(module: AppModuleInfo) {
+    // Check if user has permission to access this module
+    if (!this.canAccessModule(module)) {
+      this.snackBar.open('You do not have permission to access this module', 'Close', {
+        duration: 3000,
+      });
+      return;
+    }
+
     // Get the module config from registry to find the correct route
     let registryModule = getModuleById(module.id);
     if (!registryModule) registryModule = getModuleById(module.name);
@@ -1339,6 +1377,15 @@ export class ModulesComponent implements OnInit {
 
     console.log('Opening module:', module.id, 'resolved to registry:', registryModule?.id, 'route:', route, 'params:', queryParams);
     this.router.navigate([route], { queryParams });
+  }
+
+  canAccessModule(module: AppModuleInfo): boolean {
+    // Check if module is active
+    if (!module.isActive) return false;
+    
+    // Use signal to check if user has access (prevents change detection errors)
+    const accessible = this.accessibleModules();
+    return accessible.has(module.id) || accessible.has(module.name);
   }
 
   approveRequest(request: ModuleRequest) {

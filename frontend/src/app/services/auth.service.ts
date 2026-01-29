@@ -288,4 +288,94 @@ export class AuthService {
       })) || []
     };
   }
+
+  // Common module access methods
+  private userAccessibleModules: any[] = [];
+
+  async getUserAccessibleModules(modulesService: any): Promise<any[]> {
+    const user = this.getCurrentUser();
+    if (!user) return [];
+
+    try {
+      // Load modules based on context (personal vs organization)
+      let modules: any[] = [];
+      
+      if (user.organizationId) {
+        // Try organization modules first
+        modules = await modulesService.getOrganizationModules(user.organizationId).toPromise();
+      }
+      
+      // If no organization modules or no organization, fall back to personal
+      if (!modules || modules.length === 0) {
+        modules = await modulesService.getPersonalModules().toPromise();
+      }
+
+      // Cache the accessible modules for permission checks
+      this.userAccessibleModules = modules || [];
+      return modules || [];
+    } catch (error) {
+      console.error('Error loading user accessible modules:', error);
+      return [];
+    }
+  }
+
+  hasModuleAccess(moduleId: string): boolean {
+    if (!moduleId) return false;
+    return this.userAccessibleModules.some(m => 
+      m.id === moduleId || m.name === moduleId
+    );
+  }
+  filterModulesWithPermissions(modules: any[], brandKey: string, moduleRegistry: any[], allowedModules: any[]): any[] {
+    if (!modules || modules.length === 0) return [];
+
+    // Filter modules that have corresponding widget components using module registry
+    const filtered = modules.filter(m => {
+      const registryModule = this.getModuleFromRegistry(m.name || m.id, moduleRegistry);
+      return registryModule && registryModule.widgetComponent;
+    });
+
+    // Filter modules based on brand configuration from module registry
+    const brandFiltered = filtered.filter(m => {
+      const moduleId = m.name || m.id;
+      return allowedModules.some(am => am.id === moduleId || am.name === moduleId);
+    });
+
+    return brandFiltered;
+  }
+
+  getModuleFromRegistry(moduleId: string, moduleRegistry: any[]) {
+    if (!moduleId) return undefined;
+
+    const normalize = (s: string) =>
+      (s || '')
+        .toString()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '');
+
+    // 1) Exact id/name match (fast path)
+    let module = moduleRegistry.find(
+      (m) => m.id === moduleId || m.name === moduleId || m.displayName === moduleId
+    );
+    if (module) return module;
+
+    // 2) Normalized match (case/space/punctuation insensitive)
+    const target = normalize(moduleId);
+    module = moduleRegistry.find(
+      (m) => normalize(m.id) === target || normalize(m.name) === target || normalize(m.displayName) === target
+    );
+    if (module) return module;
+
+    // 3) Kebab-case common fallback
+    const kebabCase = moduleId.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    module = moduleRegistry.find((m) => m.name === kebabCase || m.id === kebabCase);
+    if (module) return module;
+
+    // 4) Loose contains match as last resort
+    module = moduleRegistry.find(
+      (m) => target.includes(normalize(m.name)) || normalize(m.name).includes(target) || target.includes(normalize(m.displayName))
+    );
+    if (module) return module;
+
+    return undefined;
+  }
 }

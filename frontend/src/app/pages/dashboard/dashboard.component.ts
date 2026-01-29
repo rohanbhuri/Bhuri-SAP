@@ -517,24 +517,21 @@ export class DashboardComponent implements OnInit {
   private loadPersonalModules() {
     console.log('=== LOADING PERSONAL MODULES ===');
 
-    this.modulesService.getPersonalModules().subscribe({
-      next: (modules) => {
-        console.log('API Response - Personal modules:', modules);
-        console.log('Module count:', modules?.length || 0);
-        if (modules && modules.length > 0) {
-          console.log('Module names:', modules.map(m => m.displayName));
-        }
-        this.updateWidgets(modules || []);
-      },
-      error: (error) => {
-        console.error('=== ERROR LOADING PERSONAL MODULES ===');
-        console.error('Error details:', error);
-        this.isLoadingWidgets.set(false);
-        this.widgets.set([]);
-        this.snackBar.open('Failed to load personal modules', 'Close', {
-          duration: 3000,
-        });
+    this.authService.getUserAccessibleModules(this.modulesService).then((modules) => {
+      console.log('API Response - Accessible modules:', modules);
+      console.log('Module count:', modules?.length || 0);
+      if (modules && modules.length > 0) {
+        console.log('Module names:', modules.map(m => m.displayName));
       }
+      this.updateWidgets(modules || []);
+    }).catch((error) => {
+      console.error('=== ERROR LOADING ACCESSIBLE MODULES ===');
+      console.error('Error details:', error);
+      this.isLoadingWidgets.set(false);
+      this.widgets.set([]);
+      this.snackBar.open('Failed to load modules', 'Close', {
+        duration: 3000,
+      });
     });
   }
 
@@ -597,26 +594,21 @@ export class DashboardComponent implements OnInit {
       return;
     }
 
-    // Filter modules that have corresponding widget components using module registry
-    const filtered = modules.filter(m => {
-      const registryModule = this.getModuleFromRegistry(m.name || m.id);
-      return registryModule && registryModule.widgetComponent;
-    });
-
-    // Filter modules based on brand configuration from module registry
+    // Use common filtering method from auth service
     const brandKey = this.brandConfig.getBrandKey();
     const allowedModules = getModulesByBrand(brandKey);
-    const brandFiltered = filtered.filter(m => {
-      const moduleId = m.name || m.id;
-      return allowedModules.some(am => am.id === moduleId || am.name === moduleId);
-    });
+    const brandFiltered = this.authService.filterModulesWithPermissions(
+      modules, 
+      brandKey, 
+      MODULE_REGISTRY, 
+      allowedModules
+    );
 
-    console.log('Filtered supported modules:', filtered.length);
-    console.log('Brand filtered modules:', brandFiltered.length);
+    console.log('Filtered supported modules:', brandFiltered.length);
 
     const savedSizes = this.loadWidgetSizes();
     const mapped: DashboardWidget[] = brandFiltered.map((m, idx) => {
-      const registryModule = this.getModuleFromRegistry(m.name || m.id);
+      const registryModule = this.authService.getModuleFromRegistry(m.name || m.id, MODULE_REGISTRY);
       const widgetId = registryModule?.name || m.name || m.id || 'unknown';
       return {
         id: widgetId,
@@ -677,46 +669,12 @@ export class DashboardComponent implements OnInit {
     const module = this.activeModules().find((m) => m.name === moduleId);
     if (module?.color) return module.color;
 
-    // Fallback to module registry
-    const registryModule = this.getModuleFromRegistry(moduleId);
+    // Use auth service method
+    const registryModule = this.authService.getModuleFromRegistry(moduleId, MODULE_REGISTRY);
     return registryModule?.color || '#2196F3';
   }
 
-  private getModuleFromRegistry(moduleId: string) {
-    if (!moduleId) return undefined;
 
-    const normalize = (s: string) =>
-      (s || '')
-        .toString()
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '');
-
-    // 1) Exact id/name match (fast path)
-    let module = MODULE_REGISTRY.find(
-      (m) => m.id === moduleId || m.name === moduleId || m.displayName === moduleId
-    );
-    if (module) return module;
-
-    // 2) Normalized match (case/space/punctuation insensitive)
-    const target = normalize(moduleId);
-    module = MODULE_REGISTRY.find(
-      (m) => normalize(m.id) === target || normalize(m.name) === target || normalize(m.displayName) === target
-    );
-    if (module) return module;
-
-    // 3) Kebab-case common fallback
-    const kebabCase = moduleId.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-    module = MODULE_REGISTRY.find((m) => m.name === kebabCase || m.id === kebabCase);
-    if (module) return module;
-
-    // 4) Loose contains match as last resort
-    module = MODULE_REGISTRY.find(
-      (m) => target.includes(normalize(m.name)) || normalize(m.name).includes(target) || target.includes(normalize(m.displayName))
-    );
-    if (module) return module;
-
-    return undefined;
-  }
 
   setViewMode(mode: 'compact' | 'normal' | 'expanded') {
     this.viewMode.set(mode);
