@@ -19,16 +19,21 @@ self.addEventListener('install', event => {
   self.skipWaiting();
 });
 
-self.addEventListener('fetch', event => {
+self.addEventListener('fetch', (event) => {
+  // Navigation requests (HTML) should use Network-First
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Other assets use Cache-First with Network fallback
   event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        if (response) {
-          return response;
-        }
-        return fetch(event.request);
-      }
-    )
+    caches.match(event.request).then((response) => {
+      return response || fetch(event.request);
+    })
   );
 });
 

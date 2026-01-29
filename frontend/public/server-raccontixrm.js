@@ -47,13 +47,18 @@ const server = createServer((req, res) => {
     }
 
     // Fallback to index.html for SPA routing
-    const indexPath = join(browserDir, "index.html");
-    if (existsSync(indexPath)) {
-      const content = readFileSync(indexPath);
-      res.setHeader("Content-Type", "text/html; charset=utf-8");
-      res.setHeader("Cache-Control", "no-store");
-      res.writeHead(200);
-      return res.end(content);
+    // Only return index.html for requests that don't look like static assets
+    const isStaticAsset = url.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|json|webmanifest)$/) || url.includes('/config/assets/');
+
+    if (!isStaticAsset) {
+      const indexPath = join(browserDir, "index.html");
+      if (existsSync(indexPath)) {
+        const content = readFileSync(indexPath);
+        res.setHeader("Content-Type", "text/html; charset=utf-8");
+        res.setHeader("Cache-Control", "no-store");
+        res.writeHead(200);
+        return res.end(content);
+      }
     }
 
     res.writeHead(404);

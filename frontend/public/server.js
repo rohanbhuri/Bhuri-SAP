@@ -44,26 +44,30 @@ const proxyToSSR = (req, res) => {
   proxy.on("error", () => {
     // Fallback to client-side app shell if SSR is unavailable
     try {
-      const candidates = [
-        join(__dirname, "../dist/beax-rm/browser/index.html"),
-        join(__dirname, "../dist/beax-rm/browser/index.html"),
-        join(__dirname, "index.html"),
-      ];
-      for (const p of candidates) {
-        if (existsSync(p)) {
-          const content = readFileSync(p);
-          res.writeHead(200, {
-            "Content-Type": "text/html; charset=utf-8",
-            "Cache-Control": "no-store",
-          });
-          return res.end(content);
+      // Don't fallback to index.html if the request is for a missing static asset
+      const isStaticAsset = req.url.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|json|webmanifest)$/) || req.url.includes('/config/assets/');
+
+      if (!isStaticAsset) {
+        const candidates = [
+          join(__dirname, "../dist/beax-rm/browser/index.html"),
+          join(__dirname, "index.html"),
+        ];
+        for (const p of candidates) {
+          if (existsSync(p)) {
+            const content = readFileSync(p);
+            res.writeHead(200, {
+              "Content-Type": "text/html; charset=utf-8",
+              "Cache-Control": "no-store",
+            });
+            return res.end(content);
+          }
         }
       }
     } catch (e) {
       // ignore and fall back to 500
     }
     res.writeHead(500);
-    res.end("SSR Server unavailable");
+    res.end("SSR Server unavailable or file not found");
   });
 
   req.pipe(proxy);
