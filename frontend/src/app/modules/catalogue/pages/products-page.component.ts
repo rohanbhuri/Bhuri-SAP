@@ -13,7 +13,9 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { FormsModule } from '@angular/forms';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { CatalogueService } from '../catalogue.service';
+import { MatListModule } from '@angular/material/list';
 import { ProductDialogComponent } from '../dialogs/product-dialog.component';
 import { UploadUrlPipe } from '../../../pipes/upload-url.pipe';
 import { AuthService } from '../../../services/auth.service';
@@ -34,6 +36,8 @@ import { UserManagementService } from '../../user-management/user-management.ser
     MatSelectModule,
     MatPaginatorModule,
     FormsModule,
+    MatProgressSpinnerModule,
+    MatListModule,
     UploadUrlPipe
   ],
   template: `
@@ -64,6 +68,65 @@ import { UserManagementService } from '../../user-management/user-management.ser
             <mat-icon>add</mat-icon>
             Add Product
           </button>
+        </div>
+      </div>
+
+      <div class="import-overlay" *ngIf="isValidating()">
+        <div class="overlay-content">
+          <mat-spinner diameter="50"></mat-spinner>
+          <p>Validating CSV file...</p>
+        </div>
+      </div>
+
+      <div class="validation-summary" *ngIf="isValidated() && validationResults()">
+        <div class="summary-card" [class.has-errors]="validationResults().errors.length > 0">
+          <div class="summary-header">
+            <h3>Import Validation Results</h3>
+            <button mat-icon-button (click)="resetImport()">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+          
+          <div class="summary-stats" *ngIf="validationResults().errors.length === 0">
+            <div class="stat-item">
+              <span class="stat-label">Total Products:</span>
+              <span class="stat-value">{{ validationResults().totalRows }}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">To Add:</span>
+              <span class="stat-value text-green-600">{{ validationResults().toAdd }}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">To Update:</span>
+              <span class="stat-value text-blue-600">{{ validationResults().toUpdate }}</span>
+            </div>
+          </div>
+
+          <div class="error-list" *ngIf="validationResults().errors.length > 0">
+            <div class="error-header text-red-600">
+              <mat-icon>error_outline</mat-icon>
+              <span>Found {{ validationResults().errors.length }} errors in CSV:</span>
+            </div>
+            <mat-list dense>
+              <mat-list-item *ngFor="let error of validationResults().errors">
+                <mat-icon matListItemIcon class="text-red-500">circle</mat-icon>
+                <div matListItemTitle>{{ error }}</div>
+              </mat-list-item>
+            </mat-list>
+            <p class="error-hint">Please correct these errors in your CSV file and try uploading again.</p>
+          </div>
+
+          <div class="summary-actions">
+            <button mat-button (click)="resetImport()">Cancel</button>
+            <button mat-raised-button color="primary" 
+                    *ngIf="validationResults().errors.length === 0" 
+                    (click)="proceedWithImport()"
+                    [disabled]="isImporting()">
+              <mat-icon *ngIf="!isImporting()">check</mat-icon>
+              <mat-spinner diameter="20" *ngIf="isImporting()"></mat-spinner>
+              Confirm & Import {{ validationResults().totalRows }} Products
+            </button>
+          </div>
         </div>
       </div>
 
@@ -493,6 +556,98 @@ import { UserManagementService } from '../../user-management/user-management.ser
       color: #999;
       font-style: italic;
     }
+    .import-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .overlay-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+    .validation-summary {
+      margin-bottom: 2rem;
+      animation: slideDown 0.3s ease-out;
+    }
+    @keyframes slideDown {
+      from { transform: translateY(-20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .summary-card {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+    .summary-card.has-errors {
+      border-color: #ffcdd2;
+      background: #fff8f8;
+    }
+    .summary-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    .summary-header h3 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 500;
+    }
+    .summary-stats {
+      display: flex;
+      gap: 3rem;
+      margin-bottom: 2rem;
+    }
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .stat-label {
+      font-size: 0.875rem;
+      color: #666;
+    }
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+    .error-list {
+      margin-bottom: 1.5rem;
+    }
+    .error-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 500;
+      margin-bottom: 1rem;
+    }
+    .error-hint {
+      font-size: 0.875rem;
+      color: #666;
+      margin-top: 1rem;
+    }
+    .summary-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+      border-top: 1px solid #dee2e6;
+      padding-top: 1.5rem;
+    }
+    .text-green-600 { color: #16a34a; }
+    .text-blue-600 { color: #2563eb; }
+    .text-red-600 { color: #dc2626; }
+    .text-red-500 { color: #ef4444; }
   `]
 })
 export class ProductsPageComponent implements OnInit {
@@ -525,6 +680,13 @@ export class ProductsPageComponent implements OnInit {
   collections = signal<any[]>([]);
   designers = signal<any[]>([]);
   users = signal<any[]>([]);
+  
+  isValidating = signal(false);
+  isImporting = signal(false);
+  isValidated = signal(false);
+  validationResults = signal<any>(null);
+  selectedFile: File | null = null;
+
   productColumns = ['image', 'product', 'collection', 'category', 'tags', 'status', 'tracking', 'actions'];
 
   ngOnInit() {
@@ -720,20 +882,52 @@ export class ProductsPageComponent implements OnInit {
   onFileSelected(event: any) {
     const file = event.target.files[0];
     if (file) {
-      this.catalogueService.importProducts(file).subscribe({
+      this.selectedFile = file;
+      this.isValidating.set(true);
+      this.isValidated.set(false);
+      this.validationResults.set(null);
+
+      this.catalogueService.validateProducts(file).subscribe({
         next: (result) => {
-          this.snackBar.open(`Import complete: ${result.success} succeeded, ${result.failed} failed`, 'Close', { duration: 5000 });
+          this.validationResults.set(result);
+          this.isValidating.set(false);
+          this.isValidated.set(true);
           if (result.errors.length > 0) {
-            console.error('Import errors:', result.errors);
+            this.snackBar.open('CSV has validation errors. Please check the summary.', 'Close', { duration: 5000 });
           }
-          this.loadProducts();
         },
         error: (err) => {
-          this.snackBar.open('Import failed: ' + err.message, 'Close', { duration: 5000 });
+          this.isValidating.set(false);
+          this.snackBar.open('Validation failed: ' + err.message, 'Close', { duration: 5000 });
         }
       });
     }
     event.target.value = '';
+  }
+
+  proceedWithImport() {
+    if (!this.selectedFile) return;
+
+    this.isImporting.set(true);
+    this.catalogueService.importProducts(this.selectedFile).subscribe({
+      next: (result) => {
+        this.isImporting.set(false);
+        this.snackBar.open(`Import successful: ${result.success} products processed`, 'Close', { duration: 5000 });
+        this.resetImport();
+        this.loadProducts();
+      },
+      error: (err) => {
+        this.isImporting.set(false);
+        this.snackBar.open('Import failed: ' + err.message, 'Close', { duration: 5000 });
+      }
+    });
+  }
+
+  resetImport() {
+    this.selectedFile = null;
+    this.isValidating.set(false);
+    this.isValidated.set(false);
+    this.validationResults.set(null);
   }
 
   get hasActiveFilters(): boolean {

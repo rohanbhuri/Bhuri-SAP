@@ -194,4 +194,10 @@ export class CatalogueService {
         formData.append('file', file);
         return this.http.post<{ success: number; failed: number; errors: string[] }>(`${this.apiUrl}/import/products`, formData);
     }
+
+    validateProducts(file: File): Observable<{ totalRows: number; toAdd: number; toUpdate: number; errors: string[] }> {
+        const formData = new FormData();
+        formData.append('file', file);
+        return this.http.post<{ totalRows: number; toAdd: number; toUpdate: number; errors: string[] }>(`${this.apiUrl}/import/validate`, formData);
+    }
 }

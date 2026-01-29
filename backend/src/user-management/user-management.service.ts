@@ -247,7 +247,8 @@ export class UserManagementService {
       allowApiAccess: userData.allowApiAccess || false,
       sessionTimeout: userData.sessionTimeout || null,
       maxDevices: userData.maxDevices || null,
-      ipWhitelist: userData.ipWhitelist || null
+      ipWhitelist: userData.ipWhitelist || null,
+      enableEmailNotifications: userData.enableEmailNotifications || false
     });
 
     const savedUser = await this.userRepository.save(user);
@@ -288,6 +289,7 @@ export class UserManagementService {
     if (userData.sessionTimeout !== undefined) user.sessionTimeout = userData.sessionTimeout;
     if (userData.maxDevices !== undefined) user.maxDevices = userData.maxDevices;
     if (userData.ipWhitelist !== undefined) user.ipWhitelist = userData.ipWhitelist;
+    if (userData.enableEmailNotifications !== undefined) user.enableEmailNotifications = userData.enableEmailNotifications;
 
     if (userData.password) {
       user.password = await bcrypt.hash(userData.password, 10);

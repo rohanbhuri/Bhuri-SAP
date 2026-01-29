@@ -304,6 +304,17 @@ export class CatalogueController {
         res.send(csv);
     }
 
+    @Post('import/validate')
+    @UseGuards(JwtAuthGuard, PermissionsGuard)
+    @RequireRoles(RoleType.SUPER_ADMIN)
+    @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+    async validateImport(@UploadedFile() file: Express.Multer.File) {
+        if (!file || !file.buffer) {
+            throw new BadRequestException('No file uploaded or file is empty');
+        }
+        return this.catalogueService.validateProductsFromCSV(file.buffer.toString());
+    }
+
     @Post('import/products')
     @UseGuards(JwtAuthGuard, PermissionsGuard)
     @RequireRoles(RoleType.SUPER_ADMIN)

@@ -1,9 +1,10 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, Injector } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, interval, Subscription } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { BrandConfigService } from './brand-config.service';
 import { WebSocketService } from './websocket.service';
+import { AuthService } from './auth.service';
 
 export interface OrgMember {
   id: string;
@@ -72,6 +73,7 @@ export class MessagesApiService {
 
   private http = inject(HttpClient);
   private brand = inject(BrandConfigService);
+  private injector = inject(Injector);
   private get api() {
     return this.brand.getApiUrl();
   }
@@ -83,7 +85,22 @@ export class MessagesApiService {
 
   constructor() {
     this.setupSocketListeners();
-    this.fetchInitialUnreadCount();
+    this.listenToAuthChanges();
+  }
+
+  private listenToAuthChanges() {
+    try {
+      const authService = this.injector.get(AuthService);
+      authService.currentUser$.subscribe(user => {
+        if (user) {
+          this.fetchInitialUnreadCount();
+        } else {
+          this.setMessageCount(0);
+        }
+      });
+    } catch (e) {
+      console.warn('AuthService not available for subscription');
+    }
   }
 
   private setupSocketListeners() {
@@ -114,12 +131,28 @@ export class MessagesApiService {
   }
 
   private fetchInitialUnreadCount() {
+    let authService: AuthService;
+    try {
+      authService = this.injector.get(AuthService);
+    } catch (e) {
+      console.warn('AuthService not available yet');
+      return;
+    }
+
+    if (!authService.isAuthenticated()) {
+      return;
+    }
+
     this.getUnreadCount().subscribe({
       next: (counts) => {
         const totalUnread = Object.values(counts).reduce((sum, count) => sum + (count as number), 0);
         this.setMessageCount(totalUnread);
       },
-      error: (err) => console.error('Failed to fetch initial unread count:', err)
+      error: (err) => {
+        if (err.status !== 401) {
+          console.error('Failed to fetch initial unread count:', err);
+        }
+      }
     });
   }
 

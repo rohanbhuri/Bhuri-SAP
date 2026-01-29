@@ -626,42 +626,112 @@ export class CatalogueService {
         return headers.map(h => `"${h}"`).join(',');
     }
 
-    async importProductsFromCSV(csvContent: string, userId?: string): Promise<{ success: number; failed: number; errors: string[] }> {
-        const lines = csvContent.split(/\r?\n/).filter(line => line.trim());
-        if (lines.length === 0) return { success: 0, failed: 0, errors: ['Empty CSV file'] };
+    private parseCSVContent(csvContent: string): string[][] {
+        const rows: string[][] = [];
+        let currentRow: string[] = [];
+        let currentCell = '';
+        let inQuotes = false;
 
-        const parseLine = (line: string) => {
-            const result = [];
-            let current = '';
-            let inQuotes = false;
-            for (let i = 0; i < line.length; i++) {
-                const char = line[i];
-                if (char === '"') {
-                    if (inQuotes && line[i + 1] === '"') {
-                        current += '"';
-                        i++;
-                    } else {
-                        inQuotes = !inQuotes;
-                    }
-                } else if (char === ',' && !inQuotes) {
-                    result.push(current.trim());
-                    current = '';
+        for (let i = 0; i < csvContent.length; i++) {
+            const char = csvContent[i];
+            const nextChar = csvContent[i + 1];
+
+            if (char === '"') {
+                if (inQuotes && nextChar === '"') {
+                    currentCell += '"';
+                    i++;
                 } else {
-                    current += char;
+                    inQuotes = !inQuotes;
                 }
+            } else if (char === ',' && !inQuotes) {
+                currentRow.push(currentCell.trim());
+                currentCell = '';
+            } else if ((char === '\r' || char === '\n') && !inQuotes) {
+                if (char === '\r' && nextChar === '\n') i++;
+                
+                // Only push if we have a non-empty row or we're in the middle of a row
+                if (currentRow.length > 0 || currentCell !== '') {
+                    currentRow.push(currentCell.trim());
+                    rows.push(currentRow);
+                }
+                currentRow = [];
+                currentCell = '';
+            } else {
+                currentCell += char;
             }
-            result.push(current.trim());
-            return result;
-        };
+        }
 
-        const headers = parseLine(lines[0]);
+        if (currentRow.length > 0 || currentCell !== '') {
+            currentRow.push(currentCell.trim());
+            rows.push(currentRow);
+        }
+
+        return rows;
+    }
+
+    async validateProductsFromCSV(csvContent: string): Promise<{ totalRows: number; toAdd: number; toUpdate: number; errors: string[] }> {
+        const rows = this.parseCSVContent(csvContent);
+        if (rows.length <= 1) return { totalRows: 0, toAdd: 0, toUpdate: 0, errors: ['Empty CSV file or only headers found'] };
+
+        const headers = rows[0];
+        const errors: string[] = [];
+        let toAdd = 0;
+        let toUpdate = 0;
+
+        const productCodeIndex = headers.indexOf('productCode');
+        const nameIndex = headers.indexOf('name');
+
+        if (productCodeIndex === -1) {
+            errors.push('Missing required header: "productCode"');
+        }
+
+        if (errors.length > 0) {
+            return { totalRows: rows.length - 1, toAdd: 0, toUpdate: 0, errors };
+        }
+
+        for (let i = 1; i < rows.length; i++) {
+            const values = rows[i];
+            const productCode = values[productCodeIndex];
+            const name = nameIndex !== -1 ? values[nameIndex] : '';
+
+            if (!productCode) {
+                errors.push(`Row ${i + 1}: Missing product code`);
+                continue;
+            }
+
+            try {
+                const existingProduct = await this.productRepository.findOne({
+                    where: { productCode: productCode }
+                } as any);
+
+                if (existingProduct) {
+                    toUpdate++;
+                } else {
+                    if (!name) {
+                        errors.push(`Row ${i + 1}: Missing name (required for new products)`);
+                    }
+                    toAdd++;
+                }
+            } catch (error) {
+                errors.push(`Row ${i + 1}: ${error.message}`);
+            }
+        }
+
+        return { totalRows: rows.length - 1, toAdd, toUpdate, errors };
+    }
+
+    async importProductsFromCSV(csvContent: string, userId?: string): Promise<{ success: number; failed: number; errors: string[] }> {
+        const rows = this.parseCSVContent(csvContent);
+        if (rows.length <= 1) return { success: 0, failed: 0, errors: ['Empty CSV file or only headers found'] };
+
+        const headers = rows[0];
         let success = 0;
         let failed = 0;
         const errors: string[] = [];
 
-        for (let i = 1; i < lines.length; i++) {
+        for (let i = 1; i < rows.length; i++) {
             try {
-                const values = parseLine(lines[i]);
+                const values = rows[i];
                 const product: any = {};
 
                 headers.forEach((header, index) => {
