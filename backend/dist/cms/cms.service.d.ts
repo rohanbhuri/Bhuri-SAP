@@ -1,0 +1,34 @@
+import { MongoRepository } from 'typeorm';
+import { Page } from '../entities/page.entity';
+import { BlogPost } from '../entities/blog-post.entity';
+import { Menu } from '../entities/menu.entity';
+export declare class CmsService {
+    private pageRepository;
+    private blogRepository;
+    private menuRepository;
+    constructor(pageRepository: MongoRepository<Page>, blogRepository: MongoRepository<BlogPost>, menuRepository: MongoRepository<Menu>);
+    findAllPages(): Promise<Page[]>;
+    findOnePage(id: string): Promise<Page>;
+    findPageBySlug(slug: string): Promise<Page>;
+    createPage(data: Partial<Page>): Promise<Page>;
+    updatePage(id: string, data: Partial<Page>): Promise<Page>;
+    deletePage(id: string): Promise<void>;
+    findAllBlogs(): Promise<BlogPost[]>;
+    findOneBlog(id: string): Promise<BlogPost>;
+    findBlogBySlug(slug: string): Promise<BlogPost>;
+    createBlog(data: Partial<BlogPost>): Promise<BlogPost>;
+    updateBlog(id: string, data: Partial<BlogPost>): Promise<BlogPost>;
+    deleteBlog(id: string): Promise<void>;
+    findAllMenus(): Promise<Menu[]>;
+    findOneMenu(id: string): Promise<Menu>;
+    findMenuByLocation(location: string): Promise<Menu>;
+    createMenu(data: Partial<Menu>): Promise<Menu>;
+    updateMenu(id: string, data: Partial<Menu>): Promise<Menu>;
+    deleteMenu(id: string): Promise<void>;
+    findAll(): Promise<Page[]>;
+    findOne(id: string): Promise<Page>;
+    findBySlug(slug: string): Promise<Page>;
+    create(data: Partial<Page>): Promise<Page>;
+    update(id: string, data: Partial<Page>): Promise<Page>;
+    delete(id: string): Promise<void>;
+}

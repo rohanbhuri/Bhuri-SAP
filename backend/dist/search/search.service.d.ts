@@ -1,0 +1,80 @@
+import { MongoRepository } from 'typeorm';
+import { User } from '../entities/user.entity';
+import { Permission } from '../entities/permission.entity';
+import { Role } from '../entities/role.entity';
+import { Organization } from '../entities/organization.entity';
+import { Employee } from '../entities/employee.entity';
+import { Project } from '../entities/project.entity';
+import { Task } from '../entities/task.entity';
+import { Contact } from '../entities/contact.entity';
+import { Lead } from '../entities/lead.entity';
+import { Deal } from '../entities/deal.entity';
+import { Department } from '../entities/department.entity';
+import { Module } from '../entities/module.entity';
+import { Client } from '../entities/client.entity';
+import { ClientRequest } from '../entities/client-request.entity';
+import { Product } from '../entities/product.entity';
+import { BlogPost } from '../entities/blog-post.entity';
+import { Page } from '../entities/page.entity';
+import { Quotation } from '../entities/quotation.entity';
+import { Order } from '../entities/order.entity';
+export interface SearchResult {
+    id: string;
+    title: string;
+    subtitle: string;
+    type: string;
+    module: string;
+    relevance: number;
+    metadata?: any;
+}
+export interface SearchFilters {
+    modules?: string[];
+    types?: string[];
+    dateRange?: {
+        from: Date;
+        to: Date;
+    };
+}
+export declare class SearchService {
+    private userRepository;
+    private permissionRepository;
+    private roleRepository;
+    private organizationRepository;
+    private employeeRepository;
+    private projectRepository;
+    private taskRepository;
+    private contactRepository;
+    private leadRepository;
+    private dealRepository;
+    private departmentRepository;
+    private moduleRepository;
+    private clientRepository;
+    private clientRequestRepository;
+    private productRepository;
+    private blogPostRepository;
+    private pageRepository;
+    private quotationRepository;
+    private orderRepository;
+    constructor(userRepository: MongoRepository<User>, permissionRepository: MongoRepository<Permission>, roleRepository: MongoRepository<Role>, organizationRepository: MongoRepository<Organization>, employeeRepository: MongoRepository<Employee>, projectRepository: MongoRepository<Project>, taskRepository: MongoRepository<Task>, contactRepository: MongoRepository<Contact>, leadRepository: MongoRepository<Lead>, dealRepository: MongoRepository<Deal>, departmentRepository: MongoRepository<Department>, moduleRepository: MongoRepository<Module>, clientRepository: MongoRepository<Client>, clientRequestRepository: MongoRepository<ClientRequest>, productRepository: MongoRepository<Product>, blogPostRepository: MongoRepository<BlogPost>, pageRepository: MongoRepository<Page>, quotationRepository: MongoRepository<Quotation>, orderRepository: MongoRepository<Order>);
+    globalSearch(query: string, userId: string, organizationId?: string, filters?: SearchFilters, limit?: number): Promise<SearchResult[]>;
+    private getUserPermissions;
+    private hasPermission;
+    private searchUsers;
+    private searchEmployees;
+    private searchProjects;
+    private searchTasks;
+    private searchContacts;
+    private searchLeads;
+    private searchDeals;
+    private searchDepartments;
+    private searchOrganizations;
+    private searchClients;
+    private searchClientRequests;
+    private searchProducts;
+    private searchCMS;
+    private searchQuotations;
+    private searchOrders;
+    private calculateRelevance;
+    private applyFilters;
+    getSearchSuggestions(query: string, userId: string, organizationId?: string): Promise<string[]>;
+}

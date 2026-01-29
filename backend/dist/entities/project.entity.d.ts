@@ -1,0 +1,34 @@
+import { ObjectId } from 'typeorm';
+export declare class Project {
+    _id: ObjectId;
+    organizationId?: ObjectId;
+    createdBy: ObjectId;
+    name: string;
+    description: string;
+    code: string;
+    leadId: ObjectId;
+    convertedFromLead: boolean;
+    conversionDate: Date;
+    status: string;
+    stage: string;
+    priority: string;
+    startDate: Date;
+    endDate: Date;
+    actualStartDate: Date;
+    actualEndDate: Date;
+    budget: number;
+    currency: string;
+    spent: number;
+    billingType: string;
+    hourlyRate: number;
+    managerId?: ObjectId;
+    clientId: ObjectId;
+    teamMemberIds: ObjectId[];
+    progress: number;
+    health: string;
+    tags: string[];
+    customFields: any;
+    createdAt: Date;
+    updatedAt: Date;
+    constructor();
+}

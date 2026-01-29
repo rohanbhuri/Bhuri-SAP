@@ -1,0 +1,41 @@
+import { ObjectId } from 'mongodb';
+export declare class Client {
+    _id: ObjectId;
+    userId: ObjectId;
+    organizationId?: ObjectId;
+    companyName: string;
+    contactPerson: string;
+    email: string;
+    phone: string;
+    website?: string;
+    industry?: string;
+    companySize?: string;
+    address?: string;
+    city?: string;
+    country?: string;
+    taxId?: string;
+    billingAddress?: string;
+    isActive: boolean;
+    notes?: string;
+    tags?: string[];
+    customFields?: Record<string, any>;
+    maxDevices?: number;
+    sessionTimeout?: number;
+    expiryDate?: Date;
+    ipWhitelist?: string;
+    requireTwoFactor: boolean;
+    forcePasswordChange: boolean;
+    restrictToBusinessHours: boolean;
+    allowApiAccess: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+    isDeleted: boolean;
+    deletedAt: Date;
+    deletedBy: string;
+    changeLog: Array<{
+        userId: string;
+        action: string;
+        timestamp: Date;
+        details?: string;
+    }>;
+}
