@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 import { HrManagementComponent } from './hr-management.component';
-import { roleGuard } from '../../guards/role.guard';
+import { authGuard } from '../../guards/auth.guard';
 
 export const HR_MANAGEMENT_ROUTES: Routes = [
   {
@@ -14,31 +14,23 @@ export const HR_MANAGEMENT_ROUTES: Routes = [
 export const HR_MANAGEMENT_LEGACY_ROUTES: Routes = [
   {
     path: 'employees',
-    loadComponent: () =>
-      import('./pages/employees.page').then(
-        (m) => m.EmployeesPageComponent
-      ),
+    loadComponent: () => import('./pages/employees.page').then((m) => m.EmployeesPageComponent),
     title: 'Employees',
   },
   {
     path: 'attendance',
-    loadComponent: () =>
-      import('./pages/attendance.page').then(
-        (m) => m.AttendancePageComponent
-      ),
+    loadComponent: () => import('./pages/attendance.page').then((m) => m.AttendancePageComponent),
     title: 'Attendance',
   },
   {
     path: 'leaves',
-    loadComponent: () =>
-      import('./pages/leaves.page').then((m) => m.LeavesPageComponent),
+    loadComponent: () => import('./pages/leaves.page').then((m) => m.LeavesPageComponent),
     title: 'Leaves',
   },
   {
     path: 'payroll',
-    loadComponent: () =>
-      import('./pages/payroll.page').then((m) => m.PayrollPageComponent),
-    canActivate: [roleGuard],
+    loadComponent: () => import('./pages/payroll.page').then((m) => m.PayrollPageComponent),
+    canActivate: [authGuard],
     data: { requiredRoles: ['hr_admin', 'super_admin'] },
     title: 'Payroll',
   },
@@ -56,7 +48,7 @@ export const HR_MANAGEMENT_LEGACY_ROUTES: Routes = [
       import('./pages/compliance.page').then(
         (m) => m.CompliancePageComponent
       ),
-    canActivate: [roleGuard],
+    canActivate: [authGuard],
     data: { requiredRoles: ['hr_admin', 'super_admin'] },
     title: 'Compliance',
   },
@@ -66,7 +58,7 @@ export const HR_MANAGEMENT_LEGACY_ROUTES: Routes = [
       import('./pages/documents.page').then(
         (m) => m.DocumentsPageComponent
       ),
-    canActivate: [roleGuard],
+    canActivate: [authGuard],
     data: { requiredRoles: ['hr_admin', 'super_admin'] },
     title: 'Documents',
   },
@@ -74,7 +66,7 @@ export const HR_MANAGEMENT_LEGACY_ROUTES: Routes = [
     path: 'assets',
     loadComponent: () =>
       import('./pages/assets.page').then((m) => m.AssetsPageComponent),
-    canActivate: [roleGuard],
+    canActivate: [authGuard],
     data: { requiredRoles: ['hr_admin', 'super_admin'] },
     title: 'Assets',
   },
@@ -84,7 +76,7 @@ export const HR_MANAGEMENT_LEGACY_ROUTES: Routes = [
       import('./pages/analytics.page').then(
         (m) => m.AnalyticsPageComponent
       ),
-    canActivate: [roleGuard],
+    canActivate: [authGuard],
     data: { requiredRoles: ['hr_admin', 'super_admin'] },
     title: 'HR Analytics',
   },
