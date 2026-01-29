@@ -153,7 +153,7 @@ import { getModuleById, MODULE_REGISTRY, getModulesByBrand } from '../../modules
                     <button
                       mat-icon-button
                       (click)="togglePin(module)"
-                      [disabled]="pinLoading() === module.id"
+                      [disabled]="pinLoading() === module.id || !canAccessModule(module)"
                       [class.pinned]="isPinned(module.id)"
                       [attr.aria-label]="
                         isPinned(module.id)
@@ -173,7 +173,7 @@ import { getModuleById, MODULE_REGISTRY, getModulesByBrand } from '../../modules
                       mat-stroked-button
                       color="warn"
                       (click)="deactivateModule(module)"
-                      [disabled]="moduleLoading() === module.id"
+                      [disabled]="moduleLoading() === module.id || !canAccessModule(module)"
                     >
                       @if (moduleLoading() === module.id) {
                       <mat-spinner diameter="16"></mat-spinner>
@@ -684,7 +684,13 @@ import { getModuleById, MODULE_REGISTRY, getModulesByBrand } from '../../modules
             color: var(--theme-error);
             border: 1px solid var(--theme-error);
             
-            &:hover {
+            &:disabled {
+              background-color: color-mix(in srgb, var(--theme-on-surface) 12%, transparent) !important;
+              color: color-mix(in srgb, var(--theme-on-surface) 38%, transparent) !important;
+              border-color: color-mix(in srgb, var(--theme-on-surface) 12%, transparent) !important;
+            }
+            
+            &:hover:not(:disabled) {
               background: color-mix(in srgb, var(--theme-error) 10%, transparent);
             }
           }
