@@ -12,31 +12,38 @@ import * as express from 'express';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  // Add middleware to handle HTML entity decoding
-  app.use(express.json({ limit: '50mb' }));
-  app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-  
-  // Middleware to decode HTML entities in request body
-  app.use((req, res, next) => {
-    if (req.body && typeof req.body === 'string') {
+  // Add middleware to handle HTML entity decoding and proper JSON parsing
+  app.use('/api', express.raw({ type: 'application/json', limit: '50mb' }));
+  app.use('/api', (req, res, next) => {
+    if (req.headers['content-type'] === 'application/json' && Buffer.isBuffer(req.body)) {
       try {
-        // Decode HTML entities
-        const decoded = req.body
-          .replace(/&quot;/g, '"')
-          .replace(/&amp;/g, '&')
-          .replace(/&lt;/g, '<')
-          .replace(/&gt;/g, '>')
-          .replace(/&#x27;/g, "'")
-          .replace(/&#x2F;/g, '/');
+        let bodyStr = req.body.toString('utf8');
         
-        // Try to parse as JSON
-        req.body = JSON.parse(decoded);
+        // Decode HTML entities if present
+        if (bodyStr.includes('&quot;') || bodyStr.includes('&amp;')) {
+          bodyStr = bodyStr
+            .replace(/&quot;/g, '"')
+            .replace(/&amp;/g, '&')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&#x27;/g, "'")
+            .replace(/&#x2F;/g, '/');
+        }
+        
+        // Parse JSON
+        req.body = JSON.parse(bodyStr);
       } catch (e) {
-        // If parsing fails, keep original body
+        console.error('JSON parsing error:', e.message);
+        console.error('Raw body:', req.body.toString('utf8'));
+        return res.status(400).json({ error: 'Invalid JSON in request body' });
       }
     }
     next();
   });
+  
+  // Standard JSON and URL encoded parsing for other routes
+  app.use(express.json({ limit: '50mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
   // Global exception filter for better error handling
   app.useGlobalFilters(new GlobalExceptionFilter());
@@ -45,6 +52,7 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({
     transform: true,
     whitelist: true,
+    forbidNonWhitelisted: true,
     transformOptions: {
       enableImplicitConversion: true,
     },

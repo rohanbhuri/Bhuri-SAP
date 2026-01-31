@@ -54,32 +54,96 @@ EOF
 # Create api-proxy.php
 cat > ../api-proxy.php <<'APIEOF'
 <?php
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// Set proper headers
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, PATCH, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, X-API-Key');
+header('Access-Control-Allow-Credentials: true');
 
-if (\$_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+// Handle preflight OPTIONS request
+if (\$_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit();
 }
 
+// Get the API path
 \$path = \$_GET['path'] ?? '';
-\$url = "http://$PRODUCTION_IP:$BACKEND_PORT/api/" . \$path;
+\$queryString = \$_SERVER['QUERY_STRING'] ?? '';
 
+// Remove path parameter from query string
+if (strpos(\$queryString, 'path=') !== false) {
+    \$queryParts = explode('&', \$queryString);
+    \$filteredParts = array_filter(\$queryParts, function(\$part) {
+        return strpos(\$part, 'path=') !== 0;
+    });
+    \$queryString = implode('&', \$filteredParts);
+}
+
+// Build target URL
+\$url = "http://$PRODUCTION_IP:$BACKEND_PORT/api/" . \$path;
+if (!empty(\$queryString)) {
+    \$url .= '?' . \$queryString;
+}
+
+// Initialize cURL
 \$ch = curl_init();
 curl_setopt(\$ch, CURLOPT_URL, \$url);
 curl_setopt(\$ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt(\$ch, CURLOPT_FOLLOWLOCATION, true);
+curl_setopt(\$ch, CURLOPT_TIMEOUT, 30);
 curl_setopt(\$ch, CURLOPT_CUSTOMREQUEST, \$_SERVER['REQUEST_METHOD']);
 
-if (\$_SERVER['REQUEST_METHOD'] !== 'GET') {
-    curl_setopt(\$ch, CURLOPT_POSTFIELDS, file_get_contents('php://input'));
+// Forward request headers
+\$headers = [];
+foreach (\$_SERVER as \$key => \$value) {
+    if (strpos(\$key, 'HTTP_') === 0) {
+        \$headerName = str_replace('_', '-', substr(\$key, 5));
+        // Skip problematic headers
+        if (!in_array(strtolower(\$headerName), ['host', 'connection', 'content-length'])) {
+            \$headers[] = \$headerName . ': ' . \$value;
+        }
+    }
 }
 
+// Ensure Content-Type is set for POST requests
+if (\$_SERVER['REQUEST_METHOD'] !== 'GET' && !isset(\$_SERVER['HTTP_CONTENT_TYPE'])) {
+    \$headers[] = 'Content-Type: application/json';
+}
+
+curl_setopt(\$ch, CURLOPT_HTTPHEADER, \$headers);
+
+// Handle request body for POST/PUT/PATCH requests
+if (in_array(\$_SERVER['REQUEST_METHOD'], ['POST', 'PUT', 'PATCH'])) {
+    \$input = file_get_contents('php://input');
+    curl_setopt(\$ch, CURLOPT_POSTFIELDS, \$input);
+}
+
+// Execute request
 \$response = curl_exec(\$ch);
 \$httpCode = curl_getinfo(\$ch, CURLINFO_HTTP_CODE);
+\$contentType = curl_getinfo(\$ch, CURLINFO_CONTENT_TYPE);
+
+// Check for cURL errors
+if (curl_error(\$ch)) {
+    http_response_code(503);
+    echo json_encode(['error' => 'Proxy error: ' . curl_error(\$ch)]);
+    curl_close(\$ch);
+    exit;
+}
+
 curl_close(\$ch);
 
+// Set response headers
+if (\$contentType) {
+    header('Content-Type: ' . \$contentType);
+}
+
+// Return response
 http_response_code(\$httpCode);
 echo \$response;
 ?>
