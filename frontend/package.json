@@ -6,7 +6,7 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "node replace-env.js && ng build --project=${BRAND:-beaxrm} --configuration=production",
-    "build:beaxrm": "NODE_ENV=production BRAND=beaxrm node replace-env.js && ng build --project=beaxrm --configuration=production --ssr",
+    "build:beaxrm": "NODE_ENV=production BRAND=beaxrm node replace-env.js && ng build --project=beaxrm --configuration=production --ssr && cp dist/beaxrm/browser/index.csr.html dist/beaxrm/browser/index.html && cp public/server.js dist/beaxrm/browser/server.js",
     "build:true-process": "NODE_ENV=production BRAND=true-process node replace-env.js && ng build --project=true-process --configuration=production --ssr",
     "build:raccontixrm": "NODE_ENV=production BRAND=raccontixrm node replace-env.js && ng build --project=raccontixrm --configuration=production --ssr && cp dist/raccontixrm/browser/index.csr.html dist/raccontixrm/browser/index.html && cp public/server-raccontixrm.js dist/raccontixrm/browser/server.js",
     "build:prerender:ssr": "node replace-env.js && ng build --project=${BRAND:-beaxrm} --configuration=production --ssr",
