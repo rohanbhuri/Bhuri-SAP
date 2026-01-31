@@ -40,7 +40,7 @@ module.exports = {
     },
     {
       name: 'beaxrm-frontend',
-      script: './dist/beaxrm/server/main.server.mjs',
+      script: './static-server.js',
       cwd: './frontend',
       instances: 1,
       exec_mode: 'fork',
@@ -59,7 +59,8 @@ module.exports = {
     },
     {
       name: 'true-process-frontend',
-      script: './dist/true-process/server/main.server.mjs',
+      script: 'node',
+      args: './dist/true-process/browser/server.js',
       cwd: './frontend',
       instances: 1,
       exec_mode: 'fork',
@@ -97,7 +98,7 @@ module.exports = {
     },
     {
       name: 'raccontixrm-frontend',
-      script: './dist/raccontixrm/server/main.server.mjs',
+      script: './dist/raccontixrm/browser/server.js',
       cwd: './frontend',
       instances: 1,
       exec_mode: 'fork',
