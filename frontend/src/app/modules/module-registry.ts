@@ -67,7 +67,7 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     route: '/modules/user-management/users',
     isActive: true,
     category: 'core',
-    brands: ['beax-rm', 'true-process', 'raccontixrm'],
+    brands: ['beaxrm', 'true-process', 'raccontixrm'],
   },
   {
     id: 'organization-management',
@@ -106,7 +106,7 @@ export const MODULE_REGISTRY: ModuleConfig[] = [
     route: '/modules/crm/funnel',
     isActive: true,
     category: 'sales',
-    brands: ['beax-rm', 'true-process', 'raccontixrm'],
+    brands: ['beaxrm', 'true-process', 'raccontixrm'],
   },
 
   // HR Modules

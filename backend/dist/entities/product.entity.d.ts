@@ -2,7 +2,7 @@ import { ObjectId } from 'typeorm';
 export declare class Product {
     _id: ObjectId;
     name: string;
-    productCode: string;
+    productCode?: string;
     slug: string;
     description?: string;
     descriptionHtml?: string;

@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: 'beax-rm-backend',
+      name: 'beaxrm-backend',
       script: './dist/main.js',
       cwd: './backend',
       instances: 1,
@@ -11,13 +11,13 @@ module.exports = {
         PORT: 3000,
         MONGODB_URI: 'mongodb+srv://rohanbhuri:nokiaset@bhuri-db.zg9undw.mongodb.net/beaxrm?retryWrites=true&w=majority&appName=bhuri-db',
         JWT_SECRET: 'rohanbhuri',
-        BRAND: 'beax-rm'
+        BRAND: 'beaxrm'
       },
       max_memory_restart: '200M',
       node_args: '--max-old-space-size=256',
-      error_file: './logs/beax-rm-backend-error.log',
-      out_file: './logs/beax-rm-backend-out.log',
-      log_file: './logs/beax-rm-backend.log'
+      error_file: './logs/beaxrm-backend-error.log',
+      out_file: './logs/beaxrm-backend-out.log',
+      log_file: './logs/beaxrm-backend.log'
     },
     {
       name: 'true-process-backend',
@@ -39,9 +39,9 @@ module.exports = {
       log_file: './logs/true-process-backend.log'
     },
     {
-      name: 'beax-rm-frontend',
+      name: 'beaxrm-frontend',
       script: 'node',
-      args: './dist/beax-rm/browser/server.js',
+      args: './dist/beaxrm/browser/server.js',
       cwd: './frontend',
       instances: 1,
       exec_mode: 'fork',
@@ -54,9 +54,9 @@ module.exports = {
       min_uptime: '10s',
       restart_delay: 4000,
       autorestart: true,
-      error_file: './logs/beax-rm-frontend-error.log',
-      out_file: './logs/beax-rm-frontend-out.log',
-      log_file: './logs/beax-rm-frontend.log'
+      error_file: './logs/beaxrm-frontend-error.log',
+      out_file: './logs/beaxrm-frontend-out.log',
+      log_file: './logs/beaxrm-frontend.log'
     },
     {
       name: 'true-process-frontend',

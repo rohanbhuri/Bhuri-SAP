@@ -1,5 +1,5 @@
 const configs = {
-  "beax-rm": {
+  "beaxrm": {
     brand: {
       name: "Beax RM",
       logo: "/config/assets/beaxrm/icons/XRM-logo-black.png",
@@ -106,6 +106,6 @@ const configs = {
   }
 };
 
-const getConfig = (brand = "beax-rm") => configs[brand] || configs["beax-rm"];
+const getConfig = (brand = "beaxrm") => configs[brand] || configs["beaxrm"];
 
 module.exports = { configs, getConfig };

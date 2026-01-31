@@ -39,7 +39,7 @@ __decorate([
     __metadata("design:type", String)
 ], Product.prototype, "name", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
+    (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)
 ], Product.prototype, "productCode", void 0);
 __decorate([
@@ -156,7 +156,7 @@ __decorate([
 ], Product.prototype, "deletedBy", void 0);
 exports.Product = Product = __decorate([
     (0, typeorm_1.Entity)('products'),
-    (0, typeorm_1.Index)('idx_product_code', ['productCode'], { unique: true }),
+    (0, typeorm_1.Index)('idx_product_code', ['productCode'], { unique: true, sparse: true }),
     __metadata("design:paramtypes", [])
 ], Product);
 //# sourceMappingURL=product.entity.js.map

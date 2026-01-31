@@ -1,0 +1,139 @@
+export default `<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8"/>
+  <title id="app-title">Beax Resource Manager</title>
+  <base href="/"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="description" content="Resource Management System"/>
+  <meta name="keywords" content="business management, resource management, HR, CRM, project management, inventory"/>
+  <meta name="author" content="Rohan Bhuri"/>
+  <meta name="robots" content="index, follow"/>
+  <meta name="theme-color" content="#3B82F6"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+
+  <!-- Performance hints -->
+  <link rel="dns-prefetch" href="//fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin=""/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website"/>
+  <meta property="og:title" content="Beax Resource Manager"/>
+  <meta property="og:description" content="Resource Management System"/>
+  <meta property="og:site_name" content="Beax RM"/>
+  <meta property="og:url" content="http://13.126.228.247:4200"/>
+  <meta property="og:locale" content="en_US"/>
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:title" content="Beax Resource Manager"/>
+  <meta name="twitter:description" content="Resource Management System"/>
+  <meta name="twitter:site" content="@Beax RM"/>
+
+  <!-- Icons -->
+  <link rel="icon" type="image/x-icon" href="favicon.ico" id="app-favicon"/>
+  <link rel="apple-touch-icon" sizes="180x180" href="/config/assets/beaxrm/icons/XRM-white-logo.png"/>
+  <link rel="icon" type="image/png" sizes="32x32" href="/config/assets/beaxrm/icons/XRM-white-logo.png"/>
+  <link rel="icon" type="image/png" sizes="16x16" href="/config/assets/beaxrm/icons/XRM-white-logo.png"/>
+
+  <link rel="canonical" href="http://13.126.228.247:4200"/>
+  <link rel="manifest" href="/manifest.json"/>
+
+  <!-- Optimized font loading -->
+  <link rel="preload" href="https://fonts.googleapis.com/icon?family=Material+Icons&amp;display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
+  <noscript>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons&display=swap" rel="stylesheet" />
+  </noscript>
+
+  <!-- Material theme loaded dynamically -->
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/@angular/material@20/prebuilt-themes/indigo-pink.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
+  <noscript>
+    <link href="https://cdn.jsdelivr.net/npm/@angular/material@20/prebuilt-themes/indigo-pink.css" rel="stylesheet" />
+  </noscript>
+  <!-- Critical CSS inlined -->
+  <style>
+    :root {
+      --primary-color: #3B82F6;
+      --accent-color: #F59E0B;
+      --secondary-color: #6B7280;
+    }
+
+    body {
+      margin: 0;
+      font-family: Roboto, sans-serif;
+      background: var(--primary-color);
+    }
+
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: white;
+    }
+
+    .skip-link {
+      position: absolute;
+      left: -9999px;
+    }
+
+    .skip-link:focus {
+      left: 16px;
+      top: 16px;
+      z-index: 10000;
+      padding: 8px 12px;
+      background: var(--primary-color);
+      color: white;
+    }
+  </style>
+  <!-- Model Viewer for 3D -->
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
+
+  <script>
+    // Load brand configuration from environment
+    window.brandConfig = {
+      brand: {
+        name: "Beax RM",
+        logo: "/config/assets/beaxrm/icons/XRM-logo-black.png",
+        logoDark: "/config/assets/beaxrm/icons/XRM-white-logo.png",
+        icon: "/config/assets/beaxrm/icons/XRM-white-logo.png",
+      },
+      colors: {
+        primary: "#3B82F6",
+        accent: "#F59E0B",
+        secondary: "#6B7280",
+      },
+      app: {
+        name: "Beax Resource Manager",
+        version: "1.0.0",
+        description: "Resource Management System",
+        port: parseInt("4200"),
+        apiUrl: "http://13.126.228.247:3000/api",
+      },
+    };
+
+    // Update title and favicon
+    document.getElementById("app-title").textContent = window.brandConfig.app.name;
+    document.getElementById("app-favicon").href = window.brandConfig.brand.icon;
+
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(registration => console.log('SW registered:', registration))
+          .catch(registrationError => console.log('SW registration failed:', registrationError));
+      });
+    }
+  </script>
+<link rel="stylesheet" href="styles-BHSA56TR.css"></head>
+
+<body><script type="text/javascript" id="ng-event-dispatch-contract">(()=>{function p(t,n,r,o,e,i,f,m){return{eventType:t,event:n,targetElement:r,eic:o,timeStamp:e,eia:i,eirp:f,eiack:m}}function u(t){let n=[],r=e=>{n.push(e)};return{c:t,q:n,et:[],etc:[],d:r,h:e=>{r(p(e.type,e,e.target,t,Date.now()))}}}function s(t,n,r){for(let o=0;o<n.length;o++){let e=n[o];(r?t.etc:t.et).push(e),t.c.addEventListener(e,t.h,r)}}function c(t,n,r,o,e=window){let i=u(t);e._ejsas||(e._ejsas={}),e._ejsas[n]=i,s(i,r),s(i,o,!0)}window.__jsaction_bootstrap=c;})();
+</script>
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <app-root></app-root>
+<link rel="modulepreload" href="chunk-MOFQRUIY.js"><link rel="modulepreload" href="chunk-7ZFJMYD6.js"><link rel="modulepreload" href="chunk-RTNBXH5X.js"><link rel="modulepreload" href="chunk-WU3RFG4U.js"><link rel="modulepreload" href="chunk-4EJBCLQU.js"><link rel="modulepreload" href="chunk-BRFF7I3Q.js"><link rel="modulepreload" href="chunk-KWMKND2S.js"><link rel="modulepreload" href="chunk-A4NBITR5.js"><link rel="modulepreload" href="chunk-Q4HTD3AN.js"><link rel="modulepreload" href="chunk-L7OF766J.js"><script src="main-SBK57EKN.js" type="module"></script></body>
+
+</html>`;

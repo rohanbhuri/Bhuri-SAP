@@ -1,7 +1,7 @@
 import { Entity, ObjectIdColumn, ObjectId, Column, Index } from 'typeorm';
 
 @Entity('products')
-@Index('idx_product_code', ['productCode'], { unique: true })
+@Index('idx_product_code', ['productCode'], { unique: true, sparse: true })
 export class Product {
     @ObjectIdColumn()
     _id: ObjectId;
@@ -9,8 +9,8 @@ export class Product {
     @Column()
     name: string;
 
-    @Column()
-    productCode: string;
+    @Column({ nullable: true })
+    productCode?: string;
 
     @Column()
     slug: string;

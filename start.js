@@ -4,7 +4,7 @@ const path = require('path');
 const { getConfig } = require('./config.js');
 const { getBrandIPConfig } = require('./utils/ip-detector.js');
 
-const brand = process.argv[2] || 'beax-rm';
+const brand = process.argv[2] || 'beaxrm';
 const buildOnly = process.argv.includes('--build-only');
 const brandConfig = getConfig(brand);
 
