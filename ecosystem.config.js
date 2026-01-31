@@ -40,7 +40,8 @@ module.exports = {
     },
     {
       name: 'beaxrm-frontend',
-      script: './static-server.js',
+      script: 'node',
+      args: './dist/beaxrm/browser/server.js',
       cwd: './frontend',
       instances: 1,
       exec_mode: 'fork',
