@@ -45,7 +45,9 @@
     "htaccess:beaxrm": "chmod +x generate-htaccess.sh && ./generate-htaccess.sh beaxrm",
     "htaccess:true-process": "chmod +x generate-htaccess.sh && ./generate-htaccess.sh true-process",
     "htaccess:raccontixrm": "chmod +x generate-htaccess.sh && ./generate-htaccess.sh raccontixrm",
-    "nginx:setup": "chmod +x setup-nginx.sh && ./setup-nginx.sh"
+    "nginx:beaxrm": "chmod +x setup-nginx.sh && ./setup-nginx.sh beaxrm",
+    "nginx:true-process": "chmod +x setup-nginx.sh && ./setup-nginx.sh true-process",
+    "nginx:raccontixrm": "chmod +x setup-nginx.sh && ./setup-nginx.sh raccontixrm"
   },
   "keywords": [
     "sap",
