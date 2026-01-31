@@ -19,8 +19,9 @@ npm run install-all
 npm run dev
 
 # Start specific application
-npm run start:beax-rm
+npm run start:beaxrm
 npm run start:true-process
+npm run start:raccontixrm
 ```
 
 ## Project Structure
@@ -40,6 +41,9 @@ Primary resource management application with user authentication, role-based acc
 
 ### True Process
 Secondary application for process management.
+
+### RaccontiXRM
+Advanced CRM and resource management platform with enhanced features.
 
 ## Documentation
 
@@ -110,13 +114,17 @@ The application uses a dynamic brand configuration system that automatically swi
 ### Brand Switching
 
 ```bash
+# Start BeaX RM application  
+npm run start:beaxrm
+# → Backend: localhost:3000 | Frontend: localhost:4200 | API: localhost:3000/api
+
 # Start True Process application
 npm run start:true-process
 # → Backend: localhost:3001 | Frontend: localhost:4201 | API: localhost:3001/api
 
-# Start Beax RM application  
-npm run start:beax-rm
-# → Backend: localhost:3000 | Frontend: localhost:4200 | API: localhost:3000/api
+# Start RaccontiXRM application
+npm run start:raccontixrm
+# → Backend: localhost:3002 | Frontend: localhost:4202 | API: localhost:3002/api
 ```
 
 ### Configuration Structure
@@ -154,8 +162,9 @@ npm run build:ssr   # SSR production build
 ## Production Deployment
 
 ### EC2 Server Configuration
-- **Server**: t3.micro EC2 instance
-- **IP**: 13.126.228.247 (BeaX RM & True Process) | 68.178.171.103 (RaccontiXRM)
+- **BeaX RM**: 157.173.216.251 (Hostinger)
+- **True Process**: 3.111.139.181
+- **RaccontiXRM**: 68.178.171.103
 - **Process Manager**: PM2 with optimized settings
 - **Build**: SSR prerendering for production
 
@@ -181,24 +190,31 @@ npm run pm2:delete    # Delete all applications
 npm run pm2:logs      # View logs
 
 # Individual Projects (Backend + Frontend)
-npm run pm2:start:beax-rm        # Start BeaX RM (Backend + Frontend)
+npm run pm2:start:beaxrm         # Start BeaX RM (Backend + Frontend)
 npm run pm2:start:true-process   # Start True Process (Backend + Frontend)
-npm run pm2:stop:beax-rm         # Stop BeaX RM
+npm run pm2:start:raccontixrm    # Start RaccontiXRM (Backend + Frontend)
+npm run pm2:stop:beaxrm          # Stop BeaX RM
 npm run pm2:stop:true-process    # Stop True Process
-npm run pm2:restart:beax-rm      # Restart BeaX RM
+npm run pm2:stop:raccontixrm     # Stop RaccontiXRM
+npm run pm2:restart:beaxrm       # Restart BeaX RM
 npm run pm2:restart:true-process # Restart True Process
+npm run pm2:restart:raccontixrm  # Restart RaccontiXRM
+
+# Build Commands
+npm run build:beaxrm:bothend     # Build BeaX RM (Backend + Frontend)
+npm run build:raccontixrm:bothend # Build RaccontiXRM (Backend + Frontend)
 ```
 
 ### Production URLs
 **Backend APIs:**
-- **BeaX RM API**: http://13.126.228.247:3000/api
-- **True Process API**: http://13.126.228.247:3001/api
+- **BeaX RM API**: https://beaxrm.purpuldigital.com/api
+- **True Process API**: http://3.111.139.181:3001/api
 - **RaccontiXRM API**: http://68.178.171.103:3002/api
 
 **Frontend Applications:**
-- **BeaX RM**: http://localhost:4200
-- **True Process**: http://localhost:4201
-- **RaccontiXRM**: http://localhost:4202 (or http://68.178.171.103:4202 on server)
+- **BeaX RM**: https://beaxrm.purpuldigital.com
+- **True Process**: http://3.111.139.181:4201
+- **RaccontiXRM**: http://68.178.171.103:4202
 
 ### Memory Optimization
 - Max memory restart: 200MB per process

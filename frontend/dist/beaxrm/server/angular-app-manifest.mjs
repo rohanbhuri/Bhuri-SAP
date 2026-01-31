@@ -158,8 +158,8 @@ export default {
   ]
 },
   assets: {
-    'index.csr.html': {size: 6828, hash: 'cfa34fe653fba6dcace8943fafabfc4c3db4b1dd499ea8a961915cd8e7bf16a0', text: () => import('./assets-chunks/index_csr_html.mjs').then(m => m.default)},
-    'index.server.html': {size: 6079, hash: 'acfe17f993e50e3a0d2db4a39ffd6ad68df5ce15c2e165b845107d65f7451131', text: () => import('./assets-chunks/index_server_html.mjs').then(m => m.default)},
+    'index.csr.html': {size: 6854, hash: 'c6f497933805b4aa4631734e7c6c496e2fdfa4e2f534f43d6b6e3ede8f589d42', text: () => import('./assets-chunks/index_csr_html.mjs').then(m => m.default)},
+    'index.server.html': {size: 6105, hash: '57f9f41b006e5f4b4f4decbaa467c10a55cfc2309e9807b57562832891eae772', text: () => import('./assets-chunks/index_server_html.mjs').then(m => m.default)},
     'styles-BHSA56TR.css': {size: 34529, hash: 'kAM+G14VA10', text: () => import('./assets-chunks/styles-BHSA56TR_css.mjs').then(m => m.default)}
   },
 };

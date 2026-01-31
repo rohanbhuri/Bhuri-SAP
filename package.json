@@ -41,6 +41,10 @@
     "mcp:dev": "nodemon mcp-server-improved.js",
     "mcp:config": "cat mcp-config.json",
     "mcp:test": "curl -X POST http://localhost:8931/mcp -H 'Content-Type: application/json' -d '{\"jsonrpc\":\"2.0\",\"method\":\"tools/list\",\"id\":1}'",
+    "htaccess:setup": "chmod +x generate-htaccess.sh && ./generate-htaccess.sh",
+    "htaccess:beaxrm": "chmod +x generate-htaccess.sh && ./generate-htaccess.sh beaxrm",
+    "htaccess:true-process": "chmod +x generate-htaccess.sh && ./generate-htaccess.sh true-process",
+    "htaccess:raccontixrm": "chmod +x generate-htaccess.sh && ./generate-htaccess.sh raccontixrm",
     "nginx:setup": "chmod +x setup-nginx.sh && ./setup-nginx.sh"
   },
   "keywords": [

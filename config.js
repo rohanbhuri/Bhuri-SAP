@@ -18,7 +18,9 @@ const configs = {
       version: "1.0.0",
       description: "Resource Management System",
       port: 4200,
-      apiUrl: process.env.NODE_ENV === 'production' ? "http://13.126.228.247:3000/api" : "http://localhost:3000/api"
+      apiUrl: process.env.NODE_ENV === 'production' ? "https://beaxrm.purpuldigital.com/api" : "http://localhost:3000/api",
+      domain: "beaxrm.purpuldigital.com",
+      productionIP: "157.173.216.251"
     },
     database: {
       MONGODB_URI: 'mongodb+srv://rohanbhuri:nokiaset@bhuri-db.zg9undw.mongodb.net/beaxrm?retryWrites=true&w=majority&appName=bhuri-db',
@@ -53,7 +55,9 @@ const configs = {
       version: "1.0.0",
       description: "Process Management System",
       port: 4201,
-      apiUrl: process.env.NODE_ENV === 'production' ? "http://3.111.139.181:3001/api" : "http://localhost:3001/api"
+      apiUrl: process.env.NODE_ENV === 'production' ? "http://3.111.139.181:3001/api" : "http://localhost:3001/api",
+      domain: "3.111.139.181",
+      productionIP: "3.111.139.181"
     },
 
     database: {
@@ -89,7 +93,9 @@ const configs = {
       version: "0.0.1",
       description: "Your Organisation's only dashboard for everything",
       port: 4202,
-      apiUrl: process.env.NODE_ENV === 'production' ? "https://xrm.racconti.in/api" : "http://localhost:3002/api"
+      apiUrl: process.env.NODE_ENV === 'production' ? "https://xrm.racconti.in/api" : "http://localhost:3002/api",
+      domain: "xrm.racconti.in",
+      productionIP: "68.178.171.103"
     },
     database: {
       MONGODB_URI: 'mongodb+srv://rohanbhuri:nokiaset@bhuri-db.zg9undw.mongodb.net/racconti?retryWrites=true&w=majority&appName=bhuri-db',

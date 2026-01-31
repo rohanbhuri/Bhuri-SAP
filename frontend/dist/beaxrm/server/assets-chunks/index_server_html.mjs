@@ -24,7 +24,7 @@ export default `<!DOCTYPE html>
   <meta property="og:title" content="Beax Resource Manager"/>
   <meta property="og:description" content="Resource Management System"/>
   <meta property="og:site_name" content="Beax RM"/>
-  <meta property="og:url" content="http://13.126.228.247:4200"/>
+  <meta property="og:url" content="http://beaxrm.purpuldigital.com:4200"/>
   <meta property="og:locale" content="en_US"/>
 
   <!-- Twitter -->
@@ -39,7 +39,7 @@ export default `<!DOCTYPE html>
   <link rel="icon" type="image/png" sizes="32x32" href="/config/assets/beaxrm/icons/XRM-white-logo.png"/>
   <link rel="icon" type="image/png" sizes="16x16" href="/config/assets/beaxrm/icons/XRM-white-logo.png"/>
 
-  <link rel="canonical" href="http://13.126.228.247:4200"/>
+  <link rel="canonical" href="http://beaxrm.purpuldigital.com:4200"/>
   <link rel="manifest" href="/manifest.json"/>
 
   <!-- Optimized font loading -->
@@ -111,7 +111,7 @@ export default `<!DOCTYPE html>
         version: "1.0.0",
         description: "Resource Management System",
         port: parseInt("4200"),
-        apiUrl: "http://13.126.228.247:3000/api",
+        apiUrl: "https://beaxrm.purpuldigital.com/api",
       },
     };
 
