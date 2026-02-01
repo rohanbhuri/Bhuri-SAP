@@ -10,158 +10,217 @@ import { Router } from '@angular/router';
   imports: [MatCardModule, MatButtonModule, MatIconModule],
   template: `
     <div class="messages-widget">
-      <div class="header">
-        <div class="icon-container">
-          <mat-icon>chat</mat-icon>
-        </div>
-        <div class="title-section">
-          <span class="subtitle">Team communication hub</span>
+      <div class="widget-header-content">
+        <p class="subtitle">Team communication hub</p>
+      </div>
+      <div class="widget-body-content">
+        <div class="widget-stats">
+          <div class="stat-item primary">
+            <mat-icon>chat</mat-icon>
+            <div class="stat-info">
+              <span class="stat-number">{{ stats().unreadMessages }}</span>
+              <span class="stat-label">Unread</span>
+              <span class="stat-detail">New messages</span>
+            </div>
+          </div>
+          <div class="stat-item secondary">
+            <mat-icon>group</mat-icon>
+            <div class="stat-info">
+              <span class="stat-number">{{ stats().activeChats }}</span>
+              <span class="stat-label">Chats</span>
+              <span class="stat-detail">Active conversations</span>
+            </div>
+          </div>
+          <div class="stat-item tertiary">
+            <mat-icon>schedule</mat-icon>
+            <div class="stat-info">
+              <span class="stat-number">{{ stats().recentMessages }}</span>
+              <span class="stat-label">Recent</span>
+              <span class="stat-detail">Last 24h</span>
+            </div>
+          </div>
+          <div class="stat-item accent">
+            <mat-icon>notifications</mat-icon>
+            <div class="stat-info">
+              <span class="stat-number">{{ getNotificationStatus() }}</span>
+              <span class="stat-label">Status</span>
+              <span class="stat-detail">Notifications</span>
+            </div>
+          </div>
         </div>
       </div>
-      
-      <div class="chat-overview">
-        <div class="unread-section">
-          <div class="unread-count">{{ stats().unreadMessages }}</div>
-          <div class="unread-label">Unread Messages</div>
-          <div class="unread-indicator" [class.has-unread]="stats().unreadMessages > 0"></div>
+      <div class="widget-footer-actions">
+        <div class="cta-grid">
+          <button mat-flat-button class="cta-btn" (click)="openMessages()">
+            <mat-icon>forum</mat-icon>
+            <span>Messages</span>
+          </button>
+          <button mat-flat-button class="cta-btn analytics-btn" (click)="openMessages()">
+            <mat-icon>chat</mat-icon>
+            <span>Open Chat</span>
+          </button>
         </div>
-        
-        <div class="activity-stats">
-          <div class="activity-item">
-            <mat-icon class="activity-icon">group</mat-icon>
-            <span class="activity-text">{{ stats().activeChats }} Active Chats</span>
-          </div>
-          <div class="activity-item">
-            <mat-icon class="activity-icon">schedule</mat-icon>
-            <span class="activity-text">{{ stats().recentMessages }} Recent</span>
-          </div>
-        </div>
-      </div>
-      
-      <div class="action-section">
-        <button mat-flat-button color="primary" (click)="openMessages()">
-          <mat-icon>forum</mat-icon>
-          Open Messages
-        </button>
       </div>
     </div>
   `,
   styles: [`
     .messages-widget {
-      padding: 20px;
       height: 100%;
       display: flex;
       flex-direction: column;
-      gap: 16px;
-    }
-    
-    .header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    
-    .icon-container {
-      width: 48px;
-      height: 48px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, var(--theme-primary), color-mix(in srgb, var(--theme-primary) 80%, #fff));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
+      background: transparent;
     }
     
     .subtitle {
-      font-size: 0.9rem;
       color: color-mix(in srgb, var(--theme-on-surface) 70%, transparent);
-      font-weight: 500;
-    }
-    
-    .chat-overview {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-    
-    .unread-section {
-      text-align: center;
-      padding: 20px;
-      background: transparent;
-      border-radius: 12px;
-      border: 1px solid color-mix(in srgb, var(--theme-on-surface) 8%, transparent);
-      position: relative;
-    }
-    
-    .unread-count {
-      font-size: 2.5rem;
-      font-weight: 700;
-      color: var(--theme-primary);
-      line-height: 1;
-    }
-    
-    .unread-label {
-      font-size: 0.8rem;
-      color: color-mix(in srgb, var(--theme-on-surface) 60%, transparent);
+      padding: 0 16px;
+      font-size: 0.9rem;
       margin-top: 4px;
     }
     
-    .unread-indicator {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: color-mix(in srgb, var(--theme-on-surface) 20%, transparent);
-      transition: all 0.3s ease;
+    .widget-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 16px;
     }
     
-    .unread-indicator.has-unread {
-      background: var(--theme-error, #F44336);
-      animation: pulse 2s infinite;
+    :host-context([data-view="expanded"]) .widget-stats {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      padding: 24px;
     }
     
-    .activity-stats {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    
-    .activity-item {
+    .stat-item {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      background: transparent;
-      border-radius: 8px;
+      gap: 12px;
+      padding: 12px;
+      background: color-mix(in srgb, var(--theme-surface) 96%, var(--theme-primary));
+      border: 1px solid color-mix(in srgb, var(--theme-primary) 8%, transparent);
+      border-radius: 12px;
+      transition: all 0.2s ease-in-out;
     }
     
-    .activity-icon {
-      font-size: 16px;
-      width: 16px;
-      height: 16px;
+    .stat-item:hover {
+      transform: translateY(-2px);
+      background: color-mix(in srgb, var(--theme-surface) 92%, var(--theme-primary));
+      border-color: color-mix(in srgb, var(--theme-primary) 20%, transparent);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    
+    :host-context([data-view="expanded"]) .stat-item {
+      padding: 20px;
+      border-radius: 16px;
+    }
+
+    .stat-item mat-icon {
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
       color: var(--theme-primary);
+      opacity: 0.8;
     }
     
-    .activity-text {
-      font-size: 0.85rem;
-      color: var(--theme-on-surface);
+    .stat-info {
+      display: flex;
+      flex-direction: column;
     }
     
-    .action-section button {
-      width: 100%;
-      height: 40px;
-      border-radius: 8px;
-      font-weight: 500;
+    .stat-number {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--theme-primary);
+      line-height: 1.1;
+      letter-spacing: -0.5px;
     }
     
-    @keyframes pulse {
-      0% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.2); opacity: 0.7; }
-      100% { transform: scale(1); opacity: 1; }
+    .stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: color-mix(in srgb, var(--theme-on-surface) 60%, transparent);
+      margin-top: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
+    
+    .stat-detail {
+      font-size: 10px;
+      color: color-mix(in srgb, var(--theme-on-surface) 40%, transparent);
+      margin-top: 1px;
+    }
+
+    .widget-footer-actions {
+      padding: 16px;
+      margin-top: auto;
+      border-top: 1px solid color-mix(in srgb, var(--theme-on-surface) 5%, transparent);
+    }
+    
+    .cta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    
+    :host-context([data-view="expanded"]) .cta-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .cta-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: auto;
+      padding: 14px 10px;
+      background: color-mix(in srgb, var(--theme-primary) 12%, var(--theme-surface)) !important;
+      color: var(--theme-primary) !important;
+      border-radius: 14px;
+      min-width: 0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid color-mix(in srgb, var(--theme-primary) 25%, transparent) !important;
+      box-shadow: 0 4px 6px -1px color-mix(in srgb, var(--theme-on-surface) 5%, transparent);
+    }
+
+    .cta-btn mat-icon {
+      margin: 0;
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+      transition: transform 0.3s ease;
+    }
+
+    .cta-btn span {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .analytics-btn {
+      background: color-mix(in srgb, var(--theme-primary) 18%, var(--theme-surface)) !important;
+      border-color: color-mix(in srgb, var(--theme-primary) 40%, transparent) !important;
+    }
+
+    .cta-btn:hover {
+      background: var(--theme-primary) !important;
+      color: var(--theme-on-primary) !important;
+      border-color: var(--theme-primary) !important;
+      transform: translateY(-4px);
+      box-shadow: 0 10px 15px -3px color-mix(in srgb, var(--theme-primary) 30%, transparent);
+    }
+
+    .cta-btn:hover mat-icon {
+      transform: scale(1.1);
+    }
+
+    /* Stat item specific colors */
+    .stat-item.primary { border-left: 3px solid var(--theme-primary); }
+    .stat-item.secondary { border-left: 3px solid #4caf50; }
+    .stat-item.tertiary { border-left: 3px solid #ff9800; }
+    .stat-item.accent { border-left: 3px solid #2196f3; }
   `]
 })
 export class MessagesWidgetComponent implements OnInit {
@@ -184,6 +243,10 @@ export class MessagesWidgetComponent implements OnInit {
       activeChats: 12,
       recentMessages: 24
     });
+  }
+
+  getNotificationStatus(): string {
+    return this.stats().unreadMessages > 0 ? 'ON' : 'OFF';
   }
 
   openMessages() {

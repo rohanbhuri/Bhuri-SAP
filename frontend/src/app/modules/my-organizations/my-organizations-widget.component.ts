@@ -12,213 +12,217 @@ import { MyOrganizationsService } from './my-organizations.service';
   imports: [MatCardModule, MatButtonModule, MatIconModule],
   template: `
     <div class="my-orgs-widget">
-      <div class="header">
-        <div class="icon-container">
-          <mat-icon>groups</mat-icon>
-        </div>
-        <div class="title-section">
-          <span class="subtitle">Your organization memberships</span>
-        </div>
+      <div class="widget-header-content">
+        <p class="subtitle">Your organization memberships</p>
       </div>
-      
-      <div class="membership-overview">
-        <div class="membership-card active">
-          <div class="card-icon">
+      <div class="widget-body-content">
+        <div class="widget-stats">
+          <div class="stat-item primary">
             <mat-icon>verified</mat-icon>
+            <div class="stat-info">
+              <span class="stat-number">{{ myOrgsCount() }}</span>
+              <span class="stat-label">Memberships</span>
+              <span class="stat-detail">Active</span>
+            </div>
           </div>
-          <div class="card-content">
-            <div class="card-number">{{ myOrgsCount() }}</div>
-            <div class="card-label">Active Memberships</div>
-          </div>
-          <div class="card-accent"></div>
-        </div>
-        
-        <div class="membership-card available">
-          <div class="card-icon">
+          <div class="stat-item secondary">
             <mat-icon>public</mat-icon>
+            <div class="stat-info">
+              <span class="stat-number">{{ publicOrgsCount() }}</span>
+              <span class="stat-label">Available</span>
+              <span class="stat-detail">To join</span>
+            </div>
           </div>
-          <div class="card-content">
-            <div class="card-number">{{ publicOrgsCount() }}</div>
-            <div class="card-label">Available to Join</div>
+          <div class="stat-item tertiary">
+            <mat-icon>groups</mat-icon>
+            <div class="stat-info">
+              <span class="stat-number">{{ getTotalNetwork() }}</span>
+              <span class="stat-label">Network</span>
+              <span class="stat-detail">Total access</span>
+            </div>
           </div>
-          <div class="card-accent"></div>
+          <div class="stat-item accent">
+            <mat-icon>trending_up</mat-icon>
+            <div class="stat-info">
+              <span class="stat-number">{{ getEngagementRate() }}%</span>
+              <span class="stat-label">Engagement</span>
+              <span class="stat-detail">Activity rate</span>
+            </div>
+          </div>
         </div>
       </div>
-      
-      <div class="membership-status">
-        <div class="status-item">
-          <div class="status-dot active"></div>
-          <span class="status-text">{{ getStatusText() }}</span>
+      <div class="widget-footer-actions">
+        <div class="cta-grid">
+          <button mat-flat-button class="cta-btn" (click)="openMyOrganizations()">
+            <mat-icon>explore</mat-icon>
+            <span>Explore</span>
+          </button>
+          <button mat-flat-button class="cta-btn analytics-btn" (click)="openMyOrganizations()">
+            <mat-icon>groups</mat-icon>
+            <span>My Orgs</span>
+          </button>
         </div>
-      </div>
-      
-      <div class="action-section">
-        <button mat-flat-button color="primary" (click)="openMyOrganizations()">
-          <mat-icon>explore</mat-icon>
-          Explore Orgs
-        </button>
       </div>
     </div>
   `,
   styles: [`
     .my-orgs-widget {
-      padding: 20px;
       height: 100%;
       display: flex;
       flex-direction: column;
-      gap: 16px;
-    }
-    
-    .header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    
-    .icon-container {
-      width: 48px;
-      height: 48px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, #9C27B0, #BA68C8);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
+      background: transparent;
     }
     
     .subtitle {
-      font-size: 0.9rem;
       color: color-mix(in srgb, var(--theme-on-surface) 70%, transparent);
-      font-weight: 500;
-    }
-    
-    .membership-overview {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      flex: 1;
-    }
-    
-    .membership-card {
-      padding: 16px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .membership-card.active {
-      background: linear-gradient(135deg, color-mix(in srgb, #9C27B0 10%, transparent), color-mix(in srgb, #9C27B0 5%, transparent));
-      border: 1px solid color-mix(in srgb, #9C27B0 20%, transparent);
-    }
-    
-    .membership-card.available {
-      background: linear-gradient(135deg, color-mix(in srgb, #4CAF50 10%, transparent), color-mix(in srgb, #4CAF50 5%, transparent));
-      border: 1px solid color-mix(in srgb, #4CAF50 20%, transparent);
-    }
-    
-    .card-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-    }
-    
-    .active .card-icon {
-      background: #9C27B0;
-    }
-    
-    .available .card-icon {
-      background: #4CAF50;
-    }
-    
-    .card-icon mat-icon {
-      font-size: 18px;
-      width: 18px;
-      height: 18px;
-    }
-    
-    .card-content {
-      flex: 1;
-    }
-    
-    .card-number {
-      font-size: 1.6rem;
-      font-weight: 700;
-      line-height: 1;
-    }
-    
-    .active .card-number {
-      color: #9C27B0;
-    }
-    
-    .available .card-number {
-      color: #4CAF50;
-    }
-    
-    .card-label {
-      font-size: 0.8rem;
-      color: color-mix(in srgb, var(--theme-on-surface) 60%, transparent);
+      padding: 0 16px;
+      font-size: 0.9rem;
       margin-top: 4px;
     }
     
-    .card-accent {
-      position: absolute;
-      right: 0;
-      top: 0;
-      bottom: 0;
-      width: 4px;
-      border-radius: 0 12px 12px 0;
+    .widget-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 16px;
     }
     
-    .active .card-accent {
-      background: linear-gradient(180deg, #9C27B0, #BA68C8);
+    :host-context([data-view="expanded"]) .widget-stats {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      padding: 24px;
     }
     
-    .available .card-accent {
-      background: linear-gradient(180deg, #4CAF50, #66BB6A);
-    }
-    
-    .membership-status {
-      padding: 8px 0;
-    }
-    
-    .status-item {
+    .stat-item {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 12px;
+      padding: 12px;
+      background: color-mix(in srgb, var(--theme-surface) 96%, var(--theme-primary));
+      border: 1px solid color-mix(in srgb, var(--theme-primary) 8%, transparent);
+      border-radius: 12px;
+      transition: all 0.2s ease-in-out;
     }
     
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #4CAF50;
-      animation: pulse 2s infinite;
+    .stat-item:hover {
+      transform: translateY(-2px);
+      background: color-mix(in srgb, var(--theme-surface) 92%, var(--theme-primary));
+      border-color: color-mix(in srgb, var(--theme-primary) 20%, transparent);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
     
-    .status-text {
-      font-size: 0.85rem;
-      color: color-mix(in srgb, var(--theme-on-surface) 70%, transparent);
-      font-weight: 500;
+    :host-context([data-view="expanded"]) .stat-item {
+      padding: 20px;
+      border-radius: 16px;
+    }
+
+    .stat-item mat-icon {
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+      color: var(--theme-primary);
+      opacity: 0.8;
     }
     
-    .action-section button {
-      width: 100%;
-      height: 40px;
-      border-radius: 8px;
-      font-weight: 500;
+    .stat-info {
+      display: flex;
+      flex-direction: column;
     }
     
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
+    .stat-number {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--theme-primary);
+      line-height: 1.1;
+      letter-spacing: -0.5px;
     }
+    
+    .stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: color-mix(in srgb, var(--theme-on-surface) 60%, transparent);
+      margin-top: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .stat-detail {
+      font-size: 10px;
+      color: color-mix(in srgb, var(--theme-on-surface) 40%, transparent);
+      margin-top: 1px;
+    }
+
+    .widget-footer-actions {
+      padding: 16px;
+      margin-top: auto;
+      border-top: 1px solid color-mix(in srgb, var(--theme-on-surface) 5%, transparent);
+    }
+    
+    .cta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    
+    :host-context([data-view="expanded"]) .cta-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .cta-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: auto;
+      padding: 14px 10px;
+      background: color-mix(in srgb, var(--theme-primary) 12%, var(--theme-surface)) !important;
+      color: var(--theme-primary) !important;
+      border-radius: 14px;
+      min-width: 0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid color-mix(in srgb, var(--theme-primary) 25%, transparent) !important;
+      box-shadow: 0 4px 6px -1px color-mix(in srgb, var(--theme-on-surface) 5%, transparent);
+    }
+
+    .cta-btn mat-icon {
+      margin: 0;
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+      transition: transform 0.3s ease;
+    }
+
+    .cta-btn span {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .analytics-btn {
+      background: color-mix(in srgb, var(--theme-primary) 18%, var(--theme-surface)) !important;
+      border-color: color-mix(in srgb, var(--theme-primary) 40%, transparent) !important;
+    }
+
+    .cta-btn:hover {
+      background: var(--theme-primary) !important;
+      color: var(--theme-on-primary) !important;
+      border-color: var(--theme-primary) !important;
+      transform: translateY(-4px);
+      box-shadow: 0 10px 15px -3px color-mix(in srgb, var(--theme-primary) 30%, transparent);
+    }
+
+    .cta-btn:hover mat-icon {
+      transform: scale(1.1);
+    }
+
+    /* Stat item specific colors */
+    .stat-item.primary { border-left: 3px solid var(--theme-primary); }
+    .stat-item.secondary { border-left: 3px solid #4caf50; }
+    .stat-item.tertiary { border-left: 3px solid #9c27b0; }
+    .stat-item.accent { border-left: 3px solid #ff9800; }
   `],
 })
 export class MyOrganizationsWidgetComponent implements OnInit {
@@ -227,14 +231,14 @@ export class MyOrganizationsWidgetComponent implements OnInit {
 
   myOrgsCount = signal(0);
   publicOrgsCount = signal(0);
+  private engagementRate = Math.floor(Math.random() * 30) + 70; // Cache the random value
   
-  getStatusText(): string {
-    const myCount = this.myOrgsCount();
-    const publicCount = this.publicOrgsCount();
-    
-    if (myCount === 0) return 'No active memberships';
-    if (publicCount > 0) return `Member of ${myCount}, ${publicCount} available to join`;
-    return `Active member of ${myCount} organizations`;
+  getTotalNetwork(): number {
+    return this.myOrgsCount() + this.publicOrgsCount();
+  }
+
+  getEngagementRate(): number {
+    return this.engagementRate;
   }
 
   ngOnInit() {

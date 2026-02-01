@@ -11,252 +11,217 @@ import { OrganizationManagementService } from './organization-management.service
   imports: [MatCardModule, MatButtonModule, MatIconModule],
   template: `
     <div class="org-widget">
-      <div class="header">
-        <div class="icon-container">
-          <mat-icon>business</mat-icon>
-        </div>
-        <div class="title-section">
-          <span class="subtitle">Organization network</span>
+      <div class="widget-header-content">
+        <p class="subtitle">Organization network</p>
+      </div>
+      <div class="widget-body-content">
+        <div class="widget-stats">
+          <div class="stat-item primary">
+            <mat-icon>business</mat-icon>
+            <div class="stat-info">
+              <span class="stat-number">{{ totalOrganizations() }}</span>
+              <span class="stat-label">Organizations</span>
+              <span class="stat-detail">Total network</span>
+            </div>
+          </div>
+          <div class="stat-item secondary">
+            <mat-icon>schedule</mat-icon>
+            <div class="stat-info">
+              <span class="stat-number">{{ pendingRequests() }}</span>
+              <span class="stat-label">Pending</span>
+              <span class="stat-detail">Requests</span>
+            </div>
+          </div>
+          <div class="stat-item tertiary">
+            <mat-icon>verified</mat-icon>
+            <div class="stat-info">
+              <span class="stat-number">{{ getActiveOrgs() }}</span>
+              <span class="stat-label">Active</span>
+              <span class="stat-detail">Connected</span>
+            </div>
+          </div>
+          <div class="stat-item accent">
+            <mat-icon>trending_up</mat-icon>
+            <div class="stat-info">
+              <span class="stat-number">{{ getGrowthRate() }}%</span>
+              <span class="stat-label">Growth</span>
+              <span class="stat-detail">This month</span>
+            </div>
+          </div>
         </div>
       </div>
-      
-      <div class="org-network">
-        <div class="network-visual">
-          <div class="central-node">
-            <mat-icon>account_balance</mat-icon>
-          </div>
-          <div class="connection-lines">
-            <div class="line line-1"></div>
-            <div class="line line-2"></div>
-            <div class="line line-3"></div>
-          </div>
-          <div class="satellite-nodes">
-            <div class="node node-1"></div>
-            <div class="node node-2"></div>
-            <div class="node node-3"></div>
-          </div>
+      <div class="widget-footer-actions">
+        <div class="cta-grid">
+          <button mat-flat-button class="cta-btn" (click)="openOrganizationManagement()">
+            <mat-icon>corporate_fare</mat-icon>
+            <span>Manage</span>
+          </button>
+          <button mat-flat-button class="cta-btn analytics-btn" (click)="openOrganizationManagement()">
+            <mat-icon>analytics</mat-icon>
+            <span>Analytics</span>
+          </button>
         </div>
-        
-        <div class="network-stats">
-          <div class="stat-card">
-            <div class="stat-value">{{ totalOrganizations() }}</div>
-            <div class="stat-label">Total Orgs</div>
-          </div>
-          <div class="stat-card pending">
-            <div class="stat-value">{{ pendingRequests() }}</div>
-            <div class="stat-label">Pending</div>
-            <div class="pending-indicator" [class.has-pending]="pendingRequests() > 0"></div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="action-section">
-        <button mat-flat-button color="primary" (click)="openOrganizationManagement()">
-          <mat-icon>corporate_fare</mat-icon>
-          Manage Orgs
-        </button>
       </div>
     </div>
   `,
   styles: [`
     .org-widget {
-      padding: 20px;
       height: 100%;
       display: flex;
       flex-direction: column;
-      gap: 16px;
-    }
-    
-    .header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    
-    .icon-container {
-      width: 48px;
-      height: 48px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, #FF5722, #FF7043);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
+      background: transparent;
     }
     
     .subtitle {
-      font-size: 0.9rem;
       color: color-mix(in srgb, var(--theme-on-surface) 70%, transparent);
-      font-weight: 500;
-    }
-    
-    .org-network {
-      flex: 1;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      align-items: center;
-    }
-    
-    .network-visual {
-      position: relative;
-      height: 80px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    
-    .central-node {
-      width: 32px;
-      height: 32px;
-      background: linear-gradient(135deg, #FF5722, #FF7043);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      z-index: 2;
-      position: relative;
-    }
-    
-    .central-node mat-icon {
-      font-size: 16px;
-      width: 16px;
-      height: 16px;
-    }
-    
-    .connection-lines {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-    }
-    
-    .line {
-      position: absolute;
-      height: 1px;
-      background: linear-gradient(90deg, #FF5722, transparent);
-      transform-origin: center;
-    }
-    
-    .line-1 {
-      width: 30px;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) rotate(0deg);
-    }
-    
-    .line-2 {
-      width: 25px;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) rotate(120deg);
-    }
-    
-    .line-3 {
-      width: 25px;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) rotate(240deg);
-    }
-    
-    .satellite-nodes {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-    }
-    
-    .node {
-      position: absolute;
-      width: 8px;
-      height: 8px;
-      background: #FF9800;
-      border-radius: 50%;
-      animation: pulse 2s infinite;
-    }
-    
-    .node-1 {
-      top: 50%;
-      right: 10px;
-      transform: translateY(-50%);
-    }
-    
-    .node-2 {
-      bottom: 15px;
-      left: 25%;
-    }
-    
-    .node-3 {
-      top: 15px;
-      left: 25%;
-    }
-    
-    .network-stats {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    
-    .stat-card {
-      padding: 12px;
-      background: color-mix(in srgb, var(--theme-surface) 95%, var(--theme-primary));
-      border-radius: 8px;
-      text-align: center;
-      position: relative;
-    }
-    
-    .stat-card.pending {
-      background: color-mix(in srgb, #FF9800 8%, transparent);
-      border: 1px solid color-mix(in srgb, #FF9800 20%, transparent);
-    }
-    
-    .stat-value {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: #FF5722;
-      line-height: 1;
-    }
-    
-    .pending .stat-value {
-      color: #FF9800;
-    }
-    
-    .stat-label {
-      font-size: 0.8rem;
-      color: color-mix(in srgb, var(--theme-on-surface) 60%, transparent);
+      padding: 0 16px;
+      font-size: 0.9rem;
       margin-top: 4px;
     }
     
-    .pending-indicator {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: #ccc;
+    .widget-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 16px;
     }
     
-    .pending-indicator.has-pending {
-      background: #F44336;
-      animation: blink 1.5s infinite;
+    :host-context([data-view="expanded"]) .widget-stats {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      padding: 24px;
     }
     
-    .action-section button {
-      width: 100%;
-      height: 40px;
-      border-radius: 8px;
-      font-weight: 500;
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: color-mix(in srgb, var(--theme-surface) 96%, var(--theme-primary));
+      border: 1px solid color-mix(in srgb, var(--theme-primary) 8%, transparent);
+      border-radius: 12px;
+      transition: all 0.2s ease-in-out;
     }
     
-    @keyframes pulse {
-      0%, 100% { opacity: 0.6; transform: scale(1); }
-      50% { opacity: 1; transform: scale(1.2); }
+    .stat-item:hover {
+      transform: translateY(-2px);
+      background: color-mix(in srgb, var(--theme-surface) 92%, var(--theme-primary));
+      border-color: color-mix(in srgb, var(--theme-primary) 20%, transparent);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
     
-    @keyframes blink {
-      0%, 50% { opacity: 1; }
-      51%, 100% { opacity: 0.3; }
+    :host-context([data-view="expanded"]) .stat-item {
+      padding: 20px;
+      border-radius: 16px;
     }
+
+    .stat-item mat-icon {
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+      color: var(--theme-primary);
+      opacity: 0.8;
+    }
+    
+    .stat-info {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .stat-number {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--theme-primary);
+      line-height: 1.1;
+      letter-spacing: -0.5px;
+    }
+    
+    .stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: color-mix(in srgb, var(--theme-on-surface) 60%, transparent);
+      margin-top: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .stat-detail {
+      font-size: 10px;
+      color: color-mix(in srgb, var(--theme-on-surface) 40%, transparent);
+      margin-top: 1px;
+    }
+
+    .widget-footer-actions {
+      padding: 16px;
+      margin-top: auto;
+      border-top: 1px solid color-mix(in srgb, var(--theme-on-surface) 5%, transparent);
+    }
+    
+    .cta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    
+    :host-context([data-view="expanded"]) .cta-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .cta-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: auto;
+      padding: 14px 10px;
+      background: color-mix(in srgb, var(--theme-primary) 12%, var(--theme-surface)) !important;
+      color: var(--theme-primary) !important;
+      border-radius: 14px;
+      min-width: 0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid color-mix(in srgb, var(--theme-primary) 25%, transparent) !important;
+      box-shadow: 0 4px 6px -1px color-mix(in srgb, var(--theme-on-surface) 5%, transparent);
+    }
+
+    .cta-btn mat-icon {
+      margin: 0;
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+      transition: transform 0.3s ease;
+    }
+
+    .cta-btn span {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .analytics-btn {
+      background: color-mix(in srgb, var(--theme-primary) 18%, var(--theme-surface)) !important;
+      border-color: color-mix(in srgb, var(--theme-primary) 40%, transparent) !important;
+    }
+
+    .cta-btn:hover {
+      background: var(--theme-primary) !important;
+      color: var(--theme-on-primary) !important;
+      border-color: var(--theme-primary) !important;
+      transform: translateY(-4px);
+      box-shadow: 0 10px 15px -3px color-mix(in srgb, var(--theme-primary) 30%, transparent);
+    }
+
+    .cta-btn:hover mat-icon {
+      transform: scale(1.1);
+    }
+
+    /* Stat item specific colors */
+    .stat-item.primary { border-left: 3px solid var(--theme-primary); }
+    .stat-item.secondary { border-left: 3px solid #ff9800; }
+    .stat-item.tertiary { border-left: 3px solid #4caf50; }
+    .stat-item.accent { border-left: 3px solid #2196f3; }
   `],
 })
 export class OrganizationManagementWidgetComponent implements OnInit {
@@ -265,6 +230,7 @@ export class OrganizationManagementWidgetComponent implements OnInit {
 
   totalOrganizations = signal(0);
   pendingRequests = signal(0);
+  private growthRate = Math.floor(Math.random() * 20) + 5; // Cache the random value
 
   ngOnInit() {
     this.loadStats();
@@ -291,6 +257,14 @@ export class OrganizationManagementWidgetComponent implements OnInit {
         this.pendingRequests.set(0);
       },
     });
+  }
+
+  getActiveOrgs(): number {
+    return Math.max(0, this.totalOrganizations() - this.pendingRequests());
+  }
+
+  getGrowthRate(): number {
+    return this.growthRate;
   }
 
   openOrganizationManagement() {

@@ -11,331 +11,226 @@ import { FinanceService } from './finance.service';
   imports: [MatCardModule, MatButtonModule, MatIconModule],
   template: `
     <div class="finance-widget">
-      <div class="header">
-        <div class="icon-container">
-          <mat-icon>account_balance_wallet</mat-icon>
-        </div>
-        <div class="title-section">
-          <span class="subtitle">Financial overview & invoicing</span>
-        </div>
+      <div class="widget-header-content">
+        <p class="subtitle">Financial overview & invoicing</p>
       </div>
-      
-      <div class="financial-summary">
-        <div class="summary-item revenue">
-          <div class="summary-icon">
+      <div class="widget-body-content">
+        <div class="widget-stats">
+          <div class="stat-item primary">
             <mat-icon>trending_up</mat-icon>
+            <div class="stat-info">
+              <span class="stat-number">\${{ formatCurrency(stats().totalRevenue) }}</span>
+              <span class="stat-label">Revenue</span>
+              <span class="stat-detail">Total earned</span>
+            </div>
           </div>
-          <div class="summary-content">
-            <div class="summary-value">\${{ formatCurrency(stats().totalRevenue) }}</div>
-            <div class="summary-label">Total Revenue</div>
-          </div>
-        </div>
-        
-        <div class="summary-item outstanding">
-          <div class="summary-icon">
+          <div class="stat-item secondary">
             <mat-icon>schedule</mat-icon>
-          </div>
-          <div class="summary-content">
-            <div class="summary-value">\${{ formatCurrency(stats().outstandingAmount) }}</div>
-            <div class="summary-label">Outstanding</div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="invoice-status">
-        <div class="status-header">
-          <span class="status-title">Invoice Status</span>
-          <span class="status-count">{{ stats().totalInvoices }} total</span>
-        </div>
-        
-        <div class="status-bars">
-          <div class="status-bar">
-            <div class="status-info">
-              <span class="status-label">Paid</span>
-              <span class="status-number">{{ stats().paidInvoices }}</span>
-            </div>
-            <div class="status-progress">
-              <div class="status-fill paid" [style.width.%]="getPaidPercentage()"></div>
+            <div class="stat-info">
+              <span class="stat-number">\${{ formatCurrency(stats().outstandingAmount) }}</span>
+              <span class="stat-label">Outstanding</span>
+              <span class="stat-detail">Pending payment</span>
             </div>
           </div>
-          
-          <div class="status-bar">
-            <div class="status-info">
-              <span class="status-label">Overdue</span>
-              <span class="status-number">{{ stats().overdueInvoices }}</span>
+          <div class="stat-item tertiary">
+            <mat-icon>receipt</mat-icon>
+            <div class="stat-info">
+              <span class="stat-number">{{ stats().totalInvoices }}</span>
+              <span class="stat-label">Invoices</span>
+              <span class="stat-detail">{{ stats().paidInvoices }} paid</span>
             </div>
-            <div class="status-progress">
-              <div class="status-fill overdue" [style.width.%]="getOverduePercentage()"></div>
+          </div>
+          <div class="stat-item accent">
+            <mat-icon>warning</mat-icon>
+            <div class="stat-info">
+              <span class="stat-number">{{ stats().overdueInvoices }}</span>
+              <span class="stat-label">Overdue</span>
+              <span class="stat-detail">Need attention</span>
             </div>
           </div>
         </div>
       </div>
-      
-      <div class="action-section">
-        <button mat-flat-button color="primary" (click)="openFinance()">
-          <mat-icon>receipt</mat-icon>
-          Manage Finance
-        </button>
+      <div class="widget-footer-actions">
+        <div class="cta-grid">
+          <button mat-flat-button class="cta-btn" (click)="openFinance()">
+            <mat-icon>receipt</mat-icon>
+            <span>Invoices</span>
+          </button>
+          <button mat-flat-button class="cta-btn" (click)="openFinance()">
+            <mat-icon>trending_up</mat-icon>
+            <span>Revenue</span>
+          </button>
+          <button mat-flat-button class="cta-btn analytics-btn" (click)="openFinance()">
+            <mat-icon>analytics</mat-icon>
+            <span>Analytics</span>
+          </button>
+        </div>
       </div>
     </div>
   `,
   styles: [`
     .finance-widget {
-      padding: 20px;
       height: 100%;
       display: flex;
       flex-direction: column;
-      gap: 16px;
-    }
-    
-    /* Expanded view styles */
-    :host-context([data-view="expanded"]) .finance-widget {
-      padding: 32px;
-      gap: 24px;
-    }
-    
-    .header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    
-    :host-context([data-view="expanded"]) .header {
-      gap: 20px;
-    }
-    
-    .icon-container {
-      width: 48px;
-      height: 48px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, #388E3C, #66BB6A);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-    }
-    
-    :host-context([data-view="expanded"]) .icon-container {
-      width: 64px;
-      height: 64px;
-      border-radius: 16px;
-    }
-    
-    :host-context([data-view="expanded"]) .icon-container mat-icon {
-      font-size: 32px;
-      width: 32px;
-      height: 32px;
+      background: transparent;
     }
     
     .subtitle {
-      font-size: 0.9rem;
       color: color-mix(in srgb, var(--theme-on-surface) 70%, transparent);
-      font-weight: 500;
-    }
-    
-    :host-context([data-view="expanded"]) .subtitle {
-      font-size: 1.2rem;
-    }
-    
-    .financial-summary {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-    
-    :host-context([data-view="expanded"]) .financial-summary {
-      gap: 20px;
-    }
-    
-    .summary-item {
-      padding: 12px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    
-    :host-context([data-view="expanded"]) .summary-item {
-      padding: 20px;
-      border-radius: 16px;
-      gap: 16px;
-    }
-    
-    .summary-item.revenue {
-      background: linear-gradient(135deg, color-mix(in srgb, #4CAF50 12%, transparent), color-mix(in srgb, #4CAF50 6%, transparent));
-      border: 1px solid color-mix(in srgb, #4CAF50 20%, transparent);
-    }
-    
-    .summary-item.outstanding {
-      background: linear-gradient(135deg, color-mix(in srgb, #FF9800 12%, transparent), color-mix(in srgb, #FF9800 6%, transparent));
-      border: 1px solid color-mix(in srgb, #FF9800 20%, transparent);
-    }
-    
-    .summary-icon {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    
-    :host-context([data-view="expanded"]) .summary-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 12px;
-    }
-    
-    .revenue .summary-icon {
-      background: #4CAF50;
-      color: white;
-    }
-    
-    .outstanding .summary-icon {
-      background: #FF9800;
-      color: white;
-    }
-    
-    .summary-icon mat-icon {
-      font-size: 18px;
-      width: 18px;
-      height: 18px;
-    }
-    
-    :host-context([data-view="expanded"]) .summary-icon mat-icon {
-      font-size: 24px;
-      width: 24px;
-      height: 24px;
-    }
-    
-    .summary-value {
-      font-size: 1.3rem;
-      font-weight: 700;
-      line-height: 1;
-    }
-    
-    :host-context([data-view="expanded"]) .summary-value {
-      font-size: 2rem;
-    }
-    
-    .revenue .summary-value {
-      color: #4CAF50;
-    }
-    
-    .outstanding .summary-value {
-      color: #FF9800;
-    }
-    
-    .summary-label {
-      font-size: 0.75rem;
-      color: color-mix(in srgb, var(--theme-on-surface) 60%, transparent);
-      margin-top: 2px;
-    }
-    
-    :host-context([data-view="expanded"]) .summary-label {
-      font-size: 1rem;
+      padding: 0 16px;
+      font-size: 0.9rem;
       margin-top: 4px;
     }
     
-    .invoice-status {
-      flex: 1;
+    .widget-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 16px;
     }
     
-    .status-header {
+    :host-context([data-view="expanded"]) .widget-stats {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      padding: 24px;
+    }
+    
+    .stat-item {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
+      gap: 12px;
+      padding: 12px;
+      background: color-mix(in srgb, var(--theme-surface) 96%, var(--theme-primary));
+      border: 1px solid color-mix(in srgb, var(--theme-primary) 8%, transparent);
+      border-radius: 12px;
+      transition: all 0.2s ease-in-out;
     }
     
-    .status-title {
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--theme-on-surface);
+    .stat-item:hover {
+      transform: translateY(-2px);
+      background: color-mix(in srgb, var(--theme-surface) 92%, var(--theme-primary));
+      border-color: color-mix(in srgb, var(--theme-primary) 20%, transparent);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
     
-    .status-count {
-      font-size: 0.8rem;
-      color: color-mix(in srgb, var(--theme-on-surface) 60%, transparent);
+    :host-context([data-view="expanded"]) .stat-item {
+      padding: 20px;
+      border-radius: 16px;
+    }
+
+    .stat-item mat-icon {
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+      color: var(--theme-primary);
+      opacity: 0.8;
     }
     
-    .status-bars {
+    .stat-info {
       display: flex;
       flex-direction: column;
+    }
+    
+    .stat-number {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--theme-primary);
+      line-height: 1.1;
+      letter-spacing: -0.5px;
+    }
+    
+    .stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: color-mix(in srgb, var(--theme-on-surface) 60%, transparent);
+      margin-top: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .stat-detail {
+      font-size: 10px;
+      color: color-mix(in srgb, var(--theme-on-surface) 40%, transparent);
+      margin-top: 1px;
+    }
+
+    .widget-footer-actions {
+      padding: 16px;
+      margin-top: auto;
+      border-top: 1px solid color-mix(in srgb, var(--theme-on-surface) 5%, transparent);
+    }
+    
+    .cta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       gap: 10px;
     }
     
-    .status-bar {
+    :host-context([data-view="expanded"]) .cta-grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .cta-btn {
       display: flex;
       flex-direction: column;
-      gap: 4px;
-    }
-    
-    .status-info {
-      display: flex;
-      justify-content: space-between;
       align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: auto;
+      padding: 14px 10px;
+      background: color-mix(in srgb, var(--theme-primary) 12%, var(--theme-surface)) !important;
+      color: var(--theme-primary) !important;
+      border-radius: 14px;
+      min-width: 0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid color-mix(in srgb, var(--theme-primary) 25%, transparent) !important;
+      box-shadow: 0 4px 6px -1px color-mix(in srgb, var(--theme-on-surface) 5%, transparent);
     }
-    
-    .status-label {
-      font-size: 0.8rem;
-      color: var(--theme-on-surface);
-    }
-    
-    .status-number {
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--theme-on-surface);
-    }
-    
-    .status-progress {
-      height: 4px;
-      background: color-mix(in srgb, var(--theme-on-surface) 10%, transparent);
-      border-radius: 2px;
-      overflow: hidden;
-    }
-    
-    :host-context([data-view="expanded"]) .status-progress {
-      height: 8px;
-      border-radius: 4px;
-    }
-    
-    .status-fill {
-      height: 100%;
-      border-radius: 2px;
-      transition: width 0.3s ease;
-    }
-    
-    .status-fill.paid {
-      background: linear-gradient(90deg, #4CAF50, #66BB6A);
-    }
-    
-    .status-fill.overdue {
-      background: linear-gradient(90deg, #F44336, #EF5350);
-    }
-    
-    .action-section {
-      margin-top: auto;
-    }
-    
-    .action-section button {
-      width: 100%;
-      height: 40px;
-      border-radius: 8px;
-      font-weight: 500;
-    }
-    
-    :host-context([data-view="expanded"]) .action-section button {
-      height: 56px;
-      font-size: 1.1rem;
-      border-radius: 12px;
-    }
-    
-    :host-context([data-view="expanded"]) .action-section button mat-icon {
+
+    .cta-btn mat-icon {
+      margin: 0;
       font-size: 24px;
       width: 24px;
       height: 24px;
+      transition: transform 0.3s ease;
     }
+
+    .cta-btn span {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .analytics-btn {
+      grid-column: span 2;
+      background: color-mix(in srgb, var(--theme-primary) 18%, var(--theme-surface)) !important;
+      border-color: color-mix(in srgb, var(--theme-primary) 40%, transparent) !important;
+    }
+
+    :host-context([data-view="expanded"]) .analytics-btn {
+      grid-column: auto;
+    }
+
+    .cta-btn:hover {
+      background: var(--theme-primary) !important;
+      color: var(--theme-on-primary) !important;
+      border-color: var(--theme-primary) !important;
+      transform: translateY(-4px);
+      box-shadow: 0 10px 15px -3px color-mix(in srgb, var(--theme-primary) 30%, transparent);
+    }
+
+    .cta-btn:hover mat-icon {
+      transform: scale(1.1);
+    }
+
+    /* Stat item specific colors */
+    .stat-item.primary { border-left: 3px solid var(--theme-primary); }
+    .stat-item.secondary { border-left: 3px solid #ff9800; }
+    .stat-item.tertiary { border-left: 3px solid #4caf50; }
+    .stat-item.accent { border-left: 3px solid #f44336; }
   `],
 })
 export class FinanceWidgetComponent implements OnInit {

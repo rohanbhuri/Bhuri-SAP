@@ -11,242 +11,226 @@ import { ProjectsManagementService, ProjectStats } from './projects-management.s
   imports: [MatCardModule, MatButtonModule, MatIconModule],
   template: `
     <div class="projects-widget">
-      <div class="header">
-        <div class="icon-container">
-          <mat-icon>work</mat-icon>
-        </div>
-        <div class="title-section">
-          <span class="subtitle">Project portfolio overview</span>
+      <div class="widget-header-content">
+        <p class="subtitle">Project portfolio overview</p>
+      </div>
+      <div class="widget-body-content">
+        <div class="widget-stats">
+          <div class="stat-item primary">
+            <mat-icon>work</mat-icon>
+            <div class="stat-info">
+              <span class="stat-number">{{ stats().total }}</span>
+              <span class="stat-label">Projects</span>
+              <span class="stat-detail">Total portfolio</span>
+            </div>
+          </div>
+          <div class="stat-item secondary">
+            <mat-icon>play_circle</mat-icon>
+            <div class="stat-info">
+              <span class="stat-number">{{ stats().active }}</span>
+              <span class="stat-label">Active</span>
+              <span class="stat-detail">In progress</span>
+            </div>
+          </div>
+          <div class="stat-item tertiary">
+            <mat-icon>check_circle</mat-icon>
+            <div class="stat-info">
+              <span class="stat-number">{{ stats().completed }}</span>
+              <span class="stat-label">Completed</span>
+              <span class="stat-detail">Delivered</span>
+            </div>
+          </div>
+          <div class="stat-item accent">
+            <mat-icon>trending_up</mat-icon>
+            <div class="stat-info">
+              <span class="stat-number">{{ getCompletionPercentage() }}%</span>
+              <span class="stat-label">Success Rate</span>
+              <span class="stat-detail">Completion</span>
+            </div>
+          </div>
         </div>
       </div>
-      
-      <div class="progress-section">
-        <div class="completion-circle">
-          <svg viewBox="0 0 36 36" class="circular-chart">
-            <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-            <path class="circle" [attr.stroke-dasharray]="getCompletionPercentage() + ', 100'" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-            <text x="18" y="20.35" class="percentage">{{ getCompletionPercentage() }}%</text>
-          </svg>
-          <div class="completion-label">Completion Rate</div>
+      <div class="widget-footer-actions">
+        <div class="cta-grid">
+          <button mat-flat-button class="cta-btn" (click)="openModule()">
+            <mat-icon>dashboard</mat-icon>
+            <span>Dashboard</span>
+          </button>
+          <button mat-flat-button class="cta-btn" (click)="openModule()">
+            <mat-icon>work</mat-icon>
+            <span>Projects</span>
+          </button>
+          <button mat-flat-button class="cta-btn analytics-btn" (click)="openModule()">
+            <mat-icon>analytics</mat-icon>
+            <span>Analytics</span>
+          </button>
         </div>
-        
-        <div class="project-stats">
-          <div class="stat-row">
-            <div class="stat-dot active"></div>
-            <span class="stat-text">{{ stats().active }} Active</span>
-          </div>
-          <div class="stat-row">
-            <div class="stat-dot completed"></div>
-            <span class="stat-text">{{ stats().completed }} Completed</span>
-          </div>
-          <div class="stat-row">
-            <div class="stat-dot total"></div>
-            <span class="stat-text">{{ stats().total }} Total</span>
-          </div>
-        </div>
-      </div>
-      
-      <div class="action-section">
-        <button mat-flat-button color="primary" (click)="openModule()">
-          <mat-icon>dashboard</mat-icon>
-          View Projects
-        </button>
       </div>
     </div>
   `,
   styles: [`
     .projects-widget {
-      padding: 20px;
       height: 100%;
       display: flex;
       flex-direction: column;
-      gap: 16px;
-    }
-    
-    :host-context([data-view="expanded"]) .projects-widget {
-      padding: 32px;
-      gap: 24px;
-    }
-    
-    .header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    
-    :host-context([data-view="expanded"]) .header {
-      gap: 20px;
-    }
-    
-    .icon-container {
-      width: 48px;
-      height: 48px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, #3F51B5, #5C6BC0);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-    }
-    
-    :host-context([data-view="expanded"]) .icon-container {
-      width: 64px;
-      height: 64px;
-      border-radius: 16px;
-    }
-    
-    :host-context([data-view="expanded"]) .icon-container mat-icon {
-      font-size: 32px;
-      width: 32px;
-      height: 32px;
+      background: transparent;
     }
     
     .subtitle {
-      font-size: 0.9rem;
       color: color-mix(in srgb, var(--theme-on-surface) 70%, transparent);
-      font-weight: 500;
+      padding: 0 16px;
+      font-size: 0.9rem;
+      margin-top: 4px;
     }
     
-    :host-context([data-view="expanded"]) .subtitle {
-      font-size: 1.2rem;
-    }
-    
-    .progress-section {
+    .widget-stats {
       display: grid;
       grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 16px;
+    }
+    
+    :host-context([data-view="expanded"]) .widget-stats {
+      grid-template-columns: repeat(4, 1fr);
       gap: 20px;
+      padding: 24px;
+    }
+    
+    .stat-item {
+      display: flex;
       align-items: center;
-      flex: 1;
+      gap: 12px;
+      padding: 12px;
+      background: color-mix(in srgb, var(--theme-surface) 96%, var(--theme-primary));
+      border: 1px solid color-mix(in srgb, var(--theme-primary) 8%, transparent);
+      border-radius: 12px;
+      transition: all 0.2s ease-in-out;
     }
     
-    :host-context([data-view="expanded"]) .progress-section {
-      gap: 40px;
+    .stat-item:hover {
+      transform: translateY(-2px);
+      background: color-mix(in srgb, var(--theme-surface) 92%, var(--theme-primary));
+      border-color: color-mix(in srgb, var(--theme-primary) 20%, transparent);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
     
-    .completion-circle {
-      text-align: center;
+    :host-context([data-view="expanded"]) .stat-item {
+      padding: 20px;
+      border-radius: 16px;
+    }
+
+    .stat-item mat-icon {
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+      color: var(--theme-primary);
+      opacity: 0.8;
     }
     
-    .circular-chart {
-      width: 80px;
-      height: 80px;
-    }
-    
-    :host-context([data-view="expanded"]) .circular-chart {
-      width: 120px;
-      height: 120px;
-    }
-    
-    .circle-bg {
-      fill: none;
-      stroke: color-mix(in srgb, var(--theme-on-surface) 10%, transparent);
-      stroke-width: 2.8;
-    }
-    
-    .circle {
-      fill: none;
-      stroke: #3F51B5;
-      stroke-width: 2.8;
-      stroke-linecap: round;
-      animation: progress 1s ease-in-out forwards;
-    }
-    
-    .percentage {
-      fill: #3F51B5;
-      font-family: sans-serif;
-      font-size: 0.5em;
-      font-weight: bold;
-      text-anchor: middle;
-    }
-    
-    .completion-label {
-      font-size: 0.8rem;
-      color: color-mix(in srgb, var(--theme-on-surface) 60%, transparent);
-      margin-top: 8px;
-    }
-    
-    :host-context([data-view="expanded"]) .completion-label {
-      font-size: 1rem;
-      margin-top: 12px;
-    }
-    
-    .project-stats {
+    .stat-info {
       display: flex;
       flex-direction: column;
-      gap: 12px;
     }
     
-    :host-context([data-view="expanded"]) .project-stats {
-      gap: 20px;
+    .stat-number {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--theme-primary);
+      line-height: 1.1;
+      letter-spacing: -0.5px;
     }
     
-    .stat-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    .stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: color-mix(in srgb, var(--theme-on-surface) 60%, transparent);
+      margin-top: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
     
-    .stat-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
+    .stat-detail {
+      font-size: 10px;
+      color: color-mix(in srgb, var(--theme-on-surface) 40%, transparent);
+      margin-top: 1px;
     }
-    
-    :host-context([data-view="expanded"]) .stat-dot {
-      width: 12px;
-      height: 12px;
-    }
-    
-    .stat-dot.active {
-      background: #4CAF50;
-    }
-    
-    .stat-dot.completed {
-      background: #2196F3;
-    }
-    
-    .stat-dot.total {
-      background: #FF9800;
-    }
-    
-    .stat-text {
-      font-size: 0.9rem;
-      color: var(--theme-on-surface);
-      font-weight: 500;
-    }
-    
-    :host-context([data-view="expanded"]) .stat-text {
-      font-size: 1.1rem;
-    }
-    
-    .action-section {
+
+    .widget-footer-actions {
+      padding: 16px;
       margin-top: auto;
+      border-top: 1px solid color-mix(in srgb, var(--theme-on-surface) 5%, transparent);
     }
     
-    .action-section button {
-      width: 100%;
-      height: 40px;
-      border-radius: 8px;
-      font-weight: 500;
+    .cta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
     }
     
-    :host-context([data-view="expanded"]) .action-section button {
-      height: 56px;
-      font-size: 1.1rem;
-      border-radius: 12px;
+    :host-context([data-view="expanded"]) .cta-grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
     }
-    
-    :host-context([data-view="expanded"]) .action-section button mat-icon {
+
+    .cta-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: auto;
+      padding: 14px 10px;
+      background: color-mix(in srgb, var(--theme-primary) 12%, var(--theme-surface)) !important;
+      color: var(--theme-primary) !important;
+      border-radius: 14px;
+      min-width: 0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid color-mix(in srgb, var(--theme-primary) 25%, transparent) !important;
+      box-shadow: 0 4px 6px -1px color-mix(in srgb, var(--theme-on-surface) 5%, transparent);
+    }
+
+    .cta-btn mat-icon {
+      margin: 0;
       font-size: 24px;
       width: 24px;
       height: 24px;
+      transition: transform 0.3s ease;
     }
-    
-    @keyframes progress {
-      0% {
-        stroke-dasharray: 0 100;
-      }
+
+    .cta-btn span {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
+
+    .analytics-btn {
+      grid-column: span 2;
+      background: color-mix(in srgb, var(--theme-primary) 18%, var(--theme-surface)) !important;
+      border-color: color-mix(in srgb, var(--theme-primary) 40%, transparent) !important;
+    }
+
+    :host-context([data-view="expanded"]) .analytics-btn {
+      grid-column: auto;
+    }
+
+    .cta-btn:hover {
+      background: var(--theme-primary) !important;
+      color: var(--theme-on-primary) !important;
+      border-color: var(--theme-primary) !important;
+      transform: translateY(-4px);
+      box-shadow: 0 10px 15px -3px color-mix(in srgb, var(--theme-primary) 30%, transparent);
+    }
+
+    .cta-btn:hover mat-icon {
+      transform: scale(1.1);
+    }
+
+    /* Stat item specific colors */
+    .stat-item.primary { border-left: 3px solid var(--theme-primary); }
+    .stat-item.secondary { border-left: 3px solid #4caf50; }
+    .stat-item.tertiary { border-left: 3px solid #2196f3; }
+    .stat-item.accent { border-left: 3px solid #ff9800; }
   `],
 })
 export class ProjectsManagementWidgetComponent implements OnInit {

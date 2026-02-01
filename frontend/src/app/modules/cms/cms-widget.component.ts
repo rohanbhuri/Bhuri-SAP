@@ -18,303 +18,227 @@ import { CmsService } from './cms.service';
     MatChipsModule
   ],
   template: `
-      <div class="cms-widget">
-      <div>
+    <div class="cms-widget">
+      <div class="widget-header-content">
+        <p class="subtitle">Content management system</p>
+      </div>
+      <div class="widget-body-content">
         <div class="widget-stats">
-          <div class="stat-item">
-            <div class="stat-value">{{ stats().pages }}</div>
-            <div class="stat-label">Pages</div>
+          <div class="stat-item primary">
+            <mat-icon>article</mat-icon>
+            <div class="stat-info">
+              <span class="stat-number">{{ stats().pages }}</span>
+              <span class="stat-label">Pages</span>
+              <span class="stat-detail">Published content</span>
+            </div>
           </div>
-          <div class="stat-item">
-            <div class="stat-value">{{ stats().blogs }}</div>
-            <div class="stat-label">Blog Posts</div>
+          <div class="stat-item secondary">
+            <mat-icon>rss_feed</mat-icon>
+            <div class="stat-info">
+              <span class="stat-number">{{ stats().blogs }}</span>
+              <span class="stat-label">Blogs</span>
+              <span class="stat-detail">Blog posts</span>
+            </div>
           </div>
-          <div class="stat-item">
-            <div class="stat-value">{{ stats().drafts }}</div>
-            <div class="stat-label">Drafts</div>
+          <div class="stat-item tertiary">
+            <mat-icon>edit_note</mat-icon>
+            <div class="stat-info">
+              <span class="stat-number">{{ stats().drafts }}</span>
+              <span class="stat-label">Drafts</span>
+              <span class="stat-detail">In progress</span>
+            </div>
           </div>
-        </div>
-
-        <div class="recent-content">
-          <h4>Recent Activity</h4>
-          <div class="content-list">
-            <div class="content-item" *ngFor="let item of recentContent()">
-              <mat-icon [class]="'content-icon ' + item.type">{{ item.icon }}</mat-icon>
-              <div class="content-info">
-                <div class="content-title">{{ item.title }}</div>
-                <div class="content-meta">{{ item.status }} • {{ item.date }}</div>
-              </div>
-              <mat-chip [color]="getStatusColor(item.status)" class="status-chip">
-                {{ item.status }}
-              </mat-chip>
+          <div class="stat-item accent">
+            <mat-icon>visibility</mat-icon>
+            <div class="stat-info">
+              <span class="stat-number">{{ getPublishedCount() }}</span>
+              <span class="stat-label">Published</span>
+              <span class="stat-detail">Live content</span>
             </div>
           </div>
         </div>
       </div>
-      <div>
-        <button mat-button (click)="navigateToPages()">
-          <mat-icon>article</mat-icon>
-          Manage Pages
-        </button>
-        <button mat-button (click)="navigateToBlogs()">
-          <mat-icon>article</mat-icon>
-          Manage Blogs
-        </button>
-        <button mat-button (click)="navigateToCms()">
-          <mat-icon>dashboard</mat-icon>
-          View All
-        </button>
+      <div class="widget-footer-actions">
+        <div class="cta-grid">
+          <button mat-flat-button class="cta-btn" (click)="navigateToPages()">
+            <mat-icon>article</mat-icon>
+            <span>Pages</span>
+          </button>
+          <button mat-flat-button class="cta-btn" (click)="navigateToBlogs()">
+            <mat-icon>rss_feed</mat-icon>
+            <span>Blogs</span>
+          </button>
+          <button mat-flat-button class="cta-btn analytics-btn" (click)="navigateToCms()">
+            <mat-icon>dashboard</mat-icon>
+            <span>Dashboard</span>
+          </button>
+        </div>
       </div>
-      </div>
+    </div>
   `,
   styles: [`
     .cms-widget {
       height: 100%;
       display: flex;
       flex-direction: column;
+      background: transparent;
     }
-
-    /* Compact view styles */
-    :host-context([data-view="compact"]) .cms-widget {
-      mat-card-header {
-        padding: 8px;
-      }
-      
-      mat-card-title {
-        font-size: 0.8rem;
-      }
-      
-      mat-card-subtitle {
-        font-size: 0.7rem;
-        display: none;
-      }
-      
-      mat-card-content {
-        padding: 8px;
-      }
-      
-      mat-card-actions {
-        padding: 6px;
-        gap: 4px;
-      }
+    
+    .subtitle {
+      color: color-mix(in srgb, var(--theme-on-surface) 70%, transparent);
+      padding: 0 16px;
+      font-size: 0.9rem;
+      margin-top: 4px;
     }
-
-    .widget-avatar {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    :host-context([data-view="compact"]) .widget-avatar {
-      width: 24px;
-      height: 24px;
-      
-      mat-icon {
-        font-size: 14px;
-        width: 14px;
-        height: 14px;
-      }
-    }
-
+    
     .widget-stats {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-      padding: 1rem;
-      background: #f5f5f5;
-      border-radius: 8px;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 16px;
     }
-
-    :host-context([data-view="compact"]) .widget-stats {
-      gap: 4px;
-      margin-bottom: 8px;
-      padding: 6px;
-      border-radius: 4px;
+    
+    :host-context([data-view="expanded"]) .widget-stats {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      padding: 24px;
     }
-
+    
     .stat-item {
-      text-align: center;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: color-mix(in srgb, var(--theme-surface) 96%, var(--theme-primary));
+      border: 1px solid color-mix(in srgb, var(--theme-primary) 8%, transparent);
+      border-radius: 12px;
+      transition: all 0.2s ease-in-out;
+    }
+    
+    .stat-item:hover {
+      transform: translateY(-2px);
+      background: color-mix(in srgb, var(--theme-surface) 92%, var(--theme-primary));
+      border-color: color-mix(in srgb, var(--theme-primary) 20%, transparent);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    
+    :host-context([data-view="expanded"]) .stat-item {
+      padding: 20px;
+      border-radius: 16px;
     }
 
-    .stat-value {
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: #667eea;
-      margin-bottom: 0.25rem;
+    .stat-item mat-icon {
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+      color: var(--theme-primary);
+      opacity: 0.8;
     }
-
-    :host-context([data-view="compact"]) .stat-value {
-      font-size: 1rem;
-      margin-bottom: 2px;
-    }
-
-    .stat-label {
-      font-size: 0.875rem;
-      color: #666;
-    }
-
-    :host-context([data-view="compact"]) .stat-label {
-      font-size: 0.6rem;
-    }
-
-    .recent-content h4 {
-      margin: 0 0 1rem 0;
-      color: #333;
-      font-size: 1rem;
-    }
-
-    :host-context([data-view="compact"]) .recent-content h4 {
-      font-size: 0.7rem;
-      margin: 0 0 6px 0;
-    }
-
-    .content-list {
+    
+    .stat-info {
       display: flex;
       flex-direction: column;
-      gap: 0.75rem;
+    }
+    
+    .stat-number {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--theme-primary);
+      line-height: 1.1;
+      letter-spacing: -0.5px;
+    }
+    
+    .stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: color-mix(in srgb, var(--theme-on-surface) 60%, transparent);
+      margin-top: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .stat-detail {
+      font-size: 10px;
+      color: color-mix(in srgb, var(--theme-on-surface) 40%, transparent);
+      margin-top: 1px;
     }
 
-    :host-context([data-view="compact"]) .content-list {
-      gap: 4px;
+    .widget-footer-actions {
+      padding: 16px;
+      margin-top: auto;
+      border-top: 1px solid color-mix(in srgb, var(--theme-on-surface) 5%, transparent);
+    }
+    
+    .cta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    
+    :host-context([data-view="expanded"]) .cta-grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
     }
 
-    .content-item {
+    .cta-btn {
       display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.5rem;
-      border-radius: 6px;
-      background: #fafafa;
-    }
-
-    :host-context([data-view="compact"]) .content-item {
-      gap: 4px;
-      padding: 3px;
-      border-radius: 3px;
-    }
-
-    .content-icon {
-      width: 1.5rem;
-      height: 1.5rem;
-      border-radius: 50%;
-      display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      font-size: 1rem;
+      gap: 6px;
+      height: auto;
+      padding: 14px 10px;
+      background: color-mix(in srgb, var(--theme-primary) 12%, var(--theme-surface)) !important;
+      color: var(--theme-primary) !important;
+      border-radius: 14px;
+      min-width: 0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid color-mix(in srgb, var(--theme-primary) 25%, transparent) !important;
+      box-shadow: 0 4px 6px -1px color-mix(in srgb, var(--theme-on-surface) 5%, transparent);
     }
 
-    .content-icon.page {
-      background: #e3f2fd;
-      color: #2196f3;
-    }
-
-    .content-icon.blog {
-      background: #fff3e0;
-      color: #ff9800;
-    }
-
-    .content-info {
-      flex: 1;
-    }
-
-    .content-title {
-      font-weight: 500;
-      font-size: 0.875rem;
-      color: #333;
-      margin-bottom: 0.125rem;
-    }
-
-    :host-context([data-view="compact"]) .content-title {
-      font-size: 0.6rem;
-      margin-bottom: 1px;
-    }
-
-    .content-meta {
-      font-size: 0.75rem;
-      color: #666;
-    }
-
-    :host-context([data-view="compact"]) .content-meta {
-      font-size: 0.55rem;
-    }
-
-    .status-chip {
-      font-size: 0.75rem;
-      height: 20px;
-    }
-
-    :host-context([data-view="compact"]) .status-chip {
-      font-size: 0.55rem;
-      height: 16px;
-      display: none;
-    }
-
-    mat-card-actions {
-      margin-top: auto;
-      padding: 1rem;
-      display: flex;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-    }
-
-    mat-card-actions button {
-      flex: 1;
-      min-width: 120px;
-    }
-
-    :host-context([data-view="compact"]) mat-card-actions button {
-      min-width: auto;
-      font-size: 0.6rem;
+    .cta-btn mat-icon {
+      margin: 0;
+      font-size: 24px;
+      width: 24px;
       height: 24px;
-      padding: 0 6px;
-      
-      mat-icon {
-        font-size: 12px;
-        width: 12px;
-        height: 12px;
-        margin-right: 2px;
-      }
+      transition: transform 0.3s ease;
     }
 
-    @media (max-width: 768px) {
-      .widget-stats {
-        grid-template-columns: repeat(2, 1fr);
-      }
-      
-      mat-card-actions {
-        flex-direction: column;
-      }
-      
-      mat-card-actions button {
-        width: 100%;
-      }
+    .cta-btn span {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
-    /* Compact mode mobile adjustments */
-    :host-context([data-view="compact"]) {
-      @media (max-width: 768px) {
-        .widget-stats {
-          grid-template-columns: 1fr;
-        }
-        
-        .recent-content {
-          display: none;
-        }
-        
-        mat-card-actions {
-          flex-direction: row;
-          justify-content: center;
-        }
-        
-        mat-card-actions button {
-          width: auto;
-          flex: 1;
-        }
-      }
+    .analytics-btn {
+      grid-column: span 2;
+      background: color-mix(in srgb, var(--theme-primary) 18%, var(--theme-surface)) !important;
+      border-color: color-mix(in srgb, var(--theme-primary) 40%, transparent) !important;
     }
+
+    :host-context([data-view="expanded"]) .analytics-btn {
+      grid-column: auto;
+    }
+
+    .cta-btn:hover {
+      background: var(--theme-primary) !important;
+      color: var(--theme-on-primary) !important;
+      border-color: var(--theme-primary) !important;
+      transform: translateY(-4px);
+      box-shadow: 0 10px 15px -3px color-mix(in srgb, var(--theme-primary) 30%, transparent);
+    }
+
+    .cta-btn:hover mat-icon {
+      transform: scale(1.1);
+    }
+
+    /* Stat item specific colors */
+    .stat-item.primary { border-left: 3px solid var(--theme-primary); }
+    .stat-item.secondary { border-left: 3px solid #ff9800; }
+    .stat-item.tertiary { border-left: 3px solid #f44336; }
+    .stat-item.accent { border-left: 3px solid #4caf50; }
   `]
 })
 export class CmsWidgetComponent implements OnInit {
@@ -373,13 +297,9 @@ export class CmsWidgetComponent implements OnInit {
     });
   }
 
-  getStatusColor(status: string): string {
-    switch (status) {
-      case 'published': return 'primary';
-      case 'draft': return 'accent';
-      case 'archived': return 'warn';
-      default: return '';
-    }
+  getPublishedCount(): number {
+    const stats = this.stats();
+    return stats.pages + stats.blogs - stats.drafts;
   }
 
   navigateToPages() {

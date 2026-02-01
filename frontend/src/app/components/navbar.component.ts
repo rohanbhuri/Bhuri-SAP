@@ -42,7 +42,7 @@ import { PwaInstallModalComponent } from './pwa-install-modal.component';
           [alt]="brandConfig.getBrandName()"
           class="logo"
         />
-        <span class="brand-name">XRM</span>
+
       </div>
 
       <div class="nav-actions">
@@ -144,7 +144,7 @@ import { PwaInstallModalComponent } from './pwa-install-modal.component';
       }
 
       .logo {
-        height: 16px;
+        height: 40px;
         width: auto;
         max-width: 150px;
       }
@@ -288,7 +288,7 @@ import { PwaInstallModalComponent } from './pwa-install-modal.component';
         }
 
         .logo {
-          height: 28px;
+          height: 32px;
         }
       }
     `,
