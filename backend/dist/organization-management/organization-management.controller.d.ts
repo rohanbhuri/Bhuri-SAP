@@ -56,4 +56,7 @@ export declare class OrganizationManagementController {
     switchCurrentOrganization(req: any, organizationId: string): Promise<{
         success: boolean;
     }>;
+    switchToPersonal(req: any): Promise<{
+        success: boolean;
+    }>;
 }

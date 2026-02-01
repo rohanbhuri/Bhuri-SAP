@@ -56,4 +56,8 @@ export class MyOrganizationsService {
   switchOrganization(organizationId: string): Observable<any> {
     return this.http.put(`${this.apiUrl}/organization-management/switch-organization/${organizationId}`, {});
   }
+
+  switchToPersonal(): Observable<any> {
+    return this.http.put(`${this.apiUrl}/organization-management/switch-to-personal`, {});
+  }
 }

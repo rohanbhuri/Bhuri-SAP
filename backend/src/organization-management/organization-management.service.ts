@@ -294,4 +294,21 @@ export class OrganizationManagementService {
 
     return { success: true };
   }
+
+  async switchToPersonal(userId: string) {
+    const user = await this.userRepository.findOne({
+      where: { _id: new ObjectId(userId) }
+    });
+    
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    await this.userRepository.update(
+      new ObjectId(userId),
+      { organizationId: null }
+    );
+
+    return { success: true };
+  }
 }

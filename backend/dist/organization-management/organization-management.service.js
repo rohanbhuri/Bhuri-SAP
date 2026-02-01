@@ -220,6 +220,16 @@ let OrganizationManagementService = class OrganizationManagementService {
         await this.userRepository.update(new mongodb_1.ObjectId(userId), { organizationId: orgObjectId });
         return { success: true };
     }
+    async switchToPersonal(userId) {
+        const user = await this.userRepository.findOne({
+            where: { _id: new mongodb_1.ObjectId(userId) }
+        });
+        if (!user) {
+            throw new common_1.NotFoundException('User not found');
+        }
+        await this.userRepository.update(new mongodb_1.ObjectId(userId), { organizationId: null });
+        return { success: true };
+    }
 };
 exports.OrganizationManagementService = OrganizationManagementService;
 exports.OrganizationManagementService = OrganizationManagementService = __decorate([

@@ -89,4 +89,10 @@ export class OrganizationManagementController {
   switchCurrentOrganization(@Request() req, @Param('id') organizationId: string) {
     return this.orgManagementService.switchUserOrganization(req.user.userId, organizationId);
   }
+
+  @Put('switch-to-personal')
+  @UseGuards(JwtAuthGuard)
+  switchToPersonal(@Request() req) {
+    return this.orgManagementService.switchToPersonal(req.user.userId);
+  }
 }

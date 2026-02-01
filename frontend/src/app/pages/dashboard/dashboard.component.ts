@@ -341,12 +341,26 @@ export class DashboardComponent implements OnInit {
     this.authService.currentUser$.subscribe((user) => {
       console.log('=== USER SUBSCRIPTION ===');
       console.log('Current user:', user);
+      console.log('User organizationId:', user?.organizationId);
       console.log('Is authenticated:', this.authService.isAuthenticated());
 
+      const previousUser = this.currentUser();
+      const previousOrgId = previousUser?.organizationId;
+      const newOrgId = user?.organizationId;
+      
+      console.log('Organization ID change:', previousOrgId, '->', newOrgId);
+      
       this.currentUser.set(user);
+      
       if (user && this.authService.isAuthenticated()) {
         console.log('User authenticated, loading organizations...');
-        this.loadOrganizations();
+        // If organizationId changed, force context update
+        if (previousOrgId !== newOrgId && this.organizations().length > 0) {
+          console.log('Organization ID changed, forcing context update');
+          this.setInitialContext();
+        } else {
+          this.loadOrganizations();
+        }
       } else {
         console.log('User not authenticated, showing empty state');
         this.selectedContext.set('personal');
@@ -845,7 +859,9 @@ export class DashboardComponent implements OnInit {
 
     console.log('=== SETTING INITIAL CONTEXT ===');
     console.log('User:', user);
+    console.log('User organizationId:', user?.organizationId);
     console.log('Organizations:', orgs);
+    console.log('Current selectedContext:', this.selectedContext());
 
     if (!user) {
       console.log('No user, showing default widgets');
@@ -855,27 +871,52 @@ export class DashboardComponent implements OnInit {
       return;
     }
 
-    const savedContext = this.getSavedContext();
-    const validatedContext = this.validateAndGetContext(savedContext);
-
     // Determine initial context priority:
-    // 1. Valid saved context
-    // 2. User's current organizationId (if exists in organizations)
-    // 3. First available organization
-    // 4. Personal context
+    // 1. User's current organizationId from backend (if exists in organizations)
+    // 2. Personal context (if organizationId is null)
+    // 3. Valid saved context as fallback
+    // 4. First available organization
     let initialContext = 'personal';
 
-    if (validatedContext) {
-      initialContext = validatedContext;
-    } else if (user.organizationId && orgs.some(org => (org._id || org.id) === user.organizationId)) {
+    if (user.organizationId && orgs.some(org => (org._id || org.id) === user.organizationId)) {
+      // User has a valid organization set in backend
       initialContext = user.organizationId;
-    } else if (orgs.length > 0) {
-      initialContext = orgs[0]._id || orgs[0].id;
+      console.log('Using user organizationId from backend:', initialContext);
+    } else if (user.organizationId === null || user.organizationId === undefined) {
+      // User explicitly set to personal (organizationId is null)
+      initialContext = 'personal';
+      console.log('User organizationId is null, using personal');
+      // Clear any conflicting saved context
+      this.clearSavedContext();
+    } else {
+      // Fallback to saved context or first organization
+      const savedContext = this.getSavedContext();
+      const validatedContext = this.validateAndGetContext(savedContext);
+      
+      if (validatedContext) {
+        initialContext = validatedContext;
+        console.log('Using validated saved context:', initialContext);
+      } else if (orgs.length > 0) {
+        initialContext = orgs[0]._id || orgs[0].id;
+        console.log('Using first available organization:', initialContext);
+      }
     }
 
-    console.log('Initial context determined:', initialContext);
-    this.selectedContext.set(initialContext);
-    this.loadModulesForContext(initialContext);
+    console.log('Final initial context:', initialContext);
+    
+    // Only update if context actually changed
+    if (this.selectedContext() !== initialContext) {
+      console.log('Context changed from', this.selectedContext(), 'to', initialContext);
+      this.selectedContext.set(initialContext);
+      this.saveContext(initialContext); // Update localStorage to match backend
+      this.loadModulesForContext(initialContext);
+    } else {
+      console.log('Context unchanged, no need to reload modules');
+      // Still ensure widgets are loaded if they're empty
+      if (this.widgets().length === 0 && this.isLoadingWidgets()) {
+        this.loadModulesForContext(initialContext);
+      }
+    }
   }
 
   private setupSEO() {

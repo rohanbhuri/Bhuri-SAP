@@ -9,11 +9,13 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { Router } from '@angular/router';
 
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { MyOrganizationsService, PublicOrganization } from './my-organizations.service';
 import { NavbarComponent } from '../../components/navbar.component';
 import { BottomNavbarComponent } from '../../components/bottom-navbar.component';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-my-organizations',
@@ -41,49 +43,75 @@ import { BottomNavbarComponent } from '../../components/bottom-navbar.component'
         <p class="subtitle">Manage your organizations and discover new ones</p>
       </div>
 
-      @if (myOrganizations().length > 0) {
-        <div class="section">
-          <h2>My Organizations</h2>
-          <div class="organizations-grid">
-            @for (org of myOrganizations(); track org.id || org._id) {
-              <mat-card class="org-card my-org">
-                <mat-card-header>
-                  <mat-card-title>{{ org.name }}</mat-card-title>
-                  <mat-card-subtitle>{{ org.code }}</mat-card-subtitle>
-                </mat-card-header>
-                
-                <mat-card-content>
-                  @if (org.description) {
-                    <p class="description">{{ org.description }}</p>
-                  }
-                  
-                  <div class="org-stats">
-                    <div class="stat">
-                      <mat-icon>group</mat-icon>
-                      <span>{{ org.memberCount }} members</span>
-                    </div>
-                    <div class="stat">
-                      <mat-icon>apps</mat-icon>
-                      <span>{{ org.activeModuleIds.length || 0 }} modules</span>
-                    </div>
-                  </div>
-                </mat-card-content>
+      <div class="section">
+        <h2>My Organizations</h2>
+        <div class="organizations-grid">
+          <mat-card class="org-card personal-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>person</mat-icon>
+                Personal Dashboard
+              </mat-card-title>
+              <mat-card-subtitle>Your individual workspace</mat-card-subtitle>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <p class="description">Access your personal dashboard with individual modules and settings.</p>
+              
+              <div class="org-stats">
+                <div class="stat">
+                  <mat-icon>dashboard</mat-icon>
+                  <span>Personal workspace</span>
+                </div>
+                <div class="stat">
+                  <mat-icon>settings</mat-icon>
+                  <span>Individual settings</span>
+                </div>
+              </div>
+            </mat-card-content>
 
-                <mat-card-actions align="end">
-                  <button mat-button color="primary" (click)="switchToOrganization(org)">
-                    <mat-icon>swap_horiz</mat-icon>
-                    Switch To
-                  </button>
-                  <button mat-button>
-                    <mat-icon>dashboard</mat-icon>
-                    View Dashboard
-                  </button>
-                </mat-card-actions>
-              </mat-card>
-            }
-          </div>
+            <mat-card-actions align="end">
+              <button mat-button color="primary" (click)="switchToPersonal()">
+                <mat-icon>swap_horiz</mat-icon>
+                Switch To
+              </button>
+            </mat-card-actions>
+          </mat-card>
+          
+          @for (org of myOrganizations(); track org.id || org._id) {
+            <mat-card class="org-card my-org">
+              <mat-card-header>
+                <mat-card-title>{{ org.name }}</mat-card-title>
+                <mat-card-subtitle>{{ org.code }}</mat-card-subtitle>
+              </mat-card-header>
+              
+              <mat-card-content>
+                @if (org.description) {
+                  <p class="description">{{ org.description }}</p>
+                }
+                
+                <div class="org-stats">
+                  <div class="stat">
+                    <mat-icon>group</mat-icon>
+                    <span>{{ org.memberCount }} members</span>
+                  </div>
+                  <div class="stat">
+                    <mat-icon>apps</mat-icon>
+                    <span>{{ org.activeModuleIds.length || 0 }} modules</span>
+                  </div>
+                </div>
+              </mat-card-content>
+
+              <mat-card-actions align="end">
+                <button mat-button color="primary" (click)="switchToOrganization(org)">
+                  <mat-icon>swap_horiz</mat-icon>
+                  Switch To
+                </button>
+              </mat-card-actions>
+            </mat-card>
+          }
         </div>
-      }
+      </div>
 
       <div class="section">
         <div class="section-header">
@@ -312,6 +340,24 @@ import { BottomNavbarComponent } from '../../components/bottom-navbar.component'
         border-left: 4px solid var(--theme-primary);
       }
 
+      .personal-card {
+        border-left: 4px solid #4caf50;
+        background: linear-gradient(135deg, 
+          color-mix(in srgb, #4caf50 5%, var(--theme-surface)), 
+          color-mix(in srgb, #4caf50 2%, var(--theme-surface))
+        );
+      }
+
+      .personal-card mat-card-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .personal-card mat-card-title mat-icon {
+        color: #4caf50;
+      }
+
       .description {
         margin: 16px 0;
         color: color-mix(in srgb, var(--theme-on-surface) 70%, transparent);
@@ -374,6 +420,8 @@ import { BottomNavbarComponent } from '../../components/bottom-navbar.component'
 export class MyOrganizationsComponent implements OnInit {
   private myOrgService = inject(MyOrganizationsService);
   private snackBar = inject(MatSnackBar);
+  private router = inject(Router);
+  private authService = inject(AuthService);
 
   myOrganizations = signal<PublicOrganization[]>([]);
   publicOrganizations = signal<PublicOrganization[]>([]);
@@ -510,10 +558,48 @@ export class MyOrganizationsComponent implements OnInit {
     this.myOrgService.switchOrganization(orgId).subscribe({
       next: () => {
         this.snackBar.open(`Switched to ${org.name}`, 'Close', { duration: 3000 });
-        window.location.reload();
+        // Refresh user profile to get updated organizationId
+        this.authService.getProfile().subscribe({
+          next: (updatedUser) => {
+            const normalizedUser = this.authService['normalizeUser'](updatedUser);
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('user', JSON.stringify(normalizedUser));
+            }
+            this.authService['currentUserSubject'].next(normalizedUser);
+            this.router.navigate(['/dashboard']);
+          },
+          error: () => {
+            this.router.navigate(['/dashboard']);
+          }
+        });
       },
       error: () => {
         this.snackBar.open('Failed to switch organization', 'Close', { duration: 3000 });
+      }
+    });
+  }
+
+  switchToPersonal() {
+    this.myOrgService.switchToPersonal().subscribe({
+      next: () => {
+        this.snackBar.open('Switched to Personal Dashboard', 'Close', { duration: 3000 });
+        // Refresh user profile to get updated organizationId (null)
+        this.authService.getProfile().subscribe({
+          next: (updatedUser) => {
+            const normalizedUser = this.authService['normalizeUser'](updatedUser);
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('user', JSON.stringify(normalizedUser));
+            }
+            this.authService['currentUserSubject'].next(normalizedUser);
+            this.router.navigate(['/dashboard']);
+          },
+          error: () => {
+            this.router.navigate(['/dashboard']);
+          }
+        });
+      },
+      error: () => {
+        this.snackBar.open('Failed to switch to personal dashboard', 'Close', { duration: 3000 });
       }
     });
   }

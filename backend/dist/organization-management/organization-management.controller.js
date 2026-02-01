@@ -64,6 +64,9 @@ let OrganizationManagementController = class OrganizationManagementController {
     switchCurrentOrganization(req, organizationId) {
         return this.orgManagementService.switchUserOrganization(req.user.userId, organizationId);
     }
+    switchToPersonal(req) {
+        return this.orgManagementService.switchToPersonal(req.user.userId);
+    }
 };
 exports.OrganizationManagementController = OrganizationManagementController;
 __decorate([
@@ -156,6 +159,14 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], OrganizationManagementController.prototype, "switchCurrentOrganization", null);
+__decorate([
+    (0, common_1.Put)('switch-to-personal'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], OrganizationManagementController.prototype, "switchToPersonal", null);
 exports.OrganizationManagementController = OrganizationManagementController = __decorate([
     (0, common_1.Controller)('organization-management'),
     __metadata("design:paramtypes", [organization_management_service_1.OrganizationManagementService])

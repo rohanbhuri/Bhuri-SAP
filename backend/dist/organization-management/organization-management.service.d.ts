@@ -59,4 +59,7 @@ export declare class OrganizationManagementService {
     switchUserOrganization(userId: string, organizationId: string): Promise<{
         success: boolean;
     }>;
+    switchToPersonal(userId: string): Promise<{
+        success: boolean;
+    }>;
 }
