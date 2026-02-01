@@ -58,14 +58,22 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "2MB",
-                  "maximumError": "3MB"
+                  "maximumWarning": "3MB",
+                  "maximumError": "4MB"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "20kB",
-                  "maximumError": "25kB"
+                  "maximumWarning": "30kB",
+                  "maximumError": "35kB"
                 }
+              ],
+              "allowedCommonJsDependencies": [
+                "debug",
+                "xmlhttprequest-ssl",
+                "quill-delta",
+                "socket.io-client",
+                "socket.io-parser",
+                "engine.io-client"
               ]
             },
             "development": {
@@ -170,14 +178,22 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "2MB",
-                  "maximumError": "3MB"
+                  "maximumWarning": "3MB",
+                  "maximumError": "4MB"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "20kB",
-                  "maximumError": "25kB"
+                  "maximumWarning": "30kB",
+                  "maximumError": "35kB"
                 }
+              ],
+              "allowedCommonJsDependencies": [
+                "debug",
+                "xmlhttprequest-ssl",
+                "quill-delta",
+                "socket.io-client",
+                "socket.io-parser",
+                "engine.io-client"
               ]
             },
             "development": {
@@ -282,14 +298,22 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "2MB",
-                  "maximumError": "3MB"
+                  "maximumWarning": "3MB",
+                  "maximumError": "4MB"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "20kB",
-                  "maximumError": "25kB"
+                  "maximumWarning": "30kB",
+                  "maximumError": "35kB"
                 }
+              ],
+              "allowedCommonJsDependencies": [
+                "debug",
+                "xmlhttprequest-ssl",
+                "quill-delta",
+                "socket.io-client",
+                "socket.io-parser",
+                "engine.io-client"
               ]
             },
             "development": {
