@@ -531,21 +531,24 @@ export class DashboardComponent implements OnInit {
   private loadPersonalModules() {
     console.log('=== LOADING PERSONAL MODULES ===');
 
-    this.authService.getUserAccessibleModules(this.modulesService).then((modules) => {
-      console.log('API Response - Accessible modules:', modules);
-      console.log('Module count:', modules?.length || 0);
-      if (modules && modules.length > 0) {
-        console.log('Module names:', modules.map(m => m.displayName));
+    this.modulesService.getPersonalModules().subscribe({
+      next: (modules) => {
+        console.log('API Response - Personal modules:', modules);
+        console.log('Module count:', modules?.length || 0);
+        if (modules && modules.length > 0) {
+          console.log('Module names:', modules.map(m => m.displayName));
+        }
+        this.updateWidgets(modules || []);
+      },
+      error: (error) => {
+        console.error('=== ERROR LOADING PERSONAL MODULES ===');
+        console.error('Error details:', error);
+        this.isLoadingWidgets.set(false);
+        this.widgets.set([]);
+        this.snackBar.open('Failed to load personal modules', 'Close', {
+          duration: 3000,
+        });
       }
-      this.updateWidgets(modules || []);
-    }).catch((error) => {
-      console.error('=== ERROR LOADING ACCESSIBLE MODULES ===');
-      console.error('Error details:', error);
-      this.isLoadingWidgets.set(false);
-      this.widgets.set([]);
-      this.snackBar.open('Failed to load modules', 'Close', {
-        duration: 3000,
-      });
     });
   }
 

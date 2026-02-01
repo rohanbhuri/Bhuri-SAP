@@ -300,12 +300,10 @@ export class AuthService {
       let modules: any[] = [];
       
       if (user.currentOrganization) {
-        // Try organization modules first
+        // Load organization modules only
         modules = await modulesService.getOrganizationModules(user.currentOrganization.id).toPromise();
-      }
-      
-      // If no organization modules or no organization, fall back to personal
-      if (!modules || modules.length === 0) {
+      } else {
+        // Load personal modules only
         modules = await modulesService.getPersonalModules().toPromise();
       }
 
