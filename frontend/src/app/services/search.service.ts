@@ -63,8 +63,8 @@ export class SearchService {
 
     // Add organization context if available
     const currentUser = this.authService.getCurrentUser();
-    if (currentUser?.organizationId) {
-      params = params.set('organizationId', currentUser.organizationId);
+    if (currentUser?.currentOrganization) {
+      params = params.set('organizationId', currentUser.currentOrganization.id);
     }
 
     // Add filters - use active modules if none provided
@@ -108,8 +108,8 @@ export class SearchService {
     let params = new HttpParams().set('q', query.trim());
 
     const currentUser = this.authService.getCurrentUser();
-    if (currentUser?.organizationId) {
-      params = params.set('organizationId', currentUser.organizationId);
+    if (currentUser?.currentOrganization) {
+      params = params.set('organizationId', currentUser.currentOrganization.id);
     }
 
     return this.http.get<{ suggestions: string[] }>(`${this.apiUrl}/suggestions`, { params })

@@ -98,9 +98,9 @@ export class ThemeService {
 
   private loadOrganizationTheme(defaultPrefs: any) {
     const user = this.authService.getCurrentUser();
-    if (user?.organizationId) {
-      // Get organization from user's organizations array
-      const currentOrg = user.organizations?.find(org => org.id === user.organizationId);
+    if (user?.currentOrganization) {
+      // Get organization from user's currentOrganization
+      const currentOrg = user.currentOrganization;
       if (currentOrg?.settings) {
         const orgSettings = currentOrg.settings;
         const orgPrefs = {

@@ -66,7 +66,6 @@ export declare class AuthService {
         avatar: string;
         isActive: boolean;
         createdAt: Date;
-        organizationId: string;
         roles: {
             id: string;
             name: string;
@@ -96,7 +95,6 @@ export declare class AuthService {
         avatar: string;
         isActive: boolean;
         createdAt: Date;
-        organizationId: string;
         roles: {
             id: string;
             name: string;
@@ -123,7 +121,6 @@ export declare class AuthService {
         avatar: string;
         isActive: boolean;
         createdAt: Date;
-        organizationId: string;
         roles: {
             id: string;
             name: string;

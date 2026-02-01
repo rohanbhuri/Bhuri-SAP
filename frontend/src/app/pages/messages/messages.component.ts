@@ -466,7 +466,7 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
     this.auth.currentUser$.pipe(takeUntil(this.destroy$)).subscribe(user => {
       this.currentUser.set(user);
       this.meId = (user as any)?._id || user?.id || null;
-      this.userOrgId = user?.organizationId || null;
+      this.userOrgId = user?.currentOrganization?.id || null;
     });
 
     console.log('Messages initialized');

@@ -209,7 +209,7 @@ export class AssetsPageComponent implements OnInit {
   private hasMoreData = true;
 
   private get organizationId(): string {
-    return this.auth.getCurrentUser()?.organizationId || '';
+    return this.auth.getCurrentUser()?.currentOrganization?.id || '';
   }
 
   ngOnInit(): void {

@@ -206,7 +206,7 @@ export class CompliancePageComponent implements OnInit {
   scheduleDueDate = '';
 
   private get organizationId(): string {
-    return this.auth.getCurrentUser()?.organizationId || '';
+    return this.auth.getCurrentUser()?.currentOrganization?.id || '';
   }
 
   ngOnInit(): void {

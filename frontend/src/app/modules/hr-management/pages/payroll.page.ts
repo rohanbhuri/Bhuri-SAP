@@ -155,7 +155,7 @@ export class PayrollPageComponent implements OnInit {
   year = new Date().getFullYear();
 
   private get organizationId(): string {
-    return this.auth.getCurrentUser()?.organizationId || '';
+    return this.auth.getCurrentUser()?.currentOrganization?.id || '';
   }
 
   ngOnInit(): void {

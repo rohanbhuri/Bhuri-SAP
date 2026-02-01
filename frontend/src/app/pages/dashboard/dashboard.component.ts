@@ -341,12 +341,12 @@ export class DashboardComponent implements OnInit {
     this.authService.currentUser$.subscribe((user) => {
       console.log('=== USER SUBSCRIPTION ===');
       console.log('Current user:', user);
-      console.log('User organizationId:', user?.organizationId);
+      console.log('User currentOrganization:', user?.currentOrganization);
       console.log('Is authenticated:', this.authService.isAuthenticated());
 
       const previousUser = this.currentUser();
-      const previousOrgId = previousUser?.organizationId;
-      const newOrgId = user?.organizationId;
+      const previousOrgId = previousUser?.currentOrganization?.id;
+      const newOrgId = user?.currentOrganization?.id;
       
       console.log('Organization ID change:', previousOrgId, '->', newOrgId);
       
@@ -674,8 +674,8 @@ export class DashboardComponent implements OnInit {
 
   getCurrentOrgName(): string {
     const user = this.currentUser();
-    if (!user?.organizationId) return '';
-    const org = this.organizations().find((o) => o.id === user.organizationId);
+    if (!user?.currentOrganization) return '';
+    const org = this.organizations().find((o) => o.id === user.currentOrganization?.id);
     return org?.name || '';
   }
 
@@ -859,7 +859,7 @@ export class DashboardComponent implements OnInit {
 
     console.log('=== SETTING INITIAL CONTEXT ===');
     console.log('User:', user);
-    console.log('User organizationId:', user?.organizationId);
+    console.log('User currentOrganization:', user?.currentOrganization);
     console.log('Organizations:', orgs);
     console.log('Current selectedContext:', this.selectedContext());
 
@@ -878,14 +878,14 @@ export class DashboardComponent implements OnInit {
     // 4. First available organization
     let initialContext = 'personal';
 
-    if (user.organizationId && orgs.some(org => (org._id || org.id) === user.organizationId)) {
+    if (user.currentOrganization && orgs.some(org => org.id === user.currentOrganization!.id)) {
       // User has a valid organization set in backend
-      initialContext = user.organizationId;
-      console.log('Using user organizationId from backend:', initialContext);
-    } else if (user.organizationId === null || user.organizationId === undefined) {
-      // User explicitly set to personal (organizationId is null)
+      initialContext = user.currentOrganization.id;
+      console.log('Using user currentOrganization from backend:', initialContext);
+    } else if (!user.currentOrganization) {
+      // User explicitly set to personal (currentOrganization is null)
       initialContext = 'personal';
-      console.log('User organizationId is null, using personal');
+      console.log('User currentOrganization is null, using personal');
       // Clear any conflicting saved context
       this.clearSavedContext();
     } else {

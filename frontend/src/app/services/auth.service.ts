@@ -19,7 +19,6 @@ export interface User {
   createdAt: Date;
   roles: UserRole[];
   organizations: UserOrganization[];
-  organizationId?: string;
   currentOrganization?: UserOrganization;
   allowApiAccess?: boolean;
 }
@@ -300,9 +299,9 @@ export class AuthService {
       // Load modules based on context (personal vs organization)
       let modules: any[] = [];
       
-      if (user.organizationId) {
+      if (user.currentOrganization) {
         // Try organization modules first
-        modules = await modulesService.getOrganizationModules(user.organizationId).toPromise();
+        modules = await modulesService.getOrganizationModules(user.currentOrganization.id).toPromise();
       }
       
       // If no organization modules or no organization, fall back to personal

@@ -163,7 +163,6 @@ export class AuthService {
       avatar: user.avatar,
       isActive: user.isActive,
       createdAt: user.createdAt,
-      organizationId: user.organizationId?.toString() || null,
       roles: roles.map(role => ({
         id: role._id.toString(),
         name: role.name,

@@ -204,7 +204,7 @@ export class DocumentsPageComponent implements OnInit {
   docType = '';
 
   private get organizationId(): string {
-    return this.auth.getCurrentUser()?.organizationId || '';
+    return this.auth.getCurrentUser()?.currentOrganization?.id || '';
   }
 
   private get employeeId(): string {

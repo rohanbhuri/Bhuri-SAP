@@ -206,12 +206,12 @@ export class SelectOrganizationComponent {
 
   isLastSelected(orgId: string): boolean {
     const currentUser = this.authService.getCurrentUser();
-    return currentUser?.organizationId === orgId;
+    return currentUser?.currentOrganization?.id === orgId;
   }
 
   isPersonalSelected(): boolean {
     const currentUser = this.authService.getCurrentUser();
-    return !currentUser?.organizationId;
+    return !currentUser?.currentOrganization;
   }
 
   loadOrganizations() {
@@ -244,9 +244,13 @@ export class SelectOrganizationComponent {
         this.loading.set(false);
         const user = this.authService.getCurrentUser();
         if (user) {
-          user.organizationId = organizationId;
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('user', JSON.stringify(user));
+          // Update currentOrganization instead of organizationId
+          const org = user.organizations?.find(o => o.id === organizationId);
+          if (org) {
+            user.currentOrganization = org;
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('user', JSON.stringify(user));
+            }
           }
         }
         this.router.navigate(['/dashboard']);

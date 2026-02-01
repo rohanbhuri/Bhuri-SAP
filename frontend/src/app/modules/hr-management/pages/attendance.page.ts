@@ -288,7 +288,7 @@ export class AttendancePageComponent implements OnInit {
     return this.auth.getCurrentUser()?.id || '';
   }
   private get organizationId(): string {
-    return this.auth.getCurrentUser()?.organizationId || '';
+    return this.auth.getCurrentUser()?.currentOrganization?.id || '';
   }
 
   load(): void {
