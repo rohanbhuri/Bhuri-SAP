@@ -384,25 +384,23 @@ let QuotationsService = class QuotationsService {
         });
     }
     async getProductImageSource(product) {
-        const candidates = [product.featuredImage, ...(product.imageGallery || [])];
-        for (const candidate of candidates) {
-            if (!candidate)
-                continue;
-            if (candidate.startsWith('http')) {
-                try {
-                    const buffer = await this.downloadImage(candidate);
-                    return { data: buffer.toString('base64') };
-                }
-                catch (e) {
-                    console.error(`Failed to download product image: ${candidate}`, e.message);
-                    continue;
-                }
+        const imgUrl = product?.featuredImage?.trim() || product?.imageGallery?.[0]?.trim();
+        if (!imgUrl)
+            return null;
+        if (imgUrl.startsWith('http')) {
+            try {
+                const buffer = await this.downloadImage(imgUrl);
+                return { data: buffer.toString('base64') };
             }
-            else {
-                const imgPath = candidate.startsWith('/') ? `.${candidate}` : candidate;
-                if (fs.existsSync(imgPath)) {
-                    return { path: imgPath };
-                }
+            catch (e) {
+                console.error(`Failed to download product image: ${imgUrl}`, e.message);
+                return null;
+            }
+        }
+        else {
+            const imgPath = imgUrl.startsWith('/') ? `.${imgUrl}` : imgUrl;
+            if (fs.existsSync(imgPath)) {
+                return { path: imgPath };
             }
         }
         return null;
@@ -629,13 +627,6 @@ let QuotationsService = class QuotationsService {
         };
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Quotation');
-        worksheet.mergeCells('A1:L1');
-        const titleCell = worksheet.getCell('A1');
-        titleCell.value = clientName.toUpperCase();
-        titleCell.font = { size: 18, bold: true, color: { argb: 'FFF1C40F' } };
-        titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2C3E50' } };
-        titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
-        worksheet.getRow(1).height = 40;
         const columns = [
             { header: 'S.NO', key: 'sno', width: 8 },
             { header: 'PRODUCT CODE', key: 'productCode', width: 15 },
@@ -661,6 +652,15 @@ let QuotationsService = class QuotationsService {
         }
         columns.push({ header: 'SPECIFICATION', key: 'specification', width: 30 });
         worksheet.columns = columns;
+        const numCols = columns.length;
+        const lastCol = String.fromCharCode(64 + numCols);
+        worksheet.mergeCells(`A1:${lastCol}1`);
+        const titleCell = worksheet.getCell('A1');
+        titleCell.value = 'BOQ -' + clientName.toUpperCase();
+        titleCell.font = { size: 18, bold: true, color: { argb: 'FFF1C40F' } };
+        titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2C3E50' } };
+        titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+        worksheet.getRow(1).height = 40;
         const headerRow = worksheet.getRow(2);
         headerRow.values = columns.map(c => c.header);
         headerRow.font = { bold: true, color: { argb: 'FFF1C40F' } };
@@ -726,9 +726,9 @@ let QuotationsService = class QuotationsService {
                     bottom: { style: 'thin' },
                     right: { style: 'thin' }
                 };
-                if (product?.featuredImage || product?.imageGallery?.[0]) {
+                const imgUrl = product?.featuredImage?.trim() || product?.imageGallery?.[0]?.trim();
+                if (imgUrl) {
                     try {
-                        const imgUrl = product.featuredImage || product.imageGallery[0];
                         let imageBuffer;
                         if (imgUrl.startsWith('http://') || imgUrl.startsWith('https://')) {
                             imageBuffer = await downloadImage(imgUrl);
@@ -762,6 +762,100 @@ let QuotationsService = class QuotationsService {
                 currentRow++;
             }
         }
+        currentRow++;
+        const totalItems = quotation.items.reduce((sum, item) => sum + item.quantity, 0);
+        const totalPrice = quotation.subtotal;
+        const totalDiscountedPrice = quotation.subtotal - quotation.discountTotal;
+        const gstAmount = totalDiscountedPrice * 0.18;
+        const netValue = totalDiscountedPrice + gstAmount;
+        const totalRow = worksheet.getRow(currentRow);
+        worksheet.mergeCells(`A${currentRow}:D${currentRow}`);
+        totalRow.getCell(1).value = 'TOTAL';
+        totalRow.getCell(1).font = { bold: true, color: { argb: 'FFF1C40F' } };
+        totalRow.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2C3E50' } };
+        totalRow.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
+        totalRow.getCell(5).value = totalItems;
+        totalRow.getCell(5).alignment = { horizontal: 'center', vertical: 'middle' };
+        const totalPriceCol = quotation.discount ? columns.length - 2 : columns.length - 1;
+        totalRow.getCell(totalPriceCol).value = totalPrice;
+        totalRow.getCell(totalPriceCol).alignment = { horizontal: 'center', vertical: 'middle' };
+        if (quotation.discount) {
+            totalRow.getCell(totalPriceCol + 1).value = totalDiscountedPrice;
+            totalRow.getCell(totalPriceCol + 1).alignment = { horizontal: 'center', vertical: 'middle' };
+        }
+        currentRow++;
+        const packingRow = worksheet.getRow(currentRow);
+        worksheet.mergeCells(`A${currentRow}:D${currentRow}`);
+        packingRow.getCell(1).value = 'PACKING & TRANSPORTATION CHARGES';
+        packingRow.getCell(1).font = { bold: true, color: { argb: 'FFF1C40F' } };
+        packingRow.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2C3E50' } };
+        packingRow.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
+        const extraCol = quotation.discount ? columns.length : columns.length - 1;
+        packingRow.getCell(extraCol).value = 'EXTRA AS ACTUAL';
+        packingRow.getCell(extraCol).alignment = { horizontal: 'center', vertical: 'middle' };
+        currentRow++;
+        const gstRow = worksheet.getRow(currentRow);
+        worksheet.mergeCells(`A${currentRow}:D${currentRow}`);
+        gstRow.getCell(1).value = 'GST @ 18%';
+        gstRow.getCell(1).font = { bold: true, color: { argb: 'FFF1C40F' } };
+        gstRow.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2C3E50' } };
+        gstRow.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
+        gstRow.getCell(extraCol).value = Math.round(gstAmount);
+        gstRow.getCell(extraCol).alignment = { horizontal: 'center', vertical: 'middle' };
+        currentRow++;
+        const netRow = worksheet.getRow(currentRow);
+        worksheet.mergeCells(`A${currentRow}:D${currentRow}`);
+        netRow.getCell(1).value = 'NET VALUE';
+        netRow.getCell(1).font = { bold: true, color: { argb: 'FFF1C40F' } };
+        netRow.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2C3E50' } };
+        netRow.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
+        netRow.getCell(extraCol).value = Math.round(netValue);
+        netRow.getCell(extraCol).alignment = { horizontal: 'center', vertical: 'middle' };
+        currentRow += 2;
+        const termsRow = worksheet.getRow(currentRow);
+        worksheet.mergeCells(`A${currentRow}:B${currentRow}`);
+        termsRow.getCell(1).value = 'Other Terms and Condition';
+        termsRow.getCell(1).font = { bold: true, size: 12 };
+        termsRow.getCell(1).alignment = { horizontal: 'left', vertical: 'middle' };
+        termsRow.getCell(1).border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+        currentRow++;
+        const terms = [
+            'The above amount is subject to discount,which is applicable on above prices depends on final quantity of furniture.',
+            'Delivery Period will be 16 weeks from the date of payment of the fabric and selection of Mood Board.',
+            'Payment terms - 50 % Advance against order - 50% before delivery',
+            'GST, Any other Taxes, Packing, unloading and Transportation charges will be extra at actual',
+            'After selection of the material, 100% payment of material is to be done (Only after making the payment delivery period term will start)',
+            'Fabrics, leather and leatherite cost will be extra after selection the material 100% payment is to be done',
+            'Bed Hydraulic Charges will be Rs. 35000/- extra per bed.',
+            'Embroidery, quilting and accent cushions charges will be extra',
+            'Veneer cost is considerd as Rs. 200 Per SQFT if any other veneer will be selected cost will change accordingly',
+            'The Parties agree that the cost of marble shall be considered an additional charge. Upon the Client`s selection of the material, full payment for the chosen marble is required to proceed.',
+            'The Client acknowledges that the consideration of Matt/Gloss Gold as the PVD (Physical Vapor Deposition) color for the products is integral to the pricing, and understands that any deviation in PVD color selection may result incorresponding adjustments to the product cost. Black PVD cost would be additional.',
+            'Above mention prices are provided as per above mention sizes. If size will change , prices may vary.',
+            'Furniture installation charges for the FIRST VISIT will be included in the price. However, Due to any circumstances our team is not given workflow on the site and for any reason they must return the second visit will be chargeable.',
+            'Any other Visit besides the installation will be chargable on per visit per day basis.',
+            'Quotation will be valid for 30 days',
+            'In Case of Upholestry:- If leather is selected price will increase as follows',
+            'A. Sofa 6000 per Seat B. Dinning Chair 10000 per pcs C. Arm Chair 15000 per pcs',
+            'In the event that the client fails to collect the order on the mutually agreed upon date, the buyer shall be held responsible for bearing the warehousing charges which can amount up to 40,000 Indian Rupees per day. Alternatively, the discount rate previously agreed upon shall be deducted from the payment owed to the buyer.',
+            'This quotation is based upon and subject to the specific images and specifications provided by the customer as of the date hereof. Any alterations or deviations from the aforementioned specifications may result in adjustments to the quotation. The company reserves the right to amend this quotation upon receipt of any such changes.',
+            '3 modifications are allowed in the Moodboard, post that it will be charged at 20000/- per modification.',
+            '1 Modification is allowed post sending the Line Diagram and prior to approval.',
+            'No Changes in the Drawings will be done after the Line Diagram is approved by the Client or Architect. Per change 25000/- would be charged.',
+            '1 site visit for templating is complimentary, post that 40000/- will be charged per visit.'
+        ];
+        terms.forEach((term, index) => {
+            const termRow = worksheet.getRow(currentRow);
+            termRow.getCell(1).value = index + 1;
+            termRow.getCell(1).alignment = { horizontal: 'center', vertical: 'top' };
+            termRow.getCell(1).border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+            worksheet.mergeCells(`B${currentRow}:L${currentRow}`);
+            termRow.getCell(2).value = term;
+            termRow.getCell(2).alignment = { horizontal: 'left', vertical: 'top', wrapText: true };
+            termRow.getCell(2).border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+            termRow.height = 30;
+            currentRow++;
+        });
         return workbook.xlsx.writeBuffer();
     }
 };
