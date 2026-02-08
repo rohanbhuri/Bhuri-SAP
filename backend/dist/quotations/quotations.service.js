@@ -600,8 +600,22 @@ let QuotationsService = class QuotationsService {
         const quotation = await this.findOne(id);
         if (!quotation)
             throw new common_1.NotFoundException('Quotation not found');
-        const client = await this.clientRepository.findOneBy({ _id: new mongodb_1.ObjectId(quotation.clientId) });
-        const clientName = client ? `${client.companyName} - ${client.contactPerson}` : quotation.clientName;
+        let clientName = 'CLIENT';
+        try {
+            if (quotation.clientId) {
+                const client = await this.clientRepository.findOneBy({ _id: new mongodb_1.ObjectId(quotation.clientId) });
+                if (client) {
+                    clientName = client.contactPerson || client.companyName || 'CLIENT';
+                }
+            }
+            if (clientName === 'CLIENT' && quotation.clientName) {
+                clientName = quotation.clientName;
+            }
+        }
+        catch (error) {
+            console.error('Error fetching client for Excel:', error);
+            clientName = quotation.clientName || 'CLIENT';
+        }
         const downloadImage = (url) => {
             return new Promise((resolve, reject) => {
                 const protocol = url.startsWith('https') ? https : http;
@@ -617,7 +631,7 @@ let QuotationsService = class QuotationsService {
         const worksheet = workbook.addWorksheet('Quotation');
         worksheet.mergeCells('A1:L1');
         const titleCell = worksheet.getCell('A1');
-        titleCell.value = `BOQ-${clientName?.toUpperCase() || 'CLIENT'}`;
+        titleCell.value = clientName.toUpperCase();
         titleCell.font = { size: 18, bold: true, color: { argb: 'FFF1C40F' } };
         titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2C3E50' } };
         titleCell.alignment = { horizontal: 'center', vertical: 'middle' };

@@ -9,6 +9,11 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { FormsModule } from '@angular/forms';
 import { QuotationsService } from '../../quotations.service';
 import { QuotationDialogComponent } from '../../dialogs/quotation-dialog.component';
 import { PreferencesService } from '../../../../services/preferences.service';
@@ -16,7 +21,7 @@ import { PreferencesService } from '../../../../services/preferences.service';
 @Component({
   selector: 'app-quotation-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, MatButtonModule, MatIconModule, MatCardModule, MatTableModule, MatChipsModule, MatMenuModule, MatDialogModule],
+  imports: [CommonModule, RouterModule, MatButtonModule, MatIconModule, MatCardModule, MatTableModule, MatChipsModule, MatMenuModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatPaginatorModule, FormsModule],
   template: `
     <div class="tab-content">
       <div class="tab-header">
@@ -26,9 +31,33 @@ import { PreferencesService } from '../../../../services/preferences.service';
           New Quotation
         </button>
       </div>
+
+      <div class="filters-container">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Search by number or client</mat-label>
+          <input matInput [(ngModel)]="searchQuery" (ngModelChange)="onFilterChange()" placeholder="Search...">
+          <mat-icon matPrefix>search</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Status</mat-label>
+          <mat-select [(ngModel)]="selectedStatus" (selectionChange)="onFilterChange()">
+            <mat-option value="">All Status</mat-option>
+            <mat-option value="draft">Draft</mat-option>
+            <mat-option value="pending_approval">Pending Approval</mat-option>
+            <mat-option value="approved">Approved</mat-option>
+            <mat-option value="sent">Sent</mat-option>
+            <mat-option value="accepted">Accepted</mat-option>
+            <mat-option value="declined">Declined</mat-option>
+            <mat-option value="expired">Expired</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <button mat-stroked-button (click)="resetFilters()">Reset</button>
+      </div>
       
       <div class="table-container">
-        <table mat-table [dataSource]="quotes()" class="crm-table">
+        <table mat-table [dataSource]="filteredQuotes()" class="crm-table">
           <ng-container matColumnDef="quotationNumber">
             <th mat-header-cell *matHeaderCellDef>Quote #</th>
             <td mat-cell *matCellDef="let quote">{{ quote.quotationNumber }}</td>
@@ -100,6 +129,14 @@ import { PreferencesService } from '../../../../services/preferences.service';
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
           <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
         </table>
+
+        <mat-paginator
+          [length]="totalQuotes()"
+          [pageSize]="pageSize()"
+          [pageSizeOptions]="[10, 25, 50]"
+          (page)="onPageChange($event)"
+          aria-label="Select page">
+        </mat-paginator>
       </div>
     </div>
   `,
@@ -115,6 +152,20 @@ import { PreferencesService } from '../../../../services/preferences.service';
     }
     .tab-header h2 {
       margin: 0;
+    }
+    .filters-container {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .filters-container mat-form-field {
+      min-width: 200px;
+    }
+    .search-field {
+      flex: 1;
+      min-width: 300px !important;
     }
     .table-container {
       margin-top: 16px;
@@ -135,6 +186,12 @@ export class QuotationListComponent implements OnInit {
   private dialog = inject(MatDialog);
 
   quotes = signal<any[]>([]);
+  filteredQuotes = signal<any[]>([]);
+  totalQuotes = signal<number>(0);
+  pageSize = signal<number>(10);
+  pageIndex = signal<number>(0);
+  searchQuery = '';
+  selectedStatus = '';
   userCurrency = signal<string>('INR');
   displayedColumns = ['quotationNumber', 'client', 'total', 'status', 'date', 'actions'];
 
@@ -175,7 +232,48 @@ export class QuotationListComponent implements OnInit {
   loadQuotations() {
     this.quotationsService.getQuotations().subscribe(quotes => {
       this.quotes.set(quotes || []);
+      this.applyFilters();
     });
+  }
+
+  applyFilters() {
+    let filtered = this.quotes();
+
+    if (this.searchQuery) {
+      const query = this.searchQuery.toLowerCase();
+      filtered = filtered.filter(q => 
+        q.quotationNumber?.toLowerCase().includes(query) ||
+        q.clientName?.toLowerCase().includes(query) ||
+        q.clientEmail?.toLowerCase().includes(query)
+      );
+    }
+
+    if (this.selectedStatus) {
+      filtered = filtered.filter(q => q.status === this.selectedStatus);
+    }
+
+    this.totalQuotes.set(filtered.length);
+    const start = this.pageIndex() * this.pageSize();
+    const end = start + this.pageSize();
+    this.filteredQuotes.set(filtered.slice(start, end));
+  }
+
+  onFilterChange() {
+    this.pageIndex.set(0);
+    this.applyFilters();
+  }
+
+  onPageChange(event: PageEvent) {
+    this.pageIndex.set(event.pageIndex);
+    this.pageSize.set(event.pageSize);
+    this.applyFilters();
+  }
+
+  resetFilters() {
+    this.searchQuery = '';
+    this.selectedStatus = '';
+    this.pageIndex.set(0);
+    this.applyFilters();
   }
 
   submitForApproval(id: string) {

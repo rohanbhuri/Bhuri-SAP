@@ -7,6 +7,11 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { FormsModule } from '@angular/forms';
 import { QuotationsService } from '../../quotations.service';
 
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -25,7 +30,12 @@ import { PresentationDialogComponent } from '../../dialogs/presentation-dialog.c
     MatChipsModule,
     MatMenuModule,
     MatTooltipModule,
-    MatDialogModule
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatPaginatorModule,
+    FormsModule
   ],
   template: `
     <div class="enquiry-list">
@@ -33,7 +43,29 @@ import { PresentationDialogComponent } from '../../dialogs/presentation-dialog.c
         <h2>Enquiries</h2>
       </div>
 
-      <table mat-table [dataSource]="enquiries()" class="enquiry-table">
+      <div class="filters-container">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Search by number, customer name or email</mat-label>
+          <input matInput [(ngModel)]="searchQuery" (ngModelChange)="onFilterChange()" placeholder="Search...">
+          <mat-icon matPrefix>search</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Status</mat-label>
+          <mat-select [(ngModel)]="selectedStatus" (selectionChange)="onFilterChange()">
+            <mat-option value="">All Status</mat-option>
+            <mat-option value="new">New</mat-option>
+            <mat-option value="processing">Processing</mat-option>
+            <mat-option value="quoted">Quoted</mat-option>
+            <mat-option value="converted">Converted</mat-option>
+            <mat-option value="closed">Closed</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <button mat-stroked-button (click)="resetFilters()">Reset</button>
+      </div>
+
+      <table mat-table [dataSource]="filteredEnquiries()" class="enquiry-table">
         <ng-container matColumnDef="enquiryNumber">
           <th mat-header-cell *matHeaderCellDef>Enquiry #</th>
           <td mat-cell *matCellDef="let enquiry">{{ enquiry.enquiryNumber }}</td>
@@ -133,6 +165,14 @@ import { PresentationDialogComponent } from '../../dialogs/presentation-dialog.c
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
         <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
       </table>
+
+      <mat-paginator
+        [length]="totalEnquiries()"
+        [pageSize]="pageSize()"
+        [pageSizeOptions]="[10, 25, 50]"
+        (page)="onPageChange($event)"
+        aria-label="Select page">
+      </mat-paginator>
     </div>
   `,
   styles: [`
@@ -144,6 +184,20 @@ import { PresentationDialogComponent } from '../../dialogs/presentation-dialog.c
       justify-content: space-between;
       align-items: center;
       margin-bottom: 24px;
+    }
+    .filters-container {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .filters-container mat-form-field {
+      min-width: 200px;
+    }
+    .search-field {
+      flex: 1;
+      min-width: 300px !important;
     }
     .enquiry-table {
       width: 100%;
@@ -215,6 +269,12 @@ export class EnquiryListComponent implements OnInit {
   private dialog = inject(MatDialog);
 
   enquiries = signal<any[]>([]);
+  filteredEnquiries = signal<any[]>([]);
+  totalEnquiries = signal<number>(0);
+  pageSize = signal<number>(10);
+  pageIndex = signal<number>(0);
+  searchQuery = '';
+  selectedStatus = '';
   displayedColumns = ['enquiryNumber', 'customer', 'items', 'status', 'createdAt', 'actions'];
 
   ngOnInit() {
@@ -226,7 +286,48 @@ export class EnquiryListComponent implements OnInit {
   loadEnquiries() {
     this.quotationsService.getEnquiries().subscribe(data => {
       this.enquiries.set(data);
+      this.applyFilters();
     });
+  }
+
+  applyFilters() {
+    let filtered = this.enquiries();
+
+    if (this.searchQuery) {
+      const query = this.searchQuery.toLowerCase();
+      filtered = filtered.filter(e => 
+        e.enquiryNumber?.toLowerCase().includes(query) ||
+        e.customerName?.toLowerCase().includes(query) ||
+        e.customerEmail?.toLowerCase().includes(query)
+      );
+    }
+
+    if (this.selectedStatus) {
+      filtered = filtered.filter(e => e.status === this.selectedStatus);
+    }
+
+    this.totalEnquiries.set(filtered.length);
+    const start = this.pageIndex() * this.pageSize();
+    const end = start + this.pageSize();
+    this.filteredEnquiries.set(filtered.slice(start, end));
+  }
+
+  onFilterChange() {
+    this.pageIndex.set(0);
+    this.applyFilters();
+  }
+
+  onPageChange(event: PageEvent) {
+    this.pageIndex.set(event.pageIndex);
+    this.pageSize.set(event.pageSize);
+    this.applyFilters();
+  }
+
+  resetFilters() {
+    this.searchQuery = '';
+    this.selectedStatus = '';
+    this.pageIndex.set(0);
+    this.applyFilters();
   }
 
   subscribeToQuotationDeletion() {
