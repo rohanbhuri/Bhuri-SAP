@@ -65,7 +65,7 @@ interface DashboardWidget {
   id: string;
   title: string;
   description?: string;
-  size: 's' | 'm' | 'l';
+  size: 'compact' | 'normal' | 'expanded';
 }
 
 @Component({
@@ -214,17 +214,17 @@ interface DashboardWidget {
                 <mat-icon>more_vert</mat-icon>
               </button>
               <mat-menu #menu="matMenu">
-                <button mat-menu-item (click)="resize(w, 's')">
-                  <mat-icon>fit_screen</mat-icon>
-                  <span>Small</span>
+                <button mat-menu-item (click)="resize(w, 'compact')">
+                  <mat-icon>view_compact</mat-icon>
+                  <span>Compact</span>
                 </button>
-                <button mat-menu-item (click)="resize(w, 'm')">
-                  <mat-icon>crop_5_4</mat-icon>
-                  <span>Medium</span>
+                <button mat-menu-item (click)="resize(w, 'normal')">
+                  <mat-icon>view_module</mat-icon>
+                  <span>Normal</span>
                 </button>
-                <button mat-menu-item (click)="resize(w, 'l')">
-                  <mat-icon>crop_16_9</mat-icon>
-                  <span>Large</span>
+                <button mat-menu-item (click)="resize(w, 'expanded')">
+                  <mat-icon>view_comfy</mat-icon>
+                  <span>Expanded</span>
                 </button>
               </mat-menu>
             </div>
@@ -358,14 +358,14 @@ export class DashboardComponent implements OnInit {
 
   private loadDefaultWidgets() {
     const defaultWidgets: DashboardWidget[] = [
-      { id: 'user-management', title: 'User Management', size: 'm' },
-      { id: 'crm', title: 'CRM', size: 'm' },
-      { id: 'projects-management', title: 'Projects Management', size: 'l' },
-      { id: 'tasks-management', title: 'Tasks Management', size: 's' },
-      { id: 'hr-management', title: 'HR Management', size: 'm' },
-      { id: 'sales-management', title: 'Sales Management', size: 's' },
-      { id: 'inventory-management', title: 'Inventory Management', size: 's' },
-      { id: 'project-tracking', title: 'Project Tracking', size: 'm' }
+      { id: 'user-management', title: 'User Management', size: 'normal' },
+      { id: 'crm', title: 'CRM', size: 'normal' },
+      { id: 'projects-management', title: 'Projects Management', size: 'expanded' },
+      { id: 'tasks-management', title: 'Tasks Management', size: 'compact' },
+      { id: 'hr-management', title: 'HR Management', size: 'normal' },
+      { id: 'sales-management', title: 'Sales Management', size: 'compact' },
+      { id: 'inventory-management', title: 'Inventory Management', size: 'compact' },
+      { id: 'project-tracking', title: 'Project Tracking', size: 'normal' }
     ];
     this.widgets.set(defaultWidgets);
     this.isLoadingWidgets.set(false);
@@ -378,7 +378,7 @@ export class DashboardComponent implements OnInit {
     this.saveWidgetOrder(copy);
   }
 
-  resize(w: DashboardWidget, size: 's' | 'm' | 'l') {
+  resize(w: DashboardWidget, size: 'compact' | 'normal' | 'expanded') {
     // Auto-switch to normal mode if not in normal mode
     if (this.viewMode() !== 'normal') {
       this.setViewMode('normal');
@@ -393,7 +393,7 @@ export class DashboardComponent implements OnInit {
     this.widgets.set(updated);
     this.saveWidgetSizes(updated);
 
-    const sizeNames = { s: 'Small', m: 'Medium', l: 'Large' };
+    const sizeNames = { compact: 'Compact', normal: 'Normal', expanded: 'Expanded' };
     this.snackBar.open(`${w.title} resized to ${sizeNames[size]}`, 'Close', {
       duration: 2000,
     });
@@ -614,7 +614,7 @@ export class DashboardComponent implements OnInit {
         id: widgetId,
         title: m.displayName || m.name || 'Unknown Module',
         description: m.description || '',
-        size: savedSizes[widgetId] || (idx === 0 ? 'm' : idx === 1 ? 'm' : idx % 3 === 0 ? 'l' : 'm'),
+        size: savedSizes[widgetId] || (idx === 0 ? 'normal' : idx === 1 ? 'normal' : idx % 3 === 0 ? 'expanded' : 'normal'),
       };
     });
 
@@ -637,7 +637,7 @@ export class DashboardComponent implements OnInit {
               id: 'pending-work',
               title: 'Pending Work',
               description: 'Review pending organization requests',
-              size: 's'
+              size: 'compact'
             };
             const finalWidgets = [pendingWidget, ...mapped];
             this.widgets.set(this.applySavedOrder(finalWidgets));
@@ -692,8 +692,8 @@ export class DashboardComponent implements OnInit {
 
   getWidgetSize(widget: DashboardWidget): string {
     const mode = this.viewMode();
-    if (mode === 'compact') return 's';
-    if (mode === 'expanded') return 'xl';
+    if (mode === 'compact') return 'compact';
+    if (mode === 'expanded') return 'expanded';
     return widget.size;
   }
 
@@ -738,14 +738,14 @@ export class DashboardComponent implements OnInit {
       const sizes = widgets.reduce((acc, widget) => {
         acc[widget.id] = widget.size;
         return acc;
-      }, {} as Record<string, 's' | 'm' | 'l'>);
+      }, {} as Record<string, 'compact' | 'normal' | 'expanded'>);
       localStorage.setItem('dashboard-widget-sizes', JSON.stringify(sizes));
     } catch (error) {
       console.warn('Failed to save widget sizes:', error);
     }
   }
 
-  private loadWidgetSizes(): Record<string, 's' | 'm' | 'l'> {
+  private loadWidgetSizes(): Record<string, 'compact' | 'normal' | 'expanded'> {
     try {
       const saved = localStorage.getItem('dashboard-widget-sizes');
       return saved ? JSON.parse(saved) : {};

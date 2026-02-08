@@ -166,7 +166,7 @@ h1 {
         @include mixins.focus-visible;
     }
 
-    &[data-size='s'] {
+    &[data-size='compact'] {
         @include mixins.tablet {
             grid-column: span 6;
         }
@@ -176,13 +176,13 @@ h1 {
         }
     }
 
-    &[data-size='m'] {
+    &[data-size='normal'] {
         @include mixins.desktop {
             grid-column: span 6;
         }
     }
 
-    &[data-size='xl'] {
+    &[data-size='expanded'] {
         grid-column: span 12;
         min-height: 400px;
 
@@ -196,21 +196,21 @@ h1 {
     .widget {
         grid-column: span 3;
         border-radius: 6px;
-        min-height: 180px;
+        min-height: 240px;
 
         @include mixins.mobile {
             grid-column: span 6;
-            min-height: 160px;
+            min-height: 220px;
         }
 
         @include mixins.tablet {
             grid-column: span 4;
-            min-height: 170px;
+            min-height: 230px;
         }
 
         @include mixins.desktop {
             grid-column: span 1;
-            min-height: 200px;
+            min-height: 260px;
         }
     }
 
@@ -272,14 +272,14 @@ h1 {
 
 .widgets.compact {
     .widget-header {
-        padding: 4px 8px 0 8px;
+        padding: 8px 12px 0 12px;
     }
 
     .widget-title {
-        font-size: 0.75rem;
+        font-size: 0.85rem;
 
         @include mixins.mobile {
-            font-size: 0.8rem;
+            font-size: 0.85rem;
         }
     }
 }
@@ -304,7 +304,7 @@ h1 {
 }
 
 .widgets.compact .widget-body {
-    padding: 2px 8px 8px 8px;
+    padding: 6px 12px 12px 12px;
 }
 
 .widgets.expanded .widget-body {
@@ -410,20 +410,26 @@ h1 {
         }
 
         .icon-container {
-            width: 20px;
-            height: 20px;
+            width: 24px;
+            height: 24px;
             border-radius: 4px;
 
             mat-icon {
-                font-size: 12px;
-                width: 12px;
-                height: 12px;
+                font-size: 16px;
+                width: 16px;
+                height: 16px;
             }
         }
 
         .subtitle {
-            font-size: 0.7rem;
-            line-height: 1.1;
+            font-size: 0.75rem;
+            line-height: 1.2;
+            padding: 0 12px !important;
+        }
+
+        .widget-stats {
+            padding: 10px 12px !important;
+            gap: 8px !important;
         }
 
         .metric-value,
@@ -431,41 +437,73 @@ h1 {
         .summary-value,
         .employee-count .value,
         .salary-avg .rate {
-            font-size: 1rem;
+            font-size: 1.2rem !important;
         }
 
         .metric-label,
         .stat-label,
         .summary-label {
-            font-size: 0.55rem;
-            margin: 1px 0;
+            font-size: 0.65rem !important;
+            margin: 2px 0 !important;
+        }
+
+        .stat-detail {
+            font-size: 0.6rem !important;
         }
 
         .metric-card,
         .stat-item,
         .summary-item,
         .metric {
-            padding: 4px;
-            border-radius: 3px;
+            padding: 8px !important;
+            border-radius: 6px !important;
+            gap: 8px !important;
+        }
+
+        .stat-item mat-icon {
+            font-size: 20px !important;
+            width: 20px !important;
+            height: 20px !important;
         }
 
         .metrics-grid,
         .stats-grid {
-            gap: 3px;
+            gap: 6px !important;
         }
 
-        button {
-            height: 20px;
-            font-size: 0.6rem;
-            border-radius: 3px;
-            padding: 0 4px;
+        .widget-footer-actions {
+            padding: 10px 12px !important;
+        }
+
+        .cta-grid {
+            gap: 6px !important;
+        }
+
+        .cta-btn {
+            padding: 10px 6px !important;
+            gap: 4px !important;
+            border-radius: 8px !important;
 
             mat-icon {
-                font-size: 10px;
-                width: 10px;
-                height: 10px;
-                margin-right: 2px;
+                font-size: 18px !important;
+                width: 18px !important;
+                height: 18px !important;
+                margin: 0 !important;
             }
+
+            span {
+                font-size: 0.65rem !important;
+            }
+        }
+
+        .quick-stats {
+            padding: 10px 12px !important;
+            gap: 8px !important;
+        }
+
+        .stat-chip {
+            font-size: 0.65rem !important;
+            padding: 3px 8px !important;
         }
 
         .navigation {
