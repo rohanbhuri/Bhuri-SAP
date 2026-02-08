@@ -869,7 +869,7 @@ export class QuotationsService {
                     rowData.discountedTotal = item.discountedPrice || (item.total * (1 - (quotation.discount?.value || 0) / 100));
                 }
 
-                rowData.specification = item.description || item.specifications || '';
+                rowData.specification = '';
 
                 const row = worksheet.addRow(rowData);
                 row.alignment = { horizontal: 'center', vertical: 'middle' };
