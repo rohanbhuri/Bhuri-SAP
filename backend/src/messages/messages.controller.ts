@@ -45,8 +45,18 @@ export class MessagesController {
   async sendMessage(@Request() req, @Param('conversationId') conversationId: string, @Body() body: { content: string }) {
     const message = await this.messagesService.sendMessage(conversationId, req.user.userId, body.content);
     
-    // Emit WebSocket event to OTHER participants in the conversation (not sender)
+    console.log(`📤 Broadcasting message to conversation:${conversationId}`, {
+      messageId: (message as any)._id,
+      senderId: req.user.userId,
+      content: body.content.substring(0, 50)
+    });
+    
+    // Emit WebSocket event to ALL participants in the conversation (including sender for consistency)
+    // This ensures the global notification service receives the event
     this.messagesGateway.server.to(`conversation:${conversationId}`).emit('message:new', message);
+    
+    // Also emit to sender's user room to ensure they receive it even if not in conversation room
+    this.messagesGateway.server.to(`user:${req.user.userId}`).emit('message:new', message);
     
     // Update message counts for ALL participants (including sender)
     const conversation = await this.messagesService['conversationRepo'].findOne({
@@ -57,9 +67,13 @@ export class MessagesController {
       const allMemberIds = (conversation as any).memberIds;
       
       for (const memberId of allMemberIds) {
-        const unreadCount = await this.messagesService.getTotalUnreadCount(String(memberId));
-        console.log(`Emitting message count ${unreadCount} to user ${memberId}`);
-        this.messagesGateway.server.to(`user:${memberId}`).emit('message:count', { count: unreadCount });
+        const unreadCounts = await this.messagesService.getUnreadMessageCount(String(memberId));
+        const totalUnread = Object.values(unreadCounts).reduce((sum, count) => sum + (count as number), 0);
+        const unreadConversations = Object.values(unreadCounts).filter(count => (count as number) > 0).length;
+        
+        console.log(`📊 Emitting counts to user:${memberId} - messages: ${totalUnread}, conversations: ${unreadConversations}`);
+        this.messagesGateway.server.to(`user:${memberId}`).emit('message:count', { count: totalUnread });
+        this.messagesGateway.server.to(`user:${memberId}`).emit('conversation:count', { count: unreadConversations });
       }
     }
     

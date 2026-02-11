@@ -31,6 +31,7 @@ import {
 import { AuthService, User } from '../../services/auth.service';
 import { WebSocketService } from '../../services/websocket.service';
 import { NotificationsService } from '../../services/notifications.service';
+import { BrandConfigService } from '../../services/brand-config.service';
 import { Subject, debounceTime, takeUntil, finalize, filter } from 'rxjs';
 import { CreateGroupDialogComponent } from './create-group-dialog.component';
 import { DirectMessageDialogComponent } from './direct-message-dialog.component';
@@ -257,6 +258,8 @@ import { ScrollVisibilityService } from '../../services/scroll-visibility.servic
                      class="message"
                      [class.self]="isSelf(msg.senderId)"
                      [class.consecutive]="isConsecutive(msg, group.messages)"
+                     [class.status-sending]="msg.status === 'sending'"
+                     [class.status-failed]="msg.status === 'failed'"
                      [attr.data-message-id]="msg.id">
                   
                   <div class="message-avatar" *ngIf="!isSelf(msg.senderId) && !isConsecutive(msg, group.messages)">
@@ -289,7 +292,14 @@ import { ScrollVisibilityService } from '../../services/scroll-visibility.servic
                       <div class="message-footer">
                         <div class="time">
                           {{ msg.createdAt | date : 'shortTime' }}
-                          <mat-icon class="status-icon" *ngIf="isSelf(msg.senderId)">
+                          <mat-icon class="status-icon" 
+                                    [class.sending]="msg.status === 'sending'"
+                                    [class.sent]="msg.status === 'sent'"
+                                    [class.delivered]="msg.status === 'delivered'"
+                                    [class.read]="msg.status === 'read'"
+                                    [class.failed]="msg.status === 'failed'"
+                                    *ngIf="isSelf(msg.senderId)"
+                                    [matTooltip]="getStatusTooltip(msg.status)">
                             {{ getStatusIcon(msg.status) }}
                           </mat-icon>
                         </div>
@@ -322,25 +332,11 @@ import { ScrollVisibilityService } from '../../services/scroll-visibility.servic
 
           <!-- Message Composer -->
           <div class="composer">
-            <button mat-icon-button 
-                    color="primary" 
-                    class="attachment-btn" 
-                    matTooltip="Add attachment"
-                    (click)="fileInput.click()">
-              <mat-icon>attach_file</mat-icon>
-            </button>
-            
-            <input #fileInput 
-                   type="file" 
-                   hidden 
-                   multiple 
-                   (change)="onFileSelected($event)"
-                   accept="image/*,application/pdf,.doc,.docx">
-
             <mat-form-field appearance="outline" class="message-input">
               <mat-label>Type a message...</mat-label>
               <textarea matInput 
-                        [(ngModel)]="draft"
+                        [ngModel]="draft()"
+                        (ngModelChange)="draft.set($event)"
                         (keydown)="onKeyDown($event)"
                         (input)="onTyping()"
                         [disabled]="messageState().sending"
@@ -354,18 +350,13 @@ import { ScrollVisibilityService } from '../../services/scroll-visibility.servic
 
             <button mat-icon-button 
                     color="primary"
+                    type="button"
                     (click)="send()"
                     [disabled]="!canSend()"
                     matTooltip="Send message"
                     aria-label="Send message">
               <mat-spinner diameter="20" *ngIf="messageState().sending"></mat-spinner>
               <mat-icon *ngIf="!messageState().sending">send</mat-icon>
-            </button>
-
-            <button mat-icon-button 
-                    matTooltip="Voice message"
-                    aria-label="Record voice message">
-              <mat-icon>mic</mat-icon>
             </button>
           </div>
         </mat-card>
@@ -419,6 +410,7 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
   private wsService = inject(WebSocketService);
   private notificationsService = inject(NotificationsService);
   private dialog = inject(MatDialog);
+  private brand = inject(BrandConfigService);
   // messageCountService removed
   private scrollVisibilityService = inject(ScrollVisibilityService);
   private route = inject(ActivatedRoute);
@@ -429,6 +421,7 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
   private isLoadingOlder = false;
   private hasMore = true;
   private oldestMessageId: string | null = null;
+  private notificationSound?: HTMLAudioElement;
 
   @ViewChild('messageList') messageList!: ElementRef;
   @ViewChild('scrollAnchor') scrollAnchor!: ElementRef;
@@ -449,7 +442,7 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
   currentUser = signal<User | null>(null);
 
   // Form data
-  draft = '';
+  draft = signal('');
   query = '';
   meId: string | null = null;
   unreadMessages = signal<{ [userId: string]: boolean }>({});
@@ -461,6 +454,9 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngOnInit() {
     this.themeService.applyModuleTheme('messages');
+
+    // Initialize notification sound
+    this.initializeNotificationSound();
 
     // Subscribe to auth changes - THIS IS THE PROPER WAY
     this.auth.currentUser$.pipe(takeUntil(this.destroy$)).subscribe(user => {
@@ -559,7 +555,7 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
   });
 
   canSend = computed(() =>
-    this.draft.trim().length > 0 &&
+    this.draft().trim().length > 0 &&
     !this.messageState().sending &&
     this.activeConversationId()
   );
@@ -604,7 +600,10 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
   setupRealTimeUpdates() {
     // Listen for real-time message updates
     this.wsService.getMessages().pipe(takeUntil(this.destroy$)).subscribe(message => {
+      console.log('📡 WebSocket message received:', message?.type, message?.payload);
+      
       if (message?.type === 'message:new') {
+        console.log('📨 Processing new message event');
         this.handleNewMessage(message.payload);
       } else if (message?.type === 'typing:update') {
         this.handleTypingUpdate(message.payload);
@@ -615,10 +614,11 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
 
     // Rejoin conversation room on reconnect
     this.wsService.getConnectionStatus().pipe(takeUntil(this.destroy$)).subscribe(connected => {
+      console.log('🔌 WebSocket connection status changed:', connected);
       if (connected) {
         const activeId = this.activeConversationId();
         if (activeId) {
-          console.log('Socket reconnected, rejoining conversation:', activeId);
+          console.log('🔄 Socket reconnected, rejoining conversation:', activeId);
           this.wsService.joinRoom(`conversation:${activeId}`);
         }
       }
@@ -645,6 +645,14 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private handleNewMessage(message: any) {
     try {
+      console.log('🔍 handleNewMessage called with:', {
+        messageId: message._id || message.id,
+        conversationId: message.conversationId,
+        activeConversationId: this.activeConversationId(),
+        rawSenderId: message.senderId,
+        content: message.content?.substring(0, 50)
+      });
+
       // Extract senderId properly from ObjectId
       let senderId: string;
       const rawSenderId = message.senderId;
@@ -654,6 +662,8 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
         senderId = String(rawSenderId);
       }
 
+      console.log('👤 Extracted senderId:', senderId, 'Current user:', this.meId);
+
       const transformedMsg = {
         ...message,
         id: message._id || message.id,
@@ -662,12 +672,32 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
         senderName: this.getSenderName(senderId),
       };
 
+      // Check if message is from another user (not self)
+      const isFromOtherUser = !this.isSelf(senderId);
+      console.log('🤔 Is from other user?', isFromOtherUser);
+
+      // Play notification sound for any message from another user
+      if (isFromOtherUser) {
+        console.log('🔔 Message from other user, playing notification sound');
+        this.playNotificationSound();
+      }
+
       // Only add if it's for the current conversation
       if (String(message.conversationId) === String(this.activeConversationId())) {
+        console.log('✅ Message is for active conversation');
+        
         this.messages.update(msgs => {
-          // Prevent duplicate messages
-          const exists = msgs.some(m => m.id === transformedMsg.id);
-          if (exists) return msgs;
+          // Prevent duplicate messages - check by real ID or temp ID
+          const exists = msgs.some(m => 
+            m.id === transformedMsg.id || 
+            (m.content === transformedMsg.content && m.senderId === transformedMsg.senderId && 
+             Math.abs(new Date(m.createdAt).getTime() - new Date(transformedMsg.createdAt).getTime()) < 2000)
+          );
+          if (exists) {
+            console.log('⚠️ Duplicate message detected, skipping:', transformedMsg.id);
+            return msgs;
+          }
+          console.log('📨 Adding new message to conversation:', transformedMsg.id);
           return [...msgs, transformedMsg];
         });
         this.scrollToBottom();
@@ -678,15 +708,23 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
         this.saveLastChatUrl(urlWithMsg);
 
         // Mark as read if not from current user AND user is actively viewing this conversation
-        if (!this.isSelf(senderId) && document.hasFocus() && this.router.url.includes('/messages')) {
-          console.log('New message from other user, user is viewing conversation, marking as read after delay');
+        if (isFromOtherUser && document.hasFocus() && this.router.url.includes('/messages')) {
+          console.log('✅ New message from other user, user is viewing conversation, marking as read after delay');
           setTimeout(() => this.markAsRead(), 1000);
-        } else if (!this.isSelf(senderId)) {
-          console.log('New message from other user, user not actively viewing, keeping as unread');
+        } else if (isFromOtherUser) {
+          console.log('📬 New message from other user, user not actively viewing, keeping as unread');
         }
+      } else if (isFromOtherUser) {
+        // Message is for a different conversation
+        console.log('📬 Message for different conversation');
+        
+        // Update unread messages indicator for the sender
+        this.api.setUnreadMessage(senderId, true);
+      } else {
+        console.log('⏭️ Message not for active conversation, skipping');
       }
     } catch (error) {
-      console.error('Error handling new message:', error);
+      console.error('❌ Error handling new message:', error);
     }
   }
 
@@ -799,6 +837,7 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
           this.loadMessages();
           this.markAsRead();
           this.markConversationNotificationsAsRead(conversationId);
+          console.log('🚪 Joining conversation room:', `conversation:${conversationId}`);
           this.wsService.joinRoom(`conversation:${conversationId}`);
         },
         error: (error) => {
@@ -879,25 +918,57 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
 
   send() {
     const id = this.activeConversationId();
-    if (!id || !this.draft.trim() || !this.auth.isAuthenticated()) return;
+    if (!id || !this.draft().trim() || !this.auth.isAuthenticated()) return;
 
-    const content = this.draft.trim();
-    this.draft = '';
+    const content = this.draft().trim();
+    this.draft.set('');
 
-    // Send via HTTP API only (backend will handle WebSocket broadcast)
+    // Create optimistic message immediately
+    const optimisticMessage: Message = {
+      id: `temp-${Date.now()}`, // Temporary ID
+      content,
+      senderId: this.meId || '',
+      senderName: this.getSenderName(this.meId || ''),
+      conversationId: id,
+      status: 'sending',
+      createdAt: new Date(),
+    };
+
+    // Add optimistic message to UI immediately
+    this.messages.update(msgs => [...msgs, optimisticMessage]);
+    this.scrollToBottom();
+
+    // Send via HTTP API
     this.api.sendMessage(id, content)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (msg) => {
-          // Message will be added via WebSocket handleNewMessage
-          // No need to add it here to avoid duplicates
+          // Replace optimistic message with real message
+          this.messages.update(msgs => 
+            msgs.map(m => m.id === optimisticMessage.id ? {
+              ...msg,
+              id: (msg as any)._id || msg.id,
+              senderId: String((msg as any).senderId?._id || (msg as any).senderId || msg.senderId),
+              status: 'sent' as const,
+              senderName: this.getSenderName(this.meId || ''),
+            } : m)
+          );
+          console.log('✅ Message sent successfully:', msg);
         },
         error: (error) => {
-          console.error('Failed to send message:', error);
+          console.error('❌ Failed to send message:', error);
+          
+          // Update optimistic message to failed status
+          this.messages.update(msgs =>
+            msgs.map(m => m.id === optimisticMessage.id ? { ...m, status: 'failed' as const } : m)
+          );
+          
           this.snackBar.open('Failed to send message', 'Retry', {
-            duration: 3000
+            duration: 5000
           }).onAction().subscribe(() => {
-            this.draft = content; // Restore draft for retry
+            // Remove failed message and restore draft for retry
+            this.messages.update(msgs => msgs.filter(m => m.id !== optimisticMessage.id));
+            this.draft.set(content);
           });
         }
       });
@@ -1037,6 +1108,17 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
     return this.api.getStatusIcon(status);
   }
 
+  getStatusTooltip(status: string): string {
+    switch (status) {
+      case 'sending': return 'Sending...';
+      case 'sent': return 'Sent';
+      case 'delivered': return 'Delivered';
+      case 'read': return 'Read';
+      case 'failed': return 'Failed to send. Click retry to resend.';
+      default: return '';
+    }
+  }
+
   toggleReaction(messageId: string, emoji: string) {
     const message = this.messages().find(m => m.id === messageId);
     if (!message) return;
@@ -1090,20 +1172,6 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
     const commonEmojis = ['👍', '❤️', '😂', '😮', '😢', '😡'];
     const randomEmoji = commonEmojis[Math.floor(Math.random() * commonEmojis.length)];
     this.toggleReaction(messageId, randomEmoji);
-  }
-
-  onFileSelected(event: any) {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
-
-    // In a real implementation, upload files and send as attachments
-    for (const file of files) {
-      console.log('Selected file:', file.name, file.type, file.size);
-      // this.api.uploadAttachment(file).subscribe(...);
-    }
-
-    // Reset file input
-    event.target.value = '';
   }
 
   openCreateGroupDialog() {
@@ -1316,5 +1384,30 @@ export class MessagesComponent implements OnInit, OnDestroy, AfterViewInit {
     if (days === 1) return 'Yesterday';
     if (days < 7) return `${days}d ago`;
     return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  // Notification sound methods
+  private initializeNotificationSound() {
+    try {
+      const soundUrl = `${this.brand.getApiUrl().replace('/api', '')}/system-audio/mixkit-message-pop-alert-2354.mp3`;
+      this.notificationSound = new Audio(soundUrl);
+      this.notificationSound.volume = 0.5; // Set volume to 50%
+      console.log('🔔 Notification sound initialized:', soundUrl);
+    } catch (error) {
+      console.error('❌ Failed to initialize notification sound:', error);
+    }
+  }
+
+  private playNotificationSound() {
+    // Play sound for any message from another user
+    if (this.notificationSound) {
+      this.notificationSound.currentTime = 0; // Reset to start
+      this.notificationSound.play().catch(error => {
+        console.error('❌ Failed to play notification sound:', error);
+      });
+      console.log('🔊 Playing notification sound for new message');
+    } else {
+      console.warn('⚠️ Notification sound not initialized');
+    }
   }
 }

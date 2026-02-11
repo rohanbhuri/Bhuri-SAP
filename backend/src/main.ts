@@ -37,6 +37,11 @@ async function bootstrap() {
     prefix: '/uploads/',
   });
 
+  // Serve static files for system audio notifications
+  app.useStaticAssets(join(__dirname, '..', 'system-audio'), {
+    prefix: '/system-audio/',
+  });
+
   // Handle root route before setting global prefix
   app.getHttpAdapter().get('/', (req, res: Response) => {
     res.status(200).json({

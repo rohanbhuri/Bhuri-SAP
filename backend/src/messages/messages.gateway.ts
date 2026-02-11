@@ -102,7 +102,11 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
   handleJoin(@ConnectedSocket() client: Socket, @MessageBody() payload: { room: string }) {
     if (payload?.room) {
       client.join(payload.room);
-      console.log(`Client ${client.id} joined room: ${payload.room}`);
+      console.log(`✅ Client ${client.id} (user: ${client.data.userId}) joined room: ${payload.room}`);
+      
+      // Log all rooms this client is in
+      const rooms = Array.from(client.rooms);
+      console.log(`📋 Client ${client.id} is now in rooms:`, rooms);
     }
   }
 
@@ -184,8 +188,12 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
     });
 
     // Update message count for the user who read the messages
-    const unreadMessageCount = await this.messagesService.getTotalUnreadCount(payload.userId);
-    this.server.to(`user:${payload.userId}`).emit('message:count', { count: unreadMessageCount });
+    const unreadCounts = await this.messagesService.getUnreadMessageCount(payload.userId);
+    const totalUnread = Object.values(unreadCounts).reduce((sum, count) => sum + (count as number), 0);
+    const unreadConversations = Object.values(unreadCounts).filter(count => (count as number) > 0).length;
+    
+    this.server.to(`user:${payload.userId}`).emit('message:count', { count: totalUnread });
+    this.server.to(`user:${payload.userId}`).emit('conversation:count', { count: unreadConversations });
   }
 
   // Helpers to emit notifications/requests from services

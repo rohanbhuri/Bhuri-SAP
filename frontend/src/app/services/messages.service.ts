@@ -29,7 +29,7 @@ export interface Message {
   senderId: string;
   senderName?: string;
   conversationId: string;
-  status: 'sending' | 'sent' | 'delivered' | 'read';
+  status: 'sending' | 'sent' | 'delivered' | 'read' | 'failed';
   createdAt: Date;
   updatedAt?: Date;
   replyTo?: string;
@@ -81,6 +81,7 @@ export class MessagesApiService {
   // Merged from MessageCountService
   private wsService = inject(WebSocketService);
   messageCount = signal<number>(0);
+  unreadConversationCount = signal<number>(0);
   private onlineUsers = signal<Set<string>>(new Set());
 
   constructor() {
@@ -107,6 +108,8 @@ export class MessagesApiService {
     this.wsService.getMessages().subscribe(message => {
       if (message?.type === 'message:count') {
         this.setMessageCount(message.payload.count);
+      } else if (message?.type === 'conversation:count') {
+        this.setUnreadConversationCount(message.payload.count);
       } else if (message?.type === 'user:online') {
         this.onlineUsers.update(users => {
           const newSet = new Set(users);
@@ -145,8 +148,15 @@ export class MessagesApiService {
 
     this.getUnreadCount().subscribe({
       next: (counts) => {
+        // Count total unread messages
         const totalUnread = Object.values(counts).reduce((sum, count) => sum + (count as number), 0);
         this.setMessageCount(totalUnread);
+        
+        // Count conversations with unread messages
+        const unreadConversations = Object.values(counts).filter(count => (count as number) > 0).length;
+        this.setUnreadConversationCount(unreadConversations);
+        
+        console.log('📊 Unread stats:', { totalMessages: totalUnread, unreadConversations });
       },
       error: (err) => {
         if (err.status !== 401) {
@@ -158,6 +168,10 @@ export class MessagesApiService {
 
   setMessageCount(count: number) {
     this.messageCount.set(count);
+  }
+
+  setUnreadConversationCount(count: number) {
+    this.unreadConversationCount.set(count);
   }
 
   isUserOnline(userId: string): boolean {
@@ -206,6 +220,7 @@ export class MessagesApiService {
       case 'sent': return 'check';
       case 'delivered': return 'done_all';
       case 'read': return 'done_all';
+      case 'failed': return 'error';
       default: return 'check';
     }
   }

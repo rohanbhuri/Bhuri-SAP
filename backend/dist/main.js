@@ -27,6 +27,9 @@ async function bootstrap() {
     app.useStaticAssets((0, path_1.join)(__dirname, '..', 'uploads'), {
         prefix: '/uploads/',
     });
+    app.useStaticAssets((0, path_1.join)(__dirname, '..', 'system-audio'), {
+        prefix: '/system-audio/',
+    });
     app.getHttpAdapter().get('/', (req, res) => {
         res.status(200).json({
             message: 'Bhuri SAP Server',

@@ -10,6 +10,7 @@ import { PwaService } from './services/pwa.service';
 import { PwaUpdateAlertComponent } from './components/pwa-update-alert.component';
 import { WebSocketService } from './services/websocket.service';
 import { MessagesApiService } from './services/messages.service';
+import { NotificationSoundService } from './services/notification-sound.service';
 import { delay } from 'rxjs/operators';
 
 @Component({
@@ -25,6 +26,7 @@ export class App implements OnInit {
   private pwaService = inject(PwaService);
   private wsService = inject(WebSocketService);
   private messagesService = inject(MessagesApiService);
+  private notificationSoundService = inject(NotificationSoundService); // Initialize global sound service
   private snackBar = inject(MatSnackBar);
   private platformId = inject(PLATFORM_ID);
 

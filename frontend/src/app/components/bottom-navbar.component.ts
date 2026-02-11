@@ -256,7 +256,7 @@ export class BottomNavbarComponent implements OnInit, OnDestroy {
   activeRoute: string = '';
   activeModules = signal<AppModuleInfo[]>([]);
   pinnedModules = signal<AppModuleInfo[]>([]);
-  messageCount = this.messagesApiService.messageCount;
+  messageCount = this.messagesApiService.unreadConversationCount; // Changed to show unread conversations
   notificationCount = this.notificationsService.unreadCount;
   isHidden = this.scrollVisibilityService.isBottomNavHidden;
 

@@ -44,16 +44,25 @@ let MessagesController = class MessagesController {
     }
     async sendMessage(req, conversationId, body) {
         const message = await this.messagesService.sendMessage(conversationId, req.user.userId, body.content);
+        console.log(`📤 Broadcasting message to conversation:${conversationId}`, {
+            messageId: message._id,
+            senderId: req.user.userId,
+            content: body.content.substring(0, 50)
+        });
         this.messagesGateway.server.to(`conversation:${conversationId}`).emit('message:new', message);
+        this.messagesGateway.server.to(`user:${req.user.userId}`).emit('message:new', message);
         const conversation = await this.messagesService['conversationRepo'].findOne({
             where: { _id: new (require('mongodb').ObjectId)(conversationId) }
         });
         if (conversation) {
             const allMemberIds = conversation.memberIds;
             for (const memberId of allMemberIds) {
-                const unreadCount = await this.messagesService.getTotalUnreadCount(String(memberId));
-                console.log(`Emitting message count ${unreadCount} to user ${memberId}`);
-                this.messagesGateway.server.to(`user:${memberId}`).emit('message:count', { count: unreadCount });
+                const unreadCounts = await this.messagesService.getUnreadMessageCount(String(memberId));
+                const totalUnread = Object.values(unreadCounts).reduce((sum, count) => sum + count, 0);
+                const unreadConversations = Object.values(unreadCounts).filter(count => count > 0).length;
+                console.log(`📊 Emitting counts to user:${memberId} - messages: ${totalUnread}, conversations: ${unreadConversations}`);
+                this.messagesGateway.server.to(`user:${memberId}`).emit('message:count', { count: totalUnread });
+                this.messagesGateway.server.to(`user:${memberId}`).emit('conversation:count', { count: unreadConversations });
             }
         }
         return message;

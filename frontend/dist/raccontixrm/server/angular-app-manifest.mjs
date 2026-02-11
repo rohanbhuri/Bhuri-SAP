@@ -7,13 +7,13 @@ export default {
   routes: undefined,
   entryPointToBrowserMapping: {
   "src/app/modules/quotations/quotations.routes.ts": [
-    "chunk-DI2TBVLF.js"
+    "chunk-OHLXN36E.js"
   ],
   "src/app/modules/client-management/pages/api-docs-page.component.ts": [
-    "chunk-VPJU6I5U.js"
+    "chunk-TZPH3XIN.js"
   ],
   "src/app/modules/client-management/client-management.routes.ts": [
-    "chunk-OWJLN4UG.js"
+    "chunk-XWDBH77W.js"
   ],
   "src/app/modules/project-timesheet/pages/timesheets.page.ts": [
     "chunk-UKZU3FIC.js"
@@ -25,20 +25,20 @@ export default {
     "chunk-ALQ6LBJM.js"
   ],
   "src/app/modules/project-timesheet/project-timesheet.routes.ts": [
-    "chunk-BNU2VBRP.js"
+    "chunk-LCHTXQSG.js"
   ],
   "src/app/modules/order-management/order-management.routes.ts": [
-    "chunk-YAKTFRTC.js"
+    "chunk-J5AMH7QQ.js"
   ],
   "src/app/modules/finance/finance.routes.ts": [
-    "chunk-SCI33MFQ.js"
+    "chunk-Q4X4YIXB.js"
   ],
   "src/app/modules/catalogue/catalogue.routes.ts": [
-    "chunk-VJ5SGLE3.js",
+    "chunk-SBCYWG5W.js",
     "chunk-EBMDXCWA.js"
   ],
   "src/app/modules/cms/cms.routes.ts": [
-    "chunk-U7MDCMCL.js",
+    "chunk-W5BEH3LR.js",
     "chunk-EBMDXCWA.js"
   ],
   "src/app/modules/project-tracking/pages/gantt.page.ts": [
@@ -57,7 +57,7 @@ export default {
     "chunk-6ZETEGB5.js"
   ],
   "src/app/modules/project-tracking/project-tracking.routes.ts": [
-    "chunk-LYZOTB55.js"
+    "chunk-FDTECP4K.js"
   ],
   "src/app/modules/project-timesheet/pages/gantt.page.ts": [
     "chunk-SJRRUTLI.js"
@@ -66,13 +66,13 @@ export default {
     "chunk-5VACFFKV.js"
   ],
   "src/app/modules/crm/crm.routes.ts": [
-    "chunk-226KRPTL.js"
+    "chunk-CEOZKACH.js"
   ],
   "src/app/modules/my-organizations/my-organizations.routes.ts": [
-    "chunk-AAQI2D65.js"
+    "chunk-MIS7X3T5.js"
   ],
   "src/app/modules/hr-management/hr-management.routes.ts": [
-    "chunk-GHZF5CVY.js"
+    "chunk-52C45P4V.js"
   ],
   "src/app/modules/projects-management/pages/projects.page.ts": [
     "chunk-FRBYP2X7.js"
@@ -87,22 +87,22 @@ export default {
     "chunk-NQXAQQY6.js"
   ],
   "src/app/modules/projects-management/projects-management.routes.ts": [
-    "chunk-IMPFORV3.js"
+    "chunk-HAUSNXBV.js"
   ],
   "src/app/modules/user-management/pages/permissions.component.ts": [
     "chunk-HAHCDAR5.js"
   ],
   "src/app/modules/user-management/pages/api-docs-page.component.ts": [
-    "chunk-ZHIWQ252.js"
+    "chunk-7D2F72ZI.js"
   ],
   "src/app/modules/user-management/pages/analytics-page.component.ts": [
     "chunk-PR23OAT5.js"
   ],
   "src/app/modules/user-management/user-management.routes.ts": [
-    "chunk-CBLUJFCN.js"
+    "chunk-6532PAQM.js"
   ],
   "src/app/modules/organization-management/organization-management-layout.component.ts": [
-    "chunk-CAMUETOC.js"
+    "chunk-A4R6XL3V.js"
   ],
   "src/app/modules/organization-management/pages/organizations.component.ts": [
     "chunk-34CGEJJ4.js"
@@ -111,7 +111,7 @@ export default {
     "chunk-2SCWTYNL.js"
   ],
   "src/app/modules/organization-management/organization-management.routes.ts": [
-    "chunk-BPM2MEGD.js"
+    "chunk-ZEYHCIUO.js"
   ],
   "src/app/modules/hr-management/pages/performance.page.ts": [
     "chunk-65HGVVOC.js"
@@ -129,7 +129,7 @@ export default {
     "chunk-5JBHE37W.js"
   ],
   "src/app/modules/user-management/user-management-layout.component.ts": [
-    "chunk-OLH6WOVF.js"
+    "chunk-S5N6DRCA.js"
   ],
   "src/app/modules/user-management/pages/users.component.ts": [
     "chunk-X5SZLAJG.js"
@@ -144,7 +144,7 @@ export default {
     "chunk-RAJUJAWB.js"
   ],
   "src/app/modules/my-organizations/my-organizations.component.ts": [
-    "chunk-HX57P3ZU.js"
+    "chunk-I4TVOUTY.js"
   ],
   "src/app/modules/hr-management/pages/employees.page.ts": [
     "chunk-JOMDXPLG.js"
@@ -160,8 +160,8 @@ export default {
   ]
 },
   assets: {
-    'index.csr.html': {size: 6921, hash: '9a9902d69aa3c6a999e52941c02f3f4b3db74889e17c5ebb5de5dde14d0df7e9', text: () => import('./assets-chunks/index_csr_html.mjs').then(m => m.default)},
-    'index.server.html': {size: 6172, hash: '1f9a30061fba8cbd0ac6abe2537e30b9fd1b13f089e79439b3cc922eda53015a', text: () => import('./assets-chunks/index_server_html.mjs').then(m => m.default)},
+    'index.csr.html': {size: 6921, hash: '0dbf10706b62e1e72e12e08ba33a2ccbe6457b6877eb98f794e116b184d2603b', text: () => import('./assets-chunks/index_csr_html.mjs').then(m => m.default)},
+    'index.server.html': {size: 6172, hash: 'a15d6c7c541240892b6d15cfc798ad929d3dd5b0c6e11a011638a3d828c7c4a8', text: () => import('./assets-chunks/index_server_html.mjs').then(m => m.default)},
     'styles-WXOW2UJF.css': {size: 34857, hash: '4tVdAiTxIrw', text: () => import('./assets-chunks/styles-WXOW2UJF_css.mjs').then(m => m.default)}
   },
 };
