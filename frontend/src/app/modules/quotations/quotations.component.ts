@@ -7,6 +7,8 @@ import { MatMenuModule } from '@angular/material/menu';
 import { CommonModule } from '@angular/common';
 import { NavbarComponent } from '../../components/navbar.component';
 import { BottomNavbarComponent } from '../../components/bottom-navbar.component';
+import { BreadcrumbComponent } from '../../components/breadcrumb.component';
+import { BreadcrumbService } from '../../services/breadcrumb.service';
 import { QuotationListComponent } from './components/quotation-list/quotation-list.component';
 import { EnquiryListComponent } from './components/enquiry-list/enquiry-list.component';
 import { PresentationListComponent } from './components/presentation-list/presentation-list.component';
@@ -24,6 +26,7 @@ import { AuthService } from '../../services/auth.service';
     MatMenuModule,
     NavbarComponent,
     BottomNavbarComponent,
+    BreadcrumbComponent,
     QuotationListComponent,
     EnquiryListComponent,
     PresentationListComponent,
@@ -35,11 +38,7 @@ import { AuthService } from '../../services/auth.service';
       <div class="page-header">
         <div class="header-content">
           <div>
-            <nav class="breadcrumb">
-              <span>Modules</span>
-              <mat-icon>chevron_right</mat-icon>
-              <span class="current">Quotations</span>
-            </nav>
+            <app-breadcrumb></app-breadcrumb>
             <h1>Quotation Management</h1>
             <p class="subtitle">Client enquiries to quotation workflow with approval system</p>
           </div>
@@ -78,9 +77,11 @@ export class QuotationsComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private authService = inject(AuthService);
+  private breadcrumbService = inject(BreadcrumbService);
   
   selectedTabIndex = 0;
   private tabs = ['enquiries', 'presentations', 'quotations', 'analytics'];
+  private tabNames = ['Enquiries', 'Presentations', 'Quotations', 'Analytics'];
 
   canAccessApi(): boolean {
     return this.authService.getCurrentUser()?.allowApiAccess ?? false;
@@ -91,8 +92,15 @@ export class QuotationsComponent implements OnInit {
       const tab = params['tab'];
       if (tab && this.tabs.includes(tab)) {
         this.selectedTabIndex = this.tabs.indexOf(tab);
+        this.breadcrumbService.setContext(this.tabNames[this.selectedTabIndex]);
+      } else {
+        this.breadcrumbService.setContext(this.tabNames[0]);
       }
     });
+  }
+
+  ngOnDestroy() {
+    this.breadcrumbService.clearContext();
   }
 
   onTabChange(event: any) {
@@ -102,6 +110,7 @@ export class QuotationsComponent implements OnInit {
       queryParams: { tab: tabName },
       queryParamsHandling: 'merge'
     });
+    this.breadcrumbService.setContext(this.tabNames[event.index]);
   }
 
   openApiDocs() {

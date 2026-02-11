@@ -18,6 +18,7 @@ const platform_express_1 = require("@nestjs/platform-express");
 const multer_1 = require("multer");
 const path_1 = require("path");
 const public_decorator_1 = require("../decorators/public.decorator");
+const api_key_guard_1 = require("../guards/api-key.guard");
 let MediaController = class MediaController {
     async uploadFile(file) {
         if (!file) {
@@ -73,6 +74,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], MediaController.prototype, "serveFile", null);
 exports.MediaController = MediaController = __decorate([
-    (0, common_1.Controller)('media')
+    (0, common_1.Controller)('media'),
+    (0, common_1.UseGuards)(api_key_guard_1.ApiKeyGuard)
 ], MediaController);
 //# sourceMappingURL=media.controller.js.map

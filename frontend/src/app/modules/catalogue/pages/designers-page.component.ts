@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
 import { CatalogueService } from '../catalogue.service';
 import { DesignerDialogComponent } from '../dialogs/designer-dialog.component';
@@ -21,16 +22,23 @@ import { UserManagementService } from '../../user-management/user-management.ser
     MatIconModule,
     MatMenuModule,
     MatChipsModule,
+    MatTooltipModule,
     UploadUrlPipe
   ],
   template: `
     <div class="tab-content">
       <div class="tab-header">
         <h2>Product Designers</h2>
-        <button mat-raised-button color="primary" (click)="openDesignerDialog()">
-          <mat-icon>add</mat-icon>
-          Add Designer
-        </button>
+        <div class="header-actions">
+          <button mat-button (click)="previewDesignersPage()" matTooltip="Preview Designers Page on Website">
+            <mat-icon>open_in_new</mat-icon>
+            Preview Page
+          </button>
+          <button mat-raised-button color="primary" (click)="openDesignerDialog()">
+            <mat-icon>add</mat-icon>
+            Add Designer
+          </button>
+        </div>
       </div>
       
       <div class="table-container">
@@ -168,6 +176,11 @@ import { UserManagementService } from '../../user-management/user-management.ser
       margin: 0;
       font-size: 1.5rem;
       font-weight: 500;
+    }
+    .header-actions {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
     }
     .designer-image-cell {
       width: 60px;
@@ -325,6 +338,9 @@ import { UserManagementService } from '../../user-management/user-management.ser
       color: #999;
       font-style: italic;
     }
+    .text-red-600 {
+      color: #dc2626;
+    }
   `]
 })
 export class DesignersPageComponent implements OnInit {
@@ -400,5 +416,13 @@ export class DesignersPageComponent implements OnInit {
         this.loadDesigners();
       });
     }
+  }
+
+  previewDesignersPage() {
+    // Preview the designers listing page
+    const previewUrl = 'https://racconti.in/designers';
+    
+    // Open in new tab
+    window.open(previewUrl, '_blank');
   }
 }

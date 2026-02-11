@@ -7,6 +7,8 @@ import { MatMenuModule } from '@angular/material/menu';
 import { CommonModule } from '@angular/common';
 import { NavbarComponent } from '../../components/navbar.component';
 import { BottomNavbarComponent } from '../../components/bottom-navbar.component';
+import { BreadcrumbComponent } from '../../components/breadcrumb.component';
+import { BreadcrumbService } from '../../services/breadcrumb.service';
 import { ProductsPageComponent } from './pages/products-page.component';
 import { CategoriesPageComponent } from './pages/categories-page.component';
 import { CollectionsPageComponent } from './pages/collections-page.component';
@@ -25,6 +27,7 @@ import { AuthService } from '../../services/auth.service';
     MatMenuModule,
     NavbarComponent,
     BottomNavbarComponent,
+    BreadcrumbComponent,
     ProductsPageComponent,
     CategoriesPageComponent,
     CollectionsPageComponent,
@@ -37,11 +40,7 @@ import { AuthService } from '../../services/auth.service';
       <div class="page-header">
         <div class="header-content">
           <div>
-            <nav class="breadcrumb">
-              <span>Modules</span>
-              <mat-icon>chevron_right</mat-icon>
-              <span class="current">Catalogue</span>
-            </nav>
+            <app-breadcrumb></app-breadcrumb>
             <h1>Catalogue Management</h1>
             <p class="subtitle">Manage your product catalogue with 3D models and collections</p>
           </div>
@@ -83,9 +82,11 @@ export class CatalogueComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private authService = inject(AuthService);
+  private breadcrumbService = inject(BreadcrumbService);
   
   selectedTabIndex = 0;
   private tabs = ['products', 'categories', 'collections', 'designers', 'analytics'];
+  private tabNames = ['Products', 'Categories', 'Collections', 'Designers', 'Analytics'];
 
   canAccessApi(): boolean {
     return this.authService.getCurrentUser()?.allowApiAccess ?? false;
@@ -96,8 +97,15 @@ export class CatalogueComponent implements OnInit {
       const tab = params['tab'];
       if (tab && this.tabs.includes(tab)) {
         this.selectedTabIndex = this.tabs.indexOf(tab);
+        this.breadcrumbService.setContext(this.tabNames[this.selectedTabIndex]);
+      } else {
+        this.breadcrumbService.setContext(this.tabNames[0]);
       }
     });
+  }
+
+  ngOnDestroy() {
+    this.breadcrumbService.clearContext();
   }
 
   onTabChange(event: any) {
@@ -107,6 +115,7 @@ export class CatalogueComponent implements OnInit {
       queryParams: { tab: tabName },
       queryParamsHandling: 'merge'
     });
+    this.breadcrumbService.setContext(this.tabNames[event.index]);
   }
 
   openApiDocs() {

@@ -12,6 +12,7 @@ export declare class BlogPost {
     excerpt: string;
     featuredImage: string;
     status: BlogStatus;
+    isFeatured: boolean;
     seo: {
         title?: string;
         description?: string;
@@ -23,5 +24,13 @@ export declare class BlogPost {
     updatedAt: Date;
     publishedAt?: Date;
     authorId?: string;
+    createdBy?: string;
+    updatedBy?: string;
+    changeLog: Array<{
+        userId: string;
+        action: string;
+        timestamp: Date;
+        details?: string;
+    }>;
     constructor();
 }

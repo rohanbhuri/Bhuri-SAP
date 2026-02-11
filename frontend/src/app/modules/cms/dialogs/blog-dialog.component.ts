@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit, signal } from '@angular/core';
+import { Component, Inject, OnInit, signal, inject, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
@@ -11,7 +11,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { HttpClient } from '@angular/common/http';
 import { CmsService } from '../cms.service';
+import { getBrandConfig } from '../../../brand.config';
+import Quill from 'quill';
 
 @Component({
   selector: 'app-blog-dialog',
@@ -28,7 +33,9 @@ import { CmsService } from '../cms.service';
     MatIconModule,
     MatChipsModule,
     MatDatepickerModule,
-    MatNativeDateModule
+    MatNativeDateModule,
+    MatProgressBarModule,
+    MatSlideToggleModule
   ],
   template: `
     <div class="dialog-header">
@@ -67,6 +74,25 @@ import { CmsService } from '../cms.service';
                 <mat-hint>{{ (blogForm.get('excerpt')?.value || '').length }}/160 characters</mat-hint>
               </mat-form-field>
 
+              <div class="image-upload-section">
+                <label class="upload-label">Featured Image</label>
+                <div class="upload-container">
+                  <input type="file" #fileInput (change)="onFileSelected($event)" accept="image/*" style="display: none">
+                  <button mat-stroked-button type="button" (click)="fileInput.click()" [disabled]="uploading()">
+                    <mat-icon>upload</mat-icon>
+                    Upload Image
+                  </button>
+                  <span class="upload-hint">or enter URL below</span>
+                </div>
+                <mat-progress-bar *ngIf="uploading()" mode="indeterminate"></mat-progress-bar>
+                <div *ngIf="blogForm.get('featuredImage')?.value" class="image-preview">
+                  <img [src]="blogForm.get('featuredImage')?.value" alt="Featured image preview">
+                  <button mat-icon-button type="button" (click)="removeFeaturedImage()" class="remove-btn">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                </div>
+              </div>
+
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Featured Image URL</mat-label>
                 <input matInput formControlName="featuredImage" placeholder="https://example.com/image.jpg">
@@ -90,6 +116,16 @@ import { CmsService } from '../cms.service';
                 </mat-form-field>
               </div>
 
+              <div class="featured-toggle">
+                <mat-slide-toggle formControlName="isFeatured" color="primary">
+                  <div class="toggle-content">
+                    <mat-icon>star</mat-icon>
+                    <span>Featured Post</span>
+                  </div>
+                </mat-slide-toggle>
+                <p class="toggle-hint">Featured posts will be highlighted on the homepage and blog listing</p>
+              </div>
+
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Tags</mat-label>
                 <input matInput formControlName="tagsInput" placeholder="tag1, tag2, tag3" 
@@ -106,11 +142,10 @@ import { CmsService } from '../cms.service';
                 </mat-chip-set>
               </div>
 
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Content</mat-label>
-                <textarea matInput formControlName="content" rows="12" 
-                         placeholder="Enter blog content (HTML supported)"></textarea>
-              </mat-form-field>
+              <div class="editor-field">
+                <label>Content (Rich Text)</label>
+                <div #contentEditor class="quill-editor"></div>
+              </div>
             </form>
           </div>
         </mat-tab>
@@ -300,14 +335,116 @@ import { CmsService } from '../cms.service';
       width: 1.25rem;
       height: 1.25rem;
     }
+
+    .image-upload-section {
+      margin-bottom: 1rem;
+    }
+
+    .upload-label, .editor-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: rgba(0, 0, 0, 0.6);
+      margin-bottom: 0.5rem;
+    }
+
+    .upload-container {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .upload-hint {
+      color: rgba(0, 0, 0, 0.6);
+      font-size: 0.875rem;
+    }
+
+    .image-preview {
+      position: relative;
+      margin-top: 1rem;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      overflow: hidden;
+      max-width: 400px;
+    }
+
+    .image-preview img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .remove-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
+    }
+
+    .remove-btn:hover {
+      background: rgba(0, 0, 0, 0.8);
+    }
+
+    .featured-toggle {
+      padding: 1rem;
+      background: #f5f5f5;
+      border-radius: 8px;
+      margin: 0.5rem 0;
+    }
+
+    .toggle-content {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .toggle-content mat-icon {
+      color: #ffa502;
+    }
+
+    .toggle-hint {
+      margin: 0.5rem 0 0 0;
+      font-size: 0.75rem;
+      color: rgba(0, 0, 0, 0.6);
+    }
+
+    .editor-field {
+      margin: 1rem 0;
+    }
+    .editor-field label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
+      color: #666;
+    }
+    .quill-editor {
+      min-height: 300px;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    ::ng-deep .ql-toolbar {
+      border-top-left-radius: 4px;
+      border-top-right-radius: 4px;
+    }
+    ::ng-deep .ql-container {
+      border-bottom-left-radius: 4px;
+      border-bottom-right-radius: 4px;
+    }
   `]
 })
-export class BlogDialogComponent implements OnInit {
+export class BlogDialogComponent implements OnInit, AfterViewInit {
+  @ViewChild('contentEditor') contentEditorElement!: ElementRef;
+  private http = inject(HttpClient);
   blogForm: FormGroup;
   seoForm: FormGroup;
   isEdit = false;
   selectedTabIndex = signal(0);
   tags = signal<string[]>([]);
+  uploading = signal(false);
+  quillEditor: any;
 
   constructor(
     private fb: FormBuilder,
@@ -322,6 +459,7 @@ export class BlogDialogComponent implements OnInit {
       content: [''],
       featuredImage: [''],
       status: ['draft'],
+      isFeatured: [false],
       publishedAt: [null],
       tagsInput: ['']
     });
@@ -391,12 +529,74 @@ export class BlogDialogComponent implements OnInit {
     this.blogForm.patchValue({ tagsInput: currentTags.join(', ') });
   }
 
+  onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      this.uploadImage(file);
+    }
+  }
+
+  uploadImage(file: File) {
+    this.uploading.set(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    this.http.post<any>(`${getBrandConfig().app.apiUrl}/media/upload`, formData)
+      .subscribe({
+        next: (response) => {
+          const imageUrl = `${getBrandConfig().app.apiUrl}${response.url}`;
+          this.blogForm.patchValue({ featuredImage: imageUrl });
+          this.uploading.set(false);
+        },
+        error: () => {
+          this.uploading.set(false);
+          alert('Failed to upload image');
+        }
+      });
+  }
+
+  removeFeaturedImage() {
+    this.blogForm.patchValue({ featuredImage: '' });
+  }
+
+  ngAfterViewInit() {
+    this.quillEditor = new Quill(this.contentEditorElement.nativeElement, {
+      theme: 'snow',
+      modules: {
+        toolbar: [
+          ['bold', 'italic', 'underline', 'strike'],
+          [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+          [{ 'align': [] }],
+          ['link', 'image'],
+          ['clean']
+        ]
+      }
+    });
+
+    // Disable Grammarly on Quill editor
+    this.quillEditor.root.setAttribute('data-gramm', 'false');
+    this.quillEditor.root.setAttribute('data-gramm_editor', 'false');
+    this.quillEditor.root.setAttribute('data-enable-grammarly', 'false');
+
+    if (this.data?.blog?.content) {
+      this.quillEditor.root.innerHTML = this.data.blog.content;
+    }
+
+    this.quillEditor.on('text-change', () => {
+      this.blogForm.patchValue({ content: this.quillEditor.root.innerHTML });
+    });
+  }
+
   saveBlog() {
     if (this.blogForm.valid) {
       const blogData = {
         ...this.blogForm.value,
         tags: this.tags(),
-        seo: this.seoForm.value
+        seo: {
+          ...this.seoForm.value,
+          ogImage: this.seoForm.value.ogImage || this.blogForm.value.featuredImage
+        }
       };
       delete blogData.tagsInput;
 

@@ -14,6 +14,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatMenuModule } from '@angular/material/menu';
 import { NavbarComponent } from '../../components/navbar.component';
 import { BottomNavbarComponent } from '../../components/bottom-navbar.component';
+import { BreadcrumbComponent } from '../../components/breadcrumb.component';
 import { UserManagementService, UserInfo } from './user-management.service';
 import { FormsModule } from '@angular/forms';
 import { ConfirmDialogComponent } from './dialogs/confirm-dialog.component';
@@ -36,6 +37,7 @@ import { ConfirmDialogComponent } from './dialogs/confirm-dialog.component';
     MatMenuModule,
     NavbarComponent,
     BottomNavbarComponent,
+    BreadcrumbComponent,
     FormsModule,
   ],
   template: `
@@ -45,11 +47,7 @@ import { ConfirmDialogComponent } from './dialogs/confirm-dialog.component';
       <div class="page-header">
         <div class="header-content">
           <div>
-            <nav class="breadcrumb">
-              <span>Modules</span>
-              <mat-icon>chevron_right</mat-icon>
-              <span class="current">User Management</span>
-            </nav>
+            <app-breadcrumb></app-breadcrumb>
             <h1>User Management</h1>
             <p class="subtitle">
               Manage users and their roles within your organization
@@ -206,18 +204,6 @@ import { ConfirmDialogComponent } from './dialogs/confirm-dialog.component';
         justify-content: space-between;
         align-items: flex-start;
         gap: 16px;
-      }
-
-      .breadcrumb {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        color: color-mix(in srgb, var(--theme-on-surface) 60%, transparent);
-        font-size: 0.9rem;
-        margin-bottom: 8px;
-      }
-      .breadcrumb .current {
-        color: var(--theme-on-surface);
       }
 
       h1 {

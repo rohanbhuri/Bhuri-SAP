@@ -14,6 +14,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { FormsModule } from '@angular/forms';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { CatalogueService } from '../catalogue.service';
 import { MatListModule } from '@angular/material/list';
 import { ProductDialogComponent } from '../dialogs/product-dialog.component';
@@ -37,6 +38,7 @@ import { UserManagementService } from '../../user-management/user-management.ser
     MatPaginatorModule,
     FormsModule,
     MatProgressSpinnerModule,
+    MatTooltipModule,
     MatListModule,
     UploadUrlPipe
   ],
@@ -45,6 +47,10 @@ import { UserManagementService } from '../../user-management/user-management.ser
       <div class="tab-header">
         <h2>Products</h2>
         <div class="header-actions">
+          <button mat-button (click)="previewProductsPage()" matTooltip="Preview Products Page on Website">
+            <mat-icon>open_in_new</mat-icon>
+            Preview Page
+          </button>
           <button mat-button [matMenuTriggerFor]="importMenu">
             <mat-icon>upload</mat-icon>
             Import/Export
@@ -308,9 +314,18 @@ import { UserManagementService } from '../../user-management/user-management.ser
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef>Actions</th>
             <td mat-cell *matCellDef="let product">
-              <button mat-icon-button [matMenuTriggerFor]="productMenu" class="action-button">
-                <mat-icon>more_vert</mat-icon>
-              </button>
+              <div class="actions-cell">
+                <button mat-icon-button 
+                        *ngIf="product.isPublished" 
+                        (click)="previewProduct(product)" 
+                        matTooltip="Preview on Website"
+                        class="preview-button">
+                  <mat-icon>open_in_new</mat-icon>
+                </button>
+                <button mat-icon-button [matMenuTriggerFor]="productMenu" class="action-button">
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+              </div>
               <mat-menu #productMenu="matMenu">
                 <button mat-menu-item (click)="editProduct(product)">
                   <mat-icon>edit</mat-icon>
@@ -648,6 +663,17 @@ import { UserManagementService } from '../../user-management/user-management.ser
     .text-blue-600 { color: #2563eb; }
     .text-red-600 { color: #dc2626; }
     .text-red-500 { color: #ef4444; }
+    .actions-cell {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .preview-button {
+      color: #2196F3;
+    }
+    .preview-button:hover {
+      background-color: rgba(33, 150, 243, 0.1);
+    }
   `]
 })
 export class ProductsPageComponent implements OnInit {
@@ -979,5 +1005,23 @@ export class ProductsPageComponent implements OnInit {
       a.click();
       window.URL.revokeObjectURL(url);
     });
+  }
+
+  previewProduct(product: any) {
+    // Generate the preview URL: https://racconti.in/product/{slug}-{productId}
+    const productId = product._id.toString();
+    const slug = product.slug;
+    const previewUrl = `https://racconti.in/product/${slug}-${productId}`;
+    
+    // Open in new tab
+    window.open(previewUrl, '_blank');
+  }
+
+  previewProductsPage() {
+    // Preview the products listing page
+    const previewUrl = 'https://racconti.in/products';
+    
+    // Open in new tab
+    window.open(previewUrl, '_blank');
   }
 }

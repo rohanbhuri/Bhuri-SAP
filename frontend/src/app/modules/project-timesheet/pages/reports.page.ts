@@ -288,7 +288,7 @@ import { ProjectTimesheetService, ProjectTimeReport } from '../project-timesheet
         gap: 16px;
       }
       .summary-icon {
-        font-size: 2rem;
+        font-size: 1.2rem;
         color: var(--theme-primary);
       }
       .summary-number {

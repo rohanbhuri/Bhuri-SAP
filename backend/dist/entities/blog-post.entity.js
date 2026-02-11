@@ -20,9 +20,11 @@ var BlogStatus;
 let BlogPost = class BlogPost {
     constructor() {
         this.status = BlogStatus.DRAFT;
+        this.isFeatured = false;
         this.seo = {};
         this.tags = [];
         this.createdAt = new Date();
+        this.changeLog = [];
     }
 };
 exports.BlogPost = BlogPost;
@@ -55,6 +57,10 @@ __decorate([
     __metadata("design:type", String)
 ], BlogPost.prototype, "status", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ default: false }),
+    __metadata("design:type", Boolean)
+], BlogPost.prototype, "isFeatured", void 0);
+__decorate([
     (0, typeorm_1.Column)({ type: 'json', default: {} }),
     __metadata("design:type", Object)
 ], BlogPost.prototype, "seo", void 0);
@@ -78,6 +84,18 @@ __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)
 ], BlogPost.prototype, "authorId", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], BlogPost.prototype, "createdBy", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], BlogPost.prototype, "updatedBy", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'json', default: [] }),
+    __metadata("design:type", Array)
+], BlogPost.prototype, "changeLog", void 0);
 exports.BlogPost = BlogPost = __decorate([
     (0, typeorm_1.Entity)('blog_posts'),
     __metadata("design:paramtypes", [])

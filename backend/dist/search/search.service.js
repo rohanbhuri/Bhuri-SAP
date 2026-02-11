@@ -718,15 +718,18 @@ let SearchService = class SearchService {
             });
         }
         const quotations = await this.quotationRepository.find({ where: filter });
-        return quotations.map(q => ({
-            id: q._id.toString(),
-            title: q.quotationNumber,
-            subtitle: `${q.clientName || 'Unknown Client'} - $${q.grandTotal}`,
-            type: 'quotation',
-            module: 'quotations',
-            relevance: this.calculateRelevance(query, `${q.quotationNumber} ${q.clientName || ''} ${q.clientEmail || ''}`),
-            metadata: { status: q.status, total: q.grandTotal }
-        }));
+        return quotations.map(q => {
+            const maskedPrice = this.maskPrice(q.grandTotal);
+            return {
+                id: q._id.toString(),
+                title: q.quotationNumber,
+                subtitle: `${q.clientName || 'Unknown Client'} - ${maskedPrice}`,
+                type: 'quotation',
+                module: 'quotations',
+                relevance: this.calculateRelevance(query, `${q.quotationNumber} ${q.clientName || ''} ${q.clientEmail || ''}`),
+                metadata: { status: q.status, total: maskedPrice }
+            };
+        });
     }
     async searchOrders(query, permissions, organizationId) {
         if (!this.hasPermission(permissions, 'order-management', permission_entity_1.ActionType.READ, 'orders'))
@@ -768,6 +771,30 @@ let SearchService = class SearchService {
             relevance: this.calculateRelevance(query, `${order.orderNumber} ${order.clientName || ''} ${order.clientEmail || ''}`),
             metadata: { status: order.status, total: order.totalAmount }
         }));
+    }
+    maskPrice(price) {
+        const priceStr = price.toFixed(2);
+        const [integerPart, decimalPart] = priceStr.split('.');
+        const maskedInteger = integerPart.replace(/\d/g, 'X');
+        const maskedDecimal = 'XX';
+        let formatted = '';
+        const len = maskedInteger.length;
+        if (len <= 3) {
+            formatted = maskedInteger;
+        }
+        else {
+            const lastThree = maskedInteger.slice(-3);
+            const remaining = maskedInteger.slice(0, -3);
+            let formattedRemaining = '';
+            for (let i = remaining.length - 1; i >= 0; i--) {
+                formattedRemaining = remaining[i] + formattedRemaining;
+                if ((remaining.length - i) % 2 === 0 && i !== 0) {
+                    formattedRemaining = ',' + formattedRemaining;
+                }
+            }
+            formatted = `${formattedRemaining},${lastThree}`;
+        }
+        return `₹${formatted}.${maskedDecimal}`;
     }
     calculateRelevance(query, text) {
         if (!text)

@@ -36,6 +36,7 @@ export const routes: Routes = [
     path: 'dashboard',
     component: DashboardComponent,
     canActivate: [authGuard],
+    data: { breadcrumb: 'Dashboard' },
   },
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
   {
@@ -74,7 +75,7 @@ export const routes: Routes = [
   { path: 'settings/delete-account', redirectTo: '/settings', pathMatch: 'full' },
   { path: 'messages', component: MessagesComponent, canActivate: [authGuard] },
   { path: 'messages/:orgId/chat/:chatId', component: MessagesComponent, canActivate: [authGuard] },
-  { path: 'search', component: SearchComponent, canActivate: [authGuard] },
+  { path: 'search', component: SearchComponent, canActivate: [authGuard], data: { breadcrumb: 'Global Search' } },
   {
     path: 'notifications',
     component: NotificationsComponent,
@@ -88,6 +89,7 @@ export const routes: Routes = [
         (m) => m.userManagementRoutes
       ),
     canActivate: [authGuard],
+    data: { breadcrumb: 'User Management' },
   },
   {
     path: 'modules/organization-management',
@@ -166,6 +168,7 @@ export const routes: Routes = [
         (m) => m.CATALOGUE_ROUTES
       ),
     canActivate: [authGuard],
+    data: { breadcrumb: 'Catalogue' },
   },
   {
     path: 'modules/cms',
@@ -174,6 +177,7 @@ export const routes: Routes = [
         (m) => m.CMS_ROUTES
       ),
     canActivate: [authGuard],
+    data: { breadcrumb: 'CMS' },
   },
   {
     path: 'modules/quotations',
@@ -182,6 +186,7 @@ export const routes: Routes = [
         (m) => m.QUOTATIONS_ROUTES
       ),
     canActivate: [authGuard],
+    data: { breadcrumb: 'Quotations' },
   },
   {
     path: 'modules/client-management',
@@ -190,6 +195,7 @@ export const routes: Routes = [
         (m) => m.CLIENT_MANAGEMENT_ROUTES
       ),
     canActivate: [authGuard],
+    data: { breadcrumb: 'Client Management' },
   },
 
   { path: '404', component: NotFoundComponent },

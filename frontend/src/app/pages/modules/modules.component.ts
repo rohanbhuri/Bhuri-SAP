@@ -412,7 +412,7 @@ import { getModuleById, MODULE_REGISTRY, getModulesByBrand } from '../../modules
       h1 {
         margin: 0 0 8px;
         font-weight: 700;
-        font-size: 2.25rem;
+        font-size: 1.2rem;
         color: var(--theme-on-surface);
         letter-spacing: -0.025em;
       }

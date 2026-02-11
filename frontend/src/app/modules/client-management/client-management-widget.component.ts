@@ -112,7 +112,7 @@ import { ClientManagementService } from './services/client-management.service';
     }
     
     .icon-wrapper mat-icon {
-      font-size: 28px;
+      font-size: 1.2rem;
       width: 28px;
       height: 28px;
       color: white;
@@ -172,7 +172,7 @@ import { ClientManagementService } from './services/client-management.service';
     }
 
     .stat-item mat-icon {
-      font-size: 28px;
+      font-size: 1.2rem;
       width: 28px;
       height: 28px;
       color: var(--theme-primary);

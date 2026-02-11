@@ -93,7 +93,7 @@ import { OrderManagementService } from './order-management.service';
     }
     
     .revenue-amount {
-      font-size: 2rem;
+      font-size: 1.2rem;
       font-weight: 700;
       color: #FF5722;
       line-height: 1;

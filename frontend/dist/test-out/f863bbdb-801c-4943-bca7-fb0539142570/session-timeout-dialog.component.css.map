@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/app/dialogs/session-timeout-dialog.component.ts"],
+  "sourcesContent": ["\n    .session-timeout-dialog {\n      text-align: center;\n      padding: 2rem;\n      min-width: 300px;\n    }\n    .warning-icon {\n      font-size: 3rem;\n      width: 3rem;\n      height: 3rem;\n      color: #ff9800;\n      margin-bottom: 1rem;\n    }\n    h2 {\n      margin: 1rem 0 0.5rem;\n      color: #333;\n    }\n    p {\n      color: #666;\n      margin-bottom: 1.5rem;\n    }\n  "],
+  "mappings": ";AACI,CAAA;AACE,cAAA;AACA,WAAA;AACA,aAAA;;AAEF,CAAA;AACE,aAAA;AACA,SAAA;AACA,UAAA;AACA,SAAA;AACA,iBAAA;;AAEF;AACE,UAAA,KAAA,EAAA;AACA,SAAA;;AAEF;AACE,SAAA;AACA,iBAAA;;",
+  "names": []
+}

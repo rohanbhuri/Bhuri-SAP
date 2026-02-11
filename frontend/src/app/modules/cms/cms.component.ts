@@ -7,10 +7,10 @@ import { MatMenuModule } from '@angular/material/menu';
 import { CommonModule } from '@angular/common';
 import { NavbarComponent } from '../../components/navbar.component';
 import { BottomNavbarComponent } from '../../components/bottom-navbar.component';
-import { PagesPageComponent } from './pages/pages-page.component';
+import { BreadcrumbComponent } from '../../components/breadcrumb.component';
+import { BreadcrumbService } from '../../services/breadcrumb.service';
 import { BlogsPageComponent } from './pages/blogs-page.component';
-import { MenusPageComponent } from './pages/menus-page.component';
-import { MediaPageComponent } from './pages/media-page.component';
+import { NewsMediaPageComponent } from './pages/news-media-page.component';
 import { AnalyticsPageComponent } from './pages/analytics-page.component';
 import { AuthService } from '../../services/auth.service';
 
@@ -25,10 +25,9 @@ import { AuthService } from '../../services/auth.service';
     MatMenuModule,
     NavbarComponent,
     BottomNavbarComponent,
-    PagesPageComponent,
+    BreadcrumbComponent,
     BlogsPageComponent,
-    MenusPageComponent,
-    MediaPageComponent,
+    NewsMediaPageComponent,
     AnalyticsPageComponent
   ],
   template: `
@@ -37,11 +36,7 @@ import { AuthService } from '../../services/auth.service';
       <div class="page-header">
         <div class="header-content">
           <div>
-            <nav class="breadcrumb">
-              <span>Modules</span>
-              <mat-icon>chevron_right</mat-icon>
-              <span class="current">CMS</span>
-            </nav>
+            <app-breadcrumb></app-breadcrumb>
             <h1>Content Management System</h1>
             <p class="subtitle">Manage your website content, pages, blogs, and media</p>
           </div>
@@ -58,17 +53,11 @@ import { AuthService } from '../../services/auth.service';
       </div>
 
       <mat-tab-group class="cms-tabs" [selectedIndex]="selectedTabIndex" (selectedTabChange)="onTabChange($event)">
-        <mat-tab label="Pages">
-          <app-pages-page></app-pages-page>
-        </mat-tab>
-        <mat-tab label="Blogs">
+        <mat-tab label="Blogs & Articles">
           <app-blogs-page></app-blogs-page>
         </mat-tab>
-        <mat-tab label="Menus">
-          <app-menus-page></app-menus-page>
-        </mat-tab>
-        <mat-tab label="Media">
-          <app-media-page></app-media-page>
+        <mat-tab label="News & Media">
+          <app-news-media-page></app-news-media-page>
         </mat-tab>
         <mat-tab label="Analytics">
           <app-analytics-page></app-analytics-page>
@@ -83,9 +72,11 @@ export class CmsComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private authService = inject(AuthService);
+  private breadcrumbService = inject(BreadcrumbService);
   
   selectedTabIndex = 0;
-  private tabs = ['pages', 'blogs', 'menus', 'media', 'analytics'];
+  private tabs = ['blogs', 'news-media', 'analytics'];
+  private tabNames = ['Blogs & Articles', 'News & Media', 'Analytics'];
 
   canAccessApi(): boolean {
     return this.authService.getCurrentUser()?.allowApiAccess ?? false;
@@ -96,8 +87,15 @@ export class CmsComponent implements OnInit {
       const tab = params['tab'];
       if (tab && this.tabs.includes(tab)) {
         this.selectedTabIndex = this.tabs.indexOf(tab);
+        this.breadcrumbService.setContext(this.tabNames[this.selectedTabIndex]);
+      } else {
+        this.breadcrumbService.setContext(this.tabNames[0]);
       }
     });
+  }
+
+  ngOnDestroy() {
+    this.breadcrumbService.clearContext();
   }
 
   onTabChange(event: any) {
@@ -107,6 +105,7 @@ export class CmsComponent implements OnInit {
       queryParams: { tab: tabName },
       queryParamsHandling: 'merge'
     });
+    this.breadcrumbService.setContext(this.tabNames[event.index]);
   }
 
   openApiDocs() {

@@ -1,11 +1,13 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { ActivatedRoute } from '@angular/router';
 import { QuotationsService } from '../quotations.service';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-quotation-analytics-page',
@@ -15,16 +17,19 @@ import { forkJoin } from 'rxjs';
     MatCardModule,
     MatButtonModule,
     MatIconModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MatTooltipModule
   ],
   template: `
     <div class="analytics-container">
       <div class="analytics-header">
-        <h2>Quotation Analytics & Overview</h2>
+        <div>
+          <h2>Quotation Analytics & Overview</h2>
+          <p class="last-updated" *ngIf="lastUpdated()">Last updated: {{ lastUpdated() | date:'short' }}</p>
+        </div>
         <div class="header-actions">
-           <button mat-raised-button color="primary" (click)="loadData()">
-            <mat-icon>refresh</mat-icon>
-            Refresh Data
+           <button mat-icon-button (click)="refreshAnalytics()" [disabled]="loading()" matTooltip="Refresh Analytics">
+            <mat-icon [class.spinning]="loading()">refresh</mat-icon>
           </button>
         </div>
       </div>
@@ -192,10 +197,28 @@ import { forkJoin } from 'rxjs';
       margin-bottom: 24px;
     }
     .analytics-header h2 {
-      margin: 0;
+      margin: 0 0 4px 0;
       font-size: 24px;
       font-weight: 600;
       color: var(--theme-on-surface);
+    }
+    .last-updated {
+      margin: 0;
+      font-size: 12px;
+      color: #999;
+    }
+    .header-actions button {
+      transition: transform 0.3s ease;
+    }
+    .header-actions button:active {
+      transform: rotate(180deg);
+    }
+    .spinning {
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
     }
     
     .stats-grid {
@@ -376,10 +399,15 @@ import { forkJoin } from 'rxjs';
     .mt-4 { margin-top: 24px; }
   `]
 })
-export class QuotationAnalyticsPageComponent implements OnInit {
+export class QuotationAnalyticsPageComponent implements OnInit, OnDestroy {
   private quotationService = inject(QuotationsService);
+  private route = inject(ActivatedRoute);
   
   loading = signal(true);
+  lastUpdated = signal<Date | null>(null);
+  private queryParamsSubscription?: Subscription;
+  private currentTab = '';
+  
   analytics = signal({
     totalEnquiries: 0,
     newEnquiries: 0,
@@ -397,6 +425,29 @@ export class QuotationAnalyticsPageComponent implements OnInit {
 
   ngOnInit() {
     this.loadData();
+    
+    // Subscribe to query params to detect tab changes
+    this.queryParamsSubscription = this.route.queryParams.subscribe(params => {
+      const tab = params['tab'];
+      // If we're switching TO the analytics tab, refresh the data
+      if (tab === 'analytics' && this.currentTab !== 'analytics') {
+        console.log('Switched to analytics tab, refreshing data...');
+        this.loadData();
+      }
+      this.currentTab = tab || '';
+    });
+  }
+
+  ngOnDestroy() {
+    // Clean up subscription
+    if (this.queryParamsSubscription) {
+      this.queryParamsSubscription.unsubscribe();
+    }
+  }
+
+  refreshAnalytics() {
+    console.log('Manual refresh triggered');
+    this.loadData();
   }
 
   loadData() {
@@ -409,6 +460,7 @@ export class QuotationAnalyticsPageComponent implements OnInit {
     }).subscribe({
       next: (data) => {
         this.processData(data);
+        this.lastUpdated.set(new Date());
         this.loading.set(false);
       },
       error: (err) => {

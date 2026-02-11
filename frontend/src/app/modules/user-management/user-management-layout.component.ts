@@ -6,6 +6,8 @@ import { MatMenuModule } from '@angular/material/menu';
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { NavbarComponent } from '../../components/navbar.component';
 import { BottomNavbarComponent } from '../../components/bottom-navbar.component';
+import { BreadcrumbComponent } from '../../components/breadcrumb.component';
+import { BreadcrumbService } from '../../services/breadcrumb.service';
 import { AuthService } from '../../services/auth.service';
 import { filter } from 'rxjs/operators';
 
@@ -20,6 +22,7 @@ import { filter } from 'rxjs/operators';
     RouterOutlet,
     NavbarComponent,
     BottomNavbarComponent,
+    BreadcrumbComponent,
   ],
   template: `
     <app-navbar></app-navbar>
@@ -28,11 +31,7 @@ import { filter } from 'rxjs/operators';
       <div class="page-header">
         <div class="header-content">
           <div>
-            <nav class="breadcrumb">
-              <span>Modules</span>
-              <mat-icon>chevron_right</mat-icon>
-              <span class="current">User Management</span>
-            </nav>
+            <app-breadcrumb></app-breadcrumb>
             <h1>User Management</h1>
             <p class="subtitle">Manage users, roles, and permissions</p>
           </div>
@@ -108,18 +107,6 @@ import { filter } from 'rxjs/operators';
         gap: 16px;
       }
 
-      .breadcrumb {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 0.9rem;
-        margin-bottom: 8px;
-        color: color-mix(in srgb, var(--theme-on-surface) 60%, transparent);
-      }
-      .breadcrumb .current {
-        color: var(--theme-on-surface);
-      }
-
       h1 {
         margin: 0 0 6px;
         font-weight: 600;
@@ -158,8 +145,10 @@ import { filter } from 'rxjs/operators';
 export class UserManagementLayoutComponent {
   private router = inject(Router);
   private authService = inject(AuthService);
+  private breadcrumbService = inject(BreadcrumbService);
 
   selectedTab = 0;
+  private tabNames = ['Users', 'Roles', 'Permissions', 'Analytics'];
 
   ngOnInit() {
     console.log('UserManagementLayoutComponent initialized');
@@ -173,6 +162,10 @@ export class UserManagementLayoutComponent {
     this.updateSelectedTab(this.router.url);
   }
 
+  ngOnDestroy() {
+    this.breadcrumbService.clearContext();
+  }
+
   updateSelectedTab(url: string) {
     if (url.includes('/roles')) {
       this.selectedTab = 1;
@@ -183,6 +176,7 @@ export class UserManagementLayoutComponent {
     } else {
       this.selectedTab = 0;
     }
+    this.breadcrumbService.setContext(this.tabNames[this.selectedTab]);
   }
 
   onTabChange(index: number) {
@@ -190,6 +184,7 @@ export class UserManagementLayoutComponent {
     if (routes[index]) {
       this.router.navigate(['/modules/user-management', routes[index]]);
     }
+    this.breadcrumbService.setContext(this.tabNames[index]);
   }
 
   openApiDocs() {

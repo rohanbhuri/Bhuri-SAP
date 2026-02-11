@@ -597,12 +597,14 @@ body.dark-theme {
 
 /* Dialog Box Global Styles */
 .mat-mdc-dialog-container {
-  max-width: 95vw !important;
+  min-width: 50vw;
+  max-width: 50vw !important;
   width: auto !important;
 }
 
 .mat-mdc-dialog-container .mdc-dialog__surface {
-  max-width: 95vw !important;
+  min-width: 50vw;
+  max-width: 50vw !important;
   width: auto !important;
 }
 
@@ -610,4 +612,32 @@ body.dark-theme {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
+}
+
+/* Quill Editor Styles */
+@import 'quill/dist/quill.snow.css';
+
+.quill-editor .ql-editor {
+  min-height: 300px;
+  font-family: inherit !important;
+}
+
+/* Fix Quill tooltip positioning */
+.ql-tooltip {
+  z-index: 9999 !important;
+  left: 0 !important;
+  transform: translateX(0) !important;
+}
+
+.ql-tooltip.ql-editing {
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+}
+
+.ql-container {
+  overflow: visible !important;
+}
+
+.ql-editor {
+  overflow-y: auto !important;
 }

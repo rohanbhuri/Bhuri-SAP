@@ -59,6 +59,10 @@ export class CmsService {
         return this.http.delete<void>(`${this.apiUrl}/blogs/${id}`);
     }
 
+    toggleBlogFeatured(id: string): Observable<any> {
+        return this.http.put<any>(`${this.apiUrl}/blogs/${id}/toggle-featured`, {});
+    }
+
     // ===== MENUS =====
     getMenus(): Observable<any[]> {
         return this.http.get<any[]>(`${this.apiUrl}/menus`);
@@ -82,5 +86,39 @@ export class CmsService {
 
     deleteMenu(id: string): Observable<void> {
         return this.http.delete<void>(`${this.apiUrl}/menus/${id}`);
+    }
+
+    // ===== NEWS & MEDIA =====
+    getNewsMedia(): Observable<any[]> {
+        return this.http.get<any[]>(`${this.apiUrl}/news-media`);
+    }
+
+    getNewsMediaItem(id: string): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/news-media/${id}`);
+    }
+
+    getNewsMediaBySlug(slug: string): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/news-media/slug/${slug}`);
+    }
+
+    createNewsMedia(newsMedia: any): Observable<any> {
+        return this.http.post<any>(`${this.apiUrl}/news-media`, newsMedia);
+    }
+
+    updateNewsMedia(id: string, newsMedia: any): Observable<any> {
+        return this.http.put<any>(`${this.apiUrl}/news-media/${id}`, newsMedia);
+    }
+
+    deleteNewsMedia(id: string): Observable<void> {
+        return this.http.delete<void>(`${this.apiUrl}/news-media/${id}`);
+    }
+
+    toggleNewsMediaFeatured(id: string): Observable<any> {
+        return this.http.put<any>(`${this.apiUrl}/news-media/${id}/toggle-featured`, {});
+    }
+
+    // Analytics
+    getAnalytics(): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/analytics`);
     }
 }

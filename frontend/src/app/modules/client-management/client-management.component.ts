@@ -6,6 +6,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
 import { NavbarComponent } from '../../components/navbar.component';
 import { BottomNavbarComponent } from '../../components/bottom-navbar.component';
+import { BreadcrumbComponent } from '../../components/breadcrumb.component';
+import { BreadcrumbService } from '../../services/breadcrumb.service';
 import { RequestLoginListComponent } from './components/request-login-list.component';
 import { ClientsListComponent } from './components/clients-list.component';
 import { ContactUsComponent } from './pages/contact-us.component';
@@ -21,6 +23,7 @@ import { AnalyticsPageComponent } from './pages/analytics-page.component';
     MatMenuModule,
     NavbarComponent,
     BottomNavbarComponent,
+    BreadcrumbComponent,
     RequestLoginListComponent,
     ClientsListComponent,
     ContactUsComponent,
@@ -32,11 +35,7 @@ import { AnalyticsPageComponent } from './pages/analytics-page.component';
       <div class="page-header">
         <div class="header-content">
           <div>
-            <div class="breadcrumb">
-              <span>Modules</span>
-              <mat-icon>chevron_right</mat-icon>
-              <span>Client Management</span>
-            </div>
+            <app-breadcrumb></app-breadcrumb>
             <h1 class="page-title">Client Management</h1>
             <p class="page-subtitle">Manage client requests and accounts</p>
           </div>
@@ -95,15 +94,6 @@ import { AnalyticsPageComponent } from './pages/analytics-page.component';
       gap: 16px;
     }
 
-    .breadcrumb {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.875rem;
-      color: #6b7280;
-      margin-bottom: 12px;
-    }
-
     .breadcrumb mat-icon {
       font-size: 18px;
       width: 18px;
@@ -111,7 +101,7 @@ import { AnalyticsPageComponent } from './pages/analytics-page.component';
     }
 
     .page-title {
-      font-size: 2rem;
+      font-size: 1.2rem;
       font-weight: 600;
       margin: 0 0 8px 0;
       color: #111827;
@@ -147,17 +137,26 @@ import { AnalyticsPageComponent } from './pages/analytics-page.component';
 export class ClientManagementComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private breadcrumbService = inject(BreadcrumbService);
   
   selectedTabIndex = 0;
   private tabs = ['requests', 'clients', 'contact-us', 'analytics'];
+  private tabNames = ['Request Login Credentials', 'Clients', 'Contact Us', 'Analytics'];
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
       const tab = params['tab'];
       if (tab && this.tabs.includes(tab)) {
         this.selectedTabIndex = this.tabs.indexOf(tab);
+        this.breadcrumbService.setContext(this.tabNames[this.selectedTabIndex]);
+      } else {
+        this.breadcrumbService.setContext(this.tabNames[0]);
       }
     });
+  }
+
+  ngOnDestroy() {
+    this.breadcrumbService.clearContext();
   }
 
   onTabChange(event: any) {
@@ -167,6 +166,7 @@ export class ClientManagementComponent implements OnInit {
       queryParams: { tab: tabName },
       queryParamsHandling: 'merge'
     });
+    this.breadcrumbService.setContext(this.tabNames[event.index]);
   }
 
   openApiDocs() {

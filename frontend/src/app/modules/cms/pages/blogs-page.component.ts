@@ -1,10 +1,15 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatDialog } from '@angular/material/dialog';
 import { CmsService } from '../cms.service';
 import { BlogDialogComponent } from '../dialogs/blog-dialog.component';
@@ -14,11 +19,16 @@ import { BlogDialogComponent } from '../dialogs/blog-dialog.component';
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     MatTableModule,
     MatButtonModule,
     MatIconModule,
     MatMenuModule,
-    MatChipsModule
+    MatChipsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatPaginatorModule
   ],
   template: `
     <div class="tab-content">
@@ -29,9 +39,40 @@ import { BlogDialogComponent } from '../dialogs/blog-dialog.component';
           Add Blog Post
         </button>
       </div>
+
+      <div class="filters-section">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Search blogs</mat-label>
+          <input matInput [(ngModel)]="searchTerm" (input)="applyFilters()" placeholder="Search by title...">
+          <mat-icon matPrefix>search</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Status</mat-label>
+          <mat-select [(ngModel)]="statusFilter" (selectionChange)="applyFilters()">
+            <mat-option value="all">All</mat-option>
+            <mat-option value="published">Published</mat-option>
+            <mat-option value="draft">Draft</mat-option>
+            <mat-option value="archived">Archived</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <button mat-icon-button (click)="clearFilters()" matTooltip="Clear filters">
+          <mat-icon>clear</mat-icon>
+        </button>
+      </div>
       
       <div class="table-container">
-        <table mat-table [dataSource]="blogs()" class="cms-table">
+        <table mat-table [dataSource]="paginatedBlogs()" class="cms-table">
+          <ng-container matColumnDef="image">
+            <th mat-header-cell *matHeaderCellDef>Image</th>
+            <td mat-cell *matCellDef="let blog">
+              <div class="blog-image">
+                <img [src]="blog.featuredImage || 'assets/placeholder.png'" [alt]="blog.title">
+              </div>
+            </td>
+          </ng-container>
+
           <ng-container matColumnDef="title">
             <th mat-header-cell *matHeaderCellDef>Title</th>
             <td mat-cell *matCellDef="let blog">
@@ -119,9 +160,60 @@ import { BlogDialogComponent } from '../dialogs/blog-dialog.component';
           <tr mat-row *matRowDef="let row; columns: blogColumns"></tr>
         </table>
       </div>
+
+      <mat-paginator
+        [length]="filteredBlogs().length"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="[5, 10, 25, 50]"
+        (page)="onPageChange($event)"
+        showFirstLastButtons>
+      </mat-paginator>
     </div>
   `,
   styles: [`
+    .tab-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 2rem 2rem 1.5rem 2rem;
+      background: white;
+      margin: 0;
+    }
+    .tab-header h2 {
+      margin: 0;
+      font-size: 1.75rem;
+      font-weight: 600;
+    }
+    .filters-section {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-end;
+      padding: 2rem;
+      background: white;
+      border-bottom: 1px solid #e8e8e8;
+    }
+    .search-field {
+      flex: 1;
+      max-width: 500px;
+    }
+    .filter-field {
+      min-width: 200px;
+    }
+    .table-container {
+      background: white;
+    }
+    .blog-image {
+      width: 100px;
+      height: 100px;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .blog-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
     .blog-info {
       display: flex;
       align-items: center;
@@ -166,7 +258,14 @@ export class BlogsPageComponent implements OnInit {
   private cmsService = inject(CmsService);
 
   blogs = signal<any[]>([]);
-  blogColumns = ['title', 'status', 'tags', 'seo', 'published', 'actions'];
+  filteredBlogs = signal<any[]>([]);
+  paginatedBlogs = signal<any[]>([]);
+  blogColumns = ['image', 'title', 'status', 'tags', 'seo', 'published', 'actions'];
+  
+  searchTerm = '';
+  statusFilter = 'all';
+  pageSize = 10;
+  pageIndex = 0;
 
   ngOnInit() {
     this.loadBlogs();
@@ -175,7 +274,46 @@ export class BlogsPageComponent implements OnInit {
   loadBlogs() {
     this.cmsService.getBlogs().subscribe(blogs => {
       this.blogs.set(blogs);
+      this.applyFilters();
     });
+  }
+
+  applyFilters() {
+    let filtered = this.blogs();
+
+    if (this.searchTerm) {
+      const term = this.searchTerm.toLowerCase();
+      filtered = filtered.filter(blog => 
+        blog.title?.toLowerCase().includes(term) ||
+        blog.excerpt?.toLowerCase().includes(term)
+      );
+    }
+
+    if (this.statusFilter !== 'all') {
+      filtered = filtered.filter(blog => blog.status === this.statusFilter);
+    }
+
+    this.filteredBlogs.set(filtered);
+    this.pageIndex = 0;
+    this.updatePagination();
+  }
+
+  clearFilters() {
+    this.searchTerm = '';
+    this.statusFilter = 'all';
+    this.applyFilters();
+  }
+
+  onPageChange(event: PageEvent) {
+    this.pageSize = event.pageSize;
+    this.pageIndex = event.pageIndex;
+    this.updatePagination();
+  }
+
+  updatePagination() {
+    const start = this.pageIndex * this.pageSize;
+    const end = start + this.pageSize;
+    this.paginatedBlogs.set(this.filteredBlogs().slice(start, end));
   }
 
   getStatusColor(status: string): string {

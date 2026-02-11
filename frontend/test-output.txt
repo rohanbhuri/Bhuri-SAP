@@ -1,0 +1,166 @@
+
+> bhuri-sap-frontend@0.0.0 test
+> ng test
+
+❯ Building...
+✔ Building...
+Initial chunk files                              | Names                                         |  Raw size
+chunk-S5YEWOSK.js                                | -                                             |   2.45 MB | 
+polyfills.js                                     | polyfills                                     | 943.97 kB | 
+spec-app-app.spec.js                             | spec-app-app.spec                             | 647.93 kB | 
+chunk-PPGSDIHY.js                                | -                                             | 348.56 kB | 
+chunk-ECNNNQ5B.js                                | -                                             | 145.96 kB | 
+styles.css                                       | styles                                        |  40.45 kB | 
+test_main.js                                     | test_main                                     |  21.76 kB | 
+spec-app-components-breadcrumb.component.spec.js | spec-app-components-breadcrumb.component.spec |   5.54 kB | 
+spec-app-services-breadcrumb.service.spec.js     | spec-app-services-breadcrumb.service.spec     |   4.12 kB | 
+chunk-HC6FYXML.js                                | -                                             |   3.41 kB | 
+jasmine-cleanup-0.js                             | jasmine-cleanup-0                             | 519 bytes | 
+
+                                                 | Initial total                                 |   4.61 MB
+
+Application bundle generation complete. [3.733 seconds]
+
+Watch mode enabled. Watching for file changes...
+[33m11 02 2026 05:42:20.780:WARN [karma]: [39mNo captured browser, open http://localhost:9876/
+[32m11 02 2026 05:42:20.800:INFO [karma-server]: [39mKarma v6.4.4 server started at http://localhost:9876/
+[32m11 02 2026 05:42:20.800:INFO [launcher]: [39mLaunching browsers Chrome with concurrency unlimited
+[32m11 02 2026 05:42:20.803:INFO [launcher]: [39mStarting browser Chrome
+[32m11 02 2026 05:42:22.952:INFO [Chrome 144.0.0.0 (Mac OS 10.15.7)]: [39mConnected on socket EStT-C768DcbVXLtAAAB with id 12753110
+Chrome 144.0.0.0 (Mac OS 10.15.7): Executed 0 of 16[32m SUCCESS[39m (0 secs / 0 secs)
+[1A[2KChrome 144.0.0.0 (Mac OS 10.15.7): Executed 1 of 16[32m SUCCESS[39m (0 secs / 0.007 secs)
+[1A[2KChrome 144.0.0.0 (Mac OS 10.15.7): Executed 2 of 16[32m SUCCESS[39m (0 secs / 0.009 secs)
+[1A[2KChrome 144.0.0.0 (Mac OS 10.15.7): Executed 3 of 16[32m SUCCESS[39m (0 secs / 0.01 secs)
+[1A[2KChrome 144.0.0.0 (Mac OS 10.15.7): Executed 4 of 16[32m SUCCESS[39m (0 secs / 0.011 secs)
+[1A[2KChrome 144.0.0.0 (Mac OS 10.15.7): Executed 5 of 16[32m SUCCESS[39m (0 secs / 0.011 secs)
+[1A[2KChrome 144.0.0.0 (Mac OS 10.15.7): Executed 6 of 16[32m SUCCESS[39m (0 secs / 0.011 secs)
+[1A[2KChrome 144.0.0.0 (Mac OS 10.15.7): Executed 7 of 16[32m SUCCESS[39m (0 secs / 0.012 secs)
+[1A[2KChrome 144.0.0.0 (Mac OS 10.15.7): Executed 8 of 16[32m SUCCESS[39m (0 secs / 0.014 secs)
+[1A[2KChrome 144.0.0.0 (Mac OS 10.15.7): Executed 9 of 16[32m SUCCESS[39m (0 secs / 0.039 secs)
+[1A[2KChrome 144.0.0.0 (Mac OS 10.15.7): Executed 10 of 16[32m SUCCESS[39m (0 secs / 0.042 secs)
+[1A[2KChrome 144.0.0.0 (Mac OS 10.15.7): Executed 11 of 16[32m SUCCESS[39m (0 secs / 0.044 secs)
+[1A[2KChrome 144.0.0.0 (Mac OS 10.15.7): Executed 12 of 16[32m SUCCESS[39m (0 secs / 0.046 secs)
+[1A[2KChrome 144.0.0.0 (Mac OS 10.15.7): Executed 13 of 16[32m SUCCESS[39m (0 secs / 0.047 secs)
+[1A[2KChrome 144.0.0.0 (Mac OS 10.15.7): Executed 14 of 16[32m SUCCESS[39m (0 secs / 0.048 secs)
+[1A[2K[31mChrome 144.0.0.0 (Mac OS 10.15.7) App should render title FAILED[39m
+	ɵNotFound: NG0201: No provider found for `_HttpClient`. Source: DynamicTestModule. Path: AuthService2 -> _HttpClient. Find more at https://angular.dev/errors/NG0201
+	error properties: Object({ code: -201, ngErrorCode: -201, ngErrorMessage: 'No provider found for `_HttpClient`.', ngTokenPath: [ 'AuthService2', '_HttpClient' ] })
+	ɵNotFound: NG0201: No provider found for `_HttpClient`. Source: DynamicTestModule. Path: AuthService2 -> _HttpClient. Find more at https://angular.dev/errors/NG0201
+	    at createRuntimeError (node_modules/@angular/core/fesm2022/root_effect_scheduler.mjs:895:19)
+	    at NullInjector.get (node_modules/@angular/core/fesm2022/root_effect_scheduler.mjs:1463:27)
+	    at R3Injector.get (node_modules/@angular/core/fesm2022/root_effect_scheduler.mjs:2019:33)
+	    at R3Injector.get (node_modules/@angular/core/fesm2022/root_effect_scheduler.mjs:2019:33)
+	    at R3Injector.retrieve (node_modules/@angular/core/fesm2022/root_effect_scheduler.mjs:1903:25)
+	    at injectInjectorOnly (node_modules/@angular/core/fesm2022/root_effect_scheduler.mjs:1020:39)
+	    at ɵɵinject (node_modules/@angular/core/fesm2022/root_effect_scheduler.mjs:1032:42)
+	    at inject2 (node_modules/@angular/core/fesm2022/root_effect_scheduler.mjs:1118:12)
+	    at AuthService2.<instance_members_initializer> (src/app/services/auth.service.ts:81:18)
+	    at new AuthService2 (src/app/services/auth.service.ts:91:3)
+Chrome 144.0.0.0 (Mac OS 10.15.7): Executed 15 of 16[31m (1 FAILED)[39m (0 secs / 0.367 secs)
+[1A[2K[31mChrome 144.0.0.0 (Mac OS 10.15.7) App should create the app FAILED[39m
+	ɵNotFound: NG0201: No provider found for `_HttpClient`. Source: DynamicTestModule. Path: AuthService2 -> _HttpClient. Find more at https://angular.dev/errors/NG0201
+	error properties: Object({ code: -201, ngErrorCode: -201, ngErrorMessage: 'No provider found for `_HttpClient`.', ngTokenPath: [ 'AuthService2', '_HttpClient' ] })
+	ɵNotFound: NG0201: No provider found for `_HttpClient`. Source: DynamicTestModule. Path: AuthService2 -> _HttpClient. Find more at https://angular.dev/errors/NG0201
+	    at createRuntimeError (node_modules/@angular/core/fesm2022/root_effect_scheduler.mjs:895:19)
+	    at NullInjector.get (node_modules/@angular/core/fesm2022/root_effect_scheduler.mjs:1463:27)
+	    at R3Injector.get (node_modules/@angular/core/fesm2022/root_effect_scheduler.mjs:2019:33)
+	    at R3Injector.get (node_modules/@angular/core/fesm2022/root_effect_scheduler.mjs:2019:33)
+	    at R3Injector.retrieve (node_modules/@angular/core/fesm2022/root_effect_scheduler.mjs:1903:25)
+	    at injectInjectorOnly (node_modules/@angular/core/fesm2022/root_effect_scheduler.mjs:1020:39)
+	    at ɵɵinject (node_modules/@angular/core/fesm2022/root_effect_scheduler.mjs:1032:42)
+	    at inject2 (node_modules/@angular/core/fesm2022/root_effect_scheduler.mjs:1118:12)
+	    at AuthService2.<instance_members_initializer> (src/app/services/auth.service.ts:81:18)
+	    at new AuthService2 (src/app/services/auth.service.ts:91:3)
+Chrome 144.0.0.0 (Mac OS 10.15.7): Executed 16 of 16[31m (2 FAILED)[39m (0 secs / 0.373 secs)
+[1A[2KChrome 144.0.0.0 (Mac OS 10.15.7): Executed 16 of 16[31m (2 FAILED)[39m (0.381 secs / 0.373 secs)
+[31mTOTAL: 2 FAILED, 14 SUCCESS[39m
+[1A[2K[31mChrome 144.0.0.0 (Mac OS 10.15.7) ERROR[39m
+  Some of your tests did a full page reload!
+Chrome 144.0.0.0 (Mac OS 10.15.7): Executed 16 of 16[31m (2 FAILED)[39m (0.381 secs / 0.373 secs)
+Chrome 144.0.0.0 (Mac OS 10.15.7) ERROR
+  Some of your tests did a full page reload!
+[33m11 02 2026 05:42:41.216:WARN [Chrome 144.0.0.0 (Mac OS 10.15.7)]: [39mDisconnected (0 times) Client disconnected from CONNECTED state (transport close)
+[1A[2K[31mChrome 144.0.0.0 (Mac OS 10.15.7) ERROR[39m
+  Disconnected Client disconnected from CONNECTED state (transport close)
+Chrome 144.0.0.0 (Mac OS 10.15.7): Executed 16 of 16[31m (2 FAILED)[39m (0.381 secs / 0.373 secs)
+Chrome 144.0.0.0 (Mac OS 10.15.7) ERROR
+  Disconnected Client disconnected from CONNECTED state (transport close)
+[33m11 02 2026 05:43:11.161:WARN [Chrome 144.0.0.0 (Mac OS 10.15.7)]: [39mDisconnected (1 times) , because no message in 30000 ms.
+[1A[2K[31mChrome 144.0.0.0 (Mac OS 10.15.7) ERROR[39m
+  Disconnected , because no message in 30000 ms.
+Chrome 144.0.0.0 (Mac OS 10.15.7): Executed 16 of 16[31m (2 FAILED)[39m[31m DISCONNECTED[39m (47.692 secs / 0.373 secs)
+Chrome 144.0.0.0 (Mac OS 10.15.7) ERROR
+  Disconnected , because no message in 30000 ms.
+[1A[2KChrome 144.0.0.0 (Mac OS 10.15.7): Executed 16 of 16[31m (2 FAILED)[39m[31m DISCONNECTED[39m (47.692 secs / 0.373 secs)
+❯ Building...
+✔ Building...
+Initial chunk files                              | Names                                         |  Raw size
+chunk-S5YEWOSK.js                                | -                                             |   2.45 MB | 
+polyfills.js                                     | polyfills                                     | 943.97 kB | 
+spec-app-app.spec.js                             | spec-app-app.spec                             | 647.93 kB | 
+chunk-PPGSDIHY.js                                | -                                             | 348.56 kB | 
+chunk-ECNNNQ5B.js                                | -                                             | 145.96 kB | 
+styles.css                                       | styles                                        |  40.45 kB | 
+test_main.js                                     | test_main                                     |  21.76 kB | 
+spec-app-components-breadcrumb.component.spec.js | spec-app-components-breadcrumb.component.spec |   5.54 kB | 
+spec-app-services-breadcrumb.service.spec.js     | spec-app-services-breadcrumb.service.spec     |   4.12 kB | 
+chunk-HC6FYXML.js                                | -                                             |   3.41 kB | 
+jasmine-cleanup-0.js                             | jasmine-cleanup-0                             | 519 bytes | 
+
+                                                 | Initial total                                 |   4.61 MB
+
+Application bundle generation complete. [3.829 seconds]
+
+Watch mode enabled. Watching for file changes...
+[33m11 02 2026 05:43:23.539:WARN [karma]: [39mNo captured browser, open http://localhost:9876/
+[32m11 02 2026 05:43:23.540:INFO [karma-server]: [39mKarma v6.4.4 server started at http://localhost:9876/
+[32m11 02 2026 05:43:23.541:INFO [launcher]: [39mLaunching browsers Chrome with concurrency unlimited
+[32m11 02 2026 05:43:23.545:INFO [launcher]: [39mStarting browser Chrome
+[32m11 02 2026 05:43:25.584:INFO [Chrome 144.0.0.0 (Mac OS 10.15.7)]: [39mConnected on socket l1v_-LwpQrvhlnYXAAAD with id 38284292
+Chrome 144.0.0.0 (Mac OS 10.15.7): Executed 0 of 16[32m SUCCESS[39m (0 secs / 0 secs)
+[1A[2KChrome 144.0.0.0 (Mac OS 10.15.7): Executed 1 of 16[32m SUCCESS[39m (0 secs / 0.005 secs)
+[1A[2KChrome 144.0.0.0 (Mac OS 10.15.7): Executed 2 of 16[32m SUCCESS[39m (0 secs / 0.006 secs)
+[1A[2KChrome 144.0.0.0 (Mac OS 10.15.7): Executed 3 of 16[32m SUCCESS[39m (0 secs / 0.007 secs)
+[1A[2KChrome 144.0.0.0 (Mac OS 10.15.7): Executed 4 of 16[32m SUCCESS[39m (0 secs / 0.008 secs)
+[1A[2KChrome 144.0.0.0 (Mac OS 10.15.7): Executed 5 of 16[32m SUCCESS[39m (0 secs / 0.009 secs)
+[1A[2KChrome 144.0.0.0 (Mac OS 10.15.7): Executed 6 of 16[32m SUCCESS[39m (0 secs / 0.01 secs)
+[1A[2KChrome 144.0.0.0 (Mac OS 10.15.7): Executed 7 of 16[32m SUCCESS[39m (0 secs / 0.011 secs)
+[1A[2KChrome 144.0.0.0 (Mac OS 10.15.7): Executed 8 of 16[32m SUCCESS[39m (0 secs / 0.012 secs)
+[1A[2K[31mChrome 144.0.0.0 (Mac OS 10.15.7) App should render title FAILED[39m
+	ɵNotFound: NG0201: No provider found for `_HttpClient`. Source: DynamicTestModule. Path: AuthService2 -> _HttpClient. Find more at https://angular.dev/errors/NG0201
+	error properties: Object({ code: -201, ngErrorCode: -201, ngErrorMessage: 'No provider found for `_HttpClient`.', ngTokenPath: [ 'AuthService2', '_HttpClient' ] })
+	ɵNotFound: NG0201: No provider found for `_HttpClient`. Source: DynamicTestModule. Path: AuthService2 -> _HttpClient. Find more at https://angular.dev/errors/NG0201
+	    at createRuntimeError (node_modules/@angular/core/fesm2022/root_effect_scheduler.mjs:895:19)
+	    at NullInjector.get (node_modules/@angular/core/fesm2022/root_effect_scheduler.mjs:1463:27)
+	    at R3Injector.get (node_modules/@angular/core/fesm2022/root_effect_scheduler.mjs:2019:33)
+	    at R3Injector.get (node_modules/@angular/core/fesm2022/root_effect_scheduler.mjs:2019:33)
+	    at R3Injector.retrieve (node_modules/@angular/core/fesm2022/root_effect_scheduler.mjs:1903:25)
+	    at injectInjectorOnly (node_modules/@angular/core/fesm2022/root_effect_scheduler.mjs:1020:39)
+	    at ɵɵinject (node_modules/@angular/core/fesm2022/root_effect_scheduler.mjs:1032:42)
+	    at inject2 (node_modules/@angular/core/fesm2022/root_effect_scheduler.mjs:1118:12)
+	    at AuthService2.<instance_members_initializer> (src/app/services/auth.service.ts:81:18)
+	    at new AuthService2 (src/app/services/auth.service.ts:91:3)
+Chrome 144.0.0.0 (Mac OS 10.15.7): Executed 9 of 16[31m (1 FAILED)[39m (0 secs / 0.261 secs)
+[1A[2K[31mChrome 144.0.0.0 (Mac OS 10.15.7) App should create the app FAILED[39m
+	ɵNotFound: NG0201: No provider found for `_HttpClient`. Source: DynamicTestModule. Path: AuthService2 -> _HttpClient. Find more at https://angular.dev/errors/NG0201
+	error properties: Object({ code: -201, ngErrorCode: -201, ngErrorMessage: 'No provider found for `_HttpClient`.', ngTokenPath: [ 'AuthService2', '_HttpClient' ] })
+	ɵNotFound: NG0201: No provider found for `_HttpClient`. Source: DynamicTestModule. Path: AuthService2 -> _HttpClient. Find more at https://angular.dev/errors/NG0201
+	    at createRuntimeError (node_modules/@angular/core/fesm2022/root_effect_scheduler.mjs:895:19)
+	    at NullInjector.get (node_modules/@angular/core/fesm2022/root_effect_scheduler.mjs:1463:27)
+	    at R3Injector.get (node_modules/@angular/core/fesm2022/root_effect_scheduler.mjs:2019:33)
+	    at R3Injector.get (node_modules/@angular/core/fesm2022/root_effect_scheduler.mjs:2019:33)
+	    at R3Injector.retrieve (node_modules/@angular/core/fesm2022/root_effect_scheduler.mjs:1903:25)
+	    at injectInjectorOnly (node_modules/@angular/core/fesm2022/root_effect_scheduler.mjs:1020:39)
+	    at ɵɵinject (node_modules/@angular/core/fesm2022/root_effect_scheduler.mjs:1032:42)
+	    at inject2 (node_modules/@angular/core/fesm2022/root_effect_scheduler.mjs:1118:12)
+	    at AuthService2.<instance_members_initializer> (src/app/services/auth.service.ts:81:18)
+	    at new AuthService2 (src/app/services/auth.service.ts:91:3)
+Chrome 144.0.0.0 (Mac OS 10.15.7): Executed 10 of 16[31m (2 FAILED)[39m (0 secs / 0.264 secs)
+[1A[2KChrome 144.0.0.0 (Mac OS 10.15.7): Executed 11 of 16[31m (2 FAILED)[39m (0 secs / 0.28 secs)
+[1A[2KChrome 144.0.0.0 (Mac OS 10.15.7): Executed 12 of 16[31m (2 FAILED)[39m (0 secs / 0.283 secs)
+[1A[2KChrome 144.0.0.0 (Mac OS 10.15.7): Executed 13 of 16[31m (2 FAILED)[39m (0 secs / 0.285 secs)
+[1A[2KChrome 144.0.0.0 (Mac OS 10.15.7): Executed 14 of 16[31m (2 FAILED)[39m (0 secs / 0.287 secs)
+[1A[2KChrome 144.0.0.0 (Mac OS 10.15.7): Executed 15 of 16[31m (2 FAILED)[39m (0 secs / 0.289 secs)
+[1A[2KChrome 144.0.0.0 (Mac OS 10.15.7): Executed 16 of 16[31m (2 FAILED)[39m (0 secs / 0.29 secs)
+[1A[2KChrome 144.0.0.0 (Mac OS 10.15.7): Executed 16 of 16[31m (2 FAILED)[39m (0.298 secs / 0.29 secs)
+[31mTOTAL: 2 FAILED, 14 SUCCESS[39m

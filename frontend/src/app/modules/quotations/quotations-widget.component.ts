@@ -125,7 +125,7 @@ import { forkJoin } from 'rxjs';
     }
 
     .stat-item mat-icon {
-      font-size: 28px;
+      font-size: 1.2rem;
       width: 28px;
       height: 28px;
       color: var(--theme-primary);

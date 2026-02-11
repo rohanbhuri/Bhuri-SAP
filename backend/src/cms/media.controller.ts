@@ -1,12 +1,14 @@
-import { Controller, Post, UseInterceptors, UploadedFile, BadRequestException, Get, Param, Res } from '@nestjs/common';
+import { Controller, Post, UseInterceptors, UploadedFile, BadRequestException, Get, Param, Res, UseGuards } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { Response } from 'express';
 import * as fs from 'fs';
 import { Public } from '../decorators/public.decorator';
+import { ApiKeyGuard } from '../guards/api-key.guard';
 
 @Controller('media')
+@UseGuards(ApiKeyGuard)
 export class MediaController {
 
     @Post('upload')

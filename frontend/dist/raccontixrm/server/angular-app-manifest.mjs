@@ -7,37 +7,39 @@ export default {
   routes: undefined,
   entryPointToBrowserMapping: {
   "src/app/modules/quotations/quotations.routes.ts": [
-    "chunk-PWVUJ2X5.js"
+    "chunk-DI2TBVLF.js"
   ],
   "src/app/modules/client-management/pages/api-docs-page.component.ts": [
-    "chunk-FX3PNPJD.js"
+    "chunk-VPJU6I5U.js"
   ],
   "src/app/modules/client-management/client-management.routes.ts": [
-    "chunk-VPX2LE6U.js"
+    "chunk-OWJLN4UG.js"
   ],
   "src/app/modules/project-timesheet/pages/timesheets.page.ts": [
     "chunk-UKZU3FIC.js"
   ],
   "src/app/modules/project-timesheet/pages/reports.page.ts": [
-    "chunk-2X67WZEO.js"
+    "chunk-KIF3BURC.js"
   ],
   "src/app/modules/project-timesheet/pages/analytics.page.ts": [
     "chunk-ALQ6LBJM.js"
   ],
   "src/app/modules/project-timesheet/project-timesheet.routes.ts": [
-    "chunk-TFCX4RTN.js"
+    "chunk-BNU2VBRP.js"
   ],
   "src/app/modules/order-management/order-management.routes.ts": [
-    "chunk-EYPKGB3G.js"
+    "chunk-YAKTFRTC.js"
   ],
   "src/app/modules/finance/finance.routes.ts": [
-    "chunk-SLE3ZY5I.js"
+    "chunk-SCI33MFQ.js"
   ],
   "src/app/modules/catalogue/catalogue.routes.ts": [
-    "chunk-N6DERG3M.js"
+    "chunk-VJ5SGLE3.js",
+    "chunk-EBMDXCWA.js"
   ],
   "src/app/modules/cms/cms.routes.ts": [
-    "chunk-62PZISOO.js"
+    "chunk-U7MDCMCL.js",
+    "chunk-EBMDXCWA.js"
   ],
   "src/app/modules/project-tracking/pages/gantt.page.ts": [
     "chunk-5I4QVDQW.js"
@@ -55,7 +57,7 @@ export default {
     "chunk-6ZETEGB5.js"
   ],
   "src/app/modules/project-tracking/project-tracking.routes.ts": [
-    "chunk-JLABADRX.js"
+    "chunk-LYZOTB55.js"
   ],
   "src/app/modules/project-timesheet/pages/gantt.page.ts": [
     "chunk-SJRRUTLI.js"
@@ -64,13 +66,13 @@ export default {
     "chunk-5VACFFKV.js"
   ],
   "src/app/modules/crm/crm.routes.ts": [
-    "chunk-7JFHSPEE.js"
+    "chunk-226KRPTL.js"
   ],
   "src/app/modules/my-organizations/my-organizations.routes.ts": [
-    "chunk-F4Q7IHA7.js"
+    "chunk-AAQI2D65.js"
   ],
   "src/app/modules/hr-management/hr-management.routes.ts": [
-    "chunk-DQS6JDBB.js"
+    "chunk-GHZF5CVY.js"
   ],
   "src/app/modules/projects-management/pages/projects.page.ts": [
     "chunk-FRBYP2X7.js"
@@ -79,28 +81,28 @@ export default {
     "chunk-5WPFTFCQ.js"
   ],
   "src/app/modules/projects-management/pages/analytics.page.ts": [
-    "chunk-2IHWBJJW.js"
+    "chunk-LIBPJQOA.js"
   ],
   "src/app/modules/projects-management/pages/gantt.page.ts": [
     "chunk-NQXAQQY6.js"
   ],
   "src/app/modules/projects-management/projects-management.routes.ts": [
-    "chunk-FXSERNFK.js"
+    "chunk-IMPFORV3.js"
   ],
   "src/app/modules/user-management/pages/permissions.component.ts": [
     "chunk-HAHCDAR5.js"
   ],
   "src/app/modules/user-management/pages/api-docs-page.component.ts": [
-    "chunk-5F7QAQCP.js"
+    "chunk-ZHIWQ252.js"
   ],
   "src/app/modules/user-management/pages/analytics-page.component.ts": [
-    "chunk-5BXODEBF.js"
+    "chunk-PR23OAT5.js"
   ],
   "src/app/modules/user-management/user-management.routes.ts": [
-    "chunk-Q3VGTWSR.js"
+    "chunk-CBLUJFCN.js"
   ],
   "src/app/modules/organization-management/organization-management-layout.component.ts": [
-    "chunk-EIVUXCD6.js"
+    "chunk-CAMUETOC.js"
   ],
   "src/app/modules/organization-management/pages/organizations.component.ts": [
     "chunk-34CGEJJ4.js"
@@ -109,28 +111,28 @@ export default {
     "chunk-2SCWTYNL.js"
   ],
   "src/app/modules/organization-management/organization-management.routes.ts": [
-    "chunk-TQRDXXDY.js"
+    "chunk-BPM2MEGD.js"
   ],
   "src/app/modules/hr-management/pages/performance.page.ts": [
-    "chunk-GC4MRWEQ.js"
+    "chunk-65HGVVOC.js"
   ],
   "src/app/modules/hr-management/pages/compliance.page.ts": [
-    "chunk-L4XBTHTD.js"
+    "chunk-MWPOCYKU.js"
   ],
   "src/app/modules/hr-management/pages/documents.page.ts": [
-    "chunk-HW3KPHXH.js"
+    "chunk-AUJPHKEC.js"
   ],
   "src/app/modules/hr-management/pages/assets.page.ts": [
-    "chunk-WD2A7SII.js"
+    "chunk-LEOE5POM.js"
   ],
   "src/app/modules/hr-management/pages/analytics.page.ts": [
-    "chunk-ZRUDJADL.js"
+    "chunk-5JBHE37W.js"
   ],
   "src/app/modules/user-management/user-management-layout.component.ts": [
-    "chunk-W655NVAQ.js"
+    "chunk-OLH6WOVF.js"
   ],
   "src/app/modules/user-management/pages/users.component.ts": [
-    "chunk-EKTEFWUC.js"
+    "chunk-X5SZLAJG.js"
   ],
   "src/app/modules/user-management/pages/roles.component.ts": [
     "chunk-TMZBYS5R.js"
@@ -142,24 +144,24 @@ export default {
     "chunk-RAJUJAWB.js"
   ],
   "src/app/modules/my-organizations/my-organizations.component.ts": [
-    "chunk-TQADDWCK.js"
+    "chunk-HX57P3ZU.js"
   ],
   "src/app/modules/hr-management/pages/employees.page.ts": [
     "chunk-JOMDXPLG.js"
   ],
   "src/app/modules/hr-management/pages/attendance.page.ts": [
-    "chunk-GQYKSQC5.js"
+    "chunk-2SIIMPVD.js"
   ],
   "src/app/modules/hr-management/pages/leaves.page.ts": [
-    "chunk-SEZSNKHX.js"
+    "chunk-OIYEWPHS.js"
   ],
   "src/app/modules/hr-management/pages/payroll.page.ts": [
-    "chunk-4YMQGYDA.js"
+    "chunk-R4VCSJAN.js"
   ]
 },
   assets: {
-    'index.csr.html': {size: 6921, hash: '13bfe896b365415152cee8c956d7f4abe59db0bcef6ef753ce378510ec851133', text: () => import('./assets-chunks/index_csr_html.mjs').then(m => m.default)},
-    'index.server.html': {size: 6172, hash: 'c102fdba55315aad6a79c1ba03d112d5d0711ed601021bbbb526d68bf4dee01d', text: () => import('./assets-chunks/index_server_html.mjs').then(m => m.default)},
-    'styles-BHSA56TR.css': {size: 34529, hash: 'kAM+G14VA10', text: () => import('./assets-chunks/styles-BHSA56TR_css.mjs').then(m => m.default)}
+    'index.csr.html': {size: 6921, hash: '9a9902d69aa3c6a999e52941c02f3f4b3db74889e17c5ebb5de5dde14d0df7e9', text: () => import('./assets-chunks/index_csr_html.mjs').then(m => m.default)},
+    'index.server.html': {size: 6172, hash: '1f9a30061fba8cbd0ac6abe2537e30b9fd1b13f089e79439b3cc922eda53015a', text: () => import('./assets-chunks/index_server_html.mjs').then(m => m.default)},
+    'styles-WXOW2UJF.css': {size: 34857, hash: '4tVdAiTxIrw', text: () => import('./assets-chunks/styles-WXOW2UJF_css.mjs').then(m => m.default)}
   },
 };

@@ -24,6 +24,7 @@ export interface Organization {
 import { Router } from '@angular/router';
 import { NavbarComponent } from '../../components/navbar.component';
 import { BottomNavbarComponent } from '../../components/bottom-navbar.component';
+import { BreadcrumbComponent } from '../../components/breadcrumb.component';
 import { BrandConfigService } from '../../services/brand-config.service';
 import { ModulesService, AppModuleInfo } from '../../services/modules.service';
 import {
@@ -84,6 +85,7 @@ interface DashboardWidget {
     FormsModule,
     NavbarComponent,
     BottomNavbarComponent,
+    BreadcrumbComponent,
     CdkDropList,
     CdkDrag,
     CdkDragHandle,
@@ -115,29 +117,10 @@ interface DashboardWidget {
 
     <div class="page">
       <div class="page-header" aria-label="Dashboard header">
-        <nav class="breadcrumb" aria-label="Breadcrumb">
-          <span>Pages</span>
-          <mat-icon aria-hidden="true">chevron_right</mat-icon>
-          <span class="current">Dashboard</span>
-        </nav>
+        
         <div class="header-controls">
-          <mat-form-field class="view-selector">
-            <mat-select 
-              [ngModel]="selectedContext()" 
-              (ngModelChange)="onContextChange($event)">
-              <mat-option value="personal">
-                <mat-icon>person</mat-icon>
-                Personal
-              </mat-option>
-              @for (org of organizations(); track org._id || org.id) {
-                <mat-option [value]="org._id || org.id">
-                  <mat-icon>business</mat-icon>
-                  {{ org.name }}
-                </mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
-          <h1>Dashboard</h1>
+        <app-breadcrumb></app-breadcrumb>
+          <!-- Organization/Personal switcher hidden as per requirement -->
           <div class="dashboard-menu">
             <button
               mat-icon-button

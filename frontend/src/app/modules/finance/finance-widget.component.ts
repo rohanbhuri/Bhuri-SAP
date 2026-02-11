@@ -215,7 +215,7 @@ import { FinanceService } from './finance.service';
     }
     
     :host-context([data-view="expanded"]) .summary-value {
-      font-size: 2rem;
+      font-size: 1.2rem;
     }
     
     .revenue .summary-value {

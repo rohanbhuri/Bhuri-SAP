@@ -43,6 +43,7 @@
 }
 
 .sidebar-header {
+  font-size: 1.2rem;
   padding: 16px;
   border-bottom: 1px solid color-mix(in srgb, var(--theme-on-surface) 8%, transparent);
   display: flex;
@@ -841,7 +842,7 @@
     padding: 12px 16px;
 
     h1 {
-      font-size: 20px !important;
+      font-size: 1.2rem !important;
     }
   }
 

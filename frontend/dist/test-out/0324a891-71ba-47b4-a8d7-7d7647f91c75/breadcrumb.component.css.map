@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/app/components/breadcrumb.component.ts"],
+  "sourcesContent": ["\n    .breadcrumb {\n      display: flex;\n      align-items: center;\n      gap: 0.5rem;\n      color: #666;\n      font-size: 0.875rem;\n      margin-bottom: 1rem;\n    }\n\n    .breadcrumb-link {\n      color: #666;\n      text-decoration: none;\n      transition: color 0.2s;\n    }\n\n    .breadcrumb-link:hover {\n      color: #333;\n      text-decoration: underline;\n    }\n\n    .breadcrumb .current {\n      color: #333;\n      font-weight: 500;\n    }\n\n    .breadcrumb mat-icon {\n      font-size: 1rem;\n      width: 1rem;\n      height: 1rem;\n      color: #999;\n    }\n  "],
+  "mappings": ";AACI,CAAA;AACE,WAAA;AACA,eAAA;AACA,OAAA;AACA,SAAA;AACA,aAAA;AACA,iBAAA;;AAGF,CAAA;AACE,SAAA;AACA,mBAAA;AACA,cAAA,MAAA;;AAGF,CANA,eAMA;AACE,SAAA;AACA,mBAAA;;AAGF,CApBA,WAoBA,CAAA;AACE,SAAA;AACA,eAAA;;AAGF,CAzBA,WAyBA;AACE,aAAA;AACA,SAAA;AACA,UAAA;AACA,SAAA;;",
+  "names": []
+}

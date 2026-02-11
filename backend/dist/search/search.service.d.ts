@@ -74,6 +74,7 @@ export declare class SearchService {
     private searchCMS;
     private searchQuotations;
     private searchOrders;
+    private maskPrice;
     private calculateRelevance;
     private applyFilters;
     getSearchSuggestions(query: string, userId: string, organizationId?: string): Promise<string[]>;

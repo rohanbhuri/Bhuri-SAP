@@ -1,9 +1,12 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { ActivatedRoute } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { UserManagementService } from '../user-management.service';
 
 @Component({
@@ -14,12 +17,19 @@ import { UserManagementService } from '../user-management.service';
     MatCardModule,
     MatButtonModule,
     MatIconModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MatTooltipModule
   ],
   template: `
     <div class="analytics-container">
       <div class="analytics-header">
-        <h2>User Analytics & Reports</h2>
+        <div>
+          <h2>User Analytics & Reports</h2>
+          <p class="last-updated" *ngIf="lastUpdated()">Last updated: {{ lastUpdated() | date:'short' }}</p>
+        </div>
+        <button mat-icon-button (click)="refreshAnalytics()" [disabled]="loading()" matTooltip="Refresh Analytics">
+          <mat-icon [class.spinning]="loading()">refresh</mat-icon>
+        </button>
       </div>
 
       <div class="stats-grid" *ngIf="!loading()">
@@ -131,12 +141,33 @@ import { UserManagementService } from '../user-management.service';
       max-width: 1400px;
     }
     .analytics-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: 24px;
     }
     .analytics-header h2 {
-      margin: 0;
+      margin: 0 0 4px 0;
       font-size: 24px;
       font-weight: 600;
+    }
+    .last-updated {
+      margin: 0;
+      font-size: 12px;
+      color: #999;
+    }
+    .analytics-header button {
+      transition: transform 0.3s ease;
+    }
+    .analytics-header button:active {
+      transform: rotate(180deg);
+    }
+    .spinning {
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
     }
     .stats-grid {
       display: grid;
@@ -167,7 +198,7 @@ import { UserManagementService } from '../user-management.service';
       flex-shrink: 0;
     }
     .stat-icon mat-icon {
-      font-size: 28px;
+      font-size: 1.2rem;
       width: 28px;
       height: 28px;
       color: white;
@@ -183,7 +214,7 @@ import { UserManagementService } from '../user-management.service';
     }
     .stat-info h3 {
       margin: 0 0 4px 0;
-      font-size: 28px;
+      font-size: 1.2rem;
       font-weight: 700;
       line-height: 1;
     }
@@ -328,10 +359,15 @@ import { UserManagementService } from '../user-management.service';
     }
   `]
 })
-export class UserAnalyticsPageComponent implements OnInit {
+export class UserAnalyticsPageComponent implements OnInit, OnDestroy {
   private userService = inject(UserManagementService);
+  private route = inject(ActivatedRoute);
   
   loading = signal(true);
+  lastUpdated = signal<Date | null>(null);
+  private queryParamsSubscription?: Subscription;
+  private currentTab = '';
+  
   analytics = signal({
     totalUsers: 0,
     activeUsers: 0,
@@ -345,6 +381,29 @@ export class UserAnalyticsPageComponent implements OnInit {
 
   ngOnInit() {
     this.loadAnalytics();
+    
+    // Subscribe to query params to detect tab changes
+    this.queryParamsSubscription = this.route.queryParams.subscribe(params => {
+      const tab = params['tab'];
+      // If we're switching TO the analytics tab, refresh the data
+      if (tab === 'analytics' && this.currentTab !== 'analytics') {
+        console.log('Switched to analytics tab, refreshing data...');
+        this.loadAnalytics();
+      }
+      this.currentTab = tab || '';
+    });
+  }
+
+  ngOnDestroy() {
+    // Clean up subscription
+    if (this.queryParamsSubscription) {
+      this.queryParamsSubscription.unsubscribe();
+    }
+  }
+
+  refreshAnalytics() {
+    console.log('Manual refresh triggered');
+    this.loadAnalytics();
   }
 
   loadAnalytics() {
@@ -352,6 +411,7 @@ export class UserAnalyticsPageComponent implements OnInit {
     this.userService.getAnalytics().subscribe({
       next: (data) => {
         this.analytics.set(data);
+        this.lastUpdated.set(new Date());
         this.loading.set(false);
       },
       error: () => this.loading.set(false)

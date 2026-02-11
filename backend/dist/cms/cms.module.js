@@ -14,6 +14,7 @@ const cms_service_1 = require("./cms.service");
 const page_entity_1 = require("../entities/page.entity");
 const blog_post_entity_1 = require("../entities/blog-post.entity");
 const menu_entity_1 = require("../entities/menu.entity");
+const news_media_entity_1 = require("../entities/news-media.entity");
 const api_key_module_1 = require("../guards/api-key.module");
 const media_controller_1 = require("./media.controller");
 let CmsModule = class CmsModule {
@@ -22,7 +23,7 @@ exports.CmsModule = CmsModule;
 exports.CmsModule = CmsModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([page_entity_1.Page, blog_post_entity_1.BlogPost, menu_entity_1.Menu]),
+            typeorm_1.TypeOrmModule.forFeature([page_entity_1.Page, blog_post_entity_1.BlogPost, menu_entity_1.Menu, news_media_entity_1.NewsMedia]),
             api_key_module_1.ApiKeyModule
         ],
         controllers: [cms_controller_1.CmsController, media_controller_1.MediaController],

@@ -5,13 +5,14 @@ import { CmsService } from './cms.service';
 import { Page } from '../entities/page.entity';
 import { BlogPost } from '../entities/blog-post.entity';
 import { Menu } from '../entities/menu.entity';
+import { NewsMedia } from '../entities/news-media.entity';
 import { ApiKeyModule } from '../guards/api-key.module';
 
 import { MediaController } from './media.controller';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([Page, BlogPost, Menu]),
+        TypeOrmModule.forFeature([Page, BlogPost, Menu, NewsMedia]),
         ApiKeyModule
     ],
     controllers: [CmsController, MediaController],

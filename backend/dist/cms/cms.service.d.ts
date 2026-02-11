@@ -2,11 +2,13 @@ import { MongoRepository } from 'typeorm';
 import { Page } from '../entities/page.entity';
 import { BlogPost } from '../entities/blog-post.entity';
 import { Menu } from '../entities/menu.entity';
+import { NewsMedia } from '../entities/news-media.entity';
 export declare class CmsService {
     private pageRepository;
     private blogRepository;
     private menuRepository;
-    constructor(pageRepository: MongoRepository<Page>, blogRepository: MongoRepository<BlogPost>, menuRepository: MongoRepository<Menu>);
+    private newsMediaRepository;
+    constructor(pageRepository: MongoRepository<Page>, blogRepository: MongoRepository<BlogPost>, menuRepository: MongoRepository<Menu>, newsMediaRepository: MongoRepository<NewsMedia>);
     findAllPages(): Promise<Page[]>;
     findOnePage(id: string): Promise<Page>;
     findPageBySlug(slug: string): Promise<Page>;
@@ -16,15 +18,50 @@ export declare class CmsService {
     findAllBlogs(): Promise<BlogPost[]>;
     findOneBlog(id: string): Promise<BlogPost>;
     findBlogBySlug(slug: string): Promise<BlogPost>;
-    createBlog(data: Partial<BlogPost>): Promise<BlogPost>;
-    updateBlog(id: string, data: Partial<BlogPost>): Promise<BlogPost>;
-    deleteBlog(id: string): Promise<void>;
+    createBlog(data: Partial<BlogPost>, userId?: string): Promise<BlogPost>;
+    updateBlog(id: string, data: Partial<BlogPost>, userId?: string): Promise<BlogPost>;
+    deleteBlog(id: string, userId?: string): Promise<void>;
+    toggleBlogFeatured(id: string): Promise<BlogPost>;
     findAllMenus(): Promise<Menu[]>;
     findOneMenu(id: string): Promise<Menu>;
     findMenuByLocation(location: string): Promise<Menu>;
     createMenu(data: Partial<Menu>): Promise<Menu>;
     updateMenu(id: string, data: Partial<Menu>): Promise<Menu>;
     deleteMenu(id: string): Promise<void>;
+    findAllNewsMedia(): Promise<NewsMedia[]>;
+    findOneNewsMedia(id: string): Promise<NewsMedia>;
+    findNewsMediaBySlug(slug: string): Promise<NewsMedia>;
+    createNewsMedia(data: Partial<NewsMedia>, userId?: string): Promise<NewsMedia>;
+    updateNewsMedia(id: string, data: Partial<NewsMedia>, userId?: string): Promise<NewsMedia>;
+    deleteNewsMedia(id: string, userId?: string): Promise<void>;
+    toggleNewsMediaFeatured(id: string): Promise<NewsMedia>;
+    getAnalytics(): Promise<{
+        totalBlogs: number;
+        publishedBlogs: number;
+        draftBlogs: number;
+        featuredBlogs: number;
+        archivedBlogs: number;
+        totalNewsMedia: number;
+        publishedNews: number;
+        draftNews: number;
+        featuredNews: number;
+        archivedNews: number;
+        topBlogTags: {
+            tag: any;
+            count: any;
+        }[];
+        topNewsTags: {
+            tag: any;
+            count: any;
+        }[];
+        blogsByMonth: any[];
+        newsByMonth: any[];
+        recentChanges: {
+            blogs: number;
+            newsMedia: number;
+        };
+    }>;
+    private groupByMonth;
     findAll(): Promise<Page[]>;
     findOne(id: string): Promise<Page>;
     findBySlug(slug: string): Promise<Page>;

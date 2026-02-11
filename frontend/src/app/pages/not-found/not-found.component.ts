@@ -90,7 +90,7 @@ import { SeoService } from '../../services/seo.service';
       }
       
       .error-title {
-        font-size: 2rem;
+        font-size: 1.2rem;
       }
       
       .error-message {

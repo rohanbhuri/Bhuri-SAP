@@ -284,7 +284,7 @@ import { BottomNavbarComponent } from '../../components/bottom-navbar.component'
 
     .user-name {
       margin: 0 0 8px 0;
-      font-size: 28px;
+      font-size: 1.2rem;
       font-weight: 600;
       color: var(--theme-on-surface);
     }

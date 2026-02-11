@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
 import { CatalogueService } from '../catalogue.service';
 import { CollectionDialogComponent } from '../dialogs/collection-dialog.component';
@@ -21,16 +22,23 @@ import { UserManagementService } from '../../user-management/user-management.ser
     MatIconModule,
     MatMenuModule,
     MatChipsModule,
+    MatTooltipModule,
     UploadUrlPipe
   ],
   template: `
     <div class="tab-content">
       <div class="tab-header">
         <h2>Collections</h2>
-        <button mat-raised-button color="primary" (click)="openCollectionDialog()">
-          <mat-icon>add</mat-icon>
-          Add Collection
-        </button>
+        <div class="header-actions">
+          <button mat-button (click)="previewCollectionsPage()" matTooltip="Preview Collections Page on Website">
+            <mat-icon>open_in_new</mat-icon>
+            Preview Page
+          </button>
+          <button mat-raised-button color="primary" (click)="openCollectionDialog()">
+            <mat-icon>add</mat-icon>
+            Add Collection
+          </button>
+        </div>
       </div>
       
       <div class="table-container">
@@ -133,9 +141,18 @@ import { UserManagementService } from '../../user-management/user-management.ser
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef>Actions</th>
             <td mat-cell *matCellDef="let collection">
-              <button mat-icon-button [matMenuTriggerFor]="collectionMenu" class="action-button">
-                <mat-icon>more_vert</mat-icon>
-              </button>
+              <div class="actions-cell">
+                <button mat-icon-button 
+                        *ngIf="collection.isActive" 
+                        (click)="previewCollection(collection)" 
+                        matTooltip="Preview on Website"
+                        class="preview-button">
+                  <mat-icon>open_in_new</mat-icon>
+                </button>
+                <button mat-icon-button [matMenuTriggerFor]="collectionMenu" class="action-button">
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+              </div>
               <mat-menu #collectionMenu="matMenu">
                 <button mat-menu-item (click)="editCollection(collection)">
                   <mat-icon>edit</mat-icon>
@@ -185,6 +202,11 @@ import { UserManagementService } from '../../user-management/user-management.ser
       margin: 0;
       font-size: 1.5rem;
       font-weight: 500;
+    }
+    .header-actions {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
     }
     .table-container {
       overflow-x: auto;
@@ -352,6 +374,20 @@ import { UserManagementService } from '../../user-management/user-management.ser
       color: #999;
       font-style: italic;
     }
+    .actions-cell {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .preview-button {
+      color: #2196F3;
+    }
+    .preview-button:hover {
+      background-color: rgba(33, 150, 243, 0.1);
+    }
+    .text-red-600 {
+      color: #dc2626;
+    }
   `]
 })
 export class CollectionsPageComponent implements OnInit {
@@ -480,5 +516,23 @@ export class CollectionsPageComponent implements OnInit {
 
   onImageError(collection: any) {
     collection.imageError = true;
+  }
+
+  previewCollection(collection: any) {
+    // Generate the preview URL: https://racconti.in/collection/{slug}-{collectionId}
+    const collectionId = collection._id.toString();
+    const slug = collection.slug;
+    const previewUrl = `https://racconti.in/collection/${slug}-${collectionId}`;
+    
+    // Open in new tab
+    window.open(previewUrl, '_blank');
+  }
+
+  previewCollectionsPage() {
+    // Preview the collections listing page
+    const previewUrl = 'https://racconti.in/collections';
+    
+    // Open in new tab
+    window.open(previewUrl, '_blank');
   }
 }

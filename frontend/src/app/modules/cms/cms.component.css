@@ -15,23 +15,9 @@
   gap: 1rem;
 }
 
-.breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #666;
-  font-size: 0.875rem;
-  margin-bottom: 1rem;
-}
-
-.breadcrumb .current {
-  color: #333;
-  font-weight: 500;
-}
-
 .page-header h1 {
   margin: 0 0 0.5rem 0;
-  font-size: 2rem;
+  font-size: 1.2rem;
   font-weight: 600;
   color: #333;
 }
@@ -57,30 +43,31 @@
 }
 
 .tab-content {
-  padding: 1.5rem;
+  padding: 0;
   min-height: 500px;
+  background: #fafafa;
 }
 
 .tab-header {
   display: flex;
-  justify-content: between;
+  justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 0;
+  padding: 2rem 2rem 1.5rem 2rem;
+  background: white;
 }
 
 .tab-header h2 {
   margin: 0;
-  font-size: 1.5rem;
-  font-weight: 500;
+  font-size: 1.75rem;
+  font-weight: 600;
   color: #333;
 }
 
 .table-container {
   overflow-x: auto;
-  border-radius: 8px;
-  border: 1px solid #e0e0e0;
+  background: white;
+  margin-top: 0;
 }
 
 .cms-table {
@@ -89,15 +76,18 @@
 }
 
 .cms-table th {
-  background: #f5f5f5;
+  background: #e8e8e8;
   font-weight: 600;
   color: #333;
-  padding: 1rem;
+  padding: 1rem 1.5rem;
+  text-transform: capitalize;
+  font-size: 0.875rem;
 }
 
 .cms-table td {
-  padding: 1rem;
-  border-bottom: 1px solid #e0e0e0;
+  padding: 1.5rem;
+  border-bottom: 1px solid #f0f0f0;
+  background: white;
 }
 
 .cms-table tr:hover {
@@ -175,7 +165,7 @@
 }
 
 .stat-value {
-  font-size: 2rem;
+  font-size: 1.2rem;
   font-weight: 600;
   color: var(--primary-color);
   margin-bottom: 0.5rem;

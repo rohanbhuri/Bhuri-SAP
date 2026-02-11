@@ -444,11 +444,12 @@ body.dark-theme p {
   text-align: left !important;
 }
 .mat-mdc-dialog-container {
-  max-width: 95vw !important;
+  min-width: 50vw;
+  max-width: 50vw !important;
   width: auto !important;
 }
 .mat-mdc-dialog-container .mdc-dialog__surface {
-  max-width: 95vw !important;
+  max-width: 50vw !important;
   width: auto !important;
 }
 .cdk-global-overlay-wrapper {

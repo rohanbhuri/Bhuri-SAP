@@ -291,7 +291,7 @@ import { ClientManagementService } from '../services/client-management.service';
       flex-shrink: 0;
     }
     .stat-icon mat-icon {
-      font-size: 28px;
+      font-size: 1.2rem;
       width: 28px;
       height: 28px;
       color: white;
@@ -308,7 +308,7 @@ import { ClientManagementService } from '../services/client-management.service';
     }
     .stat-info h3 {
       margin: 0 0 4px 0;
-      font-size: 28px;
+      font-size: 1.2rem;
       font-weight: 700;
       line-height: 1;
     }

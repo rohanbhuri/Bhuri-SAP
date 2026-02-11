@@ -29,6 +29,9 @@ export class BlogPost {
     @Column({ type: 'enum', enum: BlogStatus, default: BlogStatus.DRAFT })
     status: BlogStatus;
 
+    @Column({ default: false })
+    isFeatured: boolean;
+
     @Column({ type: 'json', default: {} })
     seo: {
         title?: string;
@@ -52,10 +55,26 @@ export class BlogPost {
     @Column({ nullable: true })
     authorId?: string;
 
+    @Column({ nullable: true })
+    createdBy?: string;
+
+    @Column({ nullable: true })
+    updatedBy?: string;
+
+    @Column({ type: 'json', default: [] })
+    changeLog: Array<{
+        userId: string;
+        action: string;
+        timestamp: Date;
+        details?: string;
+    }>;
+
     constructor() {
         this.status = BlogStatus.DRAFT;
+        this.isFeatured = false;
         this.seo = {};
         this.tags = [];
         this.createdAt = new Date();
+        this.changeLog = [];
     }
 }

@@ -210,7 +210,7 @@ import { FinanceService } from '../finance.service';
     }
 
     .stat-number {
-      font-size: 2rem;
+      font-size: 1.2rem;
       font-weight: 700;
       color: var(--theme-on-surface);
       margin-bottom: 4px;

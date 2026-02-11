@@ -836,15 +836,19 @@ export class SearchService {
     }
 
     const quotations = await this.quotationRepository.find({ where: filter });
-    return quotations.map(q => ({
-      id: q._id.toString(),
-      title: q.quotationNumber,
-      subtitle: `${q.clientName || 'Unknown Client'} - $${q.grandTotal}`,
-      type: 'quotation',
-      module: 'quotations',
-      relevance: this.calculateRelevance(query, `${q.quotationNumber} ${q.clientName || ''} ${q.clientEmail || ''}`),
-      metadata: { status: q.status, total: q.grandTotal }
-    }));
+    return quotations.map(q => {
+      // Mask the price for data security
+      const maskedPrice = this.maskPrice(q.grandTotal);
+      return {
+        id: q._id.toString(),
+        title: q.quotationNumber,
+        subtitle: `${q.clientName || 'Unknown Client'} - ${maskedPrice}`,
+        type: 'quotation',
+        module: 'quotations',
+        relevance: this.calculateRelevance(query, `${q.quotationNumber} ${q.clientName || ''} ${q.clientEmail || ''}`),
+        metadata: { status: q.status, total: maskedPrice }
+      };
+    });
   }
 
   private async searchOrders(query: string, permissions: Set<string>, organizationId?: string): Promise<SearchResult[]> {
@@ -890,6 +894,41 @@ export class SearchService {
       relevance: this.calculateRelevance(query, `${order.orderNumber} ${order.clientName || ''} ${order.clientEmail || ''}`),
       metadata: { status: order.status, total: order.totalAmount }
     }));
+  }
+
+  private maskPrice(price: number): string {
+    // Mask the price for data security in search results
+    // Format: ₹XX,XX,XXX.XX (Indian number format)
+    const priceStr = price.toFixed(2);
+    const [integerPart, decimalPart] = priceStr.split('.');
+    
+    // Mask all digits with X
+    const maskedInteger = integerPart.replace(/\d/g, 'X');
+    const maskedDecimal = 'XX'; // Always show XX for decimal
+    
+    // Apply Indian number formatting (last 3 digits, then groups of 2)
+    let formatted = '';
+    const len = maskedInteger.length;
+    
+    if (len <= 3) {
+      formatted = maskedInteger;
+    } else {
+      const lastThree = maskedInteger.slice(-3);
+      const remaining = maskedInteger.slice(0, -3);
+      
+      // Add commas every 2 digits from right to left for remaining part
+      let formattedRemaining = '';
+      for (let i = remaining.length - 1; i >= 0; i--) {
+        formattedRemaining = remaining[i] + formattedRemaining;
+        if ((remaining.length - i) % 2 === 0 && i !== 0) {
+          formattedRemaining = ',' + formattedRemaining;
+        }
+      }
+      
+      formatted = `${formattedRemaining},${lastThree}`;
+    }
+    
+    return `₹${formatted}.${maskedDecimal}`;
   }
 
   private calculateRelevance(query: string, text: string): number {

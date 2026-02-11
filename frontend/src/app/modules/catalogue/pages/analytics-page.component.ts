@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -6,6 +6,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { ActivatedRoute } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { CatalogueService } from '../catalogue.service';
 import { PreferencesService } from '../../../services/preferences.service';
 
@@ -19,13 +22,20 @@ import { PreferencesService } from '../../../services/preferences.service';
     MatIconModule,
     MatProgressSpinnerModule,
     MatSelectModule,
-    MatFormFieldModule
+    MatFormFieldModule,
+    MatTooltipModule
   ],
   template: `
     <div class="analytics-container">
       <div class="analytics-header">
-        <h2>Catalogue Analytics & Reports</h2>
+        <div>
+          <h2>Catalogue Analytics & Reports</h2>
+          <p class="last-updated" *ngIf="lastUpdated()">Last updated: {{ lastUpdated() | date:'short' }}</p>
+        </div>
         <div class="export-actions">
+          <button mat-icon-button (click)="refreshAnalytics()" [disabled]="exporting() || loading()" matTooltip="Refresh Analytics">
+            <mat-icon [class.spinning]="loading()">refresh</mat-icon>
+          </button>
           <button mat-raised-button color="primary" (click)="exportAll()" [disabled]="exporting()">
             <mat-icon>download</mat-icon>
             {{ exporting() ? 'Exporting...' : 'Export All Data' }}
@@ -310,9 +320,32 @@ import { PreferencesService } from '../../../services/preferences.service';
       margin-bottom: 24px;
     }
     .analytics-header h2 {
-      margin: 0;
+      margin: 0 0 4px 0;
       font-size: 24px;
       font-weight: 600;
+    }
+    .last-updated {
+      margin: 0;
+      font-size: 12px;
+      color: #999;
+    }
+    .export-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .export-actions button[mat-icon-button] {
+      transition: transform 0.3s ease;
+    }
+    .export-actions button[mat-icon-button]:active {
+      transform: rotate(180deg);
+    }
+    .spinning {
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
     }
     .stats-grid {
       display: grid;
@@ -343,7 +376,7 @@ import { PreferencesService } from '../../../services/preferences.service';
       flex-shrink: 0;
     }
     .stat-icon mat-icon {
-      font-size: 28px;
+      font-size: 1.2rem;
       width: 28px;
       height: 28px;
       color: white;
@@ -359,7 +392,7 @@ import { PreferencesService } from '../../../services/preferences.service';
     }
     .stat-info h3 {
       margin: 0 0 4px 0;
-      font-size: 28px;
+      font-size: 1.2rem;
       font-weight: 700;
       line-height: 1;
     }
@@ -557,13 +590,18 @@ import { PreferencesService } from '../../../services/preferences.service';
     }
   `]
 })
-export class AnalyticsPageComponent implements OnInit {
+export class AnalyticsPageComponent implements OnInit, OnDestroy {
   private catalogueService = inject(CatalogueService);
   private preferencesService = inject(PreferencesService);
+  private route = inject(ActivatedRoute);
   
   loading = signal(true);
   exporting = signal(false);
+  lastUpdated = signal<Date | null>(null);
   currencySymbol = signal('₹');
+  private queryParamsSubscription?: Subscription;
+  private currentTab = '';
+  
   analytics = signal({
     totalProducts: 0,
     publishedProducts: 0,
@@ -585,6 +623,29 @@ export class AnalyticsPageComponent implements OnInit {
 
   ngOnInit() {
     this.loadCurrencyPreferences();
+    this.loadAnalytics();
+    
+    // Subscribe to query params to detect tab changes
+    this.queryParamsSubscription = this.route.queryParams.subscribe(params => {
+      const tab = params['tab'];
+      // If we're switching TO the analytics tab, refresh the data
+      if (tab === 'analytics' && this.currentTab !== 'analytics') {
+        console.log('Switched to analytics tab, refreshing data...');
+        this.loadAnalytics();
+      }
+      this.currentTab = tab || '';
+    });
+  }
+
+  ngOnDestroy() {
+    // Clean up subscription
+    if (this.queryParamsSubscription) {
+      this.queryParamsSubscription.unsubscribe();
+    }
+  }
+
+  refreshAnalytics() {
+    console.log('Manual refresh triggered');
     this.loadAnalytics();
   }
 
@@ -612,9 +673,12 @@ export class AnalyticsPageComponent implements OnInit {
     this.catalogueService.getAnalytics().subscribe({
       next: (data) => {
         this.analytics.set(data);
+        this.lastUpdated.set(new Date());
         this.loading.set(false);
       },
-      error: () => this.loading.set(false)
+      error: () => {
+        this.loading.set(false);
+      }
     });
   }
 

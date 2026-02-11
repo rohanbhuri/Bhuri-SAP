@@ -417,7 +417,7 @@ import { ClientManagementService } from '../services/client-management.service';
 
     .credentials-header mat-icon {
       color: #059669;
-      font-size: 28px;
+      font-size: 1.2rem;
       width: 28px;
       height: 28px;
     }

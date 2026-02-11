@@ -20,6 +20,7 @@ import { ThemeService } from '../../services/theme.service';
 import { AuthService } from '../../services/auth.service';
 import { NavbarComponent } from '../../components/navbar.component';
 import { BottomNavbarComponent } from '../../components/bottom-navbar.component';
+import { BreadcrumbComponent } from '../../components/breadcrumb.component';
 import { MODULE_REGISTRY, getModuleById } from '../../modules/module-registry';
 
 @Component({
@@ -40,7 +41,8 @@ import { MODULE_REGISTRY, getModuleById } from '../../modules/module-registry';
     MatDividerModule,
     MatTooltipModule,
     NavbarComponent,
-    BottomNavbarComponent
+    BottomNavbarComponent,
+    BreadcrumbComponent
   ],
   template: `
     <app-navbar></app-navbar>
@@ -48,11 +50,7 @@ import { MODULE_REGISTRY, getModuleById } from '../../modules/module-registry';
     <div class="page">
       <!-- Dashboard-style page header -->
       <div class="page-header" aria-label="Search header">
-        <nav class="breadcrumb" aria-label="Breadcrumb">
-          <span>Pages</span>
-          <mat-icon aria-hidden="true" ripple>chevron_right</mat-icon>
-          <span class="current">Global Search</span>
-        </nav>
+        <app-breadcrumb></app-breadcrumb>
         <div class="header-controls">
           <h1>Global Search</h1>
           <p class="description">Locate people, projects, and resources across your workspace</p>

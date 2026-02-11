@@ -404,7 +404,7 @@ import { TimesheetEntryDialogComponent } from './dialogs';
       }
 
       .stat-number {
-        font-size: 2rem;
+        font-size: 1.2rem;
         font-weight: 700;
         color: var(--theme-primary);
         margin-bottom: 4px;
