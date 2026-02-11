@@ -23,6 +23,7 @@ let BlogPost = class BlogPost {
         this.isFeatured = false;
         this.seo = {};
         this.tags = [];
+        this.gallery = [];
         this.createdAt = new Date();
         this.changeLog = [];
     }
@@ -52,6 +53,10 @@ __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)
 ], BlogPost.prototype, "featuredImage", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'array', default: [] }),
+    __metadata("design:type", Array)
+], BlogPost.prototype, "gallery", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'enum', enum: BlogStatus, default: BlogStatus.DRAFT }),
     __metadata("design:type", String)

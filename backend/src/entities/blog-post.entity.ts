@@ -26,6 +26,13 @@ export class BlogPost {
     @Column({ nullable: true })
     featuredImage: string; // URL to featured image
 
+    @Column({ type: 'array', default: [] })
+    gallery: {
+        url: string;
+        caption?: string;
+        order?: number;
+    }[];
+
     @Column({ type: 'enum', enum: BlogStatus, default: BlogStatus.DRAFT })
     status: BlogStatus;
 
@@ -74,6 +81,7 @@ export class BlogPost {
         this.isFeatured = false;
         this.seo = {};
         this.tags = [];
+        this.gallery = [];
         this.createdAt = new Date();
         this.changeLog = [];
     }

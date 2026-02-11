@@ -30,6 +30,7 @@ let NewsMedia = class NewsMedia {
         this.seo = {};
         this.tags = [];
         this.mediaFiles = [];
+        this.gallery = [];
         this.createdAt = new Date();
         this.changeLog = [];
     }
@@ -63,6 +64,10 @@ __decorate([
     (0, typeorm_1.Column)({ type: 'array', default: [] }),
     __metadata("design:type", Array)
 ], NewsMedia.prototype, "mediaFiles", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'array', default: [] }),
+    __metadata("design:type", Array)
+], NewsMedia.prototype, "gallery", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'enum', enum: NewsStatus, default: NewsStatus.DRAFT }),
     __metadata("design:type", String)

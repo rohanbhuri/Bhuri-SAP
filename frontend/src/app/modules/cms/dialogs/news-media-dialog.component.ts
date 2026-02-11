@@ -150,6 +150,52 @@ import Quill from 'quill';
           </div>
         </mat-tab>
 
+        <mat-tab label="Media Gallery">
+          <div class="tab-content">
+            <div class="gallery-section">
+              <h3>Image Gallery</h3>
+              <p class="gallery-hint">Upload multiple images to create a gallery for this news item</p>
+              
+              <div class="gallery-upload">
+                <input type="file" #galleryInput (change)="onGalleryFilesSelected($event)" 
+                       accept="image/*" multiple style="display: none">
+                <button mat-raised-button color="accent" type="button" 
+                        (click)="galleryInput.click()" [disabled]="uploadingGallery()">
+                  <mat-icon>add_photo_alternate</mat-icon>
+                  Add Images to Gallery
+                </button>
+                <span class="upload-hint">Select multiple images (max 10)</span>
+              </div>
+
+              <mat-progress-bar *ngIf="uploadingGallery()" mode="indeterminate"></mat-progress-bar>
+
+              <div class="gallery-grid" *ngIf="gallery().length > 0">
+                <div class="gallery-item" *ngFor="let image of gallery(); let i = index">
+                  <div class="gallery-image">
+                    <img [src]="image.url" [alt]="image.caption || 'Gallery image'">
+                    <button mat-icon-button class="remove-gallery-btn" 
+                            (click)="removeGalleryImage(i)" type="button">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                  <mat-form-field appearance="outline" class="caption-field">
+                    <mat-label>Caption</mat-label>
+                    <input matInput [value]="image.caption || ''" 
+                           (blur)="updateGalleryCaption(i, $any($event.target).value)"
+                           placeholder="Add image caption">
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <div class="empty-gallery" *ngIf="gallery().length === 0">
+                <mat-icon>photo_library</mat-icon>
+                <p>No images in gallery yet</p>
+                <p class="hint">Click "Add Images to Gallery" to upload images</p>
+              </div>
+            </div>
+          </div>
+        </mat-tab>
+
         <mat-tab label="SEO Settings">
           <div class="tab-content">
             <form [formGroup]="seoForm" class="seo-form">
@@ -433,6 +479,93 @@ import Quill from 'quill';
       border-bottom-left-radius: 4px;
       border-bottom-right-radius: 4px;
     }
+
+    .gallery-section {
+      padding: 1rem 0;
+    }
+
+    .gallery-section h3 {
+      margin: 0 0 0.5rem 0;
+      color: #333;
+    }
+
+    .gallery-hint {
+      color: rgba(0, 0, 0, 0.6);
+      font-size: 0.875rem;
+      margin: 0 0 1.5rem 0;
+    }
+
+    .gallery-upload {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .gallery-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .gallery-image {
+      position: relative;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      overflow: hidden;
+      aspect-ratio: 16/9;
+    }
+
+    .gallery-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .remove-gallery-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(244, 67, 54, 0.9);
+      color: white;
+    }
+
+    .remove-gallery-btn:hover {
+      background: rgba(244, 67, 54, 1);
+    }
+
+    .caption-field {
+      width: 100%;
+      margin: 0;
+    }
+
+    .empty-gallery {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: rgba(0, 0, 0, 0.4);
+    }
+
+    .empty-gallery mat-icon {
+      font-size: 4rem;
+      width: 4rem;
+      height: 4rem;
+      margin-bottom: 1rem;
+    }
+
+    .empty-gallery p {
+      margin: 0.5rem 0;
+    }
+
+    .empty-gallery .hint {
+      font-size: 0.875rem;
+    }
   `]
 })
 export class NewsMediaDialogComponent implements OnInit, AfterViewInit {
@@ -444,6 +577,8 @@ export class NewsMediaDialogComponent implements OnInit, AfterViewInit {
   selectedTabIndex = signal(0);
   tags = signal<string[]>([]);
   uploading = signal(false);
+  uploadingGallery = signal(false);
+  gallery = signal<Array<{ url: string; caption?: string; order?: number }>>([]);
   quillEditor: any;
 
   constructor(
@@ -482,6 +617,9 @@ export class NewsMediaDialogComponent implements OnInit, AfterViewInit {
       if (this.data.newsMedia.tags) {
         this.tags.set(this.data.newsMedia.tags);
         this.newsForm.patchValue({ tagsInput: this.data.newsMedia.tags.join(', ') });
+      }
+      if (this.data.newsMedia.gallery) {
+        this.gallery.set(this.data.newsMedia.gallery);
       }
     }
 
@@ -537,7 +675,7 @@ export class NewsMediaDialogComponent implements OnInit, AfterViewInit {
     const formData = new FormData();
     formData.append('file', file);
 
-    this.http.post<any>(`${getBrandConfig().app.apiUrl}/media/upload`, formData)
+    this.http.post<any>(`${getBrandConfig().app.apiUrl}/media/upload/news/featured`, formData)
       .subscribe({
         next: (response) => {
           const imageUrl = `${getBrandConfig().app.apiUrl}${response.url}`;
@@ -553,6 +691,50 @@ export class NewsMediaDialogComponent implements OnInit, AfterViewInit {
 
   removeFeaturedImage() {
     this.newsForm.patchValue({ featuredImage: '' });
+  }
+
+  onGalleryFilesSelected(event: any) {
+    const files = Array.from(event.target.files) as File[];
+    if (files.length > 0) {
+      this.uploadGalleryImages(files);
+    }
+  }
+
+  uploadGalleryImages(files: File[]) {
+    this.uploadingGallery.set(true);
+    const formData = new FormData();
+    files.forEach(file => {
+      formData.append('files', file);
+    });
+
+    this.http.post<any>(`${getBrandConfig().app.apiUrl}/media/upload/news/gallery`, formData)
+      .subscribe({
+        next: (response) => {
+          const newImages = response.files.map((file: any) => ({
+            url: `${getBrandConfig().app.apiUrl}${file.url}`,
+            caption: '',
+            order: this.gallery().length + file.order
+          }));
+          this.gallery.set([...this.gallery(), ...newImages]);
+          this.uploadingGallery.set(false);
+        },
+        error: () => {
+          this.uploadingGallery.set(false);
+          alert('Failed to upload gallery images');
+        }
+      });
+  }
+
+  removeGalleryImage(index: number) {
+    const currentGallery = [...this.gallery()];
+    currentGallery.splice(index, 1);
+    this.gallery.set(currentGallery);
+  }
+
+  updateGalleryCaption(index: number, caption: string) {
+    const currentGallery = [...this.gallery()];
+    currentGallery[index].caption = caption;
+    this.gallery.set(currentGallery);
   }
 
   ngAfterViewInit() {
@@ -589,6 +771,7 @@ export class NewsMediaDialogComponent implements OnInit, AfterViewInit {
       const newsData = {
         ...this.newsForm.value,
         tags: this.tags(),
+        gallery: this.gallery(),
         seo: {
           ...this.seoForm.value,
           ogImage: this.seoForm.value.ogImage || this.newsForm.value.featuredImage

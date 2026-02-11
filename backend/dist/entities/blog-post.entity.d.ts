@@ -11,6 +11,11 @@ export declare class BlogPost {
     content: string;
     excerpt: string;
     featuredImage: string;
+    gallery: {
+        url: string;
+        caption?: string;
+        order?: number;
+    }[];
     status: BlogStatus;
     isFeatured: boolean;
     seo: {

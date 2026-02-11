@@ -21,6 +21,11 @@ export declare class NewsMedia {
         url: string;
         caption?: string;
     }[];
+    gallery: {
+        url: string;
+        caption?: string;
+        order?: number;
+    }[];
     status: NewsStatus;
     isFeatured: boolean;
     seo: {

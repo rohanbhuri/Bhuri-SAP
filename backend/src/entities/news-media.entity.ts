@@ -39,6 +39,13 @@ export class NewsMedia {
         caption?: string;
     }[];
 
+    @Column({ type: 'array', default: [] })
+    gallery: {
+        url: string;
+        caption?: string;
+        order?: number;
+    }[];
+
     @Column({ type: 'enum', enum: NewsStatus, default: NewsStatus.DRAFT })
     status: NewsStatus;
 
@@ -88,6 +95,7 @@ export class NewsMedia {
         this.seo = {};
         this.tags = [];
         this.mediaFiles = [];
+        this.gallery = [];
         this.createdAt = new Date();
         this.changeLog = [];
     }
