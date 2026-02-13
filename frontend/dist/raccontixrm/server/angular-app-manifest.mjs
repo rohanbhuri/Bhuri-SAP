@@ -38,7 +38,7 @@ export default {
     "chunk-EBMDXCWA.js"
   ],
   "src/app/modules/cms/cms.routes.ts": [
-    "chunk-YKJUKR3L.js",
+    "chunk-TWZA2GEF.js",
     "chunk-EBMDXCWA.js"
   ],
   "src/app/modules/project-tracking/pages/gantt.page.ts": [
@@ -160,8 +160,8 @@ export default {
   ]
 },
   assets: {
-    'index.csr.html': {size: 6921, hash: '5df2ea0eb5bd69cbf6182f800b1637fe04f1c877af00f80c0f77dbc823d70822', text: () => import('./assets-chunks/index_csr_html.mjs').then(m => m.default)},
-    'index.server.html': {size: 6172, hash: '015f3130b8c07f1a4f7fc80c6320164d596fad5360016bc8927df5ccb87b026f', text: () => import('./assets-chunks/index_server_html.mjs').then(m => m.default)},
+    'index.csr.html': {size: 6921, hash: '72f34377441f59106b814c9f66f542f6b82f9f9ee4fde3554b0533743fed444a', text: () => import('./assets-chunks/index_csr_html.mjs').then(m => m.default)},
+    'index.server.html': {size: 6172, hash: '5dec6d9573fac7947b63b04f7fa07f302657ebe3a5b94f094abd1c5cc316afd4', text: () => import('./assets-chunks/index_server_html.mjs').then(m => m.default)},
     'styles-WXOW2UJF.css': {size: 34857, hash: '4tVdAiTxIrw', text: () => import('./assets-chunks/styles-WXOW2UJF_css.mjs').then(m => m.default)}
   },
 };

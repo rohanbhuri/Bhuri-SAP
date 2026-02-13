@@ -805,11 +805,11 @@ export class NewsMediaDialogComponent implements OnInit, AfterViewInit {
         const formData = new FormData();
         formData.append('file', file);
 
-        this.http.post<any>(`${getBrandConfig().app.apiUrl}/media/upload/news/gallery`, formData)
+        this.http.post<any>(`${getBrandConfig().app.apiUrl}/media/upload/news/featured`, formData)
           .subscribe({
             next: (response) => {
               const baseUrl = getBrandConfig().app.apiUrl.replace('/api', '');
-              const imageUrl = `${baseUrl}${response.files[0].url}`;
+              const imageUrl = `${baseUrl}${response.url}`;
               
               const range = this.quillEditor.getSelection(true);
               this.quillEditor.insertEmbed(range.index, 'image', imageUrl);
