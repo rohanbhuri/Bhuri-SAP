@@ -284,6 +284,12 @@ import Quill from 'quill';
       margin: 0;
     }
     
+    mat-dialog-content {
+      max-height: 70vh;
+      overflow-y: auto;
+      position: relative;
+    }
+
     .tab-content {
       padding: 1.5rem 0;
     }
@@ -458,6 +464,7 @@ import Quill from 'quill';
 
     .editor-field {
       margin: 1rem 0;
+      position: relative;
     }
     .editor-field label {
       display: block;
@@ -470,14 +477,27 @@ import Quill from 'quill';
       background: white;
       border: 1px solid #ccc;
       border-radius: 4px;
+      display: flex;
+      flex-direction: column;
     }
     ::ng-deep .ql-toolbar {
+      position: sticky;
+      top: -24px;
+      z-index: 100;
+      background: white;
       border-top-left-radius: 4px;
       border-top-right-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      flex-shrink: 0;
     }
     ::ng-deep .ql-container {
       border-bottom-left-radius: 4px;
       border-bottom-right-radius: 4px;
+      min-height: 300px;
+      flex: 1;
+    }
+    ::ng-deep .ql-editor {
+      min-height: 300px;
     }
 
     .gallery-section {
@@ -743,14 +763,19 @@ export class NewsMediaDialogComponent implements OnInit, AfterViewInit {
     this.quillEditor = new Quill(this.contentEditorElement.nativeElement, {
       theme: 'snow',
       modules: {
-        toolbar: [
-          ['bold', 'italic', 'underline', 'strike'],
-          [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-          [{ 'align': [] }],
-          ['link', 'image'],
-          ['clean']
-        ]
+        toolbar: {
+          container: [
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+            [{ 'align': [] }],
+            ['link', 'image'],
+            ['clean']
+          ],
+          handlers: {
+            image: () => this.imageHandler()
+          }
+        }
       }
     });
 
@@ -766,6 +791,37 @@ export class NewsMediaDialogComponent implements OnInit, AfterViewInit {
     this.quillEditor.on('text-change', () => {
       this.newsForm.patchValue({ content: this.quillEditor.root.innerHTML });
     });
+  }
+
+  imageHandler() {
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', 'image/*');
+    input.click();
+
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (file) {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        this.http.post<any>(`${getBrandConfig().app.apiUrl}/media/upload/news/gallery`, formData)
+          .subscribe({
+            next: (response) => {
+              const baseUrl = getBrandConfig().app.apiUrl.replace('/api', '');
+              const imageUrl = `${baseUrl}${response.files[0].url}`;
+              
+              const range = this.quillEditor.getSelection(true);
+              this.quillEditor.insertEmbed(range.index, 'image', imageUrl);
+              this.quillEditor.setSelection(range.index + 1);
+            },
+            error: (err) => {
+              console.error('Failed to upload image:', err);
+              alert('Failed to upload image to editor');
+            }
+          });
+      }
+    };
   }
 
   saveNews() {
