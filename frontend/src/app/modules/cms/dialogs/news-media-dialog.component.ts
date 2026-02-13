@@ -678,7 +678,8 @@ export class NewsMediaDialogComponent implements OnInit, AfterViewInit {
     this.http.post<any>(`${getBrandConfig().app.apiUrl}/media/upload/news/featured`, formData)
       .subscribe({
         next: (response) => {
-          const imageUrl = `${getBrandConfig().app.apiUrl}${response.url}`;
+          const baseUrl = getBrandConfig().app.apiUrl.replace('/api', '');
+          const imageUrl = `${baseUrl}${response.url}`;
           this.newsForm.patchValue({ featuredImage: imageUrl });
           this.uploading.set(false);
         },
@@ -710,8 +711,9 @@ export class NewsMediaDialogComponent implements OnInit, AfterViewInit {
     this.http.post<any>(`${getBrandConfig().app.apiUrl}/media/upload/news/gallery`, formData)
       .subscribe({
         next: (response) => {
+          const baseUrl = getBrandConfig().app.apiUrl.replace('/api', '');
           const newImages = response.files.map((file: any) => ({
-            url: `${getBrandConfig().app.apiUrl}${file.url}`,
+            url: `${baseUrl}${file.url}`,
             caption: '',
             order: this.gallery().length + file.order
           }));
