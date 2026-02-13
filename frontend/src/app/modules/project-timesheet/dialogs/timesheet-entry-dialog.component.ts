@@ -95,6 +95,12 @@ import { TimesheetEntry } from '../project-timesheet.service';
       gap: 16px;
       min-width: 500px;
     }
+    
+    @media (max-width: 768px) {
+      .timesheet-form {
+        min-width: 280px;
+      }
+    }
     .full-width {
       grid-column: 1 / -1;
     }

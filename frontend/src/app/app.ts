@@ -11,11 +11,12 @@ import { PwaUpdateAlertComponent } from './components/pwa-update-alert.component
 import { WebSocketService } from './services/websocket.service';
 import { MessagesApiService } from './services/messages.service';
 import { NotificationSoundService } from './services/notification-sound.service';
+import { XrmTrainerPanelComponent } from './components/xrm-trainer-panel.component';
 import { delay } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, XrmTrainerPanelComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })

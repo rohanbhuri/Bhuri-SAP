@@ -132,6 +132,12 @@ import { Invoice, InvoiceStatus, CreateInvoiceDto, UpdateInvoiceDto } from '../f
       gap: 16px;
       min-width: 800px;
     }
+    
+    @media (max-width: 768px) {
+      .invoice-form {
+        min-width: 280px;
+      }
+    }
 
     .form-row {
       display: flex;

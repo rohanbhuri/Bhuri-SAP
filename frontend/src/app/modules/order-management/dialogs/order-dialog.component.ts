@@ -161,6 +161,12 @@ import { Order, OrderStatus, OrderPriority, CreateOrderDto, UpdateOrderDto } fro
       gap: 16px;
       min-width: 600px;
     }
+    
+    @media (max-width: 768px) {
+      .order-form {
+        min-width: 280px;
+      }
+    }
 
     .form-row {
       display: flex;

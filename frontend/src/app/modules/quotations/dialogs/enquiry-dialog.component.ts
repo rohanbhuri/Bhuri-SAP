@@ -116,8 +116,14 @@ import { MatDividerModule } from '@angular/material/divider';
       margin-top: -8px;
     }
     .enquiry-dialog-content {
-      min-width: 500px;
+      width: 100%;
       max-width: 800px;
+    }
+    
+    @media (max-width: 768px) {
+      .enquiry-dialog-content {
+        max-width: 100%;
+      }
     }
     .info-section, .items-section, .message-section {
       padding: 16px 0;

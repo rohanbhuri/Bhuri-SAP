@@ -131,7 +131,13 @@ import { UploadUrlPipe } from '../../../pipes/upload-url.pipe';
   `,
   styles: [`
     .category-form {
-      min-width: 500px;
+      width: 100%;
+    }
+    
+    @media (max-width: 768px) {
+      .category-form {
+        padding: 0;
+      }
     }
     .form-row {
       display: flex;

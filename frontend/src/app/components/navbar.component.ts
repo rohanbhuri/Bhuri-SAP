@@ -21,6 +21,7 @@ import { ThemeService } from '../services/theme.service';
 import { NotificationsService } from '../services/notifications.service';
 import { WebSocketService } from '../services/websocket.service';
 import { PwaInstallModalComponent } from './pwa-install-modal.component';
+import { XrmTrainerService } from '../services/xrm-trainer.service';
 
 @Component({
   selector: 'app-navbar',
@@ -46,6 +47,16 @@ import { PwaInstallModalComponent } from './pwa-install-modal.component';
       </div>
 
       <div class="nav-actions">
+        <button
+          mat-icon-button
+          (click)="toggleTrainer()"
+          matTooltip="XRM Trainer - Get Help (Ctrl+/)"
+          class="trainer-toggle"
+          [class.active]="trainerService.isOpen()"
+        >
+          <mat-icon>help</mat-icon>
+        </button>
+
         <button
           mat-icon-button
           (click)="toggleTheme()"
@@ -162,13 +173,15 @@ import { PwaInstallModalComponent } from './pwa-install-modal.component';
       }
 
       .theme-toggle,
-      .install-button {
+      .install-button,
+      .trainer-toggle {
         color: var(--theme-primary);
         transition: all 0.2s ease;
       }
 
       .theme-toggle:hover,
-      .install-button:hover {
+      .install-button:hover,
+      .trainer-toggle:hover {
         background-color: color-mix(
           in srgb,
           var(--theme-primary) 10%,
@@ -177,17 +190,31 @@ import { PwaInstallModalComponent } from './pwa-install-modal.component';
         transform: scale(1.05);
       }
 
+      .trainer-toggle.active {
+        background-color: color-mix(
+          in srgb,
+          var(--theme-primary) 20%,
+          transparent
+        );
+      }
+
       .user-button {
         display: flex;
         align-items: center;
-        gap: 12px;
-        padding: 8px 16px;
+        padding: 4px 16px 4px 4px;
         border-radius: 24px;
         background: transparent;
         border: 1px solid #e5e7eb;
         color: #000000;
         transition: all 0.2s ease;
         min-width: 120px;
+      }
+
+      .user-button .display-flex {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
       }
 
       :host-context(body.dark-theme) .user-button {
@@ -304,6 +331,7 @@ export class NavbarComponent implements OnInit {
   private wsService = inject(WebSocketService);
   private cdr = inject(ChangeDetectorRef);
   protected brandConfig = inject(BrandConfigService);
+  protected trainerService = inject(XrmTrainerService);
 
   currentUser = signal<User | null>(null);
   showInstallButton = signal(false);
@@ -377,5 +405,9 @@ export class NavbarComponent implements OnInit {
 
   toggleTheme() {
     this.themeService.toggleTheme();
+  }
+
+  toggleTrainer() {
+    this.trainerService.toggle();
   }
 }

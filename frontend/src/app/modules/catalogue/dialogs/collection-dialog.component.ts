@@ -116,7 +116,13 @@ import { UploadUrlPipe } from '../../../pipes/upload-url.pipe';
   `,
   styles: [`
     .collection-form {
-      min-width: 500px;
+      width: 100%;
+    }
+    
+    @media (max-width: 768px) {
+      .collection-form {
+        padding: 0;
+      }
     }
     .form-row {
       display: flex;

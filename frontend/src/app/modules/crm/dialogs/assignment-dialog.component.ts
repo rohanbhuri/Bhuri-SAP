@@ -71,6 +71,10 @@ export interface AssignmentDialogData {
   `,
   styles: [`
     .assignment-dialog { min-width: 400px; }
+    
+    @media (max-width: 768px) {
+      .assignment-dialog { min-width: 280px; }
+    }
     .full-width { width: 100%; }
     .info { display: flex; align-items: center; gap: 8px; margin: 16px 0; color: #1976d2; }
     h2[mat-dialog-title] { display: flex; align-items: center; gap: 8px; }

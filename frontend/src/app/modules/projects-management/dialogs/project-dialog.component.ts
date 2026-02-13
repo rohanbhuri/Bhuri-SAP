@@ -150,6 +150,12 @@ import { Project } from '../projects-management.service';
         gap: 16px;
         min-width: 500px;
       }
+      
+      @media (max-width: 768px) {
+        .project-form {
+          min-width: 280px;
+        }
+      }
 
       .form-row {
         display: flex;

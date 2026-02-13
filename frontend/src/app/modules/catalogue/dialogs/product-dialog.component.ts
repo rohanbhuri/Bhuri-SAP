@@ -560,14 +560,28 @@ import Quill from 'quill';
       margin-bottom: 16px;
     }
     .dialog-content {
-      min-width: 800px;
+      width: 100%;
       max-height: 70vh;
     }
     .tab-content {
       padding: 1.5rem 0;
     }
     .product-form {
-      max-width: 900px;
+      width: 100%;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .form-row {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      .half-width {
+        width: 100%;
+      }
+      .tab-content {
+        padding: 1rem 0;
+      }
     }
     .form-row {
       display: flex;

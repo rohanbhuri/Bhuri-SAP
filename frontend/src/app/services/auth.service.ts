@@ -243,7 +243,10 @@ export class AuthService {
     if (!avatarPath) {
       return '/assets/default-avatar.svg';
     }
-    return `${this.apiUrl}${avatarPath}`;
+    // Avatar paths already include /uploads/ prefix, don't add /api
+    // Extract base URL without /api suffix
+    const baseUrl = this.apiUrl.replace(/\/api$/, '');
+    return `${baseUrl}${avatarPath}`;
   }
 
   private connectWebSocket(): void {

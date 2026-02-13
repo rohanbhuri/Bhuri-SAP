@@ -595,19 +595,54 @@ body.dark-theme {
     text-align: left !important;
 }
 
-/* Dialog Box Global Styles */
+/* Responsive Dialog Box Global Styles */
+.cdk-overlay-pane {
+  max-width: 90vw !important;
+  max-height: 90vh !important;
+}
+
 .mat-mdc-dialog-container {
-  min-width: 50vw;
-  max-width: 50vw !important;
-  width: auto !important;
+  width: 100% !important;
+  max-width: 720px !important;
+  min-width: 280px !important;
+  box-sizing: border-box !important;
 }
 
 .mat-mdc-dialog-container .mdc-dialog__surface {
-  min-width: 50vw;
-  max-width: 50vw !important;
-  width: auto !important;
+  width: 100% !important;
+  max-width: 720px !important;
+  min-width: 280px !important;
+  box-sizing: border-box !important;
 }
 
+/* Responsive breakpoints for dialogs */
+@media (min-width: 1200px) {
+  .mat-mdc-dialog-container,
+  .mat-mdc-dialog-container .mdc-dialog__surface {
+    max-width: 840px !important;
+  }
+}
+
+@media (min-width: 1600px) {
+  .mat-mdc-dialog-container,
+  .mat-mdc-dialog-container .mdc-dialog__surface {
+    max-width: 960px !important;
+  }
+}
+
+@media (max-width: 599px) {
+  .cdk-overlay-pane {
+    max-width: 95vw !important;
+  }
+  
+  .mat-mdc-dialog-container,
+  .mat-mdc-dialog-container .mdc-dialog__surface {
+    max-width: 95vw !important;
+    min-width: 280px !important;
+  }
+}
+
+/* Center all dialogs properly */
 .cdk-global-overlay-wrapper {
   display: flex !important;
   align-items: center !important;

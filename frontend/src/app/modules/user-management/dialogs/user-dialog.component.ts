@@ -152,6 +152,12 @@ import { PasswordDialogComponent } from './password-dialog.component';
       gap: 16px;
       min-width: 450px;
     }
+    
+    @media (max-width: 768px) {
+      .user-form {
+        min-width: 280px;
+      }
+    }
 
     .form-row {
       display: flex;

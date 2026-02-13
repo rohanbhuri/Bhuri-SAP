@@ -107,7 +107,13 @@ import Quill from 'quill';
       display: flex;
       flex-direction: column;
       gap: 1rem;
-      min-width: 500px;
+      width: 100%;
+    }
+    
+    @media (max-width: 768px) {
+      .designer-form {
+        gap: 0.5rem;
+      }
     }
     .full-width {
       width: 100%;
