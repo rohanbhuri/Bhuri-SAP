@@ -142,7 +142,7 @@ export class MailService {
   private async sendMail(to: string[], subject: string, html: string) {
     try {
       const info = await this.transporter.sendMail({
-        from: `"RACCONTI System" <${this.configService.get('SMTP_FROM') || 'noreply@racconti.in'}>`,
+        from: `"RACCONTI" <${this.configService.get('SMTP_FROM') || 'noreply@racconti.in'}>`,
         to: to.join(','),
         subject: subject,
         html: html,
