@@ -1,12 +1,14 @@
 import { Controller, Get, Post, Body, Param, Put } from '@nestjs/common';
 import { EnquiryService } from './enquiry.service';
 import { Enquiry, EnquiryStatus } from '../entities/enquiry.entity';
+import { Public } from '../decorators/public.decorator';
 
 @Controller('enquiries')
 export class EnquiryController {
     constructor(private readonly enquiryService: EnquiryService) {}
 
     @Post()
+    @Public()
     async create(@Body() createEnquiryDto: Partial<Enquiry>) {
         return this.enquiryService.createEnquiry(createEnquiryDto);
     }

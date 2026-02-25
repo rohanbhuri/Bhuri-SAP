@@ -17,6 +17,7 @@ const common_1 = require("@nestjs/common");
 const quotations_service_1 = require("./quotations.service");
 const jwt_auth_guard_1 = require("../guards/jwt-auth.guard");
 const api_key_guard_1 = require("../guards/api-key.guard");
+const public_decorator_1 = require("../decorators/public.decorator");
 let QuotationsController = class QuotationsController {
     constructor(quotationsService) {
         this.quotationsService = quotationsService;
@@ -61,7 +62,8 @@ let QuotationsController = class QuotationsController {
         return this.quotationsService.findEnquiry(id);
     }
     async createEnquiry(data, req) {
-        return this.quotationsService.createEnquiry(data, req.user.organizationId);
+        const organizationId = req.user?.organizationId;
+        return this.quotationsService.createEnquiry(data, organizationId);
     }
     async updateEnquiry(id, data, req) {
         return this.quotationsService.updateEnquiry(id, data, req.user?.userId);
@@ -230,7 +232,7 @@ __decorate([
 ], QuotationsController.prototype, "getEnquiry", null);
 __decorate([
     (0, common_1.Post)('enquiries'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, api_key_guard_1.ApiKeyGuard),
+    (0, public_decorator_1.Public)(),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),

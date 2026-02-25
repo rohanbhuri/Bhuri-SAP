@@ -6,6 +6,7 @@ import { EmailTemplate } from '../entities/email-template.entity';
 import { Presentation } from '../entities/presentation.entity';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { ApiKeyGuard } from '../guards/api-key.guard';
+import { Public } from '../decorators/public.decorator';
 import { Response } from 'express';
 
 @Controller('quotations')
@@ -94,9 +95,10 @@ export class QuotationsController {
     }
 
     @Post('enquiries')
-    @UseGuards(JwtAuthGuard, ApiKeyGuard)
+    @Public()
     async createEnquiry(@Body() data: Partial<Enquiry>, @Request() req) {
-        return this.quotationsService.createEnquiry(data, req.user.organizationId);
+        const organizationId = req.user?.organizationId;
+        return this.quotationsService.createEnquiry(data, organizationId);
     }
 
     @Put('enquiries/:id')

@@ -16,6 +16,7 @@ exports.EnquiryController = void 0;
 const common_1 = require("@nestjs/common");
 const enquiry_service_1 = require("./enquiry.service");
 const enquiry_entity_1 = require("../entities/enquiry.entity");
+const public_decorator_1 = require("../decorators/public.decorator");
 let EnquiryController = class EnquiryController {
     constructor(enquiryService) {
         this.enquiryService = enquiryService;
@@ -39,6 +40,7 @@ let EnquiryController = class EnquiryController {
 exports.EnquiryController = EnquiryController;
 __decorate([
     (0, common_1.Post)(),
+    (0, public_decorator_1.Public)(),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
