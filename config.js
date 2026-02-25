@@ -24,6 +24,16 @@ const configs = {
       MONGODB_URI: 'mongodb+srv://rohanbhuri:nokiaset@bhuri-db.zg9undw.mongodb.net/beaxrm?retryWrites=true&w=majority&appName=bhuri-db',
       JWT_SECRET: 'rohanbhuri'
     },
+    smtp: {
+      SMTP_HOST: 'smtp.gmail.com',
+      SMTP_PORT: '465',
+      SMTP_SECURE: 'true',
+      SMTP_USER: 'info@racconti.in',
+      SMTP_PASS: 'flkbskneosmwzult',
+      SMTP_FROM: 'noreply@racconti.in',
+      ADMIN_EMAIL_RECIPIENTS: 'admin@purpul.in,deeksha@racconti.in,rosemary@racconti.in',
+      FRONTEND_URL: 'http://13.126.228.247:4200'
+    },
     development: {
       NODE_ENV: 'development',
       PORT: 3000
@@ -60,6 +70,16 @@ const configs = {
       MONGODB_URI: 'mongodb+srv://rohanbhuri:nokiaset@bhuri-db.zg9undw.mongodb.net/trueprocess?retryWrites=true&w=majority&appName=bhuri-db',
       JWT_SECRET: 'rohanbhuri'
     },
+    smtp: {
+      SMTP_HOST: 'smtp.gmail.com',
+      SMTP_PORT: '465',
+      SMTP_SECURE: 'true',
+      SMTP_USER: 'info@racconti.in',
+      SMTP_PASS: 'flkbskneosmwzult',
+      SMTP_FROM: 'noreply@racconti.in',
+      ADMIN_EMAIL_RECIPIENTS: 'admin@purpul.in,deeksha@racconti.in,rosemary@racconti.in',
+      FRONTEND_URL: 'http://3.111.139.181:4201'
+    },
     development: {
       NODE_ENV: 'development',
       PORT: 3001
@@ -94,6 +114,16 @@ const configs = {
     database: {
       MONGODB_URI: 'mongodb+srv://rohanbhuri:nokiaset@bhuri-db.zg9undw.mongodb.net/racconti?retryWrites=true&w=majority&appName=bhuri-db',
       JWT_SECRET: 'rohanbhuri'
+    },
+    smtp: {
+      SMTP_HOST: 'smtp.gmail.com',
+      SMTP_PORT: '465',
+      SMTP_SECURE: 'true',
+      SMTP_USER: 'info@racconti.in',
+      SMTP_PASS: 'flkbskneosmwzult',
+      SMTP_FROM: 'noreply@racconti.in',
+      ADMIN_EMAIL_RECIPIENTS: 'admin@purpul.in,deeksha@racconti.in,rosemary@racconti.in',
+      FRONTEND_URL: 'https://xrm.racconti.in'
     },
     development: {
       NODE_ENV: 'development',

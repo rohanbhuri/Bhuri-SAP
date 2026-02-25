@@ -15,19 +15,31 @@ export declare class MailService {
         email: string;
         subject: string;
         message: string;
-    }): Promise<void>;
+    }): Promise<{
+        success: boolean;
+        messageId?: string;
+        error?: string;
+    }>;
     sendCredentialRequestNotification(data: {
         companyName: string;
         contactPerson: string;
         email: string;
         phone: string;
-    }): Promise<void>;
+    }): Promise<{
+        success: boolean;
+        messageId?: string;
+        error?: string;
+    }>;
     sendEnquiryNotification(data: {
         enquiryNumber: string;
         customerName: string;
         customerEmail: string;
         itemsCount: number;
         message?: string;
-    }): Promise<void>;
+    }): Promise<{
+        success: boolean;
+        messageId?: string;
+        error?: string;
+    }>;
     private sendMail;
 }

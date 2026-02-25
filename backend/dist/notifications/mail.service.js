@@ -113,9 +113,10 @@ let MailService = class MailService {
         console.log('[MailService] sendContactUsNotification called');
         const emails = await this.getActiveAdminEmails();
         if (emails.length === 0) {
-            console.warn('[MailService] No admin emails found with enableEmailNotifications=true. Email will not be sent.');
-            return;
+            console.warn('[MailService] No admin emails found. Email will not be sent.');
+            return { success: false, error: 'No admin emails configured' };
         }
+        console.log('[MailService] Sending contact us notification to:', emails);
         const html = `
       ${this.getEmailHeader()}
       <h2 style="color: #1a1a1a; margin-top: 0;">New Contact Inquiry</h2>
@@ -136,14 +137,15 @@ let MailService = class MailService {
       </div>
       ${this.getEmailFooter()}
     `;
-        await this.sendMail(emails, `New Contact Inquiry: ${data.subject}`, html);
+        const result = await this.sendMail(emails, `New Contact Inquiry: ${data.subject}`, html);
+        return result;
     }
     async sendCredentialRequestNotification(data) {
         console.log('[MailService] sendCredentialRequestNotification called');
         const emails = await this.getActiveAdminEmails();
         if (emails.length === 0) {
-            console.warn('[MailService] No admin emails found with enableEmailNotifications=true. Email will not be sent.');
-            return;
+            console.warn('[MailService] No admin emails found. Email will not be sent.');
+            return { success: false, error: 'No admin emails configured' };
         }
         const html = `
       ${this.getEmailHeader()}
@@ -162,14 +164,15 @@ let MailService = class MailService {
       </div>
       ${this.getEmailFooter()}
     `;
-        await this.sendMail(emails, `New Credential Request: ${data.companyName}`, html);
+        const result = await this.sendMail(emails, `New Credential Request: ${data.companyName}`, html);
+        return result;
     }
     async sendEnquiryNotification(data) {
         console.log('[MailService] sendEnquiryNotification called with:', data);
         const emails = await this.getActiveAdminEmails();
         if (emails.length === 0) {
-            console.warn('[MailService] No admin emails found with enableEmailNotifications=true. Email will not be sent.');
-            return;
+            console.warn('[MailService] No admin emails found. Email will not be sent.');
+            return { success: false, error: 'No admin emails configured' };
         }
         console.log('[MailService] Sending enquiry notification to:', emails);
         const html = `
@@ -190,12 +193,14 @@ let MailService = class MailService {
       </div>
       ${this.getEmailFooter()}
     `;
-        await this.sendMail(emails, `New Enquiry Received: ${data.enquiryNumber}`, html);
+        const result = await this.sendMail(emails, `New Cart Enquiry Received: ${data.enquiryNumber}`, html);
+        return result;
     }
     async sendMail(to, subject, html) {
         if (!to || to.length === 0) {
-            console.error('[MailService] No recipients specified for email');
-            return;
+            const err = '[MailService] No recipients specified for email';
+            console.error(err);
+            return { success: false, error: err };
         }
         try {
             const fromAddress = this.configService.get('SMTP_FROM') || 'noreply@racconti.in';
@@ -207,11 +212,13 @@ let MailService = class MailService {
                 html: html,
             });
             console.log('[MailService] Email sent successfully! MessageId:', info.messageId);
+            return { success: true, messageId: info.messageId };
         }
         catch (error) {
-            console.error('[MailService] Error sending email:', error.message || error);
+            const errorMessage = error.message || String(error);
+            console.error('[MailService] Error sending email:', errorMessage);
             console.error('[MailService] Error details:', error);
-            throw error;
+            return { success: false, error: errorMessage };
         }
     }
 };

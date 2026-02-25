@@ -154,12 +154,13 @@ let ClientManagementService = class ClientManagementService {
             status: client_request_entity_1.ClientRequestStatus.PENDING
         });
         const savedRequest = await this.clientRequestRepository.save(clientRequest);
-        this.mailService.sendCredentialRequestNotification({
+        const emailResult = await this.mailService.sendCredentialRequestNotification({
             companyName: savedRequest.companyName,
             contactPerson: savedRequest.contactPerson,
             email: savedRequest.email,
             phone: savedRequest.phone
-        }).catch(err => console.error('Failed to send credential request email:', err));
+        });
+        console.log('[ClientManagementService] Credential request email result:', emailResult);
         return savedRequest;
     }
     async getAllClientRequests() {
@@ -528,12 +529,13 @@ let ClientManagementService = class ClientManagementService {
             organizationId: messageData.organizationId?.toString() || '',
         });
         const savedContact = await this.contactUsRepository.save(contactUs);
-        this.mailService.sendContactUsNotification({
+        const emailResult = await this.mailService.sendContactUsNotification({
             name: savedContact.name,
             email: savedContact.email,
             subject: savedContact.subject || 'No Subject',
             message: savedContact.message
-        }).catch(err => console.error('Failed to send contact us email:', err));
+        });
+        console.log('[ClientManagementService] Contact us email result:', emailResult);
         return savedContact;
     }
     async getAllContactMessages(organizationId) {

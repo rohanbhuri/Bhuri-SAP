@@ -120,9 +120,10 @@ export class MailService {
     
     const emails = await this.getActiveAdminEmails();
     if (emails.length === 0) {
-      console.warn('[MailService] No admin emails found with enableEmailNotifications=true. Email will not be sent.');
-      return;
+      console.warn('[MailService] No admin emails found. Email will not be sent.');
+      return { success: false, error: 'No admin emails configured' };
     }
+    console.log('[MailService] Sending contact us notification to:', emails);
 
     const html = `
       ${this.getEmailHeader()}
@@ -145,7 +146,8 @@ export class MailService {
       ${this.getEmailFooter()}
     `;
 
-    await this.sendMail(emails, `New Contact Inquiry: ${data.subject}`, html);
+    const result = await this.sendMail(emails, `New Contact Inquiry: ${data.subject}`, html);
+    return result;
   }
 
   async sendCredentialRequestNotification(data: { companyName: string; contactPerson: string; email: string; phone: string }) {
@@ -153,8 +155,8 @@ export class MailService {
     
     const emails = await this.getActiveAdminEmails();
     if (emails.length === 0) {
-      console.warn('[MailService] No admin emails found with enableEmailNotifications=true. Email will not be sent.');
-      return;
+      console.warn('[MailService] No admin emails found. Email will not be sent.');
+      return { success: false, error: 'No admin emails configured' };
     }
 
     const html = `
@@ -175,7 +177,8 @@ export class MailService {
       ${this.getEmailFooter()}
     `;
 
-    await this.sendMail(emails, `New Credential Request: ${data.companyName}`, html);
+    const result = await this.sendMail(emails, `New Credential Request: ${data.companyName}`, html);
+    return result;
   }
 
   async sendEnquiryNotification(data: { enquiryNumber: string; customerName: string; customerEmail: string; itemsCount: number; message?: string }) {
@@ -183,8 +186,8 @@ export class MailService {
     
     const emails = await this.getActiveAdminEmails();
     if (emails.length === 0) {
-      console.warn('[MailService] No admin emails found with enableEmailNotifications=true. Email will not be sent.');
-      return;
+      console.warn('[MailService] No admin emails found. Email will not be sent.');
+      return { success: false, error: 'No admin emails configured' };
     }
     console.log('[MailService] Sending enquiry notification to:', emails);
 
@@ -207,13 +210,15 @@ export class MailService {
       ${this.getEmailFooter()}
     `;
 
-    await this.sendMail(emails, `New Enquiry Received: ${data.enquiryNumber}`, html);
+    const result = await this.sendMail(emails, `New Cart Enquiry Received: ${data.enquiryNumber}`, html);
+    return result;
   }
 
-  private async sendMail(to: string[], subject: string, html: string) {
+  private async sendMail(to: string[], subject: string, html: string): Promise<{ success: boolean; messageId?: string; error?: string }> {
     if (!to || to.length === 0) {
-      console.error('[MailService] No recipients specified for email');
-      return;
+      const err = '[MailService] No recipients specified for email';
+      console.error(err);
+      return { success: false, error: err };
     }
     
     try {
@@ -227,11 +232,12 @@ export class MailService {
         html: html,
       });
       console.log('[MailService] Email sent successfully! MessageId:', info.messageId);
+      return { success: true, messageId: info.messageId };
     } catch (error: any) {
-      console.error('[MailService] Error sending email:', error.message || error);
+      const errorMessage = error.message || String(error);
+      console.error('[MailService] Error sending email:', errorMessage);
       console.error('[MailService] Error details:', error);
-      // Re-throw to ensure calling code knows about the failure
-      throw error;
+      return { success: false, error: errorMessage };
     }
   }
 }

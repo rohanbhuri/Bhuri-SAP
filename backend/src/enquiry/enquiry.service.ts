@@ -28,13 +28,14 @@ export class EnquiryService {
         const savedEnquiry = await this.enquiryRepository.save(enquiry);
 
         // Send email notification to admins
-        this.mailService.sendEnquiryNotification({
+        const emailResult = await this.mailService.sendEnquiryNotification({
             enquiryNumber: savedEnquiry.enquiryNumber,
             customerName: savedEnquiry.customerName,
             customerEmail: savedEnquiry.customerEmail,
             itemsCount: savedEnquiry.items?.length || 0,
             message: savedEnquiry.message
-        }).catch(err => console.error('Failed to send enquiry email:', err));
+        });
+        console.log('[EnquiryService] Email notification result:', emailResult);
 
         return savedEnquiry;
     }

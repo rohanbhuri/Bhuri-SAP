@@ -12,6 +12,15 @@ if (brandConfig) {
       }
     });
   }
+
+  // Set SMTP credentials (same for all environments)
+  if (brandConfig.smtp) {
+    Object.keys(brandConfig.smtp).forEach(key => {
+      if (!process.env[key]) {
+        process.env[key] = brandConfig.smtp[key];
+      }
+    });
+  }
   
   // Set environment-specific config
   const envConfig = process.env.NODE_ENV === 'production' ? brandConfig.production : brandConfig.development;

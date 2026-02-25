@@ -35,13 +35,14 @@ let EnquiryService = class EnquiryService {
             createdAt: new Date()
         });
         const savedEnquiry = await this.enquiryRepository.save(enquiry);
-        this.mailService.sendEnquiryNotification({
+        const emailResult = await this.mailService.sendEnquiryNotification({
             enquiryNumber: savedEnquiry.enquiryNumber,
             customerName: savedEnquiry.customerName,
             customerEmail: savedEnquiry.customerEmail,
             itemsCount: savedEnquiry.items?.length || 0,
             message: savedEnquiry.message
-        }).catch(err => console.error('Failed to send enquiry email:', err));
+        });
+        console.log('[EnquiryService] Email notification result:', emailResult);
         return savedEnquiry;
     }
     async findAll() {
