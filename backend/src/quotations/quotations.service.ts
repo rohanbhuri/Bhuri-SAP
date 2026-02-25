@@ -10,6 +10,7 @@ import { Client } from '../entities/client.entity';
 import { User } from '../entities/user.entity';
 import { Role, RoleType } from '../entities/role.entity';
 import { NotificationsService } from '../notifications/notifications.service';
+import { MailService } from '../notifications/mail.service';
 import { ObjectId } from 'mongodb';
 import * as PDFDocument from 'pdfkit';
 import * as https from 'https';
@@ -38,6 +39,7 @@ export class QuotationsService {
         @InjectRepository(Role)
         private roleRepository: MongoRepository<Role>,
         private notificationsService: NotificationsService,
+        private mailService: MailService,
     ) { }
 
     // Quotations
@@ -266,7 +268,23 @@ export class QuotationsService {
             createdAt: new Date(),
             changeLog: []
         });
-        return this.enquiryRepository.save(enquiry);
+        const savedEnquiry = await this.enquiryRepository.save(enquiry);
+
+        // Send email notification to admins
+        try {
+            const emailResult = await this.mailService.sendEnquiryNotification({
+                enquiryNumber: savedEnquiry.enquiryNumber,
+                customerName: savedEnquiry.customerName,
+                customerEmail: savedEnquiry.customerEmail,
+                itemsCount: savedEnquiry.items?.length || 0,
+                message: savedEnquiry.message
+            });
+            console.log('[QuotationsService] Cart enquiry email result:', emailResult);
+        } catch (error) {
+            console.error('[QuotationsService] Failed to send cart enquiry email:', error);
+        }
+
+        return savedEnquiry;
     }
 
     async createFromWebsiteCart(cartData: any, organizationId: string): Promise<Enquiry> {

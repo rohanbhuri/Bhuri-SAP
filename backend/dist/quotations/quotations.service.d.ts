@@ -8,6 +8,7 @@ import { Client } from '../entities/client.entity';
 import { User } from '../entities/user.entity';
 import { Role } from '../entities/role.entity';
 import { NotificationsService } from '../notifications/notifications.service';
+import { MailService } from '../notifications/mail.service';
 export declare class QuotationsService {
     private quotationRepository;
     private enquiryRepository;
@@ -18,7 +19,8 @@ export declare class QuotationsService {
     private userRepository;
     private roleRepository;
     private notificationsService;
-    constructor(quotationRepository: MongoRepository<Quotation>, enquiryRepository: MongoRepository<Enquiry>, emailTemplateRepository: MongoRepository<EmailTemplate>, presentationRepository: MongoRepository<Presentation>, productRepository: MongoRepository<Product>, clientRepository: MongoRepository<Client>, userRepository: MongoRepository<User>, roleRepository: MongoRepository<Role>, notificationsService: NotificationsService);
+    private mailService;
+    constructor(quotationRepository: MongoRepository<Quotation>, enquiryRepository: MongoRepository<Enquiry>, emailTemplateRepository: MongoRepository<EmailTemplate>, presentationRepository: MongoRepository<Presentation>, productRepository: MongoRepository<Product>, clientRepository: MongoRepository<Client>, userRepository: MongoRepository<User>, roleRepository: MongoRepository<Role>, notificationsService: NotificationsService, mailService: MailService);
     findAll(organizationId: string): Promise<Quotation[]>;
     findOne(id: string): Promise<Quotation>;
     findByClient(clientId: string): Promise<Quotation[]>;

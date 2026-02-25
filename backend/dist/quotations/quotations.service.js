@@ -25,6 +25,7 @@ const client_entity_1 = require("../entities/client.entity");
 const user_entity_1 = require("../entities/user.entity");
 const role_entity_1 = require("../entities/role.entity");
 const notifications_service_1 = require("../notifications/notifications.service");
+const mail_service_1 = require("../notifications/mail.service");
 const mongodb_1 = require("mongodb");
 const https = require("https");
 const http = require("http");
@@ -32,7 +33,7 @@ const ExcelJS = require("exceljs");
 const fs = require("fs");
 const PptxGenJS = require('pptxgenjs');
 let QuotationsService = class QuotationsService {
-    constructor(quotationRepository, enquiryRepository, emailTemplateRepository, presentationRepository, productRepository, clientRepository, userRepository, roleRepository, notificationsService) {
+    constructor(quotationRepository, enquiryRepository, emailTemplateRepository, presentationRepository, productRepository, clientRepository, userRepository, roleRepository, notificationsService, mailService) {
         this.quotationRepository = quotationRepository;
         this.enquiryRepository = enquiryRepository;
         this.emailTemplateRepository = emailTemplateRepository;
@@ -42,6 +43,7 @@ let QuotationsService = class QuotationsService {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.notificationsService = notificationsService;
+        this.mailService = mailService;
     }
     async findAll(organizationId) {
         return this.quotationRepository.find({ where: { organizationId, isDeleted: { $ne: true } } });
@@ -218,7 +220,21 @@ let QuotationsService = class QuotationsService {
             createdAt: new Date(),
             changeLog: []
         });
-        return this.enquiryRepository.save(enquiry);
+        const savedEnquiry = await this.enquiryRepository.save(enquiry);
+        try {
+            const emailResult = await this.mailService.sendEnquiryNotification({
+                enquiryNumber: savedEnquiry.enquiryNumber,
+                customerName: savedEnquiry.customerName,
+                customerEmail: savedEnquiry.customerEmail,
+                itemsCount: savedEnquiry.items?.length || 0,
+                message: savedEnquiry.message
+            });
+            console.log('[QuotationsService] Cart enquiry email result:', emailResult);
+        }
+        catch (error) {
+            console.error('[QuotationsService] Failed to send cart enquiry email:', error);
+        }
+        return savedEnquiry;
     }
     async createFromWebsiteCart(cartData, organizationId) {
         const enquiryData = {
@@ -878,6 +894,7 @@ exports.QuotationsService = QuotationsService = __decorate([
         typeorm_2.MongoRepository,
         typeorm_2.MongoRepository,
         typeorm_2.MongoRepository,
-        notifications_service_1.NotificationsService])
+        notifications_service_1.NotificationsService,
+        mail_service_1.MailService])
 ], QuotationsService);
 //# sourceMappingURL=quotations.service.js.map
