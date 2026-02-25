@@ -6,6 +6,7 @@ export declare class MailService {
     private configService;
     private transporter;
     constructor(userRepo: MongoRepository<User>, configService: ConfigService);
+    private getDefaultAdminEmails;
     private getActiveAdminEmails;
     private getEmailHeader;
     private getEmailFooter;

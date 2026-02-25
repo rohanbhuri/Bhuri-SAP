@@ -15,10 +15,27 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.NotificationsController = void 0;
 const common_1 = require("@nestjs/common");
 const jwt_auth_guard_1 = require("../guards/jwt-auth.guard");
+const public_decorator_1 = require("../decorators/public.decorator");
 const notifications_service_1 = require("./notifications.service");
+const mail_service_1 = require("./mail.service");
 let NotificationsController = class NotificationsController {
-    constructor(notificationsService) {
+    constructor(notificationsService, mailService) {
         this.notificationsService = notificationsService;
+        this.mailService = mailService;
+    }
+    async testEmail() {
+        try {
+            await this.mailService.sendContactUsNotification({
+                name: 'Test User',
+                email: 'test@example.com',
+                subject: 'Test Email',
+                message: 'This is a test email to verify SMTP configuration.'
+            });
+            return { success: true, message: 'Test email sent successfully!' };
+        }
+        catch (error) {
+            return { success: false, error: error.message || String(error) };
+        }
     }
     async getNotifications(req, limit, skip, unreadOnly, type) {
         const userId = req.user.id || req.user.userId || req.user._id;
@@ -81,7 +98,15 @@ let NotificationsController = class NotificationsController {
 };
 exports.NotificationsController = NotificationsController;
 __decorate([
+    (0, common_1.Get)('test-email'),
+    (0, public_decorator_1.Public)(),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], NotificationsController.prototype, "testEmail", null);
+__decorate([
     (0, common_1.Get)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Query)('limit')),
     __param(2, (0, common_1.Query)('skip')),
@@ -93,6 +118,7 @@ __decorate([
 ], NotificationsController.prototype, "getNotifications", null);
 __decorate([
     (0, common_1.Get)('count'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -100,6 +126,7 @@ __decorate([
 ], NotificationsController.prototype, "getUnreadCount", null);
 __decorate([
     (0, common_1.Get)('messages'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Query)('conversationId')),
     __metadata("design:type", Function),
@@ -108,6 +135,7 @@ __decorate([
 ], NotificationsController.prototype, "getMessageNotifications", null);
 __decorate([
     (0, common_1.Patch)(':id/read'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -115,6 +143,7 @@ __decorate([
 ], NotificationsController.prototype, "markAsRead", null);
 __decorate([
     (0, common_1.Patch)('read-all'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -122,6 +151,7 @@ __decorate([
 ], NotificationsController.prototype, "markAllAsRead", null);
 __decorate([
     (0, common_1.Patch)('conversation/:conversationId/read'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Param)('conversationId')),
     __metadata("design:type", Function),
@@ -130,6 +160,7 @@ __decorate([
 ], NotificationsController.prototype, "markConversationAsRead", null);
 __decorate([
     (0, common_1.Delete)(':id'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -137,6 +168,7 @@ __decorate([
 ], NotificationsController.prototype, "deleteNotification", null);
 __decorate([
     (0, common_1.Delete)('cleanup/old'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __param(0, (0, common_1.Query)('days')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -144,7 +176,7 @@ __decorate([
 ], NotificationsController.prototype, "cleanupOldNotifications", null);
 exports.NotificationsController = NotificationsController = __decorate([
     (0, common_1.Controller)('notifications'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    __metadata("design:paramtypes", [notifications_service_1.NotificationsService])
+    __metadata("design:paramtypes", [notifications_service_1.NotificationsService,
+        mail_service_1.MailService])
 ], NotificationsController);
 //# sourceMappingURL=notifications.controller.js.map

@@ -1,8 +1,19 @@
 import { NotificationsService } from './notifications.service';
+import { MailService } from './mail.service';
 import { NotificationType } from '../entities/notification.entity';
 export declare class NotificationsController {
     private readonly notificationsService;
-    constructor(notificationsService: NotificationsService);
+    private readonly mailService;
+    constructor(notificationsService: NotificationsService, mailService: MailService);
+    testEmail(): Promise<{
+        success: boolean;
+        message: string;
+        error?: undefined;
+    } | {
+        success: boolean;
+        error: any;
+        message?: undefined;
+    }>;
     getNotifications(req: any, limit?: string, skip?: string, unreadOnly?: string, type?: NotificationType): Promise<import("../entities/notification.entity").Notification[]>;
     getUnreadCount(req: any): Promise<{
         count: number;

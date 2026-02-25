@@ -23,25 +23,69 @@ let MailService = class MailService {
     constructor(userRepo, configService) {
         this.userRepo = userRepo;
         this.configService = configService;
+        const smtpHost = this.configService.get('SMTP_HOST') || 'smtp.gmail.com';
+        const smtpPort = parseInt(this.configService.get('SMTP_PORT')) || 587;
+        const smtpSecure = this.configService.get('SMTP_SECURE') === 'true';
+        const smtpUser = this.configService.get('SMTP_USER') || '';
+        const smtpPass = this.configService.get('SMTP_PASS') || '';
+        console.log('[MailService] Initializing SMTP transporter...');
+        console.log('[MailService] SMTP Host:', smtpHost);
+        console.log('[MailService] SMTP Port:', smtpPort);
+        console.log('[MailService] SMTP Secure:', smtpSecure);
+        console.log('[MailService] SMTP User:', smtpUser);
+        console.log('[MailService] SMTP Password set:', !!smtpPass);
+        if (!smtpUser || !smtpPass) {
+            console.error('[MailService] ERROR: SMTP_USER or SMTP_PASS is not configured!');
+        }
         this.transporter = nodemailer.createTransport({
-            host: this.configService.get('SMTP_HOST') || 'smtp.gmail.com',
-            port: parseInt(this.configService.get('SMTP_PORT')) || 587,
-            secure: this.configService.get('SMTP_SECURE') === 'true',
+            host: smtpHost,
+            port: smtpPort,
+            secure: smtpSecure,
             auth: {
-                user: this.configService.get('SMTP_USER') || '',
-                pass: this.configService.get('SMTP_PASS') || '',
+                user: smtpUser,
+                pass: smtpPass,
             },
         });
-    }
-    async getActiveAdminEmails() {
-        const users = await this.userRepo.find({
-            where: {
-                enableEmailNotifications: true,
-                isActive: true,
-                isDeleted: { $ne: true }
+        this.transporter.verify((error, success) => {
+            if (error) {
+                console.error('[MailService] SMTP connection verification FAILED:', error.message);
+            }
+            else {
+                console.log('[MailService] SMTP connection verified successfully!');
             }
         });
-        return users.map(u => u.email).filter(email => !!email);
+    }
+    getDefaultAdminEmails() {
+        const envEmails = this.configService.get('ADMIN_EMAIL_RECIPIENTS');
+        if (envEmails) {
+            return envEmails.split(',').map(e => e.trim()).filter(e => !!e);
+        }
+        return [
+            'admin@purpul.in',
+            'deeksha@racconti.in',
+            'rosemary@racconti.in'
+        ];
+    }
+    async getActiveAdminEmails() {
+        const defaultAdminEmails = this.getDefaultAdminEmails();
+        try {
+            const users = await this.userRepo.find({
+                where: {
+                    enableEmailNotifications: true,
+                    isActive: true,
+                    isDeleted: { $ne: true }
+                }
+            });
+            const userEmails = users.map(u => u.email).filter(email => !!email);
+            const allEmails = [...new Set([...defaultAdminEmails, ...userEmails])];
+            console.log(`[MailService] Found ${allEmails.length} admin emails (${defaultAdminEmails.length} default + ${userEmails.length} from users with notifications enabled)`);
+            return allEmails;
+        }
+        catch (error) {
+            console.error('[MailService] Error fetching admin emails:', error.message || error);
+            console.log('[MailService] Returning default admin emails due to database error');
+            return defaultAdminEmails;
+        }
     }
     getEmailHeader() {
         return `
@@ -66,9 +110,12 @@ let MailService = class MailService {
     `;
     }
     async sendContactUsNotification(data) {
+        console.log('[MailService] sendContactUsNotification called');
         const emails = await this.getActiveAdminEmails();
-        if (emails.length === 0)
+        if (emails.length === 0) {
+            console.warn('[MailService] No admin emails found with enableEmailNotifications=true. Email will not be sent.');
             return;
+        }
         const html = `
       ${this.getEmailHeader()}
       <h2 style="color: #1a1a1a; margin-top: 0;">New Contact Inquiry</h2>
@@ -85,16 +132,19 @@ let MailService = class MailService {
       </div>
       
       <div style="text-align: center; margin-top: 30px;">
-        <a href="${this.configService.get('FRONTEND_URL')}/client-management/contact-us" style="background-color: #1a1a1a; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-weight: 600; display: inline-block;">View in Dashboard</a>
+        <a href="${this.configService.get('FRONTEND_URL')}/client-management?tab=contact-us" style="background-color: #1a1a1a; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-weight: 600; display: inline-block;">View in Dashboard</a>
       </div>
       ${this.getEmailFooter()}
     `;
         await this.sendMail(emails, `New Contact Inquiry: ${data.subject}`, html);
     }
     async sendCredentialRequestNotification(data) {
+        console.log('[MailService] sendCredentialRequestNotification called');
         const emails = await this.getActiveAdminEmails();
-        if (emails.length === 0)
+        if (emails.length === 0) {
+            console.warn('[MailService] No admin emails found with enableEmailNotifications=true. Email will not be sent.');
             return;
+        }
         const html = `
       ${this.getEmailHeader()}
       <h2 style="color: #1a1a1a; margin-top: 0;">Login Credential Request</h2>
@@ -108,16 +158,20 @@ let MailService = class MailService {
       </div>
       
       <div style="text-align: center; margin-top: 30px;">
-        <a href="${this.configService.get('FRONTEND_URL')}/client-management/requests" style="background-color: #1a1a1a; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-weight: 600; display: inline-block;">Review Request</a>
+        <a href="${this.configService.get('FRONTEND_URL')}/client-management?tab=requests" style="background-color: #1a1a1a; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-weight: 600; display: inline-block;">View in Dashboard</a>
       </div>
       ${this.getEmailFooter()}
     `;
         await this.sendMail(emails, `New Credential Request: ${data.companyName}`, html);
     }
     async sendEnquiryNotification(data) {
+        console.log('[MailService] sendEnquiryNotification called with:', data);
         const emails = await this.getActiveAdminEmails();
-        if (emails.length === 0)
+        if (emails.length === 0) {
+            console.warn('[MailService] No admin emails found with enableEmailNotifications=true. Email will not be sent.');
             return;
+        }
+        console.log('[MailService] Sending enquiry notification to:', emails);
         const html = `
       ${this.getEmailHeader()}
       <h2 style="color: #1a1a1a; margin-top: 0;">New Cart Enquiry</h2>
@@ -132,24 +186,32 @@ let MailService = class MailService {
       </div>
       
       <div style="text-align: center; margin-top: 30px;">
-        <a href="${this.configService.get('FRONTEND_URL')}/quotations/enquiries" style="background-color: #1a1a1a; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-weight: 600; display: inline-block;">View Enquiry</a>
+        <a href="${this.configService.get('FRONTEND_URL')}/quotations?tab=enquiries" style="background-color: #1a1a1a; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-weight: 600; display: inline-block;">View in Dashboard</a>
       </div>
       ${this.getEmailFooter()}
     `;
-        await this.sendMail(emails, `New Cart Enquiry Received: ${data.enquiryNumber}`, html);
+        await this.sendMail(emails, `New Enquiry Received: ${data.enquiryNumber}`, html);
     }
     async sendMail(to, subject, html) {
+        if (!to || to.length === 0) {
+            console.error('[MailService] No recipients specified for email');
+            return;
+        }
         try {
+            const fromAddress = this.configService.get('SMTP_FROM') || 'noreply@racconti.in';
+            console.log('[MailService] Sending email from:', fromAddress, 'to:', to);
             const info = await this.transporter.sendMail({
-                from: `"RACCONTI System" <${this.configService.get('SMTP_FROM') || 'noreply@racconti.in'}>`,
-                to: to.join(','),
+                from: `"RACCONTI" <${fromAddress}>`,
+                to: to.join(', '),
                 subject: subject,
                 html: html,
             });
-            console.log('Email sent: %s', info.messageId);
+            console.log('[MailService] Email sent successfully! MessageId:', info.messageId);
         }
         catch (error) {
-            console.error('Error sending email:', error);
+            console.error('[MailService] Error sending email:', error.message || error);
+            console.error('[MailService] Error details:', error);
+            throw error;
         }
     }
 };
