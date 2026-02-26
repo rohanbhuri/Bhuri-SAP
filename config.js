@@ -127,7 +127,7 @@ const configs = {
       apiUrl: process.env.NODE_ENV === 'production' ? "http://localhost:3003/api" : "http://localhost:3003/api"
     },
     database: {
-      MONGODB_URI: 'mongodb+srv://purpulofficial_db_user:purpulofficial@purpulcluster0.gxhqzmc.mongodb.net/schoolos?appName=PURPULCluster0',
+      MONGODB_URI: 'mongodb+srv://purpulofficial_db_user:purpulofficial@purpulcluster0.gxhqzmc.mongodb.net/schoolOS?retryWrites=true&w=majority&appName=PURPULCluster0',
       JWT_SECRET: 'schoolos_secret_key'
     },
     development: {
