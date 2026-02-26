@@ -115,6 +115,45 @@ module.exports = {
       error_file: './logs/raccontixrm-frontend-error.log',
       out_file: './logs/raccontixrm-frontend-out.log',
       log_file: './logs/raccontixrm-frontend.log'
+    },
+    {
+      name: 'schoolos-backend',
+      script: './dist/main.js',
+      cwd: './backend',
+      instances: 1,
+      exec_mode: 'fork',
+      env: {
+        NODE_ENV: 'production',
+        PORT: 3003,
+        MONGODB_URI: 'mongodb+srv://purpulofficial_db_user:purpulofficial@purpulcluster0.gxhqzmc.mongodb.net/schoolos?retryWrites=true&w=majority&appName=PURPULCluster0',
+        JWT_SECRET: 'schoolos_secret_key',
+        BRAND: 'schoolos'
+      },
+      max_memory_restart: '200M',
+      node_args: '--max-old-space-size=256',
+      error_file: './logs/schoolos-backend-error.log',
+      out_file: './logs/schoolos-backend-out.log',
+      log_file: './logs/schoolos-backend.log'
+    },
+    {
+      name: 'schoolos-frontend',
+      script: 'node',
+      args: './dist/schoolos/browser/server.js',
+      cwd: './frontend',
+      instances: 1,
+      exec_mode: 'fork',
+      env: {
+        NODE_ENV: 'production',
+        PORT: 4203
+      },
+      max_memory_restart: '200M',
+      max_restarts: 10,
+      min_uptime: '10s',
+      restart_delay: 4000,
+      autorestart: true,
+      error_file: './logs/schoolos-frontend-error.log',
+      out_file: './logs/schoolos-frontend-out.log',
+      log_file: './logs/schoolos-frontend.log'
     }
   ]
 };

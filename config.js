@@ -103,6 +103,41 @@ const configs = {
       NODE_ENV: 'production',
       PORT: 3002
     }
+  },
+
+  "schoolos": {
+    brand: {
+      name: "SchoolOS",
+      logo: "/config/assets/schoolos/icons/schoolos-logo.png",
+      logoDark: "/config/assets/schoolos/icons/schoolos-logo-dark.png",
+      icon: "/config/assets/schoolos/icons/schoolos-icon.png"
+    },
+
+    colors: {
+      primary: "#6B46C1",
+      accent: "#9F7AEA",
+      secondary: "#553C9A"
+    },
+
+    app: {
+      name: "SchoolOS Management System",
+      version: "1.0.0",
+      description: "SchoolOS Resource Management Platform",
+      port: 4203,
+      apiUrl: process.env.NODE_ENV === 'production' ? "http://localhost:3003/api" : "http://localhost:3003/api"
+    },
+    database: {
+      MONGODB_URI: 'mongodb+srv://purpulofficial_db_user:purpulofficial@purpulcluster0.gxhqzmc.mongodb.net/?appName=PURPULCluster0',
+      JWT_SECRET: 'schoolos_secret_key'
+    },
+    development: {
+      NODE_ENV: 'development',
+      PORT: 3003
+    },
+    production: {
+      NODE_ENV: 'production',
+      PORT: 3003
+    }
   }
 };
 

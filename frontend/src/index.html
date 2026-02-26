@@ -3,14 +3,14 @@
 
 <head>
   <meta charset="utf-8" />
-  <title id="app-title">RaccontiXRM</title>
+  <title id="app-title">SchoolOS Management System</title>
   <base href="/" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Your Organisation's only dashboard for everything" />
+  <meta name="description" content="SchoolOS Resource Management Platform" />
   <meta name="keywords" content="business management, resource management, HR, CRM, project management, inventory" />
   <meta name="author" content="Rohan Bhuri" />
   <meta name="robots" content="index, follow" />
-  <meta name="theme-color" content="#050d1aff" />
+  <meta name="theme-color" content="#6B46C1" />
   <meta name="color-scheme" content="light dark" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
@@ -21,25 +21,25 @@
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="RaccontiXRM" />
-  <meta property="og:description" content="Your Organisation's only dashboard for everything" />
-  <meta property="og:site_name" content="RaccontiXRM" />
-  <meta property="og:url" content="https://xrm.racconti.in" />
+  <meta property="og:title" content="SchoolOS Management System" />
+  <meta property="og:description" content="SchoolOS Resource Management Platform" />
+  <meta property="og:site_name" content="SchoolOS" />
+  <meta property="og:url" content="http://localhost:4203" />
   <meta property="og:locale" content="en_US" />
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="RaccontiXRM" />
-  <meta name="twitter:description" content="Your Organisation's only dashboard for everything" />
-  <meta name="twitter:site" content="@RaccontiXRM" />
+  <meta name="twitter:title" content="SchoolOS Management System" />
+  <meta name="twitter:description" content="SchoolOS Resource Management Platform" />
+  <meta name="twitter:site" content="@SchoolOS" />
 
   <!-- Icons -->
   <link rel="icon" type="image/x-icon" href="favicon.ico" id="app-favicon" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/config/assets/raccontixrm/icons/racconti-icon.svg" />
-  <link rel="icon" type="image/png" sizes="32x32" href="/config/assets/raccontixrm/icons/racconti-icon.svg" />
-  <link rel="icon" type="image/png" sizes="16x16" href="/config/assets/raccontixrm/icons/racconti-icon.svg" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/config/assets/schoolos/icons/schoolos-icon.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/config/assets/schoolos/icons/schoolos-icon.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/config/assets/schoolos/icons/schoolos-icon.png" />
 
-  <link rel="canonical" href="https://xrm.racconti.in" />
+  <link rel="canonical" href="http://localhost:4203" />
   <link rel="manifest" href="/manifest.json" />
 
   <!-- Optimized font loading -->
@@ -58,9 +58,9 @@
   <!-- Critical CSS inlined -->
   <style>
     :root {
-      --primary-color: #050d1aff;
-      --accent-color: #b69253ff;
-      --secondary-color: #fff4cbff;
+      --primary-color: #6B46C1;
+      --accent-color: #9F7AEA;
+      --secondary-color: #553C9A;
     }
 
     body {
@@ -98,22 +98,22 @@
     // Load brand configuration from environment
     window.brandConfig = {
       brand: {
-        name: "RaccontiXRM",
-        logo: "/config/assets/raccontixrm/icons/racconti-logo.svg",
-        logoDark: "/config/assets/raccontixrm/icons/racconti-logo.svg",
-        icon: "/config/assets/raccontixrm/icons/racconti-icon.svg",
+        name: "SchoolOS",
+        logo: "/config/assets/schoolos/icons/schoolos-logo.png",
+        logoDark: "/config/assets/schoolos/icons/schoolos-logo-dark.png",
+        icon: "/config/assets/schoolos/icons/schoolos-icon.png",
       },
       colors: {
-        primary: "#050d1aff",
-        accent: "#b69253ff",
-        secondary: "#fff4cbff",
+        primary: "#6B46C1",
+        accent: "#9F7AEA",
+        secondary: "#553C9A",
       },
       app: {
-        name: "RaccontiXRM",
-        version: "0.0.1",
-        description: "Your Organisation's only dashboard for everything",
-        port: parseInt("4202"),
-        apiUrl: "https://xrm.racconti.in/api",
+        name: "SchoolOS Management System",
+        version: "1.0.0",
+        description: "SchoolOS Resource Management Platform",
+        port: parseInt("4203"),
+        apiUrl: "http://localhost:3003/api",
       },
     };
 
