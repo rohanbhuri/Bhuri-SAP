@@ -105,7 +105,7 @@ const configs = {
     }
   },
 
-  "schoolos": {
+  "schoolOS": {
     brand: {
       name: "SchoolOS",
       logo: "/config/assets/schoolOS/schoolOSDark.jpeg",

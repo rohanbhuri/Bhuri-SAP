@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 const path = require('path');
 
 const { getConfig } = require(path.join(__dirname, '../../../config.js'));
-const config = getConfig('schoolos');
+const config = getConfig('schoolOS');
 
 async function seedSchoolOSComplete() {
   console.log('🚀 Starting SchoolOS Complete seeding...');
@@ -12,9 +12,9 @@ async function seedSchoolOSComplete() {
 
   // Handle URI with query parameters
   if (uri.includes('?')) {
-    uri = uri.replace(/\/[^/?]+\?/, '/schoolos?');
+    uri = uri.replace(/\/[^/?]+\?/, '/schoolOS?');
   } else {
-    uri = uri.substring(0, uri.lastIndexOf('/') + 1) + 'schoolos';
+    uri = uri.substring(0, uri.lastIndexOf('/') + 1) + 'schoolOS';
   }
 
   console.log(`Using MongoDB URI (Target: schoolos): ${uri.replace(/\/\/.*@/, '//***@')}`);
