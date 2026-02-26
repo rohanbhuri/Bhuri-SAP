@@ -120,14 +120,14 @@ const configs = {
     },
 
     app: {
-      name: "SchoolOS Management System",
+      name: "SchoolOS",
       version: "1.0.0",
-      description: "SchoolOS Resource Management Platform",
+      description: "SchoolOS Management Platform",
       port: 4203,
       apiUrl: process.env.NODE_ENV === 'production' ? "http://localhost:3003/api" : "http://localhost:3003/api"
     },
     database: {
-      MONGODB_URI: 'mongodb+srv://purpulofficial_db_user:purpulofficial@purpulcluster0.gxhqzmc.mongodb.net/?appName=PURPULCluster0',
+      MONGODB_URI: 'mongodb+srv://purpulofficial_db_user:purpulofficial@purpulcluster0.gxhqzmc.mongodb.net/schoolos?appName=PURPULCluster0',
       JWT_SECRET: 'schoolos_secret_key'
     },
     development: {
