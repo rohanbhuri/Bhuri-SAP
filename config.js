@@ -108,9 +108,9 @@ const configs = {
   "schoolos": {
     brand: {
       name: "SchoolOS",
-      logo: "/config/assets/schoolos/icons/schoolos-logo.png",
-      logoDark: "/config/assets/schoolos/icons/schoolos-logo-dark.png",
-      icon: "/config/assets/schoolos/icons/schoolos-icon.png"
+      logo: "/config/assets/schoolOS/schoolOSDark.jpeg",
+      logoDark: "/config/assets/schoolOS/schoolOSLight.png",
+      icon: "/config/assets/schoolOS/schoolOSLogo.png"
     },
 
     colors: {
