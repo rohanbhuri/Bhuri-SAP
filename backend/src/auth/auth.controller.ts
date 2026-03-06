@@ -44,6 +44,20 @@ class UpdateProfileDto {
   lastName: string;
 }
 
+class ForgotPasswordDto {
+  @IsEmail()
+  email: string;
+}
+
+class ChangePasswordDto {
+  @IsString()
+  token: string;
+  
+  @IsString()
+  @MinLength(6)
+  newPassword: string;
+}
+
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -136,5 +150,16 @@ export class AuthController {
     
     const avatarUrl = `/uploads/avatars/${file.filename}`;
     return this.authService.updateAvatar(req.user.sub, avatarUrl);
+  }
+  @Public()
+  @Post('forgot-password')
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(forgotPasswordDto.email);
+  }
+
+  @Public()
+  @Post('change-password')
+  async changePassword(@Body() changePasswordDto: ChangePasswordDto) {
+    return this.authService.changePassword(changePasswordDto.token, changePasswordDto.newPassword);
   }
 }

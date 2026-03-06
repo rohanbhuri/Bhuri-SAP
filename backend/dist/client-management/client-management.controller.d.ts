@@ -48,6 +48,9 @@ export declare class ClientManagementController {
             }>;
             enableEmailNotifications: boolean;
             createdAt: Date;
+            passwordResetToken?: string;
+            passwordResetExpires?: Date;
+            passwordResetUsed?: boolean;
         };
         client: {
             id: string;

@@ -40,4 +40,7 @@ export declare class User {
     enableEmailNotifications: boolean;
     createdAt: Date;
     constructor();
+    passwordResetToken?: string;
+    passwordResetExpires?: Date;
+    passwordResetUsed?: boolean;
 }

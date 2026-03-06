@@ -19,15 +19,18 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const mongodb_1 = require("mongodb");
 const bcrypt = require("bcrypt");
+const crypto = require("crypto");
 const user_entity_1 = require("../entities/user.entity");
 const role_entity_1 = require("../entities/role.entity");
 const organization_entity_1 = require("../entities/organization.entity");
+const mail_service_1 = require("../notifications/mail.service");
 let AuthService = class AuthService {
-    constructor(userRepository, roleRepository, organizationRepository, jwtService) {
+    constructor(userRepository, roleRepository, organizationRepository, jwtService, mailService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.organizationRepository = organizationRepository;
         this.jwtService = jwtService;
+        this.mailService = mailService;
     }
     async validateUser(email, password) {
         const user = await this.userRepository.findOne({ where: { email } });
@@ -182,6 +185,57 @@ let AuthService = class AuthService {
         await this.userRepository.update({ _id: new mongodb_1.ObjectId(userId) }, { avatar: avatarUrl });
         return this.getProfile(userId);
     }
+    async forgotPassword(email) {
+        const user = await this.userRepository.findOne({
+            where: { email, isDeleted: { $ne: true } }
+        });
+        if (!user) {
+            return {
+                success: true,
+                message: 'If the email exists in our system, a password reset link has been sent.'
+            };
+        }
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+        const expiryDate = new Date();
+        expiryDate.setHours(expiryDate.getHours() + 1);
+        await this.userRepository.update({ _id: user._id }, {
+            passwordResetToken: hashedToken,
+            passwordResetExpires: expiryDate,
+            passwordResetUsed: false
+        });
+        const resetUrl = `https://racconti.in/reset-password?token=${resetToken}`;
+        await this.mailService.sendPasswordResetEmail(user.email, user.firstName, resetUrl);
+        return {
+            success: true,
+            message: 'If the email exists in our system, a password reset link has been sent.'
+        };
+    }
+    async changePassword(token, newPassword) {
+        const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+        const user = await this.userRepository.findOne({
+            where: {
+                passwordResetToken: hashedToken,
+                passwordResetExpires: { $gt: new Date() },
+                passwordResetUsed: false,
+                isDeleted: { $ne: true }
+            }
+        });
+        if (!user) {
+            throw new common_1.UnauthorizedException('Invalid or expired password reset token');
+        }
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        await this.userRepository.update({ _id: user._id }, {
+            password: hashedPassword,
+            passwordResetUsed: true,
+            passwordResetToken: null,
+            passwordResetExpires: null
+        });
+        return {
+            success: true,
+            message: 'Password has been reset successfully. You can now login with your new password.'
+        };
+    }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
@@ -192,6 +246,7 @@ exports.AuthService = AuthService = __decorate([
     __metadata("design:paramtypes", [typeorm_2.MongoRepository,
         typeorm_2.MongoRepository,
         typeorm_2.MongoRepository,
-        jwt_1.JwtService])
+        jwt_1.JwtService,
+        mail_service_1.MailService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

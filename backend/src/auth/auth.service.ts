@@ -4,9 +4,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { MongoRepository } from 'typeorm';
 import { ObjectId } from 'mongodb';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import { User } from '../entities/user.entity';
 import { Role } from '../entities/role.entity';
 import { Organization } from '../entities/organization.entity';
+import { MailService } from '../notifications/mail.service';
 
 @Injectable()
 export class AuthService {
@@ -18,6 +20,7 @@ export class AuthService {
     @InjectRepository(Organization)
     private organizationRepository: MongoRepository<Organization>,
     private jwtService: JwtService,
+    private mailService: MailService,
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
@@ -218,5 +221,84 @@ export class AuthService {
     );
 
     return this.getProfile(userId);
+  }
+
+  async forgotPassword(email: string) {
+    const user = await this.userRepository.findOne({
+      where: { email, isDeleted: { $ne: true } } as any
+    });
+
+    if (!user) {
+      // Return success even if user not found (security best practice)
+      return {
+        success: true,
+        message: 'If the email exists in our system, a password reset link has been sent.'
+      };
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+    // Set token expiry (1 hour from now)
+    const expiryDate = new Date();
+    expiryDate.setHours(expiryDate.getHours() + 1);
+
+    // Update user with reset token
+    await this.userRepository.update(
+      { _id: user._id },
+      {
+        passwordResetToken: hashedToken,
+        passwordResetExpires: expiryDate,
+        passwordResetUsed: false
+      }
+    );
+
+    // Send email with reset link (always use main website URL)
+    const resetUrl = `https://racconti.in/reset-password?token=${resetToken}`;
+    await this.mailService.sendPasswordResetEmail(user.email, user.firstName, resetUrl);
+
+    return {
+      success: true,
+      message: 'If the email exists in our system, a password reset link has been sent.'
+    };
+  }
+
+  async changePassword(token: string, newPassword: string) {
+    // Hash the token to compare with stored hash
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+    // Find user with valid token
+    const user = await this.userRepository.findOne({
+      where: {
+        passwordResetToken: hashedToken,
+        passwordResetExpires: { $gt: new Date() } as any,
+        passwordResetUsed: false,
+        isDeleted: { $ne: true }
+      } as any
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid or expired password reset token');
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password and mark token as used
+    await this.userRepository.update(
+      { _id: user._id },
+      {
+        password: hashedPassword,
+        passwordResetUsed: true,
+        passwordResetToken: null,
+        passwordResetExpires: null
+      }
+    );
+
+    return {
+      success: true,
+      message: 'Password has been reset successfully. You can now login with your new password.'
+    };
   }
 }

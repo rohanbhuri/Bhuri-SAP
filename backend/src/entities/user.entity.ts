@@ -106,4 +106,13 @@ export class User {
     this.isOnline = false;
     this.enableEmailNotifications = false;
   }
+
+  @Column({ nullable: true })
+  passwordResetToken?: string;
+
+  @Column({ nullable: true })
+  passwordResetExpires?: Date;
+
+  @Column({ default: false })
+  passwordResetUsed?: boolean;
 }

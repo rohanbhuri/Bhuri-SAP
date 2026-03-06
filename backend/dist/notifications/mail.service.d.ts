@@ -41,5 +41,10 @@ export declare class MailService {
         messageId?: string;
         error?: string;
     }>;
+    sendPasswordResetEmail(email: string, firstName: string, resetUrl: string): Promise<{
+        success: boolean;
+        messageId?: string;
+        error?: string;
+    }>;
     private sendMail;
 }

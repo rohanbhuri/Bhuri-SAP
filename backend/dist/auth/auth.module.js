@@ -19,6 +19,7 @@ const user_entity_1 = require("../entities/user.entity");
 const role_entity_1 = require("../entities/role.entity");
 const organization_entity_1 = require("../entities/organization.entity");
 const users_module_1 = require("../users/users.module");
+const notifications_module_1 = require("../notifications/notifications.module");
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;
@@ -27,6 +28,7 @@ exports.AuthModule = AuthModule = __decorate([
         imports: [
             typeorm_1.TypeOrmModule.forFeature([user_entity_1.User, role_entity_1.Role, organization_entity_1.Organization]),
             (0, common_1.forwardRef)(() => users_module_1.UsersModule),
+            notifications_module_1.NotificationsModule,
             passport_1.PassportModule,
             jwt_1.JwtModule.register({
                 secret: process.env.JWT_SECRET || 'rohanbhuri',

@@ -13,14 +13,8 @@ import { ClientManagementService } from './services/client-management.service';
   imports: [CommonModule, MatCardModule, MatButtonModule, MatIconModule, MatChipsModule],
   template: `
     <div class="client-widget">
-      <div class="widget-header">
-        <div class="icon-wrapper">
-          <mat-icon>people_outline</mat-icon>
-        </div>
-        <div class="header-content">
-          <h3>Client Management</h3>
-          <p>Manage client accounts & requests</p>
-        </div>
+      <div class="widget-header-content">
+        <p class="subtitle">Manage client accounts & requests</p>
       </div>
 
       <div class="widget-body-content">

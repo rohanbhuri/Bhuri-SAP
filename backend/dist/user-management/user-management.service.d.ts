@@ -54,6 +54,9 @@ export declare class UserManagementService {
             }>;
             enableEmailNotifications: boolean;
             createdAt: Date;
+            passwordResetToken?: string;
+            passwordResetExpires?: Date;
+            passwordResetUsed?: boolean;
         };
         roles: {
             id: string;
@@ -111,6 +114,9 @@ export declare class UserManagementService {
         }>;
         enableEmailNotifications: boolean;
         createdAt: Date;
+        passwordResetToken?: string;
+        passwordResetExpires?: Date;
+        passwordResetUsed?: boolean;
     }[]>;
     searchUsers(query: string, currentUser?: any): Promise<{
         roles: {
@@ -157,6 +163,9 @@ export declare class UserManagementService {
         }>;
         enableEmailNotifications: boolean;
         createdAt: Date;
+        passwordResetToken?: string;
+        passwordResetExpires?: Date;
+        passwordResetUsed?: boolean;
     }[]>;
     searchRoles(query: string): Promise<Role[]>;
     searchPermissions(query: string): Promise<Permission[]>;
@@ -200,6 +209,9 @@ export declare class UserManagementService {
         }>;
         enableEmailNotifications: boolean;
         createdAt: Date;
+        passwordResetToken?: string;
+        passwordResetExpires?: Date;
+        passwordResetUsed?: boolean;
     }>;
     updateUser(userId: string, userData: any): Promise<{
         _id: import("typeorm").ObjectId;
@@ -240,6 +252,9 @@ export declare class UserManagementService {
         }>;
         enableEmailNotifications: boolean;
         createdAt: Date;
+        passwordResetToken?: string;
+        passwordResetExpires?: Date;
+        passwordResetUsed?: boolean;
     }>;
     deleteUser(userId: string, deletedBy?: string): Promise<{
         success: boolean;
@@ -284,6 +299,9 @@ export declare class UserManagementService {
         }>;
         enableEmailNotifications: boolean;
         createdAt: Date;
+        passwordResetToken?: string;
+        passwordResetExpires?: Date;
+        passwordResetUsed?: boolean;
     }>;
     getAllRoles(): Promise<Role[]>;
     createRole(roleData: any, userId?: string): Promise<Role>;
@@ -340,5 +358,8 @@ export declare class UserManagementService {
         }>;
         enableEmailNotifications: boolean;
         createdAt: Date;
+        passwordResetToken?: string;
+        passwordResetExpires?: Date;
+        passwordResetUsed?: boolean;
     }>;
 }

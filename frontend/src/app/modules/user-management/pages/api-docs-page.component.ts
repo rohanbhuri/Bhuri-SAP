@@ -227,6 +227,20 @@ export class UserManagementApiDocsComponent implements OnInit {
       description: 'Logout user',
       body: '{ "userId": "..." }',
       response: '{ "success": true, "message": "Logged out successfully" }'
+    },
+    {
+      method: 'POST',
+      path: '/forgot-password',
+      description: 'Request password reset link via email',
+      body: '{ "email": "user@example.com" }',
+      response: '{ "success": true, "message": "If the email exists in our system, a password reset link has been sent." }'
+    },
+    {
+      method: 'POST',
+      path: '/change-password',
+      description: 'Reset password using token from email (one-time use)',
+      body: '{ "token": "reset_token_from_email", "newPassword": "newPassword123" }',
+      response: '{ "success": true, "message": "Password has been reset successfully. You can now login with your new password." }'
     }
   ];
 

@@ -15,6 +15,13 @@ declare class UpdateProfileDto {
     firstName: string;
     lastName: string;
 }
+declare class ForgotPasswordDto {
+    email: string;
+}
+declare class ChangePasswordDto {
+    token: string;
+    newPassword: string;
+}
 export declare class AuthController {
     private authService;
     private usersService;
@@ -60,6 +67,9 @@ export declare class AuthController {
             }>;
             enableEmailNotifications: boolean;
             createdAt: Date;
+            passwordResetToken?: string;
+            passwordResetExpires?: Date;
+            passwordResetUsed?: boolean;
         };
     }>;
     logout(req: any, body: {
@@ -109,6 +119,9 @@ export declare class AuthController {
             }>;
             enableEmailNotifications: boolean;
             createdAt: Date;
+            passwordResetToken?: string;
+            passwordResetExpires?: Date;
+            passwordResetUsed?: boolean;
         };
     }>;
     updateOrganization(req: any, body: {
@@ -197,6 +210,14 @@ export declare class AuthController {
             code: any;
             description: any;
         };
+    }>;
+    forgotPassword(forgotPasswordDto: ForgotPasswordDto): Promise<{
+        success: boolean;
+        message: string;
+    }>;
+    changePassword(changePasswordDto: ChangePasswordDto): Promise<{
+        success: boolean;
+        message: string;
     }>;
 }
 export {};

@@ -10,11 +10,13 @@ import { User } from '../entities/user.entity';
 import { Role } from '../entities/role.entity';
 import { Organization } from '../entities/organization.entity';
 import { UsersModule } from '../users/users.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, Role, Organization]),
     forwardRef(() => UsersModule),
+    NotificationsModule,
     PassportModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'rohanbhuri',

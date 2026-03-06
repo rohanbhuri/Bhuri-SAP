@@ -149,6 +149,9 @@ export declare class UsersService {
         }>;
         enableEmailNotifications: boolean;
         createdAt: Date;
+        passwordResetToken?: string;
+        passwordResetExpires?: Date;
+        passwordResetUsed?: boolean;
     }>;
     update(id: string, userData: any): Promise<{
         roles: {
@@ -200,6 +203,9 @@ export declare class UsersService {
         }>;
         enableEmailNotifications: boolean;
         createdAt: Date;
+        passwordResetToken?: string;
+        passwordResetExpires?: Date;
+        passwordResetUsed?: boolean;
     }>;
     delete(id: string): Promise<{
         message: string;
@@ -254,6 +260,9 @@ export declare class UsersService {
         }>;
         enableEmailNotifications: boolean;
         createdAt: Date;
+        passwordResetToken?: string;
+        passwordResetExpires?: Date;
+        passwordResetUsed?: boolean;
     }>;
     removeRole(userId: string, roleId: string): Promise<{
         roles: {
@@ -305,6 +314,9 @@ export declare class UsersService {
         }>;
         enableEmailNotifications: boolean;
         createdAt: Date;
+        passwordResetToken?: string;
+        passwordResetExpires?: Date;
+        passwordResetUsed?: boolean;
     }>;
     toggleStatus(userId: string, isActive: boolean): Promise<{
         roles: {
@@ -356,6 +368,9 @@ export declare class UsersService {
         }>;
         enableEmailNotifications: boolean;
         createdAt: Date;
+        passwordResetToken?: string;
+        passwordResetExpires?: Date;
+        passwordResetUsed?: boolean;
     }>;
     assignPermission(userId: string, permissionId: string): Promise<void>;
     removePermission(userId: string, permissionId: string): Promise<void>;

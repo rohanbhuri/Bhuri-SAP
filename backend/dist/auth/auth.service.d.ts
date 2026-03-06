@@ -3,12 +3,14 @@ import { MongoRepository } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { Role } from '../entities/role.entity';
 import { Organization } from '../entities/organization.entity';
+import { MailService } from '../notifications/mail.service';
 export declare class AuthService {
     private userRepository;
     private roleRepository;
     private organizationRepository;
     private jwtService;
-    constructor(userRepository: MongoRepository<User>, roleRepository: MongoRepository<Role>, organizationRepository: MongoRepository<Organization>, jwtService: JwtService);
+    private mailService;
+    constructor(userRepository: MongoRepository<User>, roleRepository: MongoRepository<Role>, organizationRepository: MongoRepository<Organization>, jwtService: JwtService, mailService: MailService);
     validateUser(email: string, password: string): Promise<any>;
     login(email: string, password: string, deviceId?: string, userAgent?: string, ip?: string): Promise<{
         access_token: string;
@@ -51,6 +53,9 @@ export declare class AuthService {
             }>;
             enableEmailNotifications: boolean;
             createdAt: Date;
+            passwordResetToken?: string;
+            passwordResetExpires?: Date;
+            passwordResetUsed?: boolean;
         };
     }>;
     private handleSession;
@@ -138,5 +143,13 @@ export declare class AuthService {
             code: any;
             description: any;
         };
+    }>;
+    forgotPassword(email: string): Promise<{
+        success: boolean;
+        message: string;
+    }>;
+    changePassword(token: string, newPassword: string): Promise<{
+        success: boolean;
+        message: string;
     }>;
 }

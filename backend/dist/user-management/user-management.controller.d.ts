@@ -48,6 +48,9 @@ export declare class UserManagementController {
             }>;
             enableEmailNotifications: boolean;
             createdAt: Date;
+            passwordResetToken?: string;
+            passwordResetExpires?: Date;
+            passwordResetUsed?: boolean;
         };
         roles: {
             id: string;
@@ -107,6 +110,9 @@ export declare class UserManagementController {
         }>;
         enableEmailNotifications: boolean;
         createdAt: Date;
+        passwordResetToken?: string;
+        passwordResetExpires?: Date;
+        passwordResetUsed?: boolean;
     }[]>;
     createUser(userData: any): Promise<{
         _id: import("typeorm").ObjectId;
@@ -147,6 +153,9 @@ export declare class UserManagementController {
         }>;
         enableEmailNotifications: boolean;
         createdAt: Date;
+        passwordResetToken?: string;
+        passwordResetExpires?: Date;
+        passwordResetUsed?: boolean;
     }>;
     updateUser(userId: string, userData: any): Promise<{
         _id: import("typeorm").ObjectId;
@@ -187,6 +196,9 @@ export declare class UserManagementController {
         }>;
         enableEmailNotifications: boolean;
         createdAt: Date;
+        passwordResetToken?: string;
+        passwordResetExpires?: Date;
+        passwordResetUsed?: boolean;
     }>;
     deleteUser(userId: string, req: any): Promise<{
         success: boolean;
@@ -233,6 +245,9 @@ export declare class UserManagementController {
         }>;
         enableEmailNotifications: boolean;
         createdAt: Date;
+        passwordResetToken?: string;
+        passwordResetExpires?: Date;
+        passwordResetUsed?: boolean;
     }>;
     getAllOrganizations(): Promise<import("../entities/organization.entity").Organization[]>;
     getAllRoles(search?: string): Promise<import("../entities/role.entity").Role[]>;
@@ -279,6 +294,9 @@ export declare class UserManagementController {
         }>;
         enableEmailNotifications: boolean;
         createdAt: Date;
+        passwordResetToken?: string;
+        passwordResetExpires?: Date;
+        passwordResetUsed?: boolean;
     }>;
     createRole(roleData: any, req: any): Promise<import("../entities/role.entity").Role>;
     updateRole(roleId: string, roleData: any, req: any): Promise<import("../entities/role.entity").Role>;

@@ -213,6 +213,33 @@ export class MailService {
     const result = await this.sendMail(emails, `New Cart Enquiry Received: ${data.enquiryNumber}`, html);
     return result;
   }
+  async sendPasswordResetEmail(email: string, firstName: string, resetUrl: string) {
+    console.log('[MailService] sendPasswordResetEmail called for:', email);
+
+    const html = `
+      ${this.getEmailHeader()}
+      <h2 style="color: #1a1a1a; margin-top: 0;">Password Reset Request</h2>
+      <p style="line-height: 1.6; color: #666;">Hi ${firstName},</p>
+      <p style="line-height: 1.6; color: #666;">We received a request to reset your password. Click the button below to create a new password:</p>
+
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${resetUrl}" style="background-color: #1a1a1a; color: #ffffff; padding: 14px 30px; text-decoration: none; border-radius: 4px; font-weight: 600; display: inline-block;">Reset Password</a>
+      </div>
+
+      <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0;">
+        <p style="margin: 0; color: #856404; font-size: 14px;"><strong>Important:</strong> This link will expire in 1 hour and can only be used once.</p>
+      </div>
+
+      <p style="line-height: 1.6; color: #666; font-size: 14px;">If you didn't request a password reset, please ignore this email or contact support if you have concerns.</p>
+
+      <p style="line-height: 1.6; color: #999; font-size: 12px; margin-top: 20px;">If the button doesn't work, copy and paste this link into your browser:<br>
+      <a href="${resetUrl}" style="color: #666; word-break: break-all;">${resetUrl}</a></p>
+      ${this.getEmailFooter()}
+    `;
+
+    const result = await this.sendMail([email], 'Password Reset Request - RACCONTI', html);
+    return result;
+  }
 
   private async sendMail(to: string[], subject: string, html: string): Promise<{ success: boolean; messageId?: string; error?: string }> {
     if (!to || to.length === 0) {

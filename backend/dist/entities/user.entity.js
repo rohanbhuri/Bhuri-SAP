@@ -143,6 +143,18 @@ __decorate([
     (0, typeorm_1.Column)(),
     __metadata("design:type", Date)
 ], User.prototype, "createdAt", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], User.prototype, "passwordResetToken", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", Date)
+], User.prototype, "passwordResetExpires", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: false }),
+    __metadata("design:type", Boolean)
+], User.prototype, "passwordResetUsed", void 0);
 exports.User = User = __decorate([
     (0, typeorm_1.Entity)('users'),
     __metadata("design:paramtypes", [])

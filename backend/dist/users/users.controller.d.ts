@@ -54,6 +54,9 @@ export declare class UsersController {
         }>;
         enableEmailNotifications: boolean;
         createdAt: Date;
+        passwordResetToken?: string;
+        passwordResetExpires?: Date;
+        passwordResetUsed?: boolean;
     }>;
     create(userData: any, req: any): Promise<{
         roles: {
@@ -194,6 +197,9 @@ export declare class UsersController {
         }>;
         enableEmailNotifications: boolean;
         createdAt: Date;
+        passwordResetToken?: string;
+        passwordResetExpires?: Date;
+        passwordResetUsed?: boolean;
     }>;
     delete(id: string): Promise<{
         message: string;
@@ -248,6 +254,9 @@ export declare class UsersController {
         }>;
         enableEmailNotifications: boolean;
         createdAt: Date;
+        passwordResetToken?: string;
+        passwordResetExpires?: Date;
+        passwordResetUsed?: boolean;
     }>;
     removeRole(id: string, roleId: string): Promise<{
         roles: {
@@ -299,6 +308,9 @@ export declare class UsersController {
         }>;
         enableEmailNotifications: boolean;
         createdAt: Date;
+        passwordResetToken?: string;
+        passwordResetExpires?: Date;
+        passwordResetUsed?: boolean;
     }>;
     assignPermission(id: string, { permissionId }: any): Promise<void>;
     removePermission(id: string, permissionId: string): Promise<void>;
@@ -352,5 +364,8 @@ export declare class UsersController {
         }>;
         enableEmailNotifications: boolean;
         createdAt: Date;
+        passwordResetToken?: string;
+        passwordResetExpires?: Date;
+        passwordResetUsed?: boolean;
     }>;
 }
