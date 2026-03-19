@@ -12,6 +12,7 @@ export declare class Product {
     imageGallery: string[];
     videos: string[];
     models3d: string[];
+    technicalSheet?: string;
     categoryId?: string;
     collectionId?: string;
     designerId?: string;

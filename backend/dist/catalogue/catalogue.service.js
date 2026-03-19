@@ -21,14 +21,16 @@ const category_entity_1 = require("../entities/category.entity");
 const collection_entity_1 = require("../entities/collection.entity");
 const designer_entity_1 = require("../entities/designer.entity");
 const enquiry_entity_1 = require("../entities/enquiry.entity");
+const technical_sheet_download_entity_1 = require("../entities/technical-sheet-download.entity");
 const mongodb_1 = require("mongodb");
 let CatalogueService = class CatalogueService {
-    constructor(productRepository, categoryRepository, collectionRepository, designerRepository, enquiryRepository) {
+    constructor(productRepository, categoryRepository, collectionRepository, designerRepository, enquiryRepository, technicalSheetDownloadRepository) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.collectionRepository = collectionRepository;
         this.designerRepository = designerRepository;
         this.enquiryRepository = enquiryRepository;
+        this.technicalSheetDownloadRepository = technicalSheetDownloadRepository;
     }
     async findAllProducts(query = {}) {
         const page = Number(query.page) || 1;
@@ -434,7 +436,7 @@ let CatalogueService = class CatalogueService {
         });
         const headers = [
             '_id', 'name', 'productCode', 'slug', 'description', 'descriptionHtml',
-            'basePrice', 'currency', 'featuredImage', 'imageGallery', 'videos', 'models3d',
+            'basePrice', 'currency', 'featuredImage', 'imageGallery', 'videos', 'models3d', 'technicalSheet',
             'categoryId', 'collectionId', 'designerId', 'tags', 'isPublished', 'isExclusive', 'isFeatured',
             'dimensionConfig', 'variations', 'attributes', 'seo', 'createdAt', 'updatedAt'
         ];
@@ -451,6 +453,7 @@ let CatalogueService = class CatalogueService {
             p.imageGallery?.join('; ') || '',
             p.videos?.join('; ') || '',
             p.models3d?.join('; ') || '',
+            p.technicalSheet || '',
             p.categoryId || '',
             p.collectionId || '',
             p.designerId || '',
@@ -524,7 +527,7 @@ let CatalogueService = class CatalogueService {
     async getProductTemplate() {
         const headers = [
             '_id', 'name', 'productCode', 'slug', 'description', 'descriptionHtml',
-            'basePrice', 'currency', 'featuredImage', 'imageGallery', 'videos', 'models3d',
+            'basePrice', 'currency', 'featuredImage', 'imageGallery', 'videos', 'models3d', 'technicalSheet',
             'categoryId', 'collectionId', 'designerId', 'tags', 'isPublished', 'isExclusive', 'isFeatured',
             'dimensionConfig', 'variations', 'attributes', 'seo', 'createdAt', 'updatedAt'
         ];
@@ -744,6 +747,54 @@ let CatalogueService = class CatalogueService {
         }
         return { success, failed, errors };
     }
+    async trackTechnicalSheetDownload(productId, email, ipAddress, userAgent, referrer) {
+        const product = await this.findOneProduct(productId);
+        if (!product) {
+            throw new Error('Product not found');
+        }
+        const download = this.technicalSheetDownloadRepository.create({
+            productId,
+            productCode: product.productCode,
+            productName: product.name,
+            email,
+            ipAddress,
+            userAgent,
+            referrer,
+            downloadedAt: new Date()
+        });
+        return this.technicalSheetDownloadRepository.save(download);
+    }
+    async getTechnicalSheetDownloads(productId) {
+        return this.technicalSheetDownloadRepository.find({
+            where: { productId },
+            order: { downloadedAt: 'DESC' }
+        });
+    }
+    async getAllTechnicalSheetDownloads() {
+        return this.technicalSheetDownloadRepository.find({
+            order: { downloadedAt: 'DESC' }
+        });
+    }
+    async getTechnicalSheetDownloadStats(productId) {
+        const match = {};
+        if (productId) {
+            match.productId = productId;
+        }
+        const downloads = await this.technicalSheetDownloadRepository.find({
+            where: match
+        });
+        const totalDownloads = downloads.length;
+        const uniqueEmails = new Set(downloads.map(d => d.email)).size;
+        const downloadsByProduct = downloads.reduce((acc, d) => {
+            acc[d.productCode] = (acc[d.productCode] || 0) + 1;
+            return acc;
+        }, {});
+        return {
+            totalDownloads,
+            uniqueEmails,
+            downloadsByProduct
+        };
+    }
 };
 exports.CatalogueService = CatalogueService;
 exports.CatalogueService = CatalogueService = __decorate([
@@ -753,7 +804,9 @@ exports.CatalogueService = CatalogueService = __decorate([
     __param(2, (0, typeorm_1.InjectRepository)(collection_entity_1.Collection)),
     __param(3, (0, typeorm_1.InjectRepository)(designer_entity_1.Designer)),
     __param(4, (0, typeorm_1.InjectRepository)(enquiry_entity_1.Enquiry)),
+    __param(5, (0, typeorm_1.InjectRepository)(technical_sheet_download_entity_1.TechnicalSheetDownload)),
     __metadata("design:paramtypes", [typeorm_2.MongoRepository,
+        typeorm_2.MongoRepository,
         typeorm_2.MongoRepository,
         typeorm_2.MongoRepository,
         typeorm_2.MongoRepository,

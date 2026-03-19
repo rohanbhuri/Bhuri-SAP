@@ -72,6 +72,13 @@ const presentationStorage = (0, multer_1.diskStorage)({
         cb(null, `${uniqueSuffix}${(0, path_1.extname)(file.originalname)}`);
     }
 });
+const technicalSheetStorage = (0, multer_1.diskStorage)({
+    destination: './uploads/products/technical-sheets',
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, `${uniqueSuffix}${(0, path_1.extname)(file.originalname)}`);
+    }
+});
 let CatalogueController = class CatalogueController {
     constructor(catalogueService) {
         this.catalogueService = catalogueService;
@@ -101,6 +108,21 @@ let CatalogueController = class CatalogueController {
     }
     async uploadModel(file) {
         return { url: `/uploads/products/models/${file.filename}` };
+    }
+    async uploadTechnicalSheet(file) {
+        return { url: `/uploads/products/technical-sheets/${file.filename}` };
+    }
+    async trackTechnicalSheetDownload(productId, data, req) {
+        const ipAddress = req.ip || req.connection.remoteAddress;
+        const userAgent = req.headers['user-agent'];
+        const referrer = req.headers['referer'] || req.headers['referrer'];
+        return this.catalogueService.trackTechnicalSheetDownload(productId, data.email, ipAddress, userAgent, referrer);
+    }
+    async getTechnicalSheetDownloads(productId) {
+        return this.catalogueService.getTechnicalSheetDownloads(productId);
+    }
+    async getAllTechnicalSheetDownloads() {
+        return this.catalogueService.getAllTechnicalSheetDownloads();
     }
     async updateProduct(id, data, req) {
         return this.catalogueService.updateProduct(id, data, req.user?.userId);
@@ -282,6 +304,48 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], CatalogueController.prototype, "uploadModel", null);
+__decorate([
+    (0, common_1.Post)('products/upload-technical-sheet'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('technicalSheet', {
+        storage: technicalSheetStorage,
+        fileFilter: (req, file, cb) => {
+            if (file.mimetype === 'application/pdf') {
+                cb(null, true);
+            }
+            else {
+                cb(new common_1.BadRequestException('Only PDF files are allowed'), false);
+            }
+        }
+    })),
+    __param(0, (0, common_1.UploadedFile)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], CatalogueController.prototype, "uploadTechnicalSheet", null);
+__decorate([
+    (0, common_1.Post)('products/:productId/track-technical-sheet-download'),
+    __param(0, (0, common_1.Param)('productId')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object]),
+    __metadata("design:returntype", Promise)
+], CatalogueController.prototype, "trackTechnicalSheetDownload", null);
+__decorate([
+    (0, common_1.Get)('products/:productId/technical-sheet-downloads'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Param)('productId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], CatalogueController.prototype, "getTechnicalSheetDownloads", null);
+__decorate([
+    (0, common_1.Get)('technical-sheet-downloads'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], CatalogueController.prototype, "getAllTechnicalSheetDownloads", null);
 __decorate([
     (0, common_1.Put)('products/:id'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),

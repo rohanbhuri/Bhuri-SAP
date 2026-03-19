@@ -81,6 +81,10 @@ __decorate([
 __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)
+], Product.prototype, "technicalSheet", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
 ], Product.prototype, "categoryId", void 0);
 __decorate([
     (0, typeorm_1.Column)({ nullable: true }),

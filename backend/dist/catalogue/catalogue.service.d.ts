@@ -4,13 +4,15 @@ import { Category } from '../entities/category.entity';
 import { Collection } from '../entities/collection.entity';
 import { Designer } from '../entities/designer.entity';
 import { Enquiry } from '../entities/enquiry.entity';
+import { TechnicalSheetDownload } from '../entities/technical-sheet-download.entity';
 export declare class CatalogueService {
     private productRepository;
     private categoryRepository;
     private collectionRepository;
     private designerRepository;
     private enquiryRepository;
-    constructor(productRepository: MongoRepository<Product>, categoryRepository: MongoRepository<Category>, collectionRepository: MongoRepository<Collection>, designerRepository: MongoRepository<Designer>, enquiryRepository: MongoRepository<Enquiry>);
+    private technicalSheetDownloadRepository;
+    constructor(productRepository: MongoRepository<Product>, categoryRepository: MongoRepository<Category>, collectionRepository: MongoRepository<Collection>, designerRepository: MongoRepository<Designer>, enquiryRepository: MongoRepository<Enquiry>, technicalSheetDownloadRepository: MongoRepository<TechnicalSheetDownload>);
     findAllProducts(query?: {
         page?: number;
         limit?: number;
@@ -114,4 +116,8 @@ export declare class CatalogueService {
         failed: number;
         errors: string[];
     }>;
+    trackTechnicalSheetDownload(productId: string, email: string, ipAddress: string, userAgent?: string, referrer?: string): Promise<TechnicalSheetDownload>;
+    getTechnicalSheetDownloads(productId: string): Promise<TechnicalSheetDownload[]>;
+    getAllTechnicalSheetDownloads(): Promise<TechnicalSheetDownload[]>;
+    getTechnicalSheetDownloadStats(productId?: string): Promise<any>;
 }

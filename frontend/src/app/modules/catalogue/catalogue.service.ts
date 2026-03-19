@@ -176,6 +176,26 @@ export class CatalogueService {
         return this.http.post<any>(url, formData);
     }
 
+    uploadProductTechnicalSheet(file: File): Observable<any> {
+        const formData = new FormData();
+        formData.append('technicalSheet', file);
+        const url = `${this.apiUrl}/products/upload-technical-sheet`;
+        console.log('Uploading technical sheet to:', url);
+        return this.http.post<any>(url, formData);
+    }
+
+    trackTechnicalSheetDownload(productId: string, email: string): Observable<any> {
+        return this.http.post<any>(`${this.apiUrl}/products/${productId}/track-technical-sheet-download`, { email });
+    }
+
+    getTechnicalSheetDownloads(productId: string): Observable<any[]> {
+        return this.http.get<any[]>(`${this.apiUrl}/products/${productId}/technical-sheet-downloads`);
+    }
+
+    getAllTechnicalSheetDownloads(): Observable<any[]> {
+        return this.http.get<any[]>(`${this.apiUrl}/technical-sheet-downloads`);
+    }
+
     checkProductCodeExists(productCode: string, excludeId?: string): Observable<{ exists: boolean }> {
         let url = `${this.apiUrl}/products/check-code/${productCode}`;
         if (excludeId) {

@@ -21,13 +21,14 @@ const enquiry_entity_1 = require("../entities/enquiry.entity");
 const user_entity_1 = require("../entities/user.entity");
 const role_entity_1 = require("../entities/role.entity");
 const permission_entity_1 = require("../entities/permission.entity");
+const technical_sheet_download_entity_1 = require("../entities/technical-sheet-download.entity");
 let CatalogueModule = class CatalogueModule {
 };
 exports.CatalogueModule = CatalogueModule;
 exports.CatalogueModule = CatalogueModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([product_entity_1.Product, category_entity_1.Category, collection_entity_1.Collection, designer_entity_1.Designer, enquiry_entity_1.Enquiry, user_entity_1.User, role_entity_1.Role, permission_entity_1.Permission]),
+            typeorm_1.TypeOrmModule.forFeature([product_entity_1.Product, category_entity_1.Category, collection_entity_1.Collection, designer_entity_1.Designer, enquiry_entity_1.Enquiry, user_entity_1.User, role_entity_1.Role, permission_entity_1.Permission, technical_sheet_download_entity_1.TechnicalSheetDownload]),
             api_key_module_1.ApiKeyModule,
             platform_express_1.MulterModule.register({
                 dest: './uploads/products'

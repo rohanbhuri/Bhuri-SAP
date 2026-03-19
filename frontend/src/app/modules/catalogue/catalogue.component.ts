@@ -13,6 +13,7 @@ import { ProductsPageComponent } from './pages/products-page.component';
 import { CategoriesPageComponent } from './pages/categories-page.component';
 import { CollectionsPageComponent } from './pages/collections-page.component';
 import { DesignersPageComponent } from './pages/designers-page.component';
+import { TechnicalSheetDownloadsPageComponent } from './pages/technical-sheet-downloads-page.component';
 import { AnalyticsPageComponent } from './pages/analytics-page.component';
 import { AuthService } from '../../services/auth.service';
 
@@ -32,6 +33,7 @@ import { AuthService } from '../../services/auth.service';
     CategoriesPageComponent,
     CollectionsPageComponent,
     DesignersPageComponent,
+    TechnicalSheetDownloadsPageComponent,
     AnalyticsPageComponent
   ],
   template: `
@@ -69,6 +71,9 @@ import { AuthService } from '../../services/auth.service';
         <mat-tab label="Designers">
           <app-designers-page></app-designers-page>
         </mat-tab>
+        <mat-tab label="Technical Sheet Downloads">
+          <app-technical-sheet-downloads-page></app-technical-sheet-downloads-page>
+        </mat-tab>
         <mat-tab label="Analytics">
           <app-analytics-page></app-analytics-page>
         </mat-tab>
@@ -85,8 +90,8 @@ export class CatalogueComponent implements OnInit {
   private breadcrumbService = inject(BreadcrumbService);
   
   selectedTabIndex = 0;
-  private tabs = ['products', 'categories', 'collections', 'designers', 'analytics'];
-  private tabNames = ['Products', 'Categories', 'Collections', 'Designers', 'Analytics'];
+  private tabs = ['products', 'categories', 'collections', 'designers', 'technical-sheet-downloads', 'analytics'];
+  private tabNames = ['Products', 'Categories', 'Collections', 'Designers', 'Technical Sheet Downloads', 'Analytics'];
 
   canAccessApi(): boolean {
     return this.authService.getCurrentUser()?.allowApiAccess ?? false;

@@ -28,6 +28,14 @@ export declare class CatalogueController {
     uploadModel(file: Express.Multer.File): Promise<{
         url: string;
     }>;
+    uploadTechnicalSheet(file: Express.Multer.File): Promise<{
+        url: string;
+    }>;
+    trackTechnicalSheetDownload(productId: string, data: {
+        email: string;
+    }, req: any): Promise<import("../entities/technical-sheet-download.entity").TechnicalSheetDownload>;
+    getTechnicalSheetDownloads(productId: string): Promise<import("../entities/technical-sheet-download.entity").TechnicalSheetDownload[]>;
+    getAllTechnicalSheetDownloads(): Promise<import("../entities/technical-sheet-download.entity").TechnicalSheetDownload[]>;
     updateProduct(id: string, data: Partial<Product>, req: any): Promise<Product>;
     deleteProduct(id: string, req: any): Promise<void>;
     getAllCategories(): Promise<Category[]>;

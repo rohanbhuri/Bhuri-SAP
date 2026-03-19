@@ -6,6 +6,7 @@ import { Category } from '../entities/category.entity';
 import { Collection } from '../entities/collection.entity';
 import { Designer } from '../entities/designer.entity';
 import { Enquiry } from '../entities/enquiry.entity';
+import { TechnicalSheetDownload } from '../entities/technical-sheet-download.entity';
 import { ObjectId } from 'mongodb';
 
 @Injectable()
@@ -21,6 +22,8 @@ export class CatalogueService {
         private designerRepository: MongoRepository<Designer>,
         @InjectRepository(Enquiry)
         private enquiryRepository: MongoRepository<Enquiry>,
+        @InjectRepository(TechnicalSheetDownload)
+        private technicalSheetDownloadRepository: MongoRepository<TechnicalSheetDownload>,
     ) { }
 
     // Products
@@ -522,7 +525,7 @@ export class CatalogueService {
         } as any);
         const headers = [
             '_id', 'name', 'productCode', 'slug', 'description', 'descriptionHtml',
-            'basePrice', 'currency', 'featuredImage', 'imageGallery', 'videos', 'models3d',
+            'basePrice', 'currency', 'featuredImage', 'imageGallery', 'videos', 'models3d', 'technicalSheet',
             'categoryId', 'collectionId', 'designerId', 'tags', 'isPublished', 'isExclusive', 'isFeatured',
             'dimensionConfig', 'variations', 'attributes', 'seo', 'createdAt', 'updatedAt'
         ];
@@ -539,6 +542,7 @@ export class CatalogueService {
             p.imageGallery?.join('; ') || '',
             p.videos?.join('; ') || '',
             p.models3d?.join('; ') || '',
+            p.technicalSheet || '',
             p.categoryId || '',
             p.collectionId || '',
             p.designerId || '',
@@ -619,7 +623,7 @@ export class CatalogueService {
     async getProductTemplate(): Promise<string> {
         const headers = [
             '_id', 'name', 'productCode', 'slug', 'description', 'descriptionHtml',
-            'basePrice', 'currency', 'featuredImage', 'imageGallery', 'videos', 'models3d',
+            'basePrice', 'currency', 'featuredImage', 'imageGallery', 'videos', 'models3d', 'technicalSheet',
             'categoryId', 'collectionId', 'designerId', 'tags', 'isPublished', 'isExclusive', 'isFeatured',
             'dimensionConfig', 'variations', 'attributes', 'seo', 'createdAt', 'updatedAt'
         ];
@@ -863,5 +867,69 @@ export class CatalogueService {
         }
 
         return { success, failed, errors };
+    }
+
+    // Technical Sheet Download Tracking
+    async trackTechnicalSheetDownload(
+        productId: string,
+        email: string,
+        ipAddress: string,
+        userAgent?: string,
+        referrer?: string
+    ): Promise<TechnicalSheetDownload> {
+        const product = await this.findOneProduct(productId);
+        if (!product) {
+            throw new Error('Product not found');
+        }
+
+        const download = this.technicalSheetDownloadRepository.create({
+            productId,
+            productCode: product.productCode,
+            productName: product.name,
+            email,
+            ipAddress,
+            userAgent,
+            referrer,
+            downloadedAt: new Date()
+        });
+
+        return this.technicalSheetDownloadRepository.save(download);
+    }
+
+    async getTechnicalSheetDownloads(productId: string): Promise<TechnicalSheetDownload[]> {
+        return this.technicalSheetDownloadRepository.find({
+            where: { productId },
+            order: { downloadedAt: 'DESC' }
+        } as any);
+    }
+
+    async getAllTechnicalSheetDownloads(): Promise<TechnicalSheetDownload[]> {
+        return this.technicalSheetDownloadRepository.find({
+            order: { downloadedAt: 'DESC' }
+        } as any);
+    }
+
+    async getTechnicalSheetDownloadStats(productId?: string): Promise<any> {
+        const match: any = {};
+        if (productId) {
+            match.productId = productId;
+        }
+
+        const downloads = await this.technicalSheetDownloadRepository.find({
+            where: match
+        } as any);
+
+        const totalDownloads = downloads.length;
+        const uniqueEmails = new Set(downloads.map(d => d.email)).size;
+        const downloadsByProduct = downloads.reduce((acc, d) => {
+            acc[d.productCode] = (acc[d.productCode] || 0) + 1;
+            return acc;
+        }, {});
+
+        return {
+            totalDownloads,
+            uniqueEmails,
+            downloadsByProduct
+        };
     }
 }

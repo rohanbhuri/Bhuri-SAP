@@ -70,6 +70,14 @@ const presentationStorage = diskStorage({
     }
 });
 
+const technicalSheetStorage = diskStorage({
+    destination: './uploads/products/technical-sheets',
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
+    }
+});
+
 @Controller('catalogue')
 @UseGuards(ApiKeyGuard)
 export class CatalogueController {
@@ -121,6 +129,52 @@ export class CatalogueController {
     @UseInterceptors(FileInterceptor('model', { storage: modelStorage }))
     async uploadModel(@UploadedFile() file: Express.Multer.File) {
         return { url: `/uploads/products/models/${file.filename}` };
+    }
+
+    @Post('products/upload-technical-sheet')
+    @UseInterceptors(FileInterceptor('technicalSheet', { 
+        storage: technicalSheetStorage,
+        fileFilter: (req, file, cb) => {
+            if (file.mimetype === 'application/pdf') {
+                cb(null, true);
+            } else {
+                cb(new BadRequestException('Only PDF files are allowed'), false);
+            }
+        }
+    }))
+    async uploadTechnicalSheet(@UploadedFile() file: Express.Multer.File) {
+        return { url: `/uploads/products/technical-sheets/${file.filename}` };
+    }
+
+    @Post('products/:productId/track-technical-sheet-download')
+    async trackTechnicalSheetDownload(
+        @Param('productId') productId: string,
+        @Body() data: { email: string },
+        @Request() req
+    ) {
+        const ipAddress = req.ip || req.connection.remoteAddress;
+        const userAgent = req.headers['user-agent'];
+        const referrer = req.headers['referer'] || req.headers['referrer'];
+        
+        return this.catalogueService.trackTechnicalSheetDownload(
+            productId,
+            data.email,
+            ipAddress,
+            userAgent,
+            referrer
+        );
+    }
+
+    @Get('products/:productId/technical-sheet-downloads')
+    @UseGuards(JwtAuthGuard)
+    async getTechnicalSheetDownloads(@Param('productId') productId: string) {
+        return this.catalogueService.getTechnicalSheetDownloads(productId);
+    }
+
+    @Get('technical-sheet-downloads')
+    @UseGuards(JwtAuthGuard)
+    async getAllTechnicalSheetDownloads() {
+        return this.catalogueService.getAllTechnicalSheetDownloads();
     }
 
     @Put('products/:id')

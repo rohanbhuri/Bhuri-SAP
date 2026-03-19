@@ -41,6 +41,9 @@ export class Product {
     models3d: string[];
 
     @Column({ nullable: true })
+    technicalSheet?: string;
+
+    @Column({ nullable: true })
     categoryId?: string;
 
     @Column({ nullable: true })

@@ -193,6 +193,7 @@ export class XrmTrainerService {
           { key: 'categories', label: 'Categories', icon: 'category' },
           { key: 'collections', label: 'Collections', icon: 'collections' },
           { key: 'designers', label: 'Designers', icon: 'palette' },
+          { key: 'technical-sheet-downloads', label: 'Technical Sheet Downloads', icon: 'download' },
           { key: 'analytics', label: 'Analytics', icon: 'analytics' }
         );
       } else if (urlWithoutParams.includes('/modules/cms')) {

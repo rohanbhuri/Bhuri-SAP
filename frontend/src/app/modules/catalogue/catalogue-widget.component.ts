@@ -83,6 +83,10 @@ import { CatalogueService } from './catalogue.service';
             <mat-icon>person_outline</mat-icon>
             <span>Designers</span>
           </button>
+          <button mat-flat-button class="cta-btn downloads-btn" (click)="navigateToTab('technical-sheet-downloads')">
+            <mat-icon>download</mat-icon>
+            <span>Track Tech Sheet</span>
+          </button>
           <button mat-flat-button class="cta-btn analytics-btn" (click)="navigateToTab('analytics')">
             <mat-icon>analytics</mat-icon>
             <span>Analytics</span>
@@ -191,7 +195,7 @@ import { CatalogueService } from './catalogue.service';
     }
     
     :host-context([data-view="expanded"]) .cta-grid {
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 16px;
     }
 
@@ -233,7 +237,23 @@ import { CatalogueService } from './catalogue.service';
       border-color: color-mix(in srgb, var(--theme-primary) 40%, transparent) !important;
     }
 
+    .downloads-btn {
+      background: color-mix(in srgb, #4caf50 12%, var(--theme-surface)) !important;
+      color: #4caf50 !important;
+      border-color: color-mix(in srgb, #4caf50 25%, transparent) !important;
+    }
+
+    .downloads-btn:hover {
+      background: #4caf50 !important;
+      color: white !important;
+      border-color: #4caf50 !important;
+    }
+
     :host-context([data-view="expanded"]) .analytics-btn {
+      grid-column: auto;
+    }
+
+    :host-context([data-view="expanded"]) .downloads-btn {
       grid-column: auto;
     }
 

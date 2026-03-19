@@ -189,6 +189,98 @@ interface ApiEndpoint {
             </mat-accordion>
           </div>
         </mat-tab>
+
+        <mat-tab label="Technical Sheet Downloads">
+          <div class="tab-content">
+            <mat-card class="info-card">
+              <mat-card-header>
+                <mat-icon mat-card-avatar class="public-icon">public</mat-icon>
+                <mat-card-title>Public API for Third-Party Websites</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <p>This endpoint is <strong>publicly accessible</strong> and does not require authentication. It's designed for third-party websites to track technical sheet downloads.</p>
+                <div class="use-case">
+                  <h4>Use Case</h4>
+                  <p>When a user on your public website wants to download a product's technical sheet, call this endpoint to track the download with their email address.</p>
+                </div>
+              </mat-card-content>
+            </mat-card>
+
+            <mat-accordion>
+              <mat-expansion-panel *ngFor="let endpoint of technicalSheetEndpoints" [expanded]="true">
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    <mat-chip [class]="'method-' + endpoint.method.toLowerCase()">{{ endpoint.method }}</mat-chip>
+                    <code>{{ endpoint.path }}</code>
+                  </mat-panel-title>
+                  <mat-panel-description>{{ endpoint.description }}</mat-panel-description>
+                </mat-expansion-panel-header>
+                <div class="endpoint-details">
+                  <div *ngIf="endpoint.params?.length" class="params">
+                    <h4>URL Parameters</h4>
+                    <table>
+                      <tr *ngFor="let param of endpoint.params">
+                        <td><code>{{ param.name }}</code></td>
+                        <td><span class="type">{{ param.type }}</span></td>
+                        <td><span [class]="param.required ? 'required' : 'optional'">{{ param.required ? 'Required' : 'Optional' }}</span></td>
+                        <td>{{ param.description }}</td>
+                      </tr>
+                    </table>
+                  </div>
+                  <div *ngIf="endpoint.body" class="body">
+                    <h4>Request Body</h4>
+                    <pre><code>{{ endpoint.body }}</code></pre>
+                  </div>
+                  <div class="response">
+                    <h4>Success Response (200 OK)</h4>
+                    <pre><code>{{ endpoint.response }}</code></pre>
+                  </div>
+                  <div class="example-section">
+                    <h4>JavaScript Example</h4>
+                    <pre><code>{{ getJavaScriptExample(endpoint) }}</code></pre>
+                    <button mat-stroked-button (click)="copyJavaScriptExample(endpoint)">
+                      <mat-icon>content_copy</mat-icon>
+                      Copy JavaScript Example
+                    </button>
+                  </div>
+                  <div class="example-section">
+                    <h4>cURL Example</h4>
+                    <pre><code>{{ getCurlExample(endpoint) }}</code></pre>
+                    <button mat-stroked-button (click)="copyCurlExample(endpoint)">
+                      <mat-icon>content_copy</mat-icon>
+                      Copy cURL Example
+                    </button>
+                  </div>
+                  <div class="example-section">
+                    <h4>HTML Form Example</h4>
+                    <pre><code>{{ getHtmlExample() }}</code></pre>
+                    <button mat-stroked-button (click)="copyHtmlExample()">
+                      <mat-icon>content_copy</mat-icon>
+                      Copy HTML Example
+                    </button>
+                  </div>
+                </div>
+              </mat-expansion-panel>
+            </mat-accordion>
+
+            <mat-card class="notes-card">
+              <mat-card-header>
+                <mat-icon mat-card-avatar>info</mat-icon>
+                <mat-card-title>Important Notes</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <ul>
+                  <li><strong>No Authentication Required:</strong> This endpoint is public and doesn't need an API key</li>
+                  <li><strong>CORS Enabled:</strong> Can be called from any domain (configure allowed origins in production)</li>
+                  <li><strong>Rate Limiting:</strong> Consider implementing rate limiting to prevent abuse</li>
+                  <li><strong>Email Validation:</strong> Email format is validated on the backend</li>
+                  <li><strong>Tracking Data:</strong> Records email, IP address, user agent, referrer, and timestamp</li>
+                  <li><strong>Privacy:</strong> Ensure compliance with privacy laws (GDPR, CCPA) when collecting emails</li>
+                </ul>
+              </mat-card-content>
+            </mat-card>
+          </div>
+        </mat-tab>
       </mat-tab-group>
     </div>
     <app-bottom-navbar></app-bottom-navbar>
@@ -223,6 +315,17 @@ interface ApiEndpoint {
     .optional { color: #999; }
     .endpoint-details pre { background: #f5f5f5; padding: 16px; border-radius: 4px; overflow-x: auto; }
     .endpoint-details pre code { font-size: 13px; line-height: 1.6; }
+    .info-card { margin-bottom: 24px; background: #e3f2fd; }
+    .info-card .public-icon { background: #2196f3; color: white; }
+    .info-card .use-case { margin-top: 16px; padding: 12px; background: white; border-radius: 4px; }
+    .info-card .use-case h4 { margin: 0 0 8px; font-size: 14px; font-weight: 600; }
+    .info-card .use-case p { margin: 0; color: #666; }
+    .notes-card { margin-top: 24px; background: #fff3e0; }
+    .notes-card ul { margin: 8px 0; padding-left: 24px; }
+    .notes-card li { margin: 8px 0; color: #666; }
+    .example-section { margin-top: 24px; padding-top: 16px; border-top: 1px solid #eee; }
+    .example-section h4 { margin: 0 0 12px; font-size: 14px; font-weight: 600; color: #333; }
+    .example-section button { margin-top: 8px; }
   `]
 })
 export class CatalogueApiDocsComponent implements OnInit {
@@ -338,6 +441,24 @@ export class CatalogueApiDocsComponent implements OnInit {
     }
   ];
 
+  technicalSheetEndpoints: ApiEndpoint[] = [
+    {
+      method: 'POST',
+      path: '/products/:productId/track-technical-sheet-download',
+      description: 'Track a technical sheet download (Public - No Auth Required)',
+      params: [
+        { 
+          name: 'productId', 
+          type: 'string', 
+          required: true, 
+          description: 'The MongoDB ObjectId of the product' 
+        }
+      ],
+      body: '{\n  "email": "user@example.com"\n}',
+      response: '{\n  "_id": "65f1a2b3c4d5e6f7g8h9i0j1",\n  "productId": "65abc123def456789012345",\n  "productCode": "PRD-001",\n  "productName": "Luxury Marble Table",\n  "email": "user@example.com",\n  "ipAddress": "192.168.1.1",\n  "userAgent": "Mozilla/5.0...",\n  "referrer": "https://yourwebsite.com/products",\n  "downloadedAt": "2026-03-10T10:30:00.000Z"\n}'
+    }
+  ];
+
   copyUrl(url: string) {
     navigator.clipboard.writeText(url);
     this.snackBar.open('URL copied to clipboard', 'Close', { duration: 2000 });
@@ -351,5 +472,99 @@ export class CatalogueApiDocsComponent implements OnInit {
 
   navigateToApiKeys() {
     this.router.navigate(['/settings/api-keys']);
+  }
+
+  getJavaScriptExample(endpoint: ApiEndpoint): string {
+    return `async function trackTechnicalSheetDownload(productId, email) {
+  try {
+    const response = await fetch(
+      '${this.baseUrl}${endpoint.path.replace(':productId', '\${productId}')}',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email })
+      }
+    );
+
+    if (response.ok) {
+      const data = await response.json();
+      console.log('Download tracked:', data);
+      // Now trigger the actual PDF download
+      window.open(technicalSheetUrl, '_blank');
+      return true;
+    } else {
+      console.error('Failed to track download');
+      return false;
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    return false;
+  }
+}
+
+// Usage
+const productId = '65abc123def456789012345';
+const userEmail = 'user@example.com';
+trackTechnicalSheetDownload(productId, userEmail);`;
+  }
+
+  getCurlExample(endpoint: ApiEndpoint): string {
+    const path = endpoint.path.replace(':productId', '65abc123def456789012345');
+    return `curl -X POST "${this.baseUrl}${path}" \\
+  -H "Content-Type: application/json" \\
+  -d '{"email": "user@example.com"}'`;
+  }
+
+  getHtmlExample(): string {
+    return `<form id="downloadForm">
+  <input type="email" id="email" placeholder="Enter your email" required>
+  <button type="submit">Download Technical Sheet</button>
+</form>
+
+<script>
+const API_URL = '${this.baseUrl}';
+const PRODUCT_ID = 'YOUR_PRODUCT_ID';
+const PDF_URL = 'YOUR_PDF_URL';
+
+document.getElementById('downloadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('email').value;
+  
+  try {
+    const response = await fetch(
+      \`\${API_URL}/products/\${PRODUCT_ID}/track-technical-sheet-download\`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      }
+    );
+    
+    if (response.ok) {
+      window.open(PDF_URL, '_blank');
+      alert('Download started!');
+    }
+  } catch (error) {
+    alert('Error: ' + error.message);
+  }
+});
+</script>`;
+  }
+
+  copyJavaScriptExample(endpoint: ApiEndpoint) {
+    navigator.clipboard.writeText(this.getJavaScriptExample(endpoint));
+    this.snackBar.open('JavaScript example copied', 'Close', { duration: 2000 });
+  }
+
+  copyCurlExample(endpoint: ApiEndpoint) {
+    navigator.clipboard.writeText(this.getCurlExample(endpoint));
+    this.snackBar.open('cURL example copied', 'Close', { duration: 2000 });
+  }
+
+  copyHtmlExample() {
+    navigator.clipboard.writeText(this.getHtmlExample());
+    this.snackBar.open('HTML example copied', 'Close', { duration: 2000 });
   }
 }

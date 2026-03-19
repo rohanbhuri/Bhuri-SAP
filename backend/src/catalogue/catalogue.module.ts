@@ -12,10 +12,11 @@ import { Enquiry } from '../entities/enquiry.entity';
 import { User } from '../entities/user.entity';
 import { Role } from '../entities/role.entity';
 import { Permission } from '../entities/permission.entity';
+import { TechnicalSheetDownload } from '../entities/technical-sheet-download.entity';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([Product, Category, Collection, Designer, Enquiry, User, Role, Permission]),
+        TypeOrmModule.forFeature([Product, Category, Collection, Designer, Enquiry, User, Role, Permission, TechnicalSheetDownload]),
         ApiKeyModule,
         MulterModule.register({
             dest: './uploads/products'

@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Technical Sheet Download Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .product-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+        
+        .product-info h2 {
+            color: #667eea;
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+        
+        .product-info p {
+            color: #666;
+            font-size: 14px;
+            margin: 4px 0;
+        }
+        
+        .description {
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        input[type="email"],
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="email"]:focus,
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .message {
+            margin-top: 20px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .message.show {
+            display: block;
+        }
+        
+        .message.error {
+            background: #fee;
+            color: #c33;
+            border: 1px solid #fcc;
+        }
+        
+        .message.success {
+            background: #efe;
+            color: #3c3;
+            border: 1px solid #cfc;
+        }
+        
+        .message.info {
+            background: #eef;
+            color: #33c;
+            border: 1px solid #ccf;
+        }
+        
+        .config-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border: 2px dashed #ddd;
+        }
+        
+        .config-section h3 {
+            color: #667eea;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+        
+        .config-section small {
+            color: #999;
+            font-size: 12px;
+            display: block;
+            margin-top: 4px;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📄 Technical Sheet Download</h1>
+        
+        <div class="product-info">
+            <h2 id="productName">Product Name</h2>
+            <p><strong>Code:</strong> <span id="productCode">-</span></p>
+            <p><strong>Product ID:</strong> <span id="displayProductId">-</span></p>
+        </div>
+        
+        <p class="description">
+            Enter your email address to download the technical specification sheet for this product. 
+            Your email will be used for tracking purposes only.
+        </p>
+        
+        <!-- Configuration Section -->
+        <div class="config-section">
+            <h3>⚙️ Configuration (For Testing)</h3>
+            
+            <div class="form-group">
+                <label for="apiUrl">API Base URL:</label>
+                <input type="text" id="apiUrl" value="http://localhost:3000/catalogue" placeholder="http://localhost:3000/catalogue">
+                <small>Your backend API URL</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="productId">Product ID:</label>
+                <input type="text" id="productId" placeholder="Enter product ID">
+                <small>Get this from your product in the admin panel</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="technicalSheetUrl">Technical Sheet URL:</label>
+                <input type="text" id="technicalSheetUrl" placeholder="http://localhost:3000/uploads/products/technical-sheets/...">
+                <small>The full URL to the PDF file</small>
+            </div>
+        </div>
+        
+        <!-- Download Form -->
+        <form id="downloadForm">
+            <div class="form-group">
+                <label for="email">Email Address: *</label>
+                <input type="email" id="email" name="email" required placeholder="your.email@example.com">
+            </div>
+            
+            <button type="submit" id="downloadBtn">
+                📥 Download Technical Sheet
+            </button>
+        </form>
+        
+        <div id="message" class="message"></div>
+        
+        <div class="footer">
+            <p>This is a test page for the Technical Sheet Download feature</p>
+            <p>© 2026 Catalogue Management System</p>
+        </div>
+    </div>
+
+    <script>
+        // Update display when product ID changes
+        document.getElementById('productId').addEventListener('input', (e) => {
+            document.getElementById('displayProductId').textContent = e.target.value || '-';
+        });
+
+        document.getElementById('downloadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const apiUrl = document.getElementById('apiUrl').value;
+            const productId = document.getElementById('productId').value;
+            const technicalSheetUrl = document.getElementById('technicalSheetUrl').value;
+            const messageDiv = document.getElementById('message');
+            const downloadBtn = document.getElementById('downloadBtn');
+            
+            // Validation
+            if (!productId) {
+                showMessage('Please enter a Product ID', 'error');
+                return;
+            }
+            
+            if (!technicalSheetUrl) {
+                showMessage('Please enter the Technical Sheet URL', 'error');
+                return;
+            }
+            
+            // Disable button and show loading
+            downloadBtn.disabled = true;
+            downloadBtn.textContent = '⏳ Processing...';
+            showMessage('Tracking download...', 'info');
+            
+            try {
+                // Track the download
+                const response = await fetch(
+                    `${apiUrl}/products/${productId}/track-technical-sheet-download`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ email })
+                    }
+                );
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Tracking response:', data);
+                    
+                    showMessage('✅ Download tracked successfully! Starting download...', 'success');
+                    
+                    // Trigger download after a short delay
+                    setTimeout(() => {
+                        const link = document.createElement('a');
+                        link.href = technicalSheetUrl;
+                        link.download = 'technical-sheet.pdf';
+                        link.target = '_blank';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        
+                        // Reset form
+                        document.getElementById('downloadForm').reset();
+                        
+                        showMessage('✅ Download started! Check your downloads folder.', 'success');
+                    }, 1000);
+                } else {
+                    const errorData = await response.json().catch(() => ({}));
+                    console.error('Error response:', errorData);
+                    showMessage(`❌ Failed to track download: ${errorData.message || response.statusText}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage(`❌ An error occurred: ${error.message}. Check console for details.`, 'error');
+            } finally {
+                // Re-enable button
+                downloadBtn.disabled = false;
+                downloadBtn.textContent = '📥 Download Technical Sheet';
+            }
+        });
+        
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type} show`;
+            
+            // Auto-hide success messages after 5 seconds
+            if (type === 'success') {
+                setTimeout(() => {
+                    messageDiv.classList.remove('show');
+                }, 5000);
+            }
+        }
+        
+        // Load saved configuration from localStorage
+        window.addEventListener('load', () => {
+            const savedApiUrl = localStorage.getItem('apiUrl');
+            const savedProductId = localStorage.getItem('productId');
+            const savedTechnicalSheetUrl = localStorage.getItem('technicalSheetUrl');
+            
+            if (savedApiUrl) document.getElementById('apiUrl').value = savedApiUrl;
+            if (savedProductId) {
+                document.getElementById('productId').value = savedProductId;
+                document.getElementById('displayProductId').textContent = savedProductId;
+            }
+            if (savedTechnicalSheetUrl) document.getElementById('technicalSheetUrl').value = savedTechnicalSheetUrl;
+        });
+        
+        // Save configuration to localStorage on change
+        ['apiUrl', 'productId', 'technicalSheetUrl'].forEach(id => {
+            document.getElementById(id).addEventListener('change', (e) => {
+                localStorage.setItem(id, e.target.value);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -519,10 +519,9 @@ export class CollectionsPageComponent implements OnInit {
   }
 
   previewCollection(collection: any) {
-    // Generate the preview URL: https://racconti.in/collection/{slug}-{collectionId}
-    const collectionId = collection._id.toString();
+    // Generate the preview URL: https://racconti.in/collection/{slug}
     const slug = collection.slug;
-    const previewUrl = `https://racconti.in/collection/${slug}-${collectionId}`;
+    const previewUrl = `https://racconti.in/collection/${slug}`;
     
     // Open in new tab
     window.open(previewUrl, '_blank');

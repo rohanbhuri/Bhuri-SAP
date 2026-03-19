@@ -211,6 +211,26 @@ import Quill from 'quill';
                 <input matInput [(ngModel)]="modelUrls" placeholder="https://...model.glb">
               </mat-form-field>
             </div>
+
+            <div class="media-section">
+              <h3>Technical Sheet (PDF)</h3>
+              <input type="file" #technicalSheetInput accept=".pdf" (change)="onTechnicalSheetSelect($event)" style="display:none">
+              <button mat-raised-button (click)="technicalSheetInput.click()">
+                <mat-icon>picture_as_pdf</mat-icon>
+                Upload Technical Sheet
+              </button>
+              <div *ngIf="uploadedTechnicalSheet()" class="technical-sheet-preview">
+                <mat-icon>picture_as_pdf</mat-icon>
+                <span>{{ uploadedTechnicalSheet() }}</span>
+                <button mat-icon-button class="remove-btn" (click)="removeTechnicalSheet()">
+                  <mat-icon>close</mat-icon>
+                </button>
+              </div>
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Or paste technical sheet URL</mat-label>
+                <input matInput [(ngModel)]="technicalSheetUrl" placeholder="https://...sheet.pdf">
+              </mat-form-field>
+            </div>
           </div>
         </mat-tab>
 
@@ -447,7 +467,7 @@ import Quill from 'quill';
     <mat-dialog-actions align="end">
       <button mat-button (click)="onCancel()">Cancel</button>
       <button mat-raised-button color="primary" (click)="onSave()" [disabled]="!productForm.valid || saving()">
-        {{ saving() ? 'Saving...' : (data.product ? 'Update' : 'Create') }}
+        {{ saving() ? 'Saving...' : (data.product?._id ? 'Update' : 'Save') }}
       </button>
     </mat-dialog-actions>
   `,
@@ -652,6 +672,25 @@ import Quill from 'quill';
       width: 16px;
       height: 16px;
     }
+    .technical-sheet-preview {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px;
+      background: #f5f5f5;
+      border-radius: 4px;
+      margin: 12px 0;
+    }
+    .technical-sheet-preview mat-icon {
+      color: #d32f2f;
+    }
+    .technical-sheet-preview span {
+      flex: 1;
+      font-size: 14px;
+    }
+    .technical-sheet-preview .remove-btn {
+      background: white;
+    }
     .variation-images-section {
       margin-top: 16px;
       padding: 16px;
@@ -708,6 +747,7 @@ export class ProductDialogComponent implements OnInit, AfterViewInit {
   variationImages = signal<Map<number, string[]>>(new Map());
   variationFeaturedImages = signal<Map<number, number>>(new Map());
   variationProductCodes = signal<Map<number, Map<number, string>>>(new Map());
+  uploadedTechnicalSheet = signal<string>('');
   saving = signal(false);
   productCodeChecking = signal(false);
   currency = signal('INR');
@@ -716,6 +756,7 @@ export class ProductDialogComponent implements OnInit, AfterViewInit {
   imageUrls = '';
   videoUrls = '';
   modelUrls = '';
+  technicalSheetUrl = '';
   quillEditor: any;
 
   constructor(
@@ -816,6 +857,7 @@ export class ProductDialogComponent implements OnInit, AfterViewInit {
       }
       if (p.videos) this.videoUrls = p.videos.join(', ');
       if (p.models3d) this.modelUrls = p.models3d.join(', ');
+      if (p.technicalSheet) this.uploadedTechnicalSheet.set(p.technicalSheet);
       
       // Transform variations back to measurements for editing
       if (p.variations && p.variations.length > 0) {
@@ -1043,6 +1085,36 @@ export class ProductDialogComponent implements OnInit, AfterViewInit {
     }
   }
 
+  onTechnicalSheetSelect(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      if (file.type !== 'application/pdf') {
+        this.snackBar.open('Only PDF files are allowed', 'Close', { duration: 3000, panelClass: ['error-snackbar'] });
+        return;
+      }
+      console.log('Uploading technical sheet:', file.name);
+      this.catalogueService.uploadProductTechnicalSheet(file).subscribe({
+        next: (res) => {
+          console.log('Technical sheet upload response:', res);
+          if (res.url) {
+            this.uploadedTechnicalSheet.set(res.url);
+            this.snackBar.open('Technical sheet uploaded successfully', 'Close', { duration: 2000 });
+          }
+        },
+        error: (err) => {
+          console.error('Technical sheet upload failed:', err);
+          const message = err.error?.message || 'Failed to upload technical sheet';
+          this.snackBar.open(message, 'Close', { duration: 5000, panelClass: ['error-snackbar'] });
+        }
+      });
+    }
+  }
+
+  removeTechnicalSheet() {
+    this.uploadedTechnicalSheet.set('');
+    this.technicalSheetUrl = '';
+  }
+
   removeImage(index: number) {
     this.uploadedImages.update((imgs: string[]) => imgs.filter((_: string, i: number) => i !== index));
     if (this.featuredImageIndex() === index) {
@@ -1142,6 +1214,7 @@ export class ProductDialogComponent implements OnInit, AfterViewInit {
       
       const allVideos = this.videoUrls ? this.videoUrls.split(',').map(u => u.trim()) : [];
       const allModels = this.modelUrls ? this.modelUrls.split(',').map(u => u.trim()) : [];
+      const technicalSheet = this.uploadedTechnicalSheet() || (this.technicalSheetUrl.trim() || undefined);
 
       // Transform measurements to variations format
       const variations = this.transformMeasurementsToVariations(
@@ -1156,6 +1229,7 @@ export class ProductDialogComponent implements OnInit, AfterViewInit {
         imageGallery: allImages,
         videos: allVideos,
         models3d: allModels,
+        technicalSheet: technicalSheet,
         variations: variations,
         dimensionConfig: {
           shape: this.productForm.value.dimensionShape,
@@ -1187,7 +1261,7 @@ export class ProductDialogComponent implements OnInit, AfterViewInit {
       delete productData.seoDescription;
       delete productData.seoKeywords;
 
-      const request = this.data.product 
+      const request = this.data.product?._id 
         ? this.catalogueService.updateProduct(this.data.product._id, productData)
         : this.catalogueService.createProduct(productData);
 

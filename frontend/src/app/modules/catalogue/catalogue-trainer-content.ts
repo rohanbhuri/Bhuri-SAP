@@ -17,6 +17,7 @@ export const CATALOGUE_TRAINER_CONTENT: Record<string, TrainerContent> = {
       { key: 'categories', label: 'Categories', icon: 'category' },
       { key: 'collections', label: 'Collections', icon: 'collections' },
       { key: 'designers', label: 'Designers', icon: 'palette' },
+      { key: 'technical-sheet-downloads', label: 'Technical Sheet Downloads', icon: 'download' },
       { key: 'analytics', label: 'Analytics', icon: 'analytics' }
     ],
     features: [
@@ -77,8 +78,9 @@ export const CATALOGUE_TRAINER_CONTENT: Record<string, TrainerContent> = {
         steps: [
           'Download CSV template',
           'Fill in product data in Excel',
+          'Include technical sheet PDF links in the technicalSheet column',
           'Upload CSV to import products',
-          'Export existing products to CSV',
+          'Export existing products to CSV (includes technical sheet URLs)',
           'Update products in bulk',
           'Validate data before import',
         ],
@@ -93,6 +95,19 @@ export const CATALOGUE_TRAINER_CONTENT: Record<string, TrainerContent> = {
           'Track top-performing products',
           'Analyze category distribution',
           'Review catalogue growth trends',
+        ],
+      },
+      {
+        icon: 'download',
+        title: 'Technical Sheet Downloads',
+        description: 'Track and monitor who downloads product technical sheets (PDFs). Capture lead data and analyze download activity.',
+        steps: [
+          'View all technical sheet download records',
+          'See total downloads, unique users, and products downloaded',
+          'Track downloads by email, IP address, and date',
+          'Search and filter download records',
+          'Monitor daily download activity',
+          'View download details including referrer and user agent',
         ],
       },
       {
@@ -192,7 +207,7 @@ export const CATALOGUE_TRAINER_CONTENT: Record<string, TrainerContent> = {
       },
       {
         question: 'Can I export my product catalogue?',
-        answer: 'Yes! Use the export button in the Products tab to download your entire catalogue as CSV. This includes all product details, pricing, stock, categories, and more. Useful for backups and external analysis.',
+        answer: 'Yes! Use the export button in the Products tab to download your entire catalogue as CSV. This includes all product details, pricing, stock, categories, technical sheet URLs, and more. Useful for backups and external analysis.',
       },
       {
         question: 'What happens when a product is out of stock?',
@@ -258,6 +273,7 @@ export const CATALOGUE_TRAINER_CONTENT: Record<string, TrainerContent> = {
           'Download CSV template',
           'Open template in Excel or Google Sheets',
           'Fill in product data (name, price, SKU, etc.)',
+          'Add technical sheet PDF URLs in the technicalSheet column',
           'Save as CSV file',
           'Upload CSV file',
           'Review validation results',
@@ -273,7 +289,7 @@ export const CATALOGUE_TRAINER_CONTENT: Record<string, TrainerContent> = {
         steps: [
           'Click "Export" button',
           'Choose export format (CSV, Excel)',
-          'Select fields to include',
+          'Export includes all fields including technical sheet URLs',
           'Apply filters if needed (category, status)',
           'Download file',
           'Use for backups, analysis, or migration',
@@ -1024,6 +1040,122 @@ export const CATALOGUE_TRAINER_CONTENT: Record<string, TrainerContent> = {
       {
         question: 'What if a designer changes their name or rebrands?',
         answer: 'Edit the designer profile and update the name, logo, and bio. All product associations are preserved. The updated branding appears immediately across the website.',
+      },
+    ],
+  },
+
+  // Technical Sheet Downloads screen specific trainer
+  'technical-sheet-downloads': {
+    title: 'Technical Sheet Downloads - Lead Tracking',
+    description: 'Monitor and track who downloads product technical sheets (PDFs). Capture lead information including email, IP address, and download timestamps for follow-up and analytics.',
+    features: [
+      {
+        icon: 'dashboard',
+        title: 'Download Statistics',
+        description: 'View key metrics about technical sheet download activity at a glance.',
+        steps: [
+          'Total Downloads — overall count of all technical sheet downloads',
+          'Unique Users — number of distinct email addresses that downloaded',
+          'Products Downloaded — how many products had their sheets downloaded',
+          'Downloads Today — daily download activity count',
+          'Stats update automatically when data loads',
+          'Click Refresh to get the latest numbers',
+        ],
+      },
+      {
+        icon: 'table_chart',
+        title: 'Download Records Table',
+        description: 'Browse all download records with sorting, searching, and pagination.',
+        steps: [
+          'View product name, product code, email, date, and IP address',
+          'Click column headers to sort by any field',
+          'Use pagination to navigate through records (10, 25, 50, or 100 per page)',
+          'Each row represents one technical sheet download event',
+        ],
+      },
+      {
+        icon: 'search',
+        title: 'Search & Filter',
+        description: 'Quickly find specific download records by product, email, or code.',
+        steps: [
+          'Type in the search box to filter records',
+          'Search works across product name, product code, and email',
+          'Results filter instantly as you type',
+          'Clear the search to see all records again',
+        ],
+      },
+      {
+        icon: 'info',
+        title: 'View Download Details',
+        description: 'See full details of each download including browser and referrer info.',
+        steps: [
+          'Click the three-dot menu on any row',
+          'Select "View Details" to see full information',
+          'Details include: product name, code, email, IP address, user agent, referrer, and timestamp',
+          'Use referrer data to understand where traffic comes from',
+        ],
+      },
+      {
+        icon: 'open_in_new',
+        title: 'View Product',
+        description: 'Navigate directly to the product associated with a download.',
+        steps: [
+          'Click the three-dot menu on any row',
+          'Select "View Product" to open the product',
+          'Useful for checking if the technical sheet is still current',
+        ],
+      },
+      {
+        icon: 'refresh',
+        title: 'Refresh Data',
+        description: 'Reload the latest download records from the server.',
+        steps: [
+          'Click the "Refresh" button in the top-right',
+          'Data reloads with a loading spinner',
+          'Stats and table update with fresh data',
+        ],
+      },
+    ],
+    faqs: [
+      {
+        question: 'What is a technical sheet?',
+        answer: 'A technical sheet is a PDF document attached to a product that contains detailed specifications, dimensions, materials, and other technical information. Customers can download these from the product page on the website.',
+      },
+      {
+        question: 'How does download tracking work?',
+        answer: 'When a customer downloads a technical sheet from the website, they provide their email address. The system records the email, IP address, browser info, referrer URL, and timestamp. This data appears in this tab.',
+      },
+      {
+        question: 'What do the stat cards show?',
+        answer: 'Total Downloads is the overall count. Unique Users counts distinct emails. Products Downloaded shows how many different products had sheets downloaded. Downloads Today shows activity for the current day.',
+      },
+      {
+        question: 'Can I export the download data?',
+        answer: 'Currently, download records are viewable in the table with search and sort. For exporting, you can use the browser\'s print function or copy data manually. A dedicated export feature may be added in a future update.',
+      },
+      {
+        question: 'How do I add a technical sheet to a product?',
+        answer: 'Edit the product in the Products tab, scroll to the Technical Sheet section, and upload a PDF file. The uploaded PDF URL is stored with the product. You can also include technical sheet URLs when importing products via CSV using the technicalSheet column.',
+      },
+      {
+        question: 'What is the referrer field?',
+        answer: 'The referrer shows which webpage the user was on before downloading the technical sheet. This helps you understand traffic sources — whether users came from search engines, social media, or direct links.',
+      },
+      {
+        question: 'Can I see downloads for a specific product?',
+        answer: 'Yes! Use the search box to filter by product name or product code. You can also sort by the Product Name column to group downloads by product.',
+      },
+      {
+        question: 'Why would I track technical sheet downloads?',
+        answer: 'Technical sheet downloads indicate strong purchase intent. Users who download specs are often evaluating products for a project. This data helps your sales team follow up with interested leads via the captured email addresses.',
+      },
+      {
+        question: 'What if no downloads appear?',
+        answer: 'Make sure products have technical sheets uploaded (PDF files). Downloads only appear after customers actually download sheets from the website. If sheets are uploaded but no downloads show, it means no one has downloaded them yet.',
+      },
+      {
+        question: 'How do I use this data for lead generation?',
+        answer: 'Export or review the email addresses of people who downloaded technical sheets. These are warm leads interested in specific products. Reach out with relevant information, quotes, or follow-up about the products they showed interest in.',
       },
     ],
   },
