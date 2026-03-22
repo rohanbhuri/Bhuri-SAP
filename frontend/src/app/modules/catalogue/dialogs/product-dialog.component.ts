@@ -1214,7 +1214,7 @@ export class ProductDialogComponent implements OnInit, AfterViewInit {
       
       const allVideos = this.videoUrls ? this.videoUrls.split(',').map(u => u.trim()) : [];
       const allModels = this.modelUrls ? this.modelUrls.split(',').map(u => u.trim()) : [];
-      const technicalSheet = this.uploadedTechnicalSheet() || (this.technicalSheetUrl.trim() || undefined);
+      const technicalSheet = this.uploadedTechnicalSheet() || this.technicalSheetUrl.trim() || null;
 
       // Transform measurements to variations format
       const variations = this.transformMeasurementsToVariations(

@@ -886,6 +886,7 @@ export class CatalogueService {
             productId,
             productCode: product.productCode,
             productName: product.name,
+            technicalSheetUrl: product.technicalSheet,
             email,
             ipAddress,
             userAgent,

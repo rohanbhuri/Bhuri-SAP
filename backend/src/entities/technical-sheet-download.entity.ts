@@ -14,6 +14,9 @@ export class TechnicalSheetDownload {
     @Column()
     productName: string;
 
+    @Column({ nullable: true })
+    technicalSheetUrl?: string;
+
     @Column()
     email: string;
 

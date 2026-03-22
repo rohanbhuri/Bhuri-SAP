@@ -4,6 +4,7 @@ export declare class TechnicalSheetDownload {
     productId: string;
     productCode: string;
     productName: string;
+    technicalSheetUrl?: string;
     email: string;
     ipAddress: string;
     userAgent?: string;

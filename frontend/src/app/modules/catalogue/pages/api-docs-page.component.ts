@@ -455,7 +455,7 @@ export class CatalogueApiDocsComponent implements OnInit {
         }
       ],
       body: '{\n  "email": "user@example.com"\n}',
-      response: '{\n  "_id": "65f1a2b3c4d5e6f7g8h9i0j1",\n  "productId": "65abc123def456789012345",\n  "productCode": "PRD-001",\n  "productName": "Luxury Marble Table",\n  "email": "user@example.com",\n  "ipAddress": "192.168.1.1",\n  "userAgent": "Mozilla/5.0...",\n  "referrer": "https://yourwebsite.com/products",\n  "downloadedAt": "2026-03-10T10:30:00.000Z"\n}'
+      response: '{\n  "_id": "65f1a2b3c4d5e6f7g8h9i0j1",\n  "productId": "65abc123def456789012345",\n  "productCode": "PRD-001",\n  "productName": "Luxury Marble Table",\n  "technicalSheetUrl": "https://your-cdn.com/files/product-technical-sheet.pdf",\n  "email": "user@example.com",\n  "ipAddress": "192.168.1.1",\n  "userAgent": "Mozilla/5.0...",\n  "referrer": "https://yourwebsite.com/products",\n  "downloadedAt": "2026-03-10T10:30:00.000Z"\n}'
     }
   ];
 
