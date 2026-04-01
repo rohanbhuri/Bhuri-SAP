@@ -9,8 +9,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Product = void 0;
+exports.Product = exports.VARIATION_TYPE_NAMES = void 0;
 const typeorm_1 = require("typeorm");
+exports.VARIATION_TYPE_NAMES = ['material', 'finish', 'size'];
 let Product = class Product {
     constructor() {
         this.currency = 'INR';

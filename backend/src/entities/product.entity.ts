@@ -1,5 +1,44 @@
 import { Entity, ObjectIdColumn, ObjectId, Column, Index } from 'typeorm';
 
+// Allowed variation type names
+export type VariationTypeName = 'material' | 'finish' | 'size';
+
+export const VARIATION_TYPE_NAMES: VariationTypeName[] = ['material', 'finish', 'size'];
+
+// Dimension config shared between product and variants
+export interface DimensionConfig {
+    shape: 'rectangle' | 'round';
+    unit: 'cm' | 'inch' | 'mm';
+    width?: { min: number; max: number; default: number };
+    height?: number;
+    depth?: number;
+    diameter?: { min: number; max: number; default: number };
+}
+
+// A single variant under a variation type
+export interface ProductVariant {
+    _id: string;
+    name: string;              // e.g., "White Marble", "Extended"
+    sku: string;               // unique SKU for this variant
+    description?: string;
+    descriptionHtml?: string;
+    price: number;             // final price for this variant
+    priceModifier: number;     // delta from base price
+    featuredImage?: string;
+    imageGallery: string[];
+    videos: string[];
+    models3d: string[];
+    technicalSheet?: string;
+    dimensionConfig?: DimensionConfig; // null/undefined = inherit from product
+    isAvailable: boolean;
+}
+
+// A variation type containing its variants
+export interface ProductVariationType {
+    typeName: VariationTypeName;
+    variants: ProductVariant[];
+}
+
 @Entity('products')
 @Index('idx_product_code', ['productCode'], { unique: true })
 export class Product {
@@ -66,38 +105,11 @@ export class Product {
 
     // Dimension configuration (flexible for different product types)
     @Column({ type: 'json', default: {} })
-    dimensionConfig: {
-        shape: 'rectangle' | 'round';
-        unit: 'cm' | 'inch' | 'mm';
-        width?: { min: number; max: number; default: number };
-        height?: number;
-        depth?: number;
-        diameter?: { min: number; max: number; default: number };
-    };
+    dimensionConfig: DimensionConfig;
 
-    // Product variations (material, color, finish, etc.)
+    // Product variations grouped by type (material, finish, size)
     @Column({ type: 'json', default: [] })
-    variations: Array<{
-        _id?: string;
-        name: string; // e.g., "White Marble with Brass"
-        sku: string;
-        material?: string; // e.g., "White Marble"
-        color?: string; // e.g., "White"
-        finish?: string; // e.g., "Brass Lining"
-        featuredImage?: string;
-        imageGallery: string[];
-        dimensions: {
-            height?: number;
-            width?: number;
-            length?: number;
-            diameter?: number;
-            custom?: Record<string, number>;
-        };
-        price: number;
-        priceModifier: number; // Additional cost from base price
-        stock?: number;
-        isAvailable: boolean;
-    }>;
+    variations: ProductVariationType[];
 
     @Column({ type: 'json', default: {} })
     attributes: Record<string, any>;

@@ -1,4 +1,42 @@
 import { ObjectId } from 'typeorm';
+export type VariationTypeName = 'material' | 'finish' | 'size';
+export declare const VARIATION_TYPE_NAMES: VariationTypeName[];
+export interface DimensionConfig {
+    shape: 'rectangle' | 'round';
+    unit: 'cm' | 'inch' | 'mm';
+    width?: {
+        min: number;
+        max: number;
+        default: number;
+    };
+    height?: number;
+    depth?: number;
+    diameter?: {
+        min: number;
+        max: number;
+        default: number;
+    };
+}
+export interface ProductVariant {
+    _id: string;
+    name: string;
+    sku: string;
+    description?: string;
+    descriptionHtml?: string;
+    price: number;
+    priceModifier: number;
+    featuredImage?: string;
+    imageGallery: string[];
+    videos: string[];
+    models3d: string[];
+    technicalSheet?: string;
+    dimensionConfig?: DimensionConfig;
+    isAvailable: boolean;
+}
+export interface ProductVariationType {
+    typeName: VariationTypeName;
+    variants: ProductVariant[];
+}
 export declare class Product {
     _id: ObjectId;
     name: string;
@@ -20,43 +58,8 @@ export declare class Product {
     isPublished: boolean;
     isExclusive: boolean;
     isFeatured: boolean;
-    dimensionConfig: {
-        shape: 'rectangle' | 'round';
-        unit: 'cm' | 'inch' | 'mm';
-        width?: {
-            min: number;
-            max: number;
-            default: number;
-        };
-        height?: number;
-        depth?: number;
-        diameter?: {
-            min: number;
-            max: number;
-            default: number;
-        };
-    };
-    variations: Array<{
-        _id?: string;
-        name: string;
-        sku: string;
-        material?: string;
-        color?: string;
-        finish?: string;
-        featuredImage?: string;
-        imageGallery: string[];
-        dimensions: {
-            height?: number;
-            width?: number;
-            length?: number;
-            diameter?: number;
-            custom?: Record<string, number>;
-        };
-        price: number;
-        priceModifier: number;
-        stock?: number;
-        isAvailable: boolean;
-    }>;
+    dimensionConfig: DimensionConfig;
+    variations: ProductVariationType[];
     attributes: Record<string, any>;
     seo: {
         title?: string;

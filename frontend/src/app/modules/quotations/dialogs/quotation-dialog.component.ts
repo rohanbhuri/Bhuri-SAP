@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, Inject, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, TitleCasePipe } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -21,6 +21,7 @@ import { map, startWith, debounceTime } from 'rxjs/operators';
   standalone: true,
   imports: [
     CommonModule,
+    TitleCasePipe,
     ReactiveFormsModule,
     MatDialogModule,
     MatFormFieldModule,
@@ -63,9 +64,13 @@ import { map, startWith, debounceTime } from 'rxjs/operators';
                 <mat-label>Variation</mat-label>
                 <mat-select formControlName="variationId" (selectionChange)="onVariationChange(i, $event)">
                   <mat-option value="">Base Product</mat-option>
-                  <mat-option *ngFor="let variation of getProductVariations(i); let vi = index" [value]="variation.sku || vi">
-                    {{variation.name}} (+{{currencySymbol}}{{variation.priceModifier}})
-                  </mat-option>
+                  <ng-container *ngFor="let vt of getProductVariationTypes(i)">
+                    <mat-optgroup [label]="vt.typeName | titlecase">
+                      <mat-option *ngFor="let variant of vt.variants" [value]="variant.sku || variant._id">
+                        {{variant.name}} (+{{currencySymbol}}{{variant.priceModifier || 0}})
+                      </mat-option>
+                    </mat-optgroup>
+                  </ng-container>
                 </mat-select>
               </mat-form-field>
 
@@ -556,8 +561,6 @@ export class QuotationDialogComponent implements OnInit {
     const variationId = item.get('variationId')?.value;
     const product = this.selectedProducts.get(index);
     
-    console.log('Variation changed:', { index, variationId, product: product?.name });
-    
     if (!product) return;
     
     if (!variationId || variationId === '') {
@@ -567,20 +570,25 @@ export class QuotationDialogComponent implements OnInit {
         unitPrice: product.basePrice
       });
     } else {
-      // Find variation by SKU or index
-      const variation = product.variations?.find((v: any) => 
-        (v.sku && v.sku === variationId) || 
-        (v._id && v._id === variationId)
-      ) || product.variations?.[parseInt(variationId)];
+      // Find variant across all variation types by SKU or _id
+      const variant = this.findVariantInProduct(product, variationId);
       
-      console.log('Found variation:', variation);
-      
-      if (variation) {
-        const variationPrice = product.basePrice + (variation.priceModifier || 0);
-        console.log('Setting price:', { basePrice: product.basePrice, priceModifier: variation.priceModifier, variationPrice });
+      if (variant) {
+        const variationPrice = product.basePrice + (variant.priceModifier || 0);
         
+        // Use variant's dimension config if it has one, otherwise product's
+        if (variant.dimensionConfig) {
+          const config = variant.dimensionConfig;
+          item.patchValue({
+            customWidth: config.width?.default || 0,
+            customDiameter: config.diameter?.default || 0,
+            customDepth: config.depth || 0,
+            customHeight: config.height || 0
+          });
+        }
+
         item.patchValue({
-          variationName: variation.name,
+          variationName: variant.name,
           originalPrice: variationPrice,
           unitPrice: variationPrice
         });
@@ -590,7 +598,23 @@ export class QuotationDialogComponent implements OnInit {
 
   getProductVariations(index: number): any[] {
     const product = this.selectedProducts.get(index);
+    if (!product?.variations?.length) return [];
+    return product.variations.flatMap((vt: any) => vt.variants || []);
+  }
+
+  getProductVariationTypes(index: number): any[] {
+    const product = this.selectedProducts.get(index);
     return product?.variations || [];
+  }
+
+  private findVariantInProduct(product: any, variantId: string): any {
+    for (const vt of (product.variations || [])) {
+      const found = (vt.variants || []).find((v: any) =>
+        v.sku === variantId || v._id === variantId
+      );
+      if (found) return found;
+    }
+    return null;
   }
 
   getCustomWidthControl(index: number): FormControl {

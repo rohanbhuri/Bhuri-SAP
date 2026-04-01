@@ -1,7 +1,7 @@
-import { Component, Inject, OnInit, signal, inject, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, Inject, OnInit, signal, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { CommonModule, TitleCasePipe } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -16,13 +16,17 @@ import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { CatalogueService } from '../catalogue.service';
 import { PreferencesService } from '../../../services/preferences.service';
 import { UploadUrlPipe } from '../../../pipes/upload-url.pipe';
+import { VariantDialogComponent } from './variant-dialog.component';
 import Quill from 'quill';
+
+const VARIATION_TYPE_NAMES = ['material', 'finish', 'size'] as const;
 
 @Component({
   selector: 'app-product-dialog',
   standalone: true,
   imports: [
     CommonModule,
+    TitleCasePipe,
     ReactiveFormsModule,
     FormsModule,
     MatDialogModule,
@@ -243,108 +247,108 @@ import Quill from 'quill';
           <div class="tab-content">
             <div class="info-banner">
               <mat-icon>info</mat-icon>
-              <p>Add product variations like different materials, colors, sizes, or finishes. Each variation can have its own price modifier.</p>
+              <p>Add variation types (Material, Finish, Size) and their variants. Click "Edit" on any variant to set media, dimensions, and more.</p>
             </div>
-            <form [formGroup]="productForm">
-              <div class="measurements-section">
-                <div class="section-header">
-                  <h3>Product Variations</h3>
-                  <button mat-raised-button color="primary" type="button" (click)="addMeasurement()">
-                    <mat-icon>add</mat-icon>
-                    Add Variation Type
-                  </button>
-                </div>
 
-                <mat-accordion formArrayName="measurements">
-                  <mat-expansion-panel *ngFor="let measurement of measurements.controls; let i = index" [formGroupName]="i">
-                    <mat-expansion-panel-header>
-                      <mat-panel-title>
-                        <mat-icon>tune</mat-icon>
-                        {{ measurement.get('name')?.value || 'New Variation Type' }}
-                      </mat-panel-title>
-                      <mat-panel-description>
-                        {{ getMeasurementOptions(i).length }} option(s)
-                      </mat-panel-description>
-                    </mat-expansion-panel-header>
-
-                    <div class="measurement-content">
-                      <mat-form-field appearance="outline" class="full-width">
-                        <mat-label>Variation Type</mat-label>
-                        <input matInput formControlName="name" placeholder="e.g., Material, Color, Size, Finish">
-                        <mat-hint>Examples: Material, Color, Size, Finish, Style</mat-hint>
-                      </mat-form-field>
-
-                      <div class="options-header">
-                        <h4>Variation Options</h4>
-                        <button mat-raised-button color="accent" type="button" (click)="addMeasurementOption(i)">
-                          <mat-icon>add</mat-icon>
-                          Add Option
-                        </button>
-                      </div>
-
-                      <div formArrayName="options" class="options-list">
-                        <div *ngFor="let option of getMeasurementOptions(i).controls; let j = index" [formGroupName]="j" class="option-row">
-                          <span class="option-number">{{ j + 1 }}</span>
-                          <mat-form-field appearance="outline" class="option-value">
-                            <mat-label>Option Name</mat-label>
-                            <input matInput formControlName="value" placeholder="e.g., White Marble, Brass Finish">
-                          </mat-form-field>
-                          <mat-form-field appearance="outline" class="option-code">
-                            <mat-label>Product Code</mat-label>
-                            <input matInput [value]="getVariationProductCode(i, j)" (input)="setVariationProductCode(i, j, $event)" placeholder="PRD-001-V1">
-                          </mat-form-field>
-                          <mat-form-field appearance="outline" class="option-price">
-                            <mat-label>Price Modifier</mat-label>
-                            <input matInput type="number" formControlName="priceModifier">
-                            <span matPrefix>+{{ currencySymbol() }}&nbsp;</span>
-                            <mat-hint>Additional cost</mat-hint>
-                          </mat-form-field>
-                          <button mat-icon-button color="warn" type="button" (click)="removeMeasurementOption(i, j)">
-                            <mat-icon>delete</mat-icon>
-                          </button>
-                        </div>
-                      </div>
-
-                      <div class="variation-images-section">
-                        <h4>Variation Images (Optional)</h4>
-                        <input type="file" #varImageInput multiple accept="image/*" (change)="onVariationImageSelect($event, i)" style="display:none">
-                        <button mat-raised-button type="button" (click)="varImageInput.click()">
-                          <mat-icon>add_photo_alternate</mat-icon>
-                          Upload Images for {{ measurement.get('name')?.value }}
-                        </button>
-                        <div class="image-preview" *ngIf="getVariationImages(i).length">
-                          <div *ngFor="let img of getVariationImages(i); let j = index" class="image-item" [class.featured]="getVariationFeaturedIndex(i) === j">
-                            <img [src]="img | uploadUrl" />
-                            <button mat-icon-button class="set-featured" (click)="setVariationFeaturedImage(i, j)" [class.active]="getVariationFeaturedIndex(i) === j">
-                              <mat-icon>{{ getVariationFeaturedIndex(i) === j ? 'star' : 'star_border' }}</mat-icon>
-                            </button>
-                            <button mat-icon-button class="remove-btn" (click)="removeVariationImage(i, j)">
-                              <mat-icon>close</mat-icon>
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div class="panel-actions">
-                        <button mat-button color="warn" type="button" (click)="removeMeasurement(i)">
-                          <mat-icon>delete</mat-icon>
-                          Remove Variation Type
-                        </button>
-                      </div>
-                    </div>
-                  </mat-expansion-panel>
-                </mat-accordion>
-
-                <div *ngIf="measurements.length === 0" class="empty-state">
-                  <mat-icon>tune</mat-icon>
-                  <p>No variations added yet</p>
-                  <button mat-raised-button color="primary" type="button" (click)="addMeasurement()">
-                    <mat-icon>add</mat-icon>
-                    Add First Variation
-                  </button>
-                </div>
+            <div class="variations-section">
+              <div class="section-header">
+                <h3>Variation Types</h3>
+                <mat-form-field appearance="outline" class="add-type-field" *ngIf="getAvailableVariationTypes().length > 0">
+                  <mat-label>Add Variation Type</mat-label>
+                  <mat-select (selectionChange)="addVariationType($event.value)" [value]="''">
+                    <mat-option value="" disabled>Select type...</mat-option>
+                    <mat-option *ngFor="let type of getAvailableVariationTypes()" [value]="type">
+                      {{ type | titlecase }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
               </div>
-            </form>
+
+              <mat-accordion>
+                <mat-expansion-panel *ngFor="let vt of variationTypes(); let ti = index">
+                  <mat-expansion-panel-header>
+                    <mat-panel-title>
+                      <mat-icon>tune</mat-icon>
+                      {{ vt.typeName | titlecase }}
+                    </mat-panel-title>
+                    <mat-panel-description>
+                      {{ vt.variants.length }} variant(s)
+                    </mat-panel-description>
+                  </mat-expansion-panel-header>
+
+                  <div class="variation-type-content">
+                    <div class="add-variant-row">
+                      <mat-form-field appearance="outline" class="variant-name-field">
+                        <mat-label>Variant Name</mat-label>
+                        <input matInput [(ngModel)]="newVariantName[ti]" placeholder="e.g., White Marble">
+                      </mat-form-field>
+                      <mat-form-field appearance="outline" class="variant-sku-field">
+                        <mat-label>SKU</mat-label>
+                        <input matInput [(ngModel)]="newVariantSku[ti]" [placeholder]="productForm.value.productCode + '-V1'">
+                      </mat-form-field>
+                      <mat-form-field appearance="outline" class="variant-price-field">
+                        <mat-label>Price Modifier</mat-label>
+                        <input matInput type="number" [(ngModel)]="newVariantPriceModifier[ti]">
+                        <span matPrefix>+{{ currencySymbol() }}&nbsp;</span>
+                      </mat-form-field>
+                      <button mat-raised-button color="accent" type="button" (click)="addVariant(ti)" [disabled]="!newVariantName[ti]?.trim() || !newVariantSku[ti]?.trim()">
+                        <mat-icon>add</mat-icon> Add
+                      </button>
+                    </div>
+
+                    <table class="variants-table" *ngIf="vt.variants.length > 0">
+                      <thead>
+                        <tr>
+                          <th>#</th>
+                          <th>Name</th>
+                          <th>SKU</th>
+                          <th>Price Mod.</th>
+                          <th>Media</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr *ngFor="let variant of vt.variants; let vi = index">
+                          <td>{{ vi + 1 }}</td>
+                          <td>{{ variant.name }}</td>
+                          <td><code>{{ variant.sku }}</code></td>
+                          <td>+{{ currencySymbol() }}{{ variant.priceModifier || 0 }}</td>
+                          <td>
+                            <span class="media-indicators">
+                              <mat-icon *ngIf="variant.imageGallery?.length" class="media-icon" title="Has images">image</mat-icon>
+                              <mat-icon *ngIf="variant.videos?.length" class="media-icon" title="Has videos">videocam</mat-icon>
+                              <mat-icon *ngIf="variant.models3d?.length" class="media-icon" title="Has 3D model">view_in_ar</mat-icon>
+                              <mat-icon *ngIf="variant.technicalSheet" class="media-icon" title="Has tech sheet">picture_as_pdf</mat-icon>
+                              <mat-icon *ngIf="variant.dimensionConfig" class="media-icon" title="Custom dimensions">straighten</mat-icon>
+                              <span *ngIf="!variant.imageGallery?.length && !variant.videos?.length && !variant.models3d?.length && !variant.technicalSheet && !variant.dimensionConfig" class="no-media">—</span>
+                            </span>
+                          </td>
+                          <td>
+                            <button mat-icon-button color="primary" (click)="editVariant(ti, vi)" title="Edit variant details">
+                              <mat-icon>edit</mat-icon>
+                            </button>
+                            <button mat-icon-button color="warn" (click)="removeVariant(ti, vi)" title="Remove variant">
+                              <mat-icon>delete</mat-icon>
+                            </button>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+
+                    <div class="panel-actions">
+                      <button mat-button color="warn" type="button" (click)="removeVariationType(ti)">
+                        <mat-icon>delete</mat-icon> Remove {{ vt.typeName | titlecase }} Type
+                      </button>
+                    </div>
+                  </div>
+                </mat-expansion-panel>
+              </mat-accordion>
+
+              <div *ngIf="variationTypes().length === 0" class="empty-state">
+                <mat-icon>tune</mat-icon>
+                <p>No variation types added yet</p>
+              </div>
+            </div>
           </div>
         </mat-tab>
 
@@ -492,6 +496,20 @@ import Quill from 'quill';
       margin: 0;
       color: #1565c0;
     }
+    .variations-section { margin-top: 1rem; }
+    .add-type-field { min-width: 200px; }
+    .add-variant-row { display: flex; gap: 0.75rem; align-items: center; margin-bottom: 1rem; padding: 12px; background: #f5f5f5; border-radius: 8px; }
+    .variant-name-field { flex: 2; }
+    .variant-sku-field { flex: 1.5; }
+    .variant-price-field { flex: 1; }
+    .variants-table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+    .variants-table th { text-align: left; padding: 8px 12px; background: #f5f5f5; font-size: 13px; color: #666; border-bottom: 2px solid #ddd; }
+    .variants-table td { padding: 8px 12px; border-bottom: 1px solid #eee; font-size: 14px; }
+    .variants-table code { background: #e8eaf6; padding: 2px 6px; border-radius: 3px; font-size: 12px; }
+    .media-indicators { display: flex; gap: 4px; align-items: center; }
+    .media-icon { font-size: 18px; width: 18px; height: 18px; color: #667eea; }
+    .no-media { color: #999; }
+    .variation-type-content { padding: 1rem 0; }
     .measurements-section {
       margin-top: 1rem;
     }
@@ -744,9 +762,10 @@ export class ProductDialogComponent implements OnInit, AfterViewInit {
   tags = signal<string[]>([]);
   uploadedImages = signal<string[]>([]);
   featuredImageIndex = signal<number>(-1);
-  variationImages = signal<Map<number, string[]>>(new Map());
-  variationFeaturedImages = signal<Map<number, number>>(new Map());
-  variationProductCodes = signal<Map<number, Map<number, string>>>(new Map());
+  variationTypes = signal<Array<{ typeName: string; variants: any[] }>>([]);
+  newVariantName: string[] = [];
+  newVariantSku: string[] = [];
+  newVariantPriceModifier: number[] = [];
   uploadedTechnicalSheet = signal<string>('');
   saving = signal(false);
   productCodeChecking = signal(false);
@@ -764,6 +783,7 @@ export class ProductDialogComponent implements OnInit, AfterViewInit {
     private catalogueService: CatalogueService,
     private preferencesService: PreferencesService,
     private snackBar: MatSnackBar,
+    private dialog: MatDialog,
     private dialogRef: MatDialogRef<ProductDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
@@ -791,15 +811,10 @@ export class ProductDialogComponent implements OnInit, AfterViewInit {
       diameterMin: [0],
       diameterMax: [0],
       diameterDefault: [0],
-      measurements: this.fb.array([]),
       seoTitle: [''],
       seoDescription: [''],
       seoKeywords: ['']
     });
-  }
-
-  get measurements(): FormArray {
-    return this.productForm.get('measurements') as FormArray;
   }
 
   ngOnInit() {
@@ -859,54 +874,16 @@ export class ProductDialogComponent implements OnInit, AfterViewInit {
       if (p.models3d) this.modelUrls = p.models3d.join(', ');
       if (p.technicalSheet) this.uploadedTechnicalSheet.set(p.technicalSheet);
       
-      // Transform variations back to measurements for editing
+      // Load variations in the new format
       if (p.variations && p.variations.length > 0) {
-        const measurementsMap = this.transformVariationsToMeasurements(p.variations);
-        let measurementIndex = 0;
-        measurementsMap.forEach((options, name) => {
-          const measurementGroup = this.fb.group({
-            name: [name],
-            options: this.fb.array(options.map((o: any) => this.fb.group({
-              value: [o.value],
-              priceModifier: [o.priceModifier]
-            })))
-          });
-          this.measurements.push(measurementGroup);
-          
-          // Restore variation images and product codes
-          const variation = p.variations.find((v: any) => v[name]);
-          if (variation) {
-            if (variation.imageGallery && variation.imageGallery.length > 0) {
-              const varImagesMap = new Map(this.variationImages());
-              varImagesMap.set(measurementIndex, variation.imageGallery);
-              this.variationImages.set(varImagesMap);
-              
-              if (variation.featuredImage) {
-                const featuredIdx = variation.imageGallery.indexOf(variation.featuredImage);
-                if (featuredIdx !== -1) {
-                  const featuredMap = new Map(this.variationFeaturedImages());
-                  featuredMap.set(measurementIndex, featuredIdx);
-                  this.variationFeaturedImages.set(featuredMap);
-                }
-              }
-            }
-            
-            // Restore product codes for each option
-            const productCodesMap = new Map<number, string>();
-            options.forEach((opt: any, optIdx: number) => {
-              const varWithCode = p.variations.find((v: any) => v[name] === opt.value);
-              if (varWithCode && varWithCode.sku) {
-                productCodesMap.set(optIdx, varWithCode.sku);
-              }
-            });
-            if (productCodesMap.size > 0) {
-              const codesMap = new Map(this.variationProductCodes());
-              codesMap.set(measurementIndex, productCodesMap);
-              this.variationProductCodes.set(codesMap);
-            }
-          }
-          measurementIndex++;
-        });
+        this.variationTypes.set(p.variations.map((vt: any) => ({
+          typeName: vt.typeName,
+          variants: (vt.variants || []).map((v: any) => ({ ...v }))
+        })));
+        // Initialize new-variant input arrays
+        this.newVariantName = new Array(p.variations.length).fill('');
+        this.newVariantSku = new Array(p.variations.length).fill('');
+        this.newVariantPriceModifier = new Array(p.variations.length).fill(0);
       }
     }
 
@@ -981,56 +958,132 @@ export class ProductDialogComponent implements OnInit, AfterViewInit {
     this.tags.update(tags => tags.filter(t => t !== tag));
   }
 
-  addMeasurement() {
-    const measurementGroup = this.fb.group({
-      name: [''],
-      options: this.fb.array([])
+  // --- Variation Type Methods ---
+
+  getAvailableVariationTypes(): string[] {
+    const used = new Set(this.variationTypes().map(vt => vt.typeName));
+    return VARIATION_TYPE_NAMES.filter(t => !used.has(t));
+  }
+
+  addVariationType(typeName: string) {
+    if (!typeName) return;
+    this.variationTypes.update(types => [...types, { typeName, variants: [] }]);
+    this.newVariantName.push('');
+    this.newVariantSku.push('');
+    this.newVariantPriceModifier.push(0);
+  }
+
+  removeVariationType(index: number) {
+    this.variationTypes.update(types => types.filter((_, i) => i !== index));
+    this.newVariantName.splice(index, 1);
+    this.newVariantSku.splice(index, 1);
+    this.newVariantPriceModifier.splice(index, 1);
+  }
+
+  addVariant(typeIndex: number) {
+    const name = this.newVariantName[typeIndex]?.trim();
+    const sku = this.newVariantSku[typeIndex]?.trim();
+    const priceModifier = this.newVariantPriceModifier[typeIndex] || 0;
+    if (!name || !sku) return;
+
+    // Check SKU uniqueness across all variation types
+    const allSkus = this.variationTypes().flatMap(vt => vt.variants.map(v => v.sku));
+    if (allSkus.includes(sku)) {
+      this.snackBar.open(`SKU "${sku}" already exists`, 'Close', { duration: 3000, panelClass: ['error-snackbar'] });
+      return;
+    }
+
+    const basePrice = this.productForm.value.basePrice || 0;
+    const newVariant = {
+      _id: crypto.randomUUID(),
+      name,
+      sku,
+      price: basePrice + priceModifier,
+      priceModifier,
+      imageGallery: [],
+      videos: [],
+      models3d: [],
+      isAvailable: true
+    };
+
+    this.variationTypes.update(types => types.map((vt, i) =>
+      i === typeIndex ? { ...vt, variants: [...vt.variants, newVariant] } : vt
+    ));
+
+    this.newVariantName[typeIndex] = '';
+    this.newVariantSku[typeIndex] = '';
+    this.newVariantPriceModifier[typeIndex] = 0;
+  }
+
+  removeVariant(typeIndex: number, variantIndex: number) {
+    this.variationTypes.update(types => types.map((vt, i) =>
+      i === typeIndex ? { ...vt, variants: vt.variants.filter((_, vi) => vi !== variantIndex) } : vt
+    ));
+  }
+
+  editVariant(typeIndex: number, variantIndex: number) {
+    const vt = this.variationTypes()[typeIndex];
+    const variant = vt.variants[variantIndex];
+
+    const dimensionConfig = {
+      shape: this.productForm.value.dimensionShape,
+      unit: this.productForm.value.dimensionUnit,
+      width: { min: this.productForm.value.widthMin, max: this.productForm.value.widthMax, default: this.productForm.value.widthDefault },
+      height: this.productForm.value.height,
+      depth: this.productForm.value.depth,
+      diameter: { min: this.productForm.value.diameterMin, max: this.productForm.value.diameterMax, default: this.productForm.value.diameterDefault }
+    };
+
+    const dialogRef = this.dialog.open(VariantDialogComponent, {
+      width: '800px',
+      maxHeight: '90vh',
+      data: {
+        variant,
+        productDimensionConfig: dimensionConfig,
+        currencySymbol: this.currencySymbol(),
+        typeName: vt.typeName
+      }
     });
-    this.measurements.push(measurementGroup);
-  }
 
-  removeMeasurement(index: number) {
-    this.measurements.removeAt(index);
-  }
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        // Check SKU uniqueness (excluding current variant)
+        const allSkus = this.variationTypes().flatMap(vt2 =>
+          vt2.variants.filter(v => v._id !== variant._id).map(v => v.sku)
+        );
+        if (allSkus.includes(result.sku)) {
+          this.snackBar.open(`SKU "${result.sku}" already exists`, 'Close', { duration: 3000, panelClass: ['error-snackbar'] });
+          return;
+        }
 
-  getMeasurementOptions(measurementIndex: number): FormArray {
-    return this.measurements.at(measurementIndex).get('options') as FormArray;
-  }
-
-  addMeasurementOption(measurementIndex: number) {
-    const options = this.getMeasurementOptions(measurementIndex);
-    options.push(this.fb.group({
-      value: [''],
-      priceModifier: [0]
-    }));
-  }
-
-  removeMeasurementOption(measurementIndex: number, optionIndex: number) {
-    const options = this.getMeasurementOptions(measurementIndex);
-    options.removeAt(optionIndex);
+        this.variationTypes.update(types => types.map((t, ti) =>
+          ti === typeIndex ? {
+            ...t,
+            variants: t.variants.map((v, vi) => vi === variantIndex ? result : v)
+          } : t
+        ));
+      }
+    });
   }
 
   onImageSelect(event: any) {
     const files = Array.from(event.target.files) as File[];
     if (files.length) {
-      console.log('Uploading', files.length, 'images...');
       this.catalogueService.uploadProductImages(files).subscribe({
         next: (res) => {
-          console.log('Upload response:', res);
           if (res.urls) {
             this.uploadedImages.update((imgs: string[]) => [...imgs, ...res.urls]);
-            console.log('Images added:', res.urls);
             this.snackBar.open(`${res.urls.length} image(s) uploaded successfully`, 'Close', { duration: 2000 });
           }
         },
         error: (err) => {
-          console.error('Image upload failed:', err);
           const message = err.error?.message || 'Failed to upload images';
           this.snackBar.open(message, 'Close', { duration: 5000, panelClass: ['error-snackbar'] });
         }
       });
     }
   }
+
 
   addExternalImageUrls() {
     if (this.imageUrls && this.imageUrls.trim()) {
@@ -1128,80 +1181,10 @@ export class ProductDialogComponent implements OnInit, AfterViewInit {
     this.featuredImageIndex.set(index);
   }
 
-  onVariationImageSelect(event: any, measurementIndex: number) {
-    const files = Array.from(event.target.files) as File[];
-    if (files.length) {
-      this.catalogueService.uploadProductImages(files).subscribe({
-        next: (res) => {
-          if (res.urls) {
-            const currentImages = this.variationImages().get(measurementIndex) || [];
-            const newMap = new Map(this.variationImages());
-            newMap.set(measurementIndex, [...currentImages, ...res.urls]);
-            this.variationImages.set(newMap);
-            this.snackBar.open(`${res.urls.length} variation image(s) uploaded`, 'Close', { duration: 2000 });
-          }
-        },
-        error: (err) => {
-          console.error('Image upload failed:', err);
-          const message = err.error?.message || 'Failed to upload images';
-          this.snackBar.open(message, 'Close', { duration: 5000, panelClass: ['error-snackbar'] });
-        }
-      });
-    }
-  }
-
-  getVariationImages(measurementIndex: number): string[] {
-    return this.variationImages().get(measurementIndex) || [];
-  }
-
-  getVariationFeaturedIndex(measurementIndex: number): number {
-    return this.variationFeaturedImages().get(measurementIndex) ?? -1;
-  }
-
-  setVariationFeaturedImage(measurementIndex: number, imageIndex: number) {
-    const newMap = new Map(this.variationFeaturedImages());
-    newMap.set(measurementIndex, imageIndex);
-    this.variationFeaturedImages.set(newMap);
-  }
-
-  removeVariationImage(measurementIndex: number, imageIndex: number) {
-    const currentImages = this.variationImages().get(measurementIndex) || [];
-    const newMap = new Map(this.variationImages());
-    newMap.set(measurementIndex, currentImages.filter((_, i) => i !== imageIndex));
-    this.variationImages.set(newMap);
-    
-    const featuredIdx = this.variationFeaturedImages().get(measurementIndex);
-    if (featuredIdx === imageIndex) {
-      const featuredMap = new Map(this.variationFeaturedImages());
-      featuredMap.set(measurementIndex, -1);
-      this.variationFeaturedImages.set(featuredMap);
-    } else if (featuredIdx !== undefined && featuredIdx > imageIndex) {
-      const featuredMap = new Map(this.variationFeaturedImages());
-      featuredMap.set(measurementIndex, featuredIdx - 1);
-      this.variationFeaturedImages.set(featuredMap);
-    }
-  }
-
-  getVariationProductCode(measurementIndex: number, optionIndex: number): string {
-    return this.variationProductCodes().get(measurementIndex)?.get(optionIndex) || '';
-  }
-
-  setVariationProductCode(measurementIndex: number, optionIndex: number, event: any) {
-    const code = event.target.value;
-    const measurementMap = this.variationProductCodes().get(measurementIndex) || new Map();
-    const newMeasurementMap = new Map(measurementMap);
-    newMeasurementMap.set(optionIndex, code);
-    
-    const newMap = new Map(this.variationProductCodes());
-    newMap.set(measurementIndex, newMeasurementMap);
-    this.variationProductCodes.set(newMap);
-  }
-
   onSave() {
     if (this.productForm.valid) {
       this.saving.set(true);
       
-      // Add any remaining URLs from the input field
       if (this.imageUrls && this.imageUrls.trim()) {
         const urls = this.imageUrls.split(',').map(u => u.trim()).filter(u => u);
         this.uploadedImages.update(imgs => [...imgs, ...urls]);
@@ -1209,28 +1192,20 @@ export class ProductDialogComponent implements OnInit, AfterViewInit {
       }
       
       const allImages = this.uploadedImages();
-      
       const featuredImage = this.featuredImageIndex() >= 0 ? allImages[this.featuredImageIndex()] : (allImages[0] || '');
-      
       const allVideos = this.videoUrls ? this.videoUrls.split(',').map(u => u.trim()) : [];
       const allModels = this.modelUrls ? this.modelUrls.split(',').map(u => u.trim()) : [];
       const technicalSheet = this.uploadedTechnicalSheet() || this.technicalSheetUrl.trim() || null;
 
-      // Transform measurements to variations format
-      const variations = this.transformMeasurementsToVariations(
-        this.productForm.value.measurements || [],
-        this.productForm.value.basePrice || 0
-      );
-
       const productData = {
         ...this.productForm.value,
         tags: this.tags(),
-        featuredImage: featuredImage,
+        featuredImage,
         imageGallery: allImages,
         videos: allVideos,
         models3d: allModels,
-        technicalSheet: technicalSheet,
-        variations: variations,
+        technicalSheet,
+        variations: this.variationTypes(),
         dimensionConfig: {
           shape: this.productForm.value.dimensionShape,
           unit: this.productForm.value.dimensionUnit,
@@ -1246,7 +1221,6 @@ export class ProductDialogComponent implements OnInit, AfterViewInit {
         }
       };
 
-      delete productData.measurements;
       delete productData.dimensionShape;
       delete productData.dimensionUnit;
       delete productData.widthMin;
@@ -1280,89 +1254,7 @@ export class ProductDialogComponent implements OnInit, AfterViewInit {
     }
   }
 
-  private transformMeasurementsToVariations(measurements: any[], basePrice: number): any[] {
-    if (!measurements || measurements.length === 0) return [];
-
-    const variations: any[] = [];
-    let variationCounter = 1;
-    
-    // Generate all combinations of measurement options
-    const generateCombinations = (index: number, current: any, optionIndices: number[]) => {
-      if (index === measurements.length) {
-        const variationName = Object.values(current).join(' - ');
-        const totalModifier = Object.keys(current).reduce((sum, key) => {
-          const measurement = measurements.find(m => m.name === key);
-          const option = measurement?.options?.find((o: any) => o.value === current[key]);
-          return sum + (option?.priceModifier || 0);
-        }, 0);
-
-        // Get images and product code for this variation
-        const measurementIndex = optionIndices[0];
-        const optionIndex = optionIndices[optionIndices.length - 1];
-        const varImages = this.variationImages().get(measurementIndex) || [];
-        const varFeaturedIdx = this.variationFeaturedImages().get(measurementIndex) ?? -1;
-        const varFeaturedImage = varFeaturedIdx >= 0 ? varImages[varFeaturedIdx] : (varImages[0] || '');
-        const varProductCode = this.variationProductCodes().get(measurementIndex)?.get(optionIndex) || 
-                               `${this.productForm.value.productCode}-V${variationCounter}`;
-
-        variations.push({
-          name: variationName,
-          sku: varProductCode,
-          featuredImage: varFeaturedImage,
-          imageGallery: varImages,
-          dimensions: {},
-          price: basePrice + totalModifier,
-          priceModifier: totalModifier,
-          isAvailable: true,
-          ...current
-        });
-        variationCounter++;
-        return;
-      }
-
-      const measurement = measurements[index];
-      if (measurement.options && measurement.options.length > 0) {
-        measurement.options.forEach((option: any, optIdx: number) => {
-          generateCombinations(index + 1, {
-            ...current,
-            [measurement.name]: option.value
-          }, [...optionIndices, optIdx]);
-        });
-      } else {
-        generateCombinations(index + 1, current, optionIndices);
-      }
-    };
-
-    generateCombinations(0, {}, []);
-    return variations;
-  }
-
   onCancel() {
     this.dialogRef.close();
-  }
-
-  private transformVariationsToMeasurements(variations: any[]): Map<string, any[]> {
-    const measurementsMap = new Map<string, any[]>();
-    const excludeKeys = ['name', 'sku', 'imageGallery', 'dimensions', 'price', 'priceModifier', 'isAvailable', '_id', 'featuredImage'];
-    
-    variations.forEach(variation => {
-      Object.keys(variation).forEach(key => {
-        if (!excludeKeys.includes(key)) {
-          if (!measurementsMap.has(key)) {
-            measurementsMap.set(key, []);
-          }
-          const options = measurementsMap.get(key)!;
-          const existingOption = options.find(o => o.value === variation[key]);
-          if (!existingOption) {
-            options.push({
-              value: variation[key],
-              priceModifier: variation.priceModifier || 0
-            });
-          }
-        }
-      });
-    });
-    
-    return measurementsMap;
   }
 }

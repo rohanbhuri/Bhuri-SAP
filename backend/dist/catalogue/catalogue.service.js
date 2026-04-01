@@ -87,6 +87,9 @@ let CatalogueService = class CatalogueService {
                 throw new common_1.ConflictException('Product code already exists');
             }
         }
+        if (data.variations) {
+            this.validateVariations(data.variations);
+        }
         const product = this.productRepository.create({
             ...data,
             createdAt: new Date(),
@@ -104,6 +107,9 @@ let CatalogueService = class CatalogueService {
                 throw new common_1.ConflictException('Product code already exists');
             }
         }
+        if (data.variations) {
+            this.validateVariations(data.variations);
+        }
         const current = await this.findOneProduct(id);
         const changeLog = current?.changeLog || [];
         if (userId) {
@@ -116,9 +122,9 @@ let CatalogueService = class CatalogueService {
                 const newValue = data[key];
                 if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) {
                     if (key === 'variations') {
-                        const oldLen = oldValue?.length || 0;
-                        const newLen = newValue?.length || 0;
-                        changes.push(`variations (${oldLen} -> ${newLen})`);
+                        const oldCount = (oldValue || []).reduce((s, vt) => s + (vt.variants?.length || 0), 0);
+                        const newCount = (newValue || []).reduce((s, vt) => s + (vt.variants?.length || 0), 0);
+                        changes.push(`variations (${oldCount} -> ${newCount} variants)`);
                     }
                     else if (key === 'imageGallery') {
                         changes.push('images updated');
@@ -155,6 +161,35 @@ let CatalogueService = class CatalogueService {
             deletedBy: userId,
             changeLog
         });
+    }
+    validateVariations(variations) {
+        if (!Array.isArray(variations))
+            return;
+        const allSkus = new Set();
+        const usedTypeNames = new Set();
+        for (const variationType of variations) {
+            if (!variationType.typeName || !product_entity_1.VARIATION_TYPE_NAMES.includes(variationType.typeName)) {
+                throw new common_1.BadRequestException(`Invalid variation type: "${variationType.typeName}". Allowed: ${product_entity_1.VARIATION_TYPE_NAMES.join(', ')}`);
+            }
+            if (usedTypeNames.has(variationType.typeName)) {
+                throw new common_1.BadRequestException(`Duplicate variation type: "${variationType.typeName}"`);
+            }
+            usedTypeNames.add(variationType.typeName);
+            if (!Array.isArray(variationType.variants))
+                continue;
+            for (const variant of variationType.variants) {
+                if (!variant.name || !variant.name.trim()) {
+                    throw new common_1.BadRequestException(`Variant name is required in type "${variationType.typeName}"`);
+                }
+                if (!variant.sku || !variant.sku.trim()) {
+                    throw new common_1.BadRequestException(`Variant SKU is required for "${variant.name}" in type "${variationType.typeName}"`);
+                }
+                if (allSkus.has(variant.sku)) {
+                    throw new common_1.BadRequestException(`Duplicate variant SKU: "${variant.sku}"`);
+                }
+                allSkus.add(variant.sku);
+            }
+        }
     }
     async findAllCategories() {
         return this.categoryRepository.find({ where: { isDeleted: { $ne: true } } });
@@ -326,7 +361,11 @@ let CatalogueService = class CatalogueService {
         const categories = await this.categoryRepository.find();
         const collections = await this.collectionRepository.find();
         const designers = await this.designerRepository.find();
-        const totalVariations = products.reduce((sum, p) => sum + (p.variations?.length || 0), 0);
+        const totalVariations = products.reduce((sum, p) => {
+            if (!p.variations?.length)
+                return sum;
+            return sum + p.variations.reduce((vtSum, vt) => vtSum + (vt.variants?.length || 0), 0);
+        }, 0);
         const prices = products.map(p => p.basePrice || 0).filter(p => p > 0);
         const categoryMap = new Map();
         categories.forEach(c => categoryMap.set(c._id.toString(), c.name));

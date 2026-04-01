@@ -74,7 +74,7 @@ export declare class CatalogueController {
         activeCollections: number;
         totalDesigners: number;
         activeDesigners: number;
-        totalVariations: number;
+        totalVariations: any;
         avgVariationsPerProduct: string | number;
         productsByCategory: {
             id: string;

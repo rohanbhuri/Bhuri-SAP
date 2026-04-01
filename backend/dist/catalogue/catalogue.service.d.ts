@@ -32,6 +32,7 @@ export declare class CatalogueService {
     createProduct(data: Partial<Product>, userId?: string): Promise<Product>;
     updateProduct(id: string, data: Partial<Product>, userId?: string): Promise<Product>;
     deleteProduct(id: string, userId?: string): Promise<void>;
+    private validateVariations;
     findAllCategories(): Promise<Category[]>;
     findOneCategory(id: string): Promise<Category>;
     createCategory(data: Partial<Category>, userId?: string): Promise<Category>;
@@ -56,7 +57,7 @@ export declare class CatalogueService {
         activeCollections: number;
         totalDesigners: number;
         activeDesigners: number;
-        totalVariations: number;
+        totalVariations: any;
         avgVariationsPerProduct: string | number;
         productsByCategory: {
             id: string;

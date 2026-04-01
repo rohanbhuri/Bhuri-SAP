@@ -1,7 +1,7 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import { Injectable, ConflictException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, MongoRepository } from 'typeorm';
-import { Product } from '../entities/product.entity';
+import { Product, ProductVariationType, VARIATION_TYPE_NAMES } from '../entities/product.entity';
 import { Category } from '../entities/category.entity';
 import { Collection } from '../entities/collection.entity';
 import { Designer } from '../entities/designer.entity';
@@ -106,6 +106,11 @@ export class CatalogueService {
                 throw new ConflictException('Product code already exists');
             }
         }
+
+        // Validate variations
+        if (data.variations) {
+            this.validateVariations(data.variations);
+        }
         
         const product = this.productRepository.create({
             ...data,
@@ -126,6 +131,11 @@ export class CatalogueService {
                 throw new ConflictException('Product code already exists');
             }
         }
+
+        // Validate variations
+        if (data.variations) {
+            this.validateVariations(data.variations);
+        }
         
         const current = await this.findOneProduct(id);
         const changeLog = current?.changeLog || [];
@@ -143,9 +153,9 @@ export class CatalogueService {
                 if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) {
                     // Check if it's a known complex object or array for better description
                     if (key === 'variations') {
-                        const oldLen = oldValue?.length || 0;
-                        const newLen = newValue?.length || 0;
-                        changes.push(`variations (${oldLen} -> ${newLen})`);
+                        const oldCount = (oldValue || []).reduce((s: number, vt: any) => s + (vt.variants?.length || 0), 0);
+                        const newCount = (newValue || []).reduce((s: number, vt: any) => s + (vt.variants?.length || 0), 0);
+                        changes.push(`variations (${oldCount} -> ${newCount} variants)`);
                     } else if (key === 'imageGallery') {
                         changes.push('images updated');
                     } else if (Array.isArray(newValue)) {
@@ -182,6 +192,38 @@ export class CatalogueService {
             deletedBy: userId,
             changeLog
         } as any);
+    }
+
+    private validateVariations(variations: ProductVariationType[]): void {
+        if (!Array.isArray(variations)) return;
+
+        const allSkus = new Set<string>();
+        const usedTypeNames = new Set<string>();
+
+        for (const variationType of variations) {
+            if (!variationType.typeName || !VARIATION_TYPE_NAMES.includes(variationType.typeName as any)) {
+                throw new BadRequestException(`Invalid variation type: "${variationType.typeName}". Allowed: ${VARIATION_TYPE_NAMES.join(', ')}`);
+            }
+            if (usedTypeNames.has(variationType.typeName)) {
+                throw new BadRequestException(`Duplicate variation type: "${variationType.typeName}"`);
+            }
+            usedTypeNames.add(variationType.typeName);
+
+            if (!Array.isArray(variationType.variants)) continue;
+
+            for (const variant of variationType.variants) {
+                if (!variant.name || !variant.name.trim()) {
+                    throw new BadRequestException(`Variant name is required in type "${variationType.typeName}"`);
+                }
+                if (!variant.sku || !variant.sku.trim()) {
+                    throw new BadRequestException(`Variant SKU is required for "${variant.name}" in type "${variationType.typeName}"`);
+                }
+                if (allSkus.has(variant.sku)) {
+                    throw new BadRequestException(`Duplicate variant SKU: "${variant.sku}"`);
+                }
+                allSkus.add(variant.sku);
+            }
+        }
     }
 
     // Categories
@@ -383,7 +425,10 @@ export class CatalogueService {
         const collections = await this.collectionRepository.find();
         const designers = await this.designerRepository.find();
 
-        const totalVariations = products.reduce((sum, p) => sum + (p.variations?.length || 0), 0);
+        const totalVariations = products.reduce((sum, p) => {
+            if (!p.variations?.length) return sum;
+            return sum + p.variations.reduce((vtSum: number, vt: any) => vtSum + (vt.variants?.length || 0), 0);
+        }, 0);
         const prices = products.map(p => p.basePrice || 0).filter(p => p > 0);
         
         const categoryMap = new Map();
