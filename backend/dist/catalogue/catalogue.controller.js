@@ -17,6 +17,7 @@ const common_1 = require("@nestjs/common");
 const platform_express_1 = require("@nestjs/platform-express");
 const multer_1 = require("multer");
 const path_1 = require("path");
+const fs_1 = require("fs");
 const catalogue_service_1 = require("./catalogue.service");
 const api_key_guard_1 = require("../guards/api-key.guard");
 const jwt_auth_guard_1 = require("../guards/jwt-auth.guard");
@@ -73,7 +74,12 @@ const presentationStorage = (0, multer_1.diskStorage)({
     }
 });
 const technicalSheetStorage = (0, multer_1.diskStorage)({
-    destination: './uploads/products/technical-sheets',
+    destination: (req, file, cb) => {
+        const dir = './uploads/products/technical-sheets';
+        if (!(0, fs_1.existsSync)(dir))
+            (0, fs_1.mkdirSync)(dir, { recursive: true });
+        cb(null, dir);
+    },
     filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         cb(null, `${uniqueSuffix}${(0, path_1.extname)(file.originalname)}`);
@@ -110,6 +116,9 @@ let CatalogueController = class CatalogueController {
         return { url: `/uploads/products/models/${file.filename}` };
     }
     async uploadTechnicalSheet(file) {
+        if (!file) {
+            throw new common_1.BadRequestException('No file uploaded or file was rejected. Please upload a valid PDF file.');
+        }
         return { url: `/uploads/products/technical-sheets/${file.filename}` };
     }
     async trackTechnicalSheetDownload(productId, data, req) {
@@ -309,7 +318,7 @@ __decorate([
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('technicalSheet', {
         storage: technicalSheetStorage,
         fileFilter: (req, file, cb) => {
-            if (file.mimetype === 'application/pdf') {
+            if (file.mimetype === 'application/pdf' || file.originalname?.toLowerCase().endsWith('.pdf')) {
                 cb(null, true);
             }
             else {

@@ -423,10 +423,10 @@ export class VariantDialogComponent implements OnInit, AfterViewInit {
   onTechnicalSheetSelect(event: any) {
     const file = event.target.files[0];
     if (file) {
-      if (file.type !== 'application/pdf') { this.snackBar.open('Only PDF files allowed', 'Close', { duration: 3000, panelClass: ['error-snackbar'] }); return; }
+      if (file.type !== 'application/pdf' && !file.name?.toLowerCase().endsWith('.pdf')) { this.snackBar.open('Only PDF files allowed', 'Close', { duration: 3000, panelClass: ['error-snackbar'] }); event.target.value = ''; return; }
       this.catalogueService.uploadProductTechnicalSheet(file).subscribe({
-        next: (res) => { if (res.url) { this.uploadedTechnicalSheet.set(res.url); this.snackBar.open('Technical sheet uploaded', 'Close', { duration: 2000 }); } },
-        error: (err) => this.snackBar.open(err.error?.message || 'Upload failed', 'Close', { duration: 5000, panelClass: ['error-snackbar'] })
+        next: (res) => { if (res.url) { this.uploadedTechnicalSheet.set(res.url); this.snackBar.open('Technical sheet uploaded', 'Close', { duration: 2000 }); } event.target.value = ''; },
+        error: (err) => { this.snackBar.open(err.error?.message || 'Upload failed', 'Close', { duration: 5000, panelClass: ['error-snackbar'] }); event.target.value = ''; }
       });
     }
   }

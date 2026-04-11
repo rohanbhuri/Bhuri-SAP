@@ -3,6 +3,7 @@ import { FileInterceptor, FilesInterceptor, FileFieldsInterceptor } from '@nestj
 import { Response } from 'express';
 import { diskStorage, memoryStorage } from 'multer';
 import { extname } from 'path';
+import { existsSync, mkdirSync } from 'fs';
 import { CatalogueService } from './catalogue.service';
 import { Product } from '../entities/product.entity';
 import { Category } from '../entities/category.entity';
@@ -71,7 +72,11 @@ const presentationStorage = diskStorage({
 });
 
 const technicalSheetStorage = diskStorage({
-    destination: './uploads/products/technical-sheets',
+    destination: (req, file, cb) => {
+        const dir = './uploads/products/technical-sheets';
+        if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+        cb(null, dir);
+    },
     filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
@@ -135,7 +140,7 @@ export class CatalogueController {
     @UseInterceptors(FileInterceptor('technicalSheet', { 
         storage: technicalSheetStorage,
         fileFilter: (req, file, cb) => {
-            if (file.mimetype === 'application/pdf') {
+            if (file.mimetype === 'application/pdf' || file.originalname?.toLowerCase().endsWith('.pdf')) {
                 cb(null, true);
             } else {
                 cb(new BadRequestException('Only PDF files are allowed'), false);
@@ -143,6 +148,9 @@ export class CatalogueController {
         }
     }))
     async uploadTechnicalSheet(@UploadedFile() file: Express.Multer.File) {
+        if (!file) {
+            throw new BadRequestException('No file uploaded or file was rejected. Please upload a valid PDF file.');
+        }
         return { url: `/uploads/products/technical-sheets/${file.filename}` };
     }
 

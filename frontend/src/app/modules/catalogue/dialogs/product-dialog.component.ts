@@ -1141,8 +1141,9 @@ export class ProductDialogComponent implements OnInit, AfterViewInit {
   onTechnicalSheetSelect(event: any) {
     const file = event.target.files[0];
     if (file) {
-      if (file.type !== 'application/pdf') {
+      if (file.type !== 'application/pdf' && !file.name?.toLowerCase().endsWith('.pdf')) {
         this.snackBar.open('Only PDF files are allowed', 'Close', { duration: 3000, panelClass: ['error-snackbar'] });
+        event.target.value = '';
         return;
       }
       console.log('Uploading technical sheet:', file.name);
@@ -1153,11 +1154,13 @@ export class ProductDialogComponent implements OnInit, AfterViewInit {
             this.uploadedTechnicalSheet.set(res.url);
             this.snackBar.open('Technical sheet uploaded successfully', 'Close', { duration: 2000 });
           }
+          event.target.value = '';
         },
         error: (err) => {
           console.error('Technical sheet upload failed:', err);
           const message = err.error?.message || 'Failed to upload technical sheet';
           this.snackBar.open(message, 'Close', { duration: 5000, panelClass: ['error-snackbar'] });
+          event.target.value = '';
         }
       });
     }
