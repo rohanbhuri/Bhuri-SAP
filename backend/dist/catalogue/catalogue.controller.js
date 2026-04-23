@@ -317,6 +317,9 @@ __decorate([
     (0, common_1.Post)('products/upload-technical-sheet'),
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('technicalSheet', {
         storage: technicalSheetStorage,
+        limits: {
+            fileSize: 20 * 1024 * 1024,
+        },
         fileFilter: (req, file, cb) => {
             if (file.mimetype === 'application/pdf' || file.originalname?.toLowerCase().endsWith('.pdf')) {
                 cb(null, true);

@@ -139,6 +139,9 @@ export class CatalogueController {
     @Post('products/upload-technical-sheet')
     @UseInterceptors(FileInterceptor('technicalSheet', { 
         storage: technicalSheetStorage,
+        limits: {
+            fileSize: 20 * 1024 * 1024, // 20MB limit for technical sheets
+        },
         fileFilter: (req, file, cb) => {
             if (file.mimetype === 'application/pdf' || file.originalname?.toLowerCase().endsWith('.pdf')) {
                 cb(null, true);

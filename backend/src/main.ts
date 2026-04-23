@@ -11,6 +11,10 @@ import { Response } from 'express';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  // Increase body size limits for file uploads (technical sheets up to 20MB)
+  app.use(require('express').json({ limit: '25mb' }));
+  app.use(require('express').urlencoded({ extended: true, limit: '25mb' }));
+
   // Global exception filter for better error handling
   app.useGlobalFilters(new GlobalExceptionFilter());
 

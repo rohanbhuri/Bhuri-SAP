@@ -9,6 +9,8 @@ const global_exception_filter_1 = require("./filters/global-exception.filter");
 const path_1 = require("path");
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
+    app.use(require('express').json({ limit: '25mb' }));
+    app.use(require('express').urlencoded({ extended: true, limit: '25mb' }));
     app.useGlobalFilters(new global_exception_filter_1.GlobalExceptionFilter());
     app.useGlobalPipes(new common_1.ValidationPipe({
         transform: true,
