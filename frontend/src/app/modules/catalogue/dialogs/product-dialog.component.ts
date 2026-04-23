@@ -1146,7 +1146,13 @@ export class ProductDialogComponent implements OnInit, AfterViewInit {
         event.target.value = '';
         return;
       }
-      console.log('Uploading technical sheet:', file.name);
+      const maxSize = 20 * 1024 * 1024; // 20MB
+      if (file.size > maxSize) {
+        this.snackBar.open(`File too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum is 20MB.`, 'Close', { duration: 5000, panelClass: ['error-snackbar'] });
+        event.target.value = '';
+        return;
+      }
+      console.log('Uploading technical sheet:', file.name, `(${(file.size / 1024 / 1024).toFixed(1)}MB)`);
       this.catalogueService.uploadProductTechnicalSheet(file).subscribe({
         next: (res) => {
           console.log('Technical sheet upload response:', res);
