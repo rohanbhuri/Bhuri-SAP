@@ -4,9 +4,17 @@ export declare enum PresentationStatus {
     FINAL = "final",
     SENT_TO_CLIENT = "sent_to_client"
 }
+export interface PresentationSlideProduct {
+    productId: string;
+    designerName?: string;
+    variantId?: string;
+    variantName?: string;
+    sku?: string;
+}
 export interface PresentationSlide {
     slideNumber: number;
     productIds: string[];
+    products?: PresentationSlideProduct[];
     layout: 'single' | 'multiple';
     slideTitle?: string;
 }

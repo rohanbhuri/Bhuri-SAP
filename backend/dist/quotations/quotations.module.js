@@ -17,6 +17,7 @@ const email_template_entity_1 = require("../entities/email-template.entity");
 const presentation_entity_1 = require("../entities/presentation.entity");
 const product_entity_1 = require("../entities/product.entity");
 const client_entity_1 = require("../entities/client.entity");
+const designer_entity_1 = require("../entities/designer.entity");
 const api_key_module_1 = require("../guards/api-key.module");
 const notifications_module_1 = require("../notifications/notifications.module");
 const user_entity_1 = require("../entities/user.entity");
@@ -27,7 +28,7 @@ exports.QuotationsModule = QuotationsModule;
 exports.QuotationsModule = QuotationsModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([quotation_entity_1.Quotation, enquiry_entity_1.Enquiry, email_template_entity_1.EmailTemplate, presentation_entity_1.Presentation, product_entity_1.Product, client_entity_1.Client, user_entity_1.User, role_entity_1.Role]),
+            typeorm_1.TypeOrmModule.forFeature([quotation_entity_1.Quotation, enquiry_entity_1.Enquiry, email_template_entity_1.EmailTemplate, presentation_entity_1.Presentation, product_entity_1.Product, client_entity_1.Client, designer_entity_1.Designer, user_entity_1.User, role_entity_1.Role]),
             api_key_module_1.ApiKeyModule,
             notifications_module_1.NotificationsModule
         ],

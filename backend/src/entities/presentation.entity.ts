@@ -7,9 +7,18 @@ export enum PresentationStatus {
     SENT_TO_CLIENT = 'sent_to_client'
 }
 
+export interface PresentationSlideProduct {
+    productId: string;
+    designerName?: string;  // Designer/creator of the product
+    variantId?: string;     // If a specific variant is being presented
+    variantName?: string;   // e.g. "Walnut Finish"
+    sku?: string;           // Variant SKU
+}
+
 export interface PresentationSlide {
     slideNumber: number;
-    productIds: string[];
+    productIds: string[];   // Kept for backward compatibility
+    products?: PresentationSlideProduct[]; // Detailed product+variant info
     layout: 'single' | 'multiple';
     slideTitle?: string;
 }

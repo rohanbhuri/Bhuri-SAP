@@ -7,6 +7,7 @@ import { EmailTemplate } from '../entities/email-template.entity';
 import { Presentation, PresentationStatus } from '../entities/presentation.entity';
 import { Product } from '../entities/product.entity';
 import { Client } from '../entities/client.entity';
+import { Designer } from '../entities/designer.entity';
 import { User } from '../entities/user.entity';
 import { Role, RoleType } from '../entities/role.entity';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -34,6 +35,8 @@ export class QuotationsService {
         private productRepository: MongoRepository<Product>,
         @InjectRepository(Client)
         private clientRepository: MongoRepository<Client>,
+        @InjectRepository(Designer)
+        private designerRepository: MongoRepository<Designer>,
         @InjectRepository(User)
         private userRepository: MongoRepository<User>,
         @InjectRepository(Role)
@@ -77,13 +80,53 @@ export class QuotationsService {
                 const product = await this.productRepository.findOneBy({
                     _id: new ObjectId(item.productId)
                 });
+
+                // Resolve designer name
+                let designerName: string | undefined;
+                if (product?.designerId) {
+                    try {
+                        const designer = await this.designerRepository.findOneBy({ _id: new ObjectId(product.designerId) });
+                        designerName = designer?.name;
+                    } catch (e) {
+                        console.error('Error fetching designer:', e);
+                    }
+                }
+
+                // Determine price: if variant selected, try to find variant price
+                let basePrice = product?.basePrice || item.unitPrice || 0;
+                let variationId: string | undefined;
+                let variationName: string | undefined;
+
+                if (item.selectedVariants && item.selectedVariants.length > 0) {
+                    const primaryVariant = item.selectedVariants[0];
+                    variationId = primaryVariant.variantId;
+                    variationName = primaryVariant.variantName;
+
+                    // Try to find variant price modifier from product
+                    if (product?.variations) {
+                        for (const vt of product.variations) {
+                            const found = (vt.variants || []).find((v: any) =>
+                                v._id?.toString() === primaryVariant.variantId || v.sku === primaryVariant.sku
+                            );
+                            if (found) {
+                                basePrice = (product.basePrice || 0) + (found.priceModifier || 0);
+                                break;
+                            }
+                        }
+                    }
+                }
+
                 return {
                     productId: item.productId,
                     productName: product?.name || item.productName,
+                    designerName,
+                    variationId,
+                    variationName,
+                    selectedVariants: item.selectedVariants || [],
                     quantity: item.quantity,
-                    originalPrice: product?.basePrice || item.unitPrice,
-                    unitPrice: product?.basePrice || item.unitPrice,
-                    total: item.quantity * (product?.basePrice || item.unitPrice),
+                    originalPrice: basePrice,
+                    unitPrice: basePrice,
+                    total: item.quantity * basePrice,
                     description: item.specifications
                 };
             })
@@ -289,6 +332,8 @@ export class QuotationsService {
 
     async createFromWebsiteCart(cartData: any, organizationId: string): Promise<Enquiry> {
         // Transform cart data to enquiry format
+        // Note: Same productId can appear multiple times (base product + variants)
+        // Each line item is stored independently — do NOT deduplicate by productId
         const enquiryData = {
             customerName: cartData.customerName,
             customerEmail: cartData.customerEmail,
@@ -299,7 +344,8 @@ export class QuotationsService {
                 productName: item.productName,
                 quantity: item.quantity,
                 unitPrice: item.unitPrice,
-                specifications: item.specifications
+                specifications: item.specifications,
+                selectedVariants: item.selectedVariants || []
             })),
             message: cartData.message,
             source: EnquirySource.WEBSITE,
@@ -637,6 +683,25 @@ export class QuotationsService {
 
                 productSlide.addText(product.name, { x: 1, y: 4.7, w: 8, h: 0.3, fontSize: 20, bold: true });
                 productSlide.addText(`Code: ${product.productCode}`, { x: 1, y: 5.1, w: 8, h: 0.2, fontSize: 14, color: '666666' });
+
+                // Show designer name
+                let designerNameForSlide = '';
+                if (product.designerId) {
+                    try {
+                        const designer = await this.designerRepository.findOneBy({ _id: new ObjectId(product.designerId) });
+                        designerNameForSlide = designer?.name || '';
+                    } catch (e) { /* ignore */ }
+                }
+                if (designerNameForSlide) {
+                    productSlide.addText(`Designer: ${designerNameForSlide}`, { x: 1, y: 5.35, w: 8, h: 0.2, fontSize: 12, color: '555555', italic: true });
+                }
+
+                // Show variant info if available in slide products
+                const slideProduct = slide.products?.find(p => p.productId === product._id?.toString());
+                if (slideProduct?.variantName) {
+                    const variantY = designerNameForSlide ? 5.55 : 5.35;
+                    productSlide.addText(`Variant: ${slideProduct.variantName}${slideProduct.sku ? ' (' + slideProduct.sku + ')' : ''}`, { x: 1, y: variantY, w: 8, h: 0.2, fontSize: 12, color: '888888' });
+                }
             } else {
                 // Group products into chunks of 2 for multiple slides if needed
                 const validProducts = products.filter(p => p);
@@ -674,6 +739,17 @@ export class QuotationsService {
 
                         productSlide.addText(product.name, { x: 4.5, y: yPos, w: 5, h: 0.3, fontSize: 16, bold: true });
                         productSlide.addText(`Code: ${product.productCode}`, { x: 4.5, y: yPos + 0.4, w: 5, h: 0.2, fontSize: 12, color: '666666' });
+
+                        // Show designer name in multi-product layout
+                        if (product.designerId) {
+                            try {
+                                const designer = await this.designerRepository.findOneBy({ _id: new ObjectId(product.designerId) });
+                                if (designer?.name) {
+                                    productSlide.addText(`Designer: ${designer.name}`, { x: 4.5, y: yPos + 0.7, w: 5, h: 0.2, fontSize: 11, color: '555555', italic: true });
+                                }
+                            } catch (e) { /* ignore */ }
+                        }
+
                         yPos += 2.5;
                     }
                 }
@@ -782,6 +858,7 @@ export class QuotationsService {
             { header: 'S.NO', key: 'sno', width: 8 },
             { header: 'PRODUCT CODE', key: 'productCode', width: 15 },
             { header: 'PRODUCT NAME', key: 'productName', width: 20 },
+            { header: 'DESIGNER', key: 'designerName', width: 18 },
             { header: 'REF. IMAGE', key: 'image', width: 15 },
             { header: 'QTY', key: 'quantity', width: 8 },
             { header: 'SEATER', key: 'seater', width: 10 },
@@ -867,12 +944,27 @@ export class QuotationsService {
                 const rowData: any = {
                     sno: sno++,
                     productCode: item.productCode || product?.productCode || '',
-                    productName: item.productName || '',
+                    productName: item.variationName 
+                        ? `${item.productName || ''} — ${item.variationName}` 
+                        : (item.productName || ''),
+                    designerName: '',
                     image: '',
                     quantity: item.quantity,
                     seater: product?.attributes?.seater || '',
                     measurements: measurements
                 };
+
+                // Resolve designer name from item or product
+                if (item.designerName) {
+                    rowData.designerName = item.designerName;
+                } else if (product?.designerId) {
+                    try {
+                        const designer = await this.designerRepository.findOneBy({ _id: new ObjectId(product.designerId) });
+                        rowData.designerName = designer?.name || '';
+                    } catch (e) {
+                        rowData.designerName = '';
+                    }
+                }
 
                 rowData.unitPrice = item.unitPrice;
 
@@ -889,6 +981,16 @@ export class QuotationsService {
                 }
 
                 rowData.specification = '';
+
+                // Include variant info in specification if available
+                if (item.selectedVariants && item.selectedVariants.length > 0) {
+                    const variantDesc = item.selectedVariants
+                        .map((v: any) => `${v.typeName}: ${v.variantName}${v.sku ? ' (' + v.sku + ')' : ''}`)
+                        .join(', ');
+                    rowData.specification = variantDesc;
+                } else if (item.variationName) {
+                    rowData.specification = item.variationName;
+                }
 
                 const row = worksheet.addRow(rowData);
                 row.alignment = { horizontal: 'center', vertical: 'middle' };

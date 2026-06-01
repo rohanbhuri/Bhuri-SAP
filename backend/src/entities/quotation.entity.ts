@@ -1,10 +1,19 @@
 import { Entity, ObjectIdColumn, ObjectId, Column } from 'typeorm';
 
+export interface QuotationItemVariant {
+    typeName: string;       // e.g. "material", "size", "color"
+    variantName: string;    // e.g. "Walnut Finish"
+    variantId: string;      // MongoDB _id of the variant
+    sku: string;            // Variant SKU code e.g. "BR_RAC_580_WN"
+}
+
 export interface QuotationItem {
     productId?: string; // Optional if ad-hoc item
     productName: string;
-    variationId?: string; // Product variation ID
+    designerName?: string; // Designer/creator of the product
+    variationId?: string; // Product variation ID (legacy single-variant field)
     variationName?: string; // Variation name (e.g., "White Marble with Brass")
+    selectedVariants?: QuotationItemVariant[]; // Multi-variant selection from website cart
     quantity: number;
     originalPrice: number; // Original product/variation price
     unitPrice: number; // Custom/revised price

@@ -67,7 +67,15 @@ import { MatDividerModule } from '@angular/material/divider';
         <table mat-table [dataSource]="data.enquiry.items || []" class="items-table">
           <ng-container matColumnDef="product">
             <th mat-header-cell *matHeaderCellDef>Product</th>
-            <td mat-cell *matCellDef="let item">{{ item.productName }}</td>
+            <td mat-cell *matCellDef="let item">
+              <div>{{ item.productName }}</div>
+              <div *ngIf="item.selectedVariants?.length" class="variant-info">
+                <mat-chip *ngFor="let v of item.selectedVariants" class="variant-chip">
+                  {{ v.typeName }}: {{ v.variantName }}
+                  <span *ngIf="v.sku" class="sku">({{ v.sku }})</span>
+                </mat-chip>
+              </div>
+            </td>
           </ng-container>
 
           <ng-container matColumnDef="quantity">
@@ -75,13 +83,14 @@ import { MatDividerModule } from '@angular/material/divider';
             <td mat-cell *matCellDef="let item">{{ item.quantity }}</td>
           </ng-container>
 
-          <ng-container matColumnDef="dimensions">
-            <th mat-header-cell *matHeaderCellDef>Dimensions</th>
+          <ng-container matColumnDef="specifications">
+            <th mat-header-cell *matHeaderCellDef>Specifications</th>
             <td mat-cell *matCellDef="let item">
-              <span *ngIf="item.customDimensions">
+              <span *ngIf="item.specifications">{{ item.specifications }}</span>
+              <span *ngIf="!item.specifications && item.customDimensions">
                 {{ item.customDimensions.width }} x {{ item.customDimensions.depth }} x {{ item.customDimensions.height }}
               </span>
-              <span *ngIf="!item.customDimensions">Standard</span>
+              <span *ngIf="!item.specifications && !item.customDimensions">—</span>
             </td>
           </ng-container>
 
@@ -163,6 +172,24 @@ import { MatDividerModule } from '@angular/material/divider';
       background: #fafafa;
       border-radius: 4px;
     }
+    .variant-info {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 4px;
+    }
+    .variant-chip {
+      font-size: 10px;
+      min-height: 20px;
+      padding: 2px 8px;
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+    .variant-chip .sku {
+      font-size: 9px;
+      color: #666;
+      margin-left: 4px;
+    }
     .message-text {
       background: #f5f5f5;
       padding: 12px;
@@ -183,7 +210,7 @@ import { MatDividerModule } from '@angular/material/divider';
 })
 export class EnquiryDialogComponent {
   dialogRef = inject(MatDialogRef<EnquiryDialogComponent>);
-  displayedColumns = ['product', 'quantity', 'dimensions'];
+  displayedColumns = ['product', 'quantity', 'specifications'];
 
   constructor(@Inject(MAT_DIALOG_DATA) public data: { enquiry: any }) {}
 }

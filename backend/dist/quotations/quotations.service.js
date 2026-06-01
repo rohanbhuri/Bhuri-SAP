@@ -22,6 +22,7 @@ const email_template_entity_1 = require("../entities/email-template.entity");
 const presentation_entity_1 = require("../entities/presentation.entity");
 const product_entity_1 = require("../entities/product.entity");
 const client_entity_1 = require("../entities/client.entity");
+const designer_entity_1 = require("../entities/designer.entity");
 const user_entity_1 = require("../entities/user.entity");
 const role_entity_1 = require("../entities/role.entity");
 const notifications_service_1 = require("../notifications/notifications.service");
@@ -33,13 +34,14 @@ const ExcelJS = require("exceljs");
 const fs = require("fs");
 const PptxGenJS = require('pptxgenjs');
 let QuotationsService = class QuotationsService {
-    constructor(quotationRepository, enquiryRepository, emailTemplateRepository, presentationRepository, productRepository, clientRepository, userRepository, roleRepository, notificationsService, mailService) {
+    constructor(quotationRepository, enquiryRepository, emailTemplateRepository, presentationRepository, productRepository, clientRepository, designerRepository, userRepository, roleRepository, notificationsService, mailService) {
         this.quotationRepository = quotationRepository;
         this.enquiryRepository = enquiryRepository;
         this.emailTemplateRepository = emailTemplateRepository;
         this.presentationRepository = presentationRepository;
         this.productRepository = productRepository;
         this.clientRepository = clientRepository;
+        this.designerRepository = designerRepository;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.notificationsService = notificationsService;
@@ -73,13 +75,44 @@ let QuotationsService = class QuotationsService {
             const product = await this.productRepository.findOneBy({
                 _id: new mongodb_1.ObjectId(item.productId)
             });
+            let designerName;
+            if (product?.designerId) {
+                try {
+                    const designer = await this.designerRepository.findOneBy({ _id: new mongodb_1.ObjectId(product.designerId) });
+                    designerName = designer?.name;
+                }
+                catch (e) {
+                    console.error('Error fetching designer:', e);
+                }
+            }
+            let basePrice = product?.basePrice || item.unitPrice || 0;
+            let variationId;
+            let variationName;
+            if (item.selectedVariants && item.selectedVariants.length > 0) {
+                const primaryVariant = item.selectedVariants[0];
+                variationId = primaryVariant.variantId;
+                variationName = primaryVariant.variantName;
+                if (product?.variations) {
+                    for (const vt of product.variations) {
+                        const found = (vt.variants || []).find((v) => v._id?.toString() === primaryVariant.variantId || v.sku === primaryVariant.sku);
+                        if (found) {
+                            basePrice = (product.basePrice || 0) + (found.priceModifier || 0);
+                            break;
+                        }
+                    }
+                }
+            }
             return {
                 productId: item.productId,
                 productName: product?.name || item.productName,
+                designerName,
+                variationId,
+                variationName,
+                selectedVariants: item.selectedVariants || [],
                 quantity: item.quantity,
-                originalPrice: product?.basePrice || item.unitPrice,
-                unitPrice: product?.basePrice || item.unitPrice,
-                total: item.quantity * (product?.basePrice || item.unitPrice),
+                originalPrice: basePrice,
+                unitPrice: basePrice,
+                total: item.quantity * basePrice,
                 description: item.specifications
             };
         }));
@@ -247,7 +280,8 @@ let QuotationsService = class QuotationsService {
                 productName: item.productName,
                 quantity: item.quantity,
                 unitPrice: item.unitPrice,
-                specifications: item.specifications
+                specifications: item.specifications,
+                selectedVariants: item.selectedVariants || []
             })),
             message: cartData.message,
             source: enquiry_entity_1.EnquirySource.WEBSITE,
@@ -531,6 +565,22 @@ let QuotationsService = class QuotationsService {
                 }
                 productSlide.addText(product.name, { x: 1, y: 4.7, w: 8, h: 0.3, fontSize: 20, bold: true });
                 productSlide.addText(`Code: ${product.productCode}`, { x: 1, y: 5.1, w: 8, h: 0.2, fontSize: 14, color: '666666' });
+                let designerNameForSlide = '';
+                if (product.designerId) {
+                    try {
+                        const designer = await this.designerRepository.findOneBy({ _id: new mongodb_1.ObjectId(product.designerId) });
+                        designerNameForSlide = designer?.name || '';
+                    }
+                    catch (e) { }
+                }
+                if (designerNameForSlide) {
+                    productSlide.addText(`Designer: ${designerNameForSlide}`, { x: 1, y: 5.35, w: 8, h: 0.2, fontSize: 12, color: '555555', italic: true });
+                }
+                const slideProduct = slide.products?.find(p => p.productId === product._id?.toString());
+                if (slideProduct?.variantName) {
+                    const variantY = designerNameForSlide ? 5.55 : 5.35;
+                    productSlide.addText(`Variant: ${slideProduct.variantName}${slideProduct.sku ? ' (' + slideProduct.sku + ')' : ''}`, { x: 1, y: variantY, w: 8, h: 0.2, fontSize: 12, color: '888888' });
+                }
             }
             else {
                 const validProducts = products.filter(p => p);
@@ -562,6 +612,15 @@ let QuotationsService = class QuotationsService {
                         }
                         productSlide.addText(product.name, { x: 4.5, y: yPos, w: 5, h: 0.3, fontSize: 16, bold: true });
                         productSlide.addText(`Code: ${product.productCode}`, { x: 4.5, y: yPos + 0.4, w: 5, h: 0.2, fontSize: 12, color: '666666' });
+                        if (product.designerId) {
+                            try {
+                                const designer = await this.designerRepository.findOneBy({ _id: new mongodb_1.ObjectId(product.designerId) });
+                                if (designer?.name) {
+                                    productSlide.addText(`Designer: ${designer.name}`, { x: 4.5, y: yPos + 0.7, w: 5, h: 0.2, fontSize: 11, color: '555555', italic: true });
+                                }
+                            }
+                            catch (e) { }
+                        }
                         yPos += 2.5;
                     }
                 }
@@ -647,6 +706,7 @@ let QuotationsService = class QuotationsService {
             { header: 'S.NO', key: 'sno', width: 8 },
             { header: 'PRODUCT CODE', key: 'productCode', width: 15 },
             { header: 'PRODUCT NAME', key: 'productName', width: 20 },
+            { header: 'DESIGNER', key: 'designerName', width: 18 },
             { header: 'REF. IMAGE', key: 'image', width: 15 },
             { header: 'QTY', key: 'quantity', width: 8 },
             { header: 'SEATER', key: 'seater', width: 10 },
@@ -716,12 +776,27 @@ let QuotationsService = class QuotationsService {
                 const rowData = {
                     sno: sno++,
                     productCode: item.productCode || product?.productCode || '',
-                    productName: item.productName || '',
+                    productName: item.variationName
+                        ? `${item.productName || ''} — ${item.variationName}`
+                        : (item.productName || ''),
+                    designerName: '',
                     image: '',
                     quantity: item.quantity,
                     seater: product?.attributes?.seater || '',
                     measurements: measurements
                 };
+                if (item.designerName) {
+                    rowData.designerName = item.designerName;
+                }
+                else if (product?.designerId) {
+                    try {
+                        const designer = await this.designerRepository.findOneBy({ _id: new mongodb_1.ObjectId(product.designerId) });
+                        rowData.designerName = designer?.name || '';
+                    }
+                    catch (e) {
+                        rowData.designerName = '';
+                    }
+                }
                 rowData.unitPrice = item.unitPrice;
                 if (quotation.discount || quotation.discountTotal > 0) {
                     rowData.discountedUnitPrice = quotation.discount?.type === 'percentage'
@@ -733,6 +808,15 @@ let QuotationsService = class QuotationsService {
                     rowData.discountedTotal = item.discountedPrice || (item.total * (1 - (quotation.discount?.value || 0) / 100));
                 }
                 rowData.specification = '';
+                if (item.selectedVariants && item.selectedVariants.length > 0) {
+                    const variantDesc = item.selectedVariants
+                        .map((v) => `${v.typeName}: ${v.variantName}${v.sku ? ' (' + v.sku + ')' : ''}`)
+                        .join(', ');
+                    rowData.specification = variantDesc;
+                }
+                else if (item.variationName) {
+                    rowData.specification = item.variationName;
+                }
                 const row = worksheet.addRow(rowData);
                 row.alignment = { horizontal: 'center', vertical: 'middle' };
                 row.height = 60;
@@ -884,9 +968,11 @@ exports.QuotationsService = QuotationsService = __decorate([
     __param(3, (0, typeorm_1.InjectRepository)(presentation_entity_1.Presentation)),
     __param(4, (0, typeorm_1.InjectRepository)(product_entity_1.Product)),
     __param(5, (0, typeorm_1.InjectRepository)(client_entity_1.Client)),
-    __param(6, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
-    __param(7, (0, typeorm_1.InjectRepository)(role_entity_1.Role)),
+    __param(6, (0, typeorm_1.InjectRepository)(designer_entity_1.Designer)),
+    __param(7, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
+    __param(8, (0, typeorm_1.InjectRepository)(role_entity_1.Role)),
     __metadata("design:paramtypes", [typeorm_2.MongoRepository,
+        typeorm_2.MongoRepository,
         typeorm_2.MongoRepository,
         typeorm_2.MongoRepository,
         typeorm_2.MongoRepository,

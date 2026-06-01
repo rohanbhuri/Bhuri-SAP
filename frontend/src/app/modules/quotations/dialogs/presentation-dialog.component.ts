@@ -219,6 +219,7 @@ export class PresentationDialogComponent implements OnInit {
           slideNumber: [slide.slideNumber],
           layout: [slide.layout],
           productIds: [slide.productIds],
+          products: [slide.products || []],
           slideTitle: [slide.slideTitle || ''],
           searchControl: ['']
         }));
@@ -361,19 +362,22 @@ export class PresentationDialogComponent implements OnInit {
     const productId = event.option.value;
     const slide = this.slides.at(slideIndex);
     const currentProducts = slide.get('productIds')?.value || [];
+    const currentProductDetails = slide.get('products')?.value || [];
     
     const layout = slide.get('layout')?.value;
 
     if (layout === 'single') {
       // Replace existing with new one
       slide.patchValue({
-         productIds: [productId]
+         productIds: [productId],
+         products: [{ productId }]
       });
     } else {
       // Multiple mode
       if (!currentProducts.includes(productId)) {
         slide.patchValue({
-          productIds: [...currentProducts, productId]
+          productIds: [...currentProducts, productId],
+          products: [...currentProductDetails, { productId }]
         });
       }
     }
@@ -388,13 +392,16 @@ export class PresentationDialogComponent implements OnInit {
   removeProduct(slideIndex: number, productId: string) {
     const slide = this.slides.at(slideIndex);
     const currentProducts = slide.get('productIds')?.value || [];
+    const currentProductDetails = slide.get('products')?.value || [];
     const index = currentProducts.indexOf(productId);
 
     if (index >= 0) {
       const newProducts = [...currentProducts];
       newProducts.splice(index, 1);
+      const newProductDetails = currentProductDetails.filter((p: any) => p.productId !== productId);
       slide.patchValue({
-        productIds: newProducts
+        productIds: newProducts,
+        products: newProductDetails
       });
     }
   }
@@ -413,6 +420,7 @@ export class PresentationDialogComponent implements OnInit {
       slideNumber: [this.slides.length + 3],
       layout: ['single'],
       productIds: [[], Validators.required],
+      products: [[]],
       slideTitle: [''],
       searchControl: ['']
     }));

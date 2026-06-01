@@ -8,6 +8,7 @@ import { EmailTemplate } from '../entities/email-template.entity';
 import { Presentation } from '../entities/presentation.entity';
 import { Product } from '../entities/product.entity';
 import { Client } from '../entities/client.entity';
+import { Designer } from '../entities/designer.entity';
 import { ApiKeyModule } from '../guards/api-key.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { User } from '../entities/user.entity';
@@ -15,7 +16,7 @@ import { Role } from '../entities/role.entity';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([Quotation, Enquiry, EmailTemplate, Presentation, Product, Client, User, Role]),
+        TypeOrmModule.forFeature([Quotation, Enquiry, EmailTemplate, Presentation, Product, Client, Designer, User, Role]),
         ApiKeyModule,
         NotificationsModule
     ],

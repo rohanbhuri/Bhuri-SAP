@@ -1,10 +1,17 @@
 import { ObjectId } from 'typeorm';
+export interface EnquiryItemVariant {
+    typeName: string;
+    variantName: string;
+    variantId: string;
+    sku: string;
+}
 export interface EnquiryItem {
     productId: string;
     productName: string;
     quantity: number;
-    unitPrice: number;
+    unitPrice?: number;
     specifications?: string;
+    selectedVariants?: EnquiryItemVariant[];
 }
 export declare enum EnquiryStatus {
     NEW = "new",

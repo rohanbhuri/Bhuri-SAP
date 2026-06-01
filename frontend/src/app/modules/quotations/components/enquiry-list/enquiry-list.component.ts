@@ -353,13 +353,29 @@ export class EnquiryListComponent implements OnInit {
     // Fetch the full enquiry details first
     this.quotationsService.getEnquiry(enquiryId).subscribe({
       next: (fullEnquiry) => {
-        // Create slides from enquiry items
-        const slides = (fullEnquiry.items || []).map((item: any, index: number) => ({
-          slideNumber: index + 1,
-          productIds: [item.productId],
-          layout: 'single' as const,
-          slideTitle: item.productName
-        }));
+        // Create slides from enquiry items, including variant info
+        const slides = (fullEnquiry.items || []).map((item: any, index: number) => {
+          const slideProduct: any = {
+            productId: item.productId
+          };
+          // If item has variant info, include it
+          if (item.selectedVariants?.length) {
+            const primaryVariant = item.selectedVariants[0];
+            slideProduct.variantId = primaryVariant.variantId;
+            slideProduct.variantName = primaryVariant.variantName;
+            slideProduct.sku = primaryVariant.sku;
+          }
+
+          return {
+            slideNumber: index + 1,
+            productIds: [item.productId],
+            products: [slideProduct],
+            layout: 'single' as const,
+            slideTitle: item.selectedVariants?.length
+              ? `${item.productName} — ${item.selectedVariants.map((v: any) => v.variantName).join(', ')}`
+              : item.productName
+          };
+        });
 
         const presentationData = {
           title: `Presentation for ${fullEnquiry.customerName}`,

@@ -1,9 +1,17 @@
 import { ObjectId } from 'typeorm';
+export interface QuotationItemVariant {
+    typeName: string;
+    variantName: string;
+    variantId: string;
+    sku: string;
+}
 export interface QuotationItem {
     productId?: string;
     productName: string;
+    designerName?: string;
     variationId?: string;
     variationName?: string;
+    selectedVariants?: QuotationItemVariant[];
     quantity: number;
     originalPrice: number;
     unitPrice: number;

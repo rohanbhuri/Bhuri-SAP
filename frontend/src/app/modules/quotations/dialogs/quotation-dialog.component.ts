@@ -84,6 +84,11 @@ import { map, startWith, debounceTime } from 'rxjs/operators';
               </button>
             </div>
 
+            <div class="designer-row" *ngIf="getDesignerName(i)">
+              <mat-icon class="designer-icon">brush</mat-icon>
+              <span class="designer-label">Designer: {{ getDesignerName(i) }}</span>
+            </div>
+
             <div class="price-row" *ngIf="item.get('productId')?.value">
               <mat-form-field appearance="outline" class="dimension-field" *ngIf="getProductShape(i) === 'rectangle' && !isSofa(i)">
                 <mat-label>Width</mat-label>
@@ -195,6 +200,9 @@ import { map, startWith, debounceTime } from 'rxjs/operators';
     .item-card { border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px; margin-bottom: 16px; background: #fafafa; }
     .item-row { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px; }
     .item-row mat-form-field { margin-bottom: 0; }
+    .designer-row { display: flex; align-items: center; gap: 6px; margin-bottom: 12px; padding: 4px 8px; background: #f3e5f5; border-radius: 4px; width: fit-content; }
+    .designer-icon { font-size: 16px; width: 16px; height: 16px; color: #7b1fa2; }
+    .designer-label { font-size: 12px; color: #7b1fa2; font-weight: 500; }
     .product-field { flex: 2; min-width: 250px; }
     .variation-field { flex: 1.5; min-width: 200px; }
     .qty-field { width: 100px; flex-shrink: 0; }
@@ -233,6 +241,7 @@ export class QuotationDialogComponent implements OnInit {
   clients: any[] = [];
   products: any[] = [];
   categories: any[] = [];
+  designers: any[] = [];
   filteredClients: Observable<any[]>;
   selectedClient: any = null;
   selectedProducts: Map<number, any> = new Map();
@@ -260,6 +269,7 @@ export class QuotationDialogComponent implements OnInit {
     this.loadClients();
     this.loadProducts();
     this.loadCategories();
+    this.loadDesigners();
     this.loadCurrencyPreferences();
     
     if (this.data?.quotation) {
@@ -315,8 +325,10 @@ export class QuotationDialogComponent implements OnInit {
           const itemGroup = this.fb.group({
             productSearch: [''],
             productId: [item.productId || ''],
+            designerName: [item.designerName || ''],
             variationId: [item.variationId || ''],
             variationName: [item.variationName || ''],
+            selectedVariants: [item.selectedVariants || []],
             quantity: [item.quantity, [Validators.required, Validators.min(1)]],
             customWidth: [item.customDimensions?.width || 0],
             customDiameter: [item.customDimensions?.diameter || 0],
@@ -372,8 +384,10 @@ export class QuotationDialogComponent implements OnInit {
           const itemGroup = this.fb.group({
             productSearch: [''],
             productId: [item.productId || ''],
-            variationId: [''],
-            variationName: [''],
+            designerName: [item.designerName || ''],
+            variationId: [item.variationId || ''],
+            variationName: [item.variationName || ''],
+            selectedVariants: [item.selectedVariants || []],
             quantity: [item.quantity, [Validators.required, Validators.min(1)]],
             customWidth: [item.customDimensions?.width || 0],
             customDiameter: [item.customDimensions?.diameter || 0],
@@ -419,8 +433,10 @@ export class QuotationDialogComponent implements OnInit {
     this.items.push(this.fb.group({
       productSearch: [''],
       productId: [''],
+      designerName: [''],
       variationId: [''],
       variationName: [''],
+      selectedVariants: [[]],
       quantity: [1, [Validators.required, Validators.min(1)]],
       customWidth: [0],
       customDiameter: [0],
@@ -471,6 +487,28 @@ export class QuotationDialogComponent implements OnInit {
       this.categories = categories;
       this.cdr.detectChanges();
     });
+  }
+
+  loadDesigners() {
+    this.catalogueService.getDesigners().subscribe((designers: any) => {
+      this.designers = designers;
+      this.cdr.detectChanges();
+    });
+  }
+
+  getDesignerName(index: number): string {
+    // First check if the item already has a designerName stored (from loaded quotation)
+    const item = this.items.at(index);
+    const storedName = item.get('designerName')?.value;
+    if (storedName) return storedName;
+
+    // Otherwise resolve from product's designerId
+    const product = this.selectedProducts.get(index);
+    if (product?.designerId && this.designers.length) {
+      const designer = this.designers.find(d => d._id === product.designerId);
+      return designer?.name || '';
+    }
+    return '';
   }
 
   private _filterClients(value: string): any[] {
@@ -541,11 +579,20 @@ export class QuotationDialogComponent implements OnInit {
     const product = event.option.value;
     this.selectedProducts.set(index, product);
     const config = product.dimensionConfig || {};
+
+    // Resolve designer name
+    let designerName = '';
+    if (product.designerId && this.designers.length) {
+      const designer = this.designers.find((d: any) => d._id === product.designerId);
+      designerName = designer?.name || '';
+    }
     
     this.items.at(index).patchValue({ 
       productId: product._id,
+      designerName,
       variationId: '',
       variationName: '',
+      selectedVariants: [],
       customWidth: config.width?.default || 0,
       customDiameter: config.diameter?.default || 0,
       customDepth: config.depth || 0,
@@ -566,6 +613,7 @@ export class QuotationDialogComponent implements OnInit {
     if (!variationId || variationId === '') {
       item.patchValue({
         variationName: '',
+        selectedVariants: [],
         originalPrice: product.basePrice,
         unitPrice: product.basePrice
       });
@@ -576,6 +624,16 @@ export class QuotationDialogComponent implements OnInit {
       if (variant) {
         const variationPrice = product.basePrice + (variant.priceModifier || 0);
         
+        // Find the variation type name for this variant
+        let typeName = '';
+        for (const vt of (product.variations || [])) {
+          const found = (vt.variants || []).find((v: any) => v.sku === variationId || v._id === variationId);
+          if (found) {
+            typeName = vt.typeName || '';
+            break;
+          }
+        }
+
         // Use variant's dimension config if it has one, otherwise product's
         if (variant.dimensionConfig) {
           const config = variant.dimensionConfig;
@@ -589,6 +647,12 @@ export class QuotationDialogComponent implements OnInit {
 
         item.patchValue({
           variationName: variant.name,
+          selectedVariants: [{
+            typeName,
+            variantName: variant.name,
+            variantId: variant._id || variationId,
+            sku: variant.sku || ''
+          }],
           originalPrice: variationPrice,
           unitPrice: variationPrice
         });
@@ -725,6 +789,7 @@ export class QuotationDialogComponent implements OnInit {
           const productId = item.get('productId')?.value;
           const variationId = item.get('variationId')?.value;
           const variationName = item.get('variationName')?.value;
+          const selectedVariants = item.get('selectedVariants')?.value || [];
           const quantity = item.get('quantity')?.value;
           const originalPrice = item.get('originalPrice')?.value;
           const unitPrice = item.get('unitPrice')?.value;
@@ -734,13 +799,22 @@ export class QuotationDialogComponent implements OnInit {
           const product = this.products.find(p => p._id === productId);
           const isSofaProduct = product?.categoryId === '6966a6b2cdf2abe6fa7981aa';
           const seats = isSofaProduct && customWidth ? this.calculateSeats(customWidth) : undefined;
+
+          // Resolve designer name
+          let designerName = item.get('designerName')?.value || '';
+          if (!designerName && product?.designerId && this.designers.length) {
+            const designer = this.designers.find((d: any) => d._id === product.designerId);
+            designerName = designer?.name || '';
+          }
           
           return {
             productId,
             productName: product?.name || '',
             productCode: product?.productCode || '',
+            designerName: designerName || undefined,
             variationId: variationId || undefined,
             variationName: variationName || undefined,
+            selectedVariants: selectedVariants.length > 0 ? selectedVariants : undefined,
             quantity,
             originalPrice,
             unitPrice,

@@ -1,11 +1,19 @@
 import { Entity, ObjectIdColumn, ObjectId, Column } from 'typeorm';
 
+export interface EnquiryItemVariant {
+    typeName: string;       // e.g. "material", "size", "color"
+    variantName: string;    // e.g. "Walnut Finish"
+    variantId: string;      // MongoDB _id of the variant
+    sku: string;            // Variant SKU code e.g. "BR_RAC_580_WN"
+}
+
 export interface EnquiryItem {
     productId: string;
     productName: string;
     quantity: number;
-    unitPrice: number;
+    unitPrice?: number;
     specifications?: string;
+    selectedVariants?: EnquiryItemVariant[];
 }
 
 export enum EnquiryStatus {
